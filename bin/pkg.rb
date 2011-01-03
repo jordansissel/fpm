@@ -39,7 +39,7 @@ def main(args)
       settings.architecture = arch
     end
 
-    opts.on("-m MAINTAINER", "--maintainer MAINTAINER") do |maint|
+    opts.on("-m MAINTAINER", "--maintainer MAINTAINER") do |maintainer|
       settings.maintainer = maintainer
     end
 
@@ -104,7 +104,28 @@ def main(args)
 
   Dir.chdir(settings.chdir || ".") do 
     puts Dir.pwd
-    system(*["tar","-zcf", "#{builddir}/data.tar.gz", *paths])
+
+    # Add directories first.
+    dirs = []
+    paths.each do |path|
+      while path != "/" and path != "."
+        if !dirs.include?(path) or File.symlink?(path)
+          dirs << path 
+        else
+          #puts "Skipping: #{path}"
+          #puts !dirs.include?(path) 
+          #puts !File.symlink?(path)
+        end
+        path = File.dirname(path)
+      end
+    end
+    dirs = dirs.sort { |a,b| a.length <=> b.length}
+    puts dirs.join("\n")
+    system(*["tar", "--owner=root", "-cf", "#{builddir}/data.tar", "--no-recursion", *dirs])
+    puts paths.join("\n")
+    #paths = paths.reject { |p| File.symlink?(p) }
+    system(*["tar", "--owner=root", "-rf", "#{builddir}/data.tar", *paths])
+    system(*["gzip", "-f", "#{builddir}/data.tar"])
 
     # Generate md5sums
     md5sums = []
