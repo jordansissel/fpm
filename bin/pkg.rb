@@ -121,10 +121,10 @@ def main(args)
     end
     dirs = dirs.sort { |a,b| a.length <=> b.length}
     puts dirs.join("\n")
-    system(*["tar", "--owner=root", "-cf", "#{builddir}/data.tar", "--no-recursion", *dirs])
+    system(*["tar", "--owner=root", "--group=root", "-cf", "#{builddir}/data.tar", "--no-recursion", *dirs])
     puts paths.join("\n")
     #paths = paths.reject { |p| File.symlink?(p) }
-    system(*["tar", "--owner=root", "-rf", "#{builddir}/data.tar", *paths])
+    system(*["tar", "--owner=root", "--group=root", "-rf", "#{builddir}/data.tar", *paths])
     system(*["gzip", "-f", "#{builddir}/data.tar"])
 
     # Generate md5sums
