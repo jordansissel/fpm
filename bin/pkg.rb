@@ -100,7 +100,7 @@ def main(args)
 
   builddir = "#{Dir.pwd}/build-#{type}-#{File.basename(package_path)}"
   Dir.mkdir(builddir) if !File.directory?(builddir)
-  template = File.new("#{File.dirname(__FILE__)}/templates/#{type}.erb").read()
+  template = File.new("#{File.dirname(__FILE__)}/../templates/#{type}.erb").read()
 
   Dir.chdir(settings.chdir || ".") do 
     puts Dir.pwd
