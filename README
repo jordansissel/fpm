@@ -1,0 +1,19 @@
+Package maintainers work hard.
+
+Sometimes they do it wrong (because you can't do it right for all situations), but small tweaks can fix it.
+
+That's what this tool is for.
+
+* Creating packages easily (deb, rpm, etc)
+* Tweaking existing packages (removing files, changing metadata/dependencies)
+* Stripping pre/post/maintainer scripts from packages
+
+First target:
+
+* .deb packages. Create + modify.
+
+Want:
+
+* Turn .gem into .deb
+* Turn npm into .deb
+etc...
