@@ -23,8 +23,6 @@ class FPM::Deb < FPM::Package
     output = params["output"]
     type = "deb" 
 
-    p self.inspect
-
     # Debian calls x86_64 "amd64"
     @architecture = "amd64" if @architecture == "x86_64"
 
