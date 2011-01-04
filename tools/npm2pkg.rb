@@ -56,7 +56,7 @@ Dir.glob("#{builddir}#{INSTALLPATH}/.npm/*/*") do |path|
     maintainer = "#{m["name"]} <#{m["email"]}>"
   end
 
-  pkgcmd = [ "ruby", "bin/pkg.rb", 
+  pkgcmd = [ "fpm", 
     "-n", "nodejs-#{package["name"]}",
     "-v", package["version"],
     "-m", maintainer,
