@@ -67,6 +67,15 @@ support would be trivial - I just need time or patches.
     % dpkg -c nodejs-doc-0.3.3-1_amd64.deb| grep node.1
     -rw-r--r-- root/root       945 2011-01-02 18:35 usr/share/man/man1/node.1
 
+    # Create the -dev package:
+    % fpm -p nodejs-dev-VERSION_ARCH.deb -n nodejs -v 0.3.3 -C /tmp/installdir usr/include  
+    % dpkg -c nodejs-dev-0.3.3-1_amd64.deb | grep -F .h 
+    -rw-r--r-- root/root     14359 2011-01-02 18:33 usr/include/node/eio.h
+    -rw-r--r-- root/root      1118 2011-01-02 18:33 usr/include/node/node_version.h
+    -rw-r--r-- root/root     25318 2011-01-02 18:33 usr/include/node/ev.h
+    ...
+
+
 ## Use case: Deploying NPMs
 
 Node has it's own package manager. Cool.
