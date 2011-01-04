@@ -1,5 +1,4 @@
 #!/usr/bin/env ruby
-#
 
 require "optparse"
 require "ostruct"
@@ -40,17 +39,18 @@ builddir="#{Dir.pwd}/npm2pkg"
 # Prefix package names with 'nodejs-'
 PACKAGEPREFIX = "nodejs-"
 
-INSTALLPATH="/usr/lib/node"
 Dir.mkdir(builddir) if !File.exists?(builddir)
 File.open("#{builddir}/.npmrc", "w") do |file|
-  file.puts "root = #{builddir}#{INSTALLPATH}"
+  file.puts "root = #{builddir}/usr/lib/node"
+  file.puts "binroot = #{builddir}/usr/lib/node/bin"
+  file.puts "manroot = #{builddir}/usr/share/man"
 end
 
 ## Trick npm into using a custom .npmrc
 system("env - PATH=$PATH HOME=#{builddir} npm install #{settings.name} #{settings.version}")
 
 # Find all installed npms in builddir, make packages.
-Dir.glob("#{builddir}#{INSTALLPATH}/.npm/*/*") do |path|
+Dir.glob("#{builddir}/usr/lib/node/.npm/*/*") do |path|
   next if File.symlink?(path)
   puts path
 
@@ -86,10 +86,19 @@ Dir.glob("#{builddir}#{INSTALLPATH}/.npm/*/*") do |path|
 
   pkgcmd += ["-p", "#{PACKAGEPREFIX}#{package["name"]}-VERSION_ARCH.deb"]
   pkgcmd += ["-C", builddir]
-  pkgcmd << "#{INSTALLPATH[1..-1]}/.npm/#{package["name"]}/active"
-  pkgcmd << "#{INSTALLPATH[1..-1]}/#{package["name"]}"
-  pkgcmd << "#{INSTALLPATH[1..-1]}/#{package["name"]}@#{package["version"]}"
+  pkgcmd << "usr/lib/node/.npm/#{package["name"]}/active"
+  pkgcmd << "usr/lib/node/#{package["name"]}"
+  pkgcmd << "usr/lib/node/#{package["name"]}@#{package["version"]}"
+  pkgcmd << "usr/lib/node/#{package["name"]}@#{package["version"]}"
 
-  puts pkgcmd.map { |x| "\"#{x}\"" }.join(" ")
+  # Include bin files, install to usr/lib/node/bin
+  (package["bin"] or []).each do |bin, script|
+    pkgcmd << "usr/lib/node/bin/#{bin}"
+    pkgcmd << "usr/lib/node/bin/#{bin}@#{package["version"]}"
+  end
+
+  # TODO(sissel): We could include manpages and docs, but I don't care right
+  # now. If you want it, I accept patches! :)
+
   system *pkgcmd
 end
