@@ -6,6 +6,14 @@ require "fpm/namespace"
 require "fpm/package"
 
 class FPM::Deb < FPM::Package
+  # Debian calls x86_64 "amd64"
+  def architecture
+    if @architecture == "x86_64"
+      "amd64"
+    else
+      @architecture
+    end
+  end
 
   # Assemble the package.
   # params:
@@ -23,11 +31,8 @@ class FPM::Deb < FPM::Package
     output = params["output"]
     type = "deb" 
 
-    # Debian calls x86_64 "amd64"
-    @architecture = "amd64" if @architecture == "x86_64"
-
     output.gsub!(/VERSION/, "#{@version}-#{@iteration}")
-    output.gsub!(/ARCH/, @architecture)
+    output.gsub!(/ARCH/, architecture)
 
     builddir = "#{Dir.pwd}/build-#{type}-#{File.basename(output)}"
     @garbage << builddir
