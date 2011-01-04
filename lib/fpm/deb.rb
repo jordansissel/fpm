@@ -49,7 +49,6 @@ class FPM::Deb < FPM::Package
       template = File.new("#{File.dirname(__FILE__)}/../../templates/deb.erb").read()
       control = ERB.new(template).result(binding)
       File.open("#{builddir}/control", "w") { |f| f.puts control }
-      puts control
     end
 
     # create control.tar.gz
