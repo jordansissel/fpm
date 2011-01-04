@@ -27,6 +27,11 @@ The goal of FPM is to be able to easily build platform-native packages.
 * Tweaking existing packages (removing files, changing metadata/dependencies)
 * Stripping pre/post/maintainer scripts from packages
 
+## The State
+
+I currently only support producing deb packages, but rpm and other package
+support would be trivial - I just need time or patches.
+
 ## Use case: Package up an installation.
 
     # Normal build steps.
