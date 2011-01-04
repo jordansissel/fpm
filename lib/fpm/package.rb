@@ -40,11 +40,12 @@ class FPM::Package
   
   def initialize
     @iteration = 1
-    @url = ""
+    @url = "http://nourlgiven.example.com/no/url/given"
     @category = "default"
     @license = "unknown"
     @maintainer = "<#{ENV["USER"]}@#{Socket.gethostname}>"
     @architecture = nil
+    @summary = "no summary given"
 
     # Garbage is stuff you may want to clean up.
     @garbage = []

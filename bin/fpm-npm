@@ -87,8 +87,8 @@ Dir.glob("#{builddir}/usr/lib/node/.npm/*/*") do |path|
   pkgcmd += ["-p", "#{PACKAGEPREFIX}#{package["name"]}-VERSION_ARCH.deb"]
   pkgcmd += ["-C", builddir]
   pkgcmd << "usr/lib/node/.npm/#{package["name"]}/active"
+  pkgcmd << "usr/lib/node/.npm/#{package["name"]}/#{package["version"]}"
   pkgcmd << "usr/lib/node/#{package["name"]}"
-  pkgcmd << "usr/lib/node/#{package["name"]}@#{package["version"]}"
   pkgcmd << "usr/lib/node/#{package["name"]}@#{package["version"]}"
 
   # Include bin files, install to usr/lib/node/bin

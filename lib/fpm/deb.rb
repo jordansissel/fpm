@@ -47,7 +47,7 @@ class FPM::Deb < FPM::Package
 
       # Generate 'control' file
       template = File.new("#{File.dirname(__FILE__)}/../../templates/deb.erb").read()
-      control = ERB.new(template).result(binding)
+      control = ERB.new(template, nil, "<>").result(binding)
       File.open("#{builddir}/control", "w") { |f| f.puts control }
     end
 
