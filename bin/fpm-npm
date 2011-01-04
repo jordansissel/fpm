@@ -37,6 +37,8 @@ if !settings.name
 end
 
 builddir="#{Dir.pwd}/npm2pkg"
+# Prefix package names with 'nodejs-'
+PACKAGEPREFIX = "nodejs-"
 
 INSTALLPATH="/usr/lib/node"
 Dir.mkdir(builddir) if !File.exists?(builddir)
@@ -54,8 +56,14 @@ Dir.glob("#{builddir}#{INSTALLPATH}/.npm/*/*") do |path|
 
   # Load the package.json and glean any information from it, then invoke pkg.rb
   package = JSON.parse(File.new("#{path}/package/package.json").read())
-  depends = Dir.glob("#{path}/dependson/*@*").collect { |p| File.basename(p) }\
-    .collect { |p| n,v = p.split("@"); "#{n} (= #{v})" }
+
+  # TODO(sissel): Ideally we want to say any version with the same 'release' number, like
+  # So we'll specify deps of {v}-1 <= x <= {v}-999999....
+  depends = Dir.glob("#{path}/dependson/*@*") \
+    .collect { |p| PACKAGEPREFIX + File.basename(p) } \
+    .collect { |p| n,v = p.split("@"); 
+      ["#{n} (>= #{v}-1)", "#{n} (<= #{v}-99999999999999)"] 
+  }.flatten
 
   if package["author"]
     maintainer = package["author"]
@@ -66,7 +74,7 @@ Dir.glob("#{builddir}#{INSTALLPATH}/.npm/*/*") do |path|
   end
 
   pkgcmd = [ "fpm", 
-    "-n", "nodejs-#{package["name"]}",
+    "-n", "#{PACKAGEPREFIX}#{package["name"]}",
     "-v", package["version"],
     "-m", maintainer,
     "-a", "all",
@@ -76,7 +84,7 @@ Dir.glob("#{builddir}#{INSTALLPATH}/.npm/*/*") do |path|
     pkgcmd += ["-d", dep]
   end
 
-  pkgcmd += ["-p", "nodejs-#{package["name"]}-VERSION_ARCH.deb"]
+  pkgcmd += ["-p", "#{PACKAGEPREFIX}#{package["name"]}-VERSION_ARCH.deb"]
   pkgcmd += ["-C", builddir]
   pkgcmd << "#{INSTALLPATH[1..-1]}/.npm/#{package["name"]}/active"
   pkgcmd << "#{INSTALLPATH[1..-1]}/#{package["name"]}"
