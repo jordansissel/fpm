@@ -64,4 +64,75 @@ class FPM::Package
     system(*["tar", "--owner=root", "--group=root", "-rf", output, *paths])
   end
 
+  # Assemble the package.
+  # params:
+  #  "root" => "/some/path"   # the 'root' of your package directory
+  #  "paths" => [ "/some/path" ...]  # paths to icnlude in this package
+  #  "output" => "foo.deb"  # what to output to.
+  #
+  # The 'output' file path will have 'VERSION' and 'ARCH' replaced with
+  # the appropriate values if if you want the filename generated.
+  def assemble(params)
+    raise "No package name given. Can't assemble package" if !@name
+
+    root = params["root"] || '.'
+    paths = params["paths"]
+    output = params["output"]
+
+    output.gsub!(/VERSION/, "#{version}-#{iteration}")
+    output.gsub!(/ARCH/, architecture)
+    File.delete(output) if File.exists?(output)
+
+    builddir = "#{Dir.pwd}/build-#{type}-#{File.basename(output)}"
+    @garbage << builddir
+
+    Dir.mkdir(builddir) if !File.directory?(builddir)
+
+    Dir.chdir root do
+      tar("#{builddir}/data.tar", paths)
+
+      # TODO(sissel): Make a helper method.
+      system(*["gzip", "-f", "#{builddir}/data.tar"])
+
+      generate_md5sums(builddir, paths)
+      generate_specfile(builddir, paths)
+    end
+
+    Dir.chdir(builddir) do
+      build(params)
+    end
+  end # def assemble
+
+  def generate_specfile(builddir, paths)
+    spec = template.result(binding)
+    File.open(specfile(builddir), "w") { |f| f.puts spec }
+  end
+
+  def generate_md5sums(builddir, paths)
+    md5sums = self.checksum(paths)
+    File.open("#{builddir}/md5sums", "w") { |f| f.puts md5sums }
+    md5sums
+  end
+
+  def checksum(paths)
+    md5sums = []
+    paths.each do |path|
+      md5sums += %x{find #{path} -type f -print0 | xargs -0 md5sum}.split("\n")
+    end
+  end # def checksum
+
+  # TODO [Jay]: make this better...?
+  def type
+    self.class.name.split(':').last.downcase
+  end
+
+  def template
+    @template ||= begin
+      tpl = File.read(
+        "#{File.dirname(__FILE__)}/../../templates/#{type}.erb"
+      )
+      ERB.new(tpl, nil, "<>")
+    end
+  end
+
 end
