@@ -57,7 +57,8 @@ support would be trivial - I just need time or patches.
     # based on the other arguments given.
     % fpm -n nodejs -v 0.3.3 -C /tmp/installdir \
       -p nodejs-VERSION_ARCH.deb \
-      -d "libssl0.9.8 (> 0)" \-d "libstdc++6 (>= 4.4.3)" \
+      -d "libssl0.9.8 (> 0)" \
+      -d "libstdc++6 (>= 4.4.3)" \
       usr/bin usr/lib
 
     # 'fpm' just produced us a nodejs deb:
