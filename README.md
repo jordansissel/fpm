@@ -45,6 +45,8 @@ support would be trivial - I just need time or patches.
     % make install DESTDIR=/tmp/installdir
 
     # Create a nodejs deb with only bin and lib directories:
+    # The 'VERSION' and 'ARCH' strings are automatically filled in for you
+    # based on the other arguments given.
     % fpm -n nodejs -v 0.3.3 -C /tmp/installdir \
       -p nodejs-VERSION_ARCH.deb \
       -d "libssl0.9.8 (> 0)" \-d "libstdc++6 (>= 4.4.3)" \
@@ -57,6 +59,13 @@ support would be trivial - I just need time or patches.
 
     % /usr/bin/node --version
     v0.3.3
+
+    # Create a package of the node manpage
+    % fpm -p nodejs-doc-VERSION_ARCH.deb -n nodejs -v 0.3.3 -C /tmp/installdir usr/share/man
+
+    # Look in the package:
+    % dpkg -c nodejs-doc-0.3.3-1_amd64.deb| grep node.1
+    -rw-r--r-- root/root       945 2011-01-02 18:35 usr/share/man/man1/node.1
 
 ## Use case: Deploying NPMs
 
