@@ -18,16 +18,21 @@ opts = OptionParser.new do |opts|
   end
 
   opts.on("-t OUTPUTTYPE", "--type OUTPUTTYPE",
-          "what kind of package you want as output (deb, etc)") do |type|
-    settings.type = type
+          "what kind of package you want as output (deb, etc)") do |packagetype|
+    settings.packagetype = packagetype
   end
 end
 
 args = opts.parse(ARGV)
 
-if !["deb"].include?(settings.type)
-  $stderr.puts("Unsupported output package type '#{settings.type}'."
-               "Only supports 'deb' right now.")
+if !["deb"].include?(settings.packagetype)
+  $stderr.puts "Unsupported output package type '#{settings.packagetype}'." \
+               "Only supports 'deb' right now."
+  exit 1
+end
+
+if !settings.name
+  $stderr.puts "No npm package name given (missing -n?)"
   exit 1
 end
 
