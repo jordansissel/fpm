@@ -27,26 +27,63 @@ The goal of FPM is to be able to easily build platform-native packages.
 * Tweaking existing packages (removing files, changing metadata/dependencies)
 * Stripping pre/post/maintainer scripts from packages
 
+## Use case: Package up an installation.
+
+    # Normal build steps.
+    % wget http://nodejs.org/dist/node-v0.3.3.tar.gz
+    % tar -zxf node-v0.3.3.tar.gz 
+    % ./configure --prefix=/usr
+    % make
+
+    # Install to a separate directory for capture.
+    % mkdir /tmp/installdir
+    % make install DESTDIR=/tmp/installdir
+
+    # Create a nodejs deb with only bin and lib directories:
+    % fpm -n nodejs -v 0.3.3 -C /tmp/installdir \
+      -p nodejs-VERSION_ARCH.deb \
+      -d "libssl0.9.8 (> 0)" \-d "libstdc++6 (>= 4.4.3)" \
+      usr/bin usr/lib
+
+    # 'fpm' just produced us a nodejs deb:
+    % file file nodejs-0.3.3-1_amd64.deb
+    nodejs-0.3.3-1_amd64.deb: Debian binary package (format 2.0)
+    % sudo dpkg -i nodejs-0.3.3-1_amd64.deb 
+
+    % /usr/bin/node --version
+    v0.3.3
+
 ## Use case: Deploying NPMs
 
 Node has it's own package manager. Cool.
 
-In the 'tools' directory there is 'npm2pkg.rb' (this will later be integrated
-directly into fpm itself, but for now, it's an external tool):
+Puppet doesn't have support for npm, but it's easy to now convert npms to debs!
 
     # Produce .deb packages for jsdom and any dependencies.
-    % ruby tools/npm2pkg.rb -n jsdom
+    % fpm-npm -t deb -n jsdom
     npm info it worked if it ends with ok
     npm info using npm@0.2.13-3
     npm info using node@v0.3.1
     npm info fetch http://registry.npmjs.org/jsdom/-/jsdom-0.1.22.tgz
-    npm info calculating sha1 /tmp/npm-1294108194638/1294108195883-0.10342533886432648/tmp.tgz
-    npm info shasum 2914b514083ac5746aa7a03b3014902dc2db5273
+
     ... blah blah blah ...
 
+    # Now we have htmlparser and jsdom .deb packages
     % ls nodejs*.deb
     nodejs-htmlparser-1.7.3-1_all.deb  nodejs-jsdom-0.1.22-1_all.deb
 
-    % dpkg -c nodejs-jsdom-0.1.22-1_all.deb
+    % dpkg --info nodejs-jsdom-0.1.23-1_all.deb
+     ...
+     Package: nodejs-jsdom
+     Version: 0.1.23-1
+     Architecture: all
+     Maintainer: Elijah Insua <tmpvar@gmail.com>
+     Depends: nodejs-htmlparser (= 1.7.3)
+     ...
 
+    % sudo dpkg -i nodejs-htmlparser-1.7.3-1_all.deb nodejs-jsdom-0.1.23-1_all.deb
+    % dpkg -l | grep nodejs-     
+    ii  nodejs-htmlparser                               1.7.3-1
+    ii  nodejs-jsdom                                    0.1.23-1
 
+Voila.
