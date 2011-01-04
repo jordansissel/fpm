@@ -62,7 +62,10 @@ def main(args)
   package.name = settings.package_name
   package.version = settings.version
   package.maintainer = settings.maintainer if settings.maintainer
-  package.architecture = settings.architecture or %x{uname -m}.chomp
+  package.architecture = (settings.architecture or %x{uname -m}.chomp)
+  package.dependencies = (settings.dependencies or [])
+
+  p settings
   package.assemble({
     "output" => settings.package_path,
     "root" => settings.chdir,

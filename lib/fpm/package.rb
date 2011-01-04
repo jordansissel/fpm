@@ -35,7 +35,8 @@ class FPM::Package
   # What architecture is this package for?
   attr_accessor :architecture
 
-  # TODO(sissel): Dependencies?
+  # Array of dependencies.
+  attr_accessor :dependencies
   
   def initialize
     @iteration = 1

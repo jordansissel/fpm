@@ -45,9 +45,6 @@ Dir.glob("#{builddir}#{INSTALLPATH}/.npm/*/*") do |path|
   depends = Dir.glob("#{path}/dependson/*@*").collect { |p| File.basename(p) }\
     .collect { |p| n,v = p.split("@"); "#{n} (= #{v})" }
 
-  require "rubygems"
-  require "ap"
-  ap package
   if package["author"]
     maintainer = package["author"]
   else
