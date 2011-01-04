@@ -12,13 +12,21 @@ situations), but small tweaks can fix it.
 And sometimes, there isn't a package available for the tool you need.
 
 And sometimes if you ask "How do I get python 3 on CentOS 5?" some unhelpful
-trolls will tell you to "Use another distro" 
+trolls will tell you to "Use another distro"
+
+Further, a recent job switch has me now using Ubuntu for production while prior
+was CentOS. These use two totally different package systems with completely different
+packaging policies and support tools. It was painful and confusing learning both. I
+want to save myself (and you) that pain in the future.
+
+It should be easy to say "here's my install dir and here's some dependencies;
+please make a package"
 
 ## The Solution - FPM
 
 I want a simple way to create packages without all the bullshit. In my own
 infrastructure, I have no interest in Debian policy and RedHat packaging
-guidelines - I have interest in my group's own style culture and a very strong
+guidelines - I have interest in my group's own style culture and have a very strong
 interest in getting work done.
 
 The goal of FPM is to be able to easily build platform-native packages.
