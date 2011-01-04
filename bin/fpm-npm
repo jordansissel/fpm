@@ -16,15 +16,22 @@ opts = OptionParser.new do |opts|
           "version to give the package") do |version|
     settings.version = version
   end
+
+  opts.on("-t OUTPUTTYPE", "--type OUTPUTTYPE",
+          "what kind of package you want as output (deb, etc)") do |type|
+    settings.type = type
+  end
 end
 
 args = opts.parse(ARGV)
 
-#builddir="#{Dir.pwd}/npm2pkg-#{settings.name}-#{settings.version or "latest"}"
+if !["deb"].include?(settings.type)
+  $stderr.puts("Unsupported output package type '#{settings.type}'."
+               "Only supports 'deb' right now.")
+  exit 1
+end
+
 builddir="#{Dir.pwd}/npm2pkg"
-#if File.exists?(builddir)
-  #system("rm -r #{builddir}")
-#end
 
 INSTALLPATH="/usr/lib/node"
 Dir.mkdir(builddir) if !File.exists?(builddir)
