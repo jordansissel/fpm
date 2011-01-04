@@ -35,6 +35,14 @@ The goal of FPM is to be able to easily build platform-native packages.
 * Tweaking existing packages (removing files, changing metadata/dependencies)
 * Stripping pre/post/maintainer scripts from packages
 
+## Get with the download
+
+You can install fpm with gem:
+
+    gem install fpm
+
+It ships with 'fpm' and 'fpm-npm' tools.
+
 ## The State
 
 I currently only support producing deb packages, but rpm and other package
