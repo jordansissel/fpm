@@ -27,7 +27,6 @@ class FPM::Deb < FPM::Package
     File.open("debian-binary", "w") { |f| f.puts "2.0" }
 
     # pack up the .deb
-    File.delete(output) if File.exists?(output)
     system("ar -qc #{params["output"]} debian-binary control.tar.gz data.tar.gz")
 
   end # def build
