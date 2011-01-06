@@ -38,17 +38,19 @@ class FPM::Package
   # Array of dependencies.
   attr_accessor :dependencies
   
-  def initialize
-    @iteration = 1
-    @url = "http://nourlgiven.example.com/no/url/given"
-    @category = "default"
-    @license = "unknown"
-    @maintainer = "<#{ENV["USER"]}@#{Socket.gethostname}>"
-    @architecture = nil
-    @summary = "no summary given"
+  def initialize(source)
+    @source = source
 
-    # Garbage is stuff you may want to clean up.
-    @garbage = []
+    @name = source[:name] # || fail
+    @version = source[:version] # || fail
+
+    @iteration = source[:iteration] || 1
+    @url = source[:url] || "http://nourlgiven.example.com/no/url/given"
+    @category = source[:category] || "default"
+    @license = source[:license] || "unknown"
+    @maintainer = source[:maintainer] || "<#{ENV["USER"]}@#{Socket.gethostname}>"
+    @architecture = source[:architecture] || %x{uname -m}.chomp
+    @summary = source[:summary] || "no summary given"
   end
 
   # Assemble the package.
