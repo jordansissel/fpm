@@ -30,7 +30,12 @@ class FPM::Builder
     @working_dir = Dir.pwd
     root = settings.chdir || '.'
     paths = ['.'] if paths.empty?
-    @source  = source_class_for(settings.source_type || 'dir').new(paths, root, :version => settings.version)
+    @source  = source_class_for(settings.source_type || 'dir').new(
+      paths, root,
+      :version => settings.version,
+      :name => settings.package_name
+    )
+
     @package = package_class_for(settings.package_type).new(@source)
 
     @paths = paths
