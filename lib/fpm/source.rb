@@ -66,11 +66,6 @@ class FPM::Source
     pkg_cls.new(self)
   end
 
-  # make the binding public for erb templating
-  def render(template)
-    template.result(binding)
-  end
-
 private
   def tar(output, paths)
     dirs = []

@@ -82,6 +82,10 @@ class FPM::Package
     end
   end
 
+  def render_spec
+    template.result(binding)
+  end
+
   def default_output
     "#{name}-#{version}-#{iteration}.#{architecture}.#{type}"
   end
