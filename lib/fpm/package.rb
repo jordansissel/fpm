@@ -72,7 +72,7 @@ class FPM::Package
   def template
     @template ||= begin
       tpl = File.read(
-        "#{File.dirname(__FILE__)}/../../templates/#{type}.erb"
+        "#{FPM::DIRS[:templates]}/#{type}.erb"
       )
       ERB.new(tpl, nil, "<>")
     end
