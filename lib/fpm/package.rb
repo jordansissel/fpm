@@ -53,45 +53,6 @@ class FPM::Package
     @summary = source[:summary] || "no summary given"
   end
 
-  # Assemble the package.
-  # params:
-  #  "root" => "/some/path"   # the 'root' of your package directory
-  #  "paths" => [ "/some/path" ...]  # paths to icnlude in this package
-  #  "output" => "foo.deb"  # what to output to.
-  #
-  # The 'output' file path will have 'VERSION' and 'ARCH' replaced with
-  # the appropriate values if if you want the filename generated.
-  def assemble(params)
-    raise "No package name given. Can't assemble package" if !@name
-
-    root = params["root"] || '.'
-    paths = params["paths"]
-    output = params["output"]
-
-    output.gsub!(/VERSION/, "#{version}-#{iteration}")
-    output.gsub!(/ARCH/, architecture)
-    File.delete(output) if File.exists?(output)
-
-    builddir = "#{Dir.pwd}/build-#{type}-#{File.basename(output)}"
-    @garbage << builddir
-
-    Dir.mkdir(builddir) if !File.directory?(builddir)
-
-    Dir.chdir root do
-      tar("#{builddir}/data.tar", paths)
-
-      # TODO(sissel): Make a helper method.
-      system(*["gzip", "-f", "#{builddir}/data.tar"])
-
-      generate_md5sums(builddir, paths)
-      generate_specfile(builddir, paths)
-    end
-
-    Dir.chdir(builddir) do
-      build(params)
-    end
-  end # def assemble
-
   def generate_specfile(builddir, paths)
     spec = template.result(binding)
     File.open(specfile(builddir), "w") { |f| f.puts spec }
