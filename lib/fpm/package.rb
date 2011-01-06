@@ -51,19 +51,6 @@ class FPM::Package
     @garbage = []
   end
 
-  def tar(output, paths)
-    dirs = []
-    paths.each do |path|
-      while path != "/" and path != "."
-        dirs << path if !dirs.include?(path) 
-        path = File.dirname(path)
-      end
-    end # paths.each
-    dirs = dirs.sort { |a,b| a.length <=> b.length}
-    system(*["tar", "--owner=root", "--group=root", "-cf", output, "--no-recursion", *dirs])
-    system(*["tar", "--owner=root", "--group=root", "-rf", output, *paths])
-  end
-
   # Assemble the package.
   # params:
   #  "root" => "/some/path"   # the 'root' of your package directory
