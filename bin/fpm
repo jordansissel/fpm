@@ -49,6 +49,14 @@ def main(args)
     opts.on("-C DIRECTORY", "Change directory before searching for files") do |dir|
       settings.chdir = dir
     end
+
+    opts.on("-t PACKAGE_TYPE", "the type of package you want to create") do |type|
+      settings.package_type = type
+    end
+
+    opts.on("-s SOURCE_TYPE", "what to build the package from") do |st|
+      settings.source_type = st
+    end
   end # OptionParser
 
   opts.parse!(args)
