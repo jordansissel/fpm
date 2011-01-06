@@ -88,7 +88,6 @@ private
     FileUtils.rm_rf builddir
     garbage << builddir
     FileUtils.mkdir(builddir) if !File.directory?(builddir)
-p :exists => File.directory?(builddir)
   end
 
   # TODO: [Jay] make this better.
