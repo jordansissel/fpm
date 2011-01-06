@@ -124,4 +124,7 @@ class FPM::Package
     end
   end
 
+  def default_output
+    "#{name}-#{version}-#{iteration}.#{architecture}.#{type}"
+  end
 end
