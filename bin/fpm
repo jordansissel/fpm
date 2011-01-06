@@ -5,6 +5,8 @@ require "rubygems"
 require "optparse"
 require "ostruct"
 require "erb"
+
+$: << "#{File.dirname(__FILE__)}/../lib"
 require "fpm"
 
 def main(args)
