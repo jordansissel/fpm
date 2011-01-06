@@ -49,29 +49,23 @@ def main(args)
     opts.on("-C DIRECTORY", "Change directory before searching for files") do |dir|
       settings.chdir = dir
     end
+
+    opts.on("-t PACKAGE_TYPE", "the type of package you want to create") do |type|
+      settings.package_type = type
+    end
+
+    opts.on("-s SOURCE_TYPE", "what to build the package from") do |st|
+      settings.source_type = st
+    end
   end # OptionParser
 
   opts.parse!(args)
 
-  if !settings.package_path
-    $stderr.puts "No package file given to manage. Give with -p PACKAGEFILE"
-    return 1
-  end
-
-  package = FPM::Deb.new
-  package.name = settings.package_name
-  package.version = settings.version
-  package.maintainer = settings.maintainer if settings.maintainer
-  package.architecture = (settings.architecture or %x{uname -m}.chomp)
-  package.dependencies = (settings.dependencies or [])
-
   p settings
-  package.assemble({
-    "output" => settings.package_path,
-    "root" => settings.chdir,
-    "paths" => args, # Remainder of args are paths.
-  })
+  FPM::Builder.new(settings, args).assemble!
+
+  return 0
 end # def main
 
-ret = main(ARGV) 
+ret = main(ARGV)
 exit(ret != nil ? ret : 0)

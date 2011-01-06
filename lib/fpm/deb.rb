@@ -19,7 +19,7 @@ class FPM::Deb < FPM::Package
     "#{builddir}/control"
   end
 
-  def build(params)
+  def build!(params)
     # Make the control
     system("tar -zcf control.tar.gz control md5sums")
 
@@ -27,7 +27,7 @@ class FPM::Deb < FPM::Package
     File.open("debian-binary", "w") { |f| f.puts "2.0" }
 
     # pack up the .deb
-    system("ar -qc #{params["output"]} debian-binary control.tar.gz data.tar.gz")
+    system("ar -qc #{params[:output]} debian-binary control.tar.gz data.tar.gz")
 
   end # def build
 end # class FPM::Deb
