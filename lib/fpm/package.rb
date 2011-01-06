@@ -37,6 +37,9 @@ class FPM::Package
 
   # Array of dependencies.
   attr_accessor :dependencies
+
+  # a summary or description of the package
+  attr_accessor :summary
   
   def initialize(source)
     @source = source
@@ -44,6 +47,7 @@ class FPM::Package
     @name = source[:name] # || fail
     @version = source[:version] # || fail
 
+    @dependencies = source[:dependencies] || []
     @iteration = source[:iteration] || 1
     @url = source[:url] || "http://nourlgiven.example.com/no/url/given"
     @category = source[:category] || "default"
