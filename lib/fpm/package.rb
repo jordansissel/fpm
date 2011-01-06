@@ -38,70 +38,20 @@ class FPM::Package
   # Array of dependencies.
   attr_accessor :dependencies
   
-  def initialize
-    @iteration = 1
-    @url = "http://nourlgiven.example.com/no/url/given"
-    @category = "default"
-    @license = "unknown"
-    @maintainer = "<#{ENV["USER"]}@#{Socket.gethostname}>"
-    @architecture = nil
-    @summary = "no summary given"
+  def initialize(source)
+    @source = source
 
-    # Garbage is stuff you may want to clean up.
-    @garbage = []
+    @name = source[:name] # || fail
+    @version = source[:version] # || fail
+
+    @iteration = source[:iteration] || 1
+    @url = source[:url] || "http://nourlgiven.example.com/no/url/given"
+    @category = source[:category] || "default"
+    @license = source[:license] || "unknown"
+    @maintainer = source[:maintainer] || "<#{ENV["USER"]}@#{Socket.gethostname}>"
+    @architecture = source[:architecture] || %x{uname -m}.chomp
+    @summary = source[:summary] || "no summary given"
   end
-
-  def tar(output, paths)
-    dirs = []
-    paths.each do |path|
-      while path != "/" and path != "."
-        dirs << path if !dirs.include?(path) 
-        path = File.dirname(path)
-      end
-    end # paths.each
-    dirs = dirs.sort { |a,b| a.length <=> b.length}
-    system(*["tar", "--owner=root", "--group=root", "-cf", output, "--no-recursion", *dirs])
-    system(*["tar", "--owner=root", "--group=root", "-rf", output, *paths])
-  end
-
-  # Assemble the package.
-  # params:
-  #  "root" => "/some/path"   # the 'root' of your package directory
-  #  "paths" => [ "/some/path" ...]  # paths to icnlude in this package
-  #  "output" => "foo.deb"  # what to output to.
-  #
-  # The 'output' file path will have 'VERSION' and 'ARCH' replaced with
-  # the appropriate values if if you want the filename generated.
-  def assemble(params)
-    raise "No package name given. Can't assemble package" if !@name
-
-    root = params["root"] || '.'
-    paths = params["paths"]
-    output = params["output"]
-
-    output.gsub!(/VERSION/, "#{version}-#{iteration}")
-    output.gsub!(/ARCH/, architecture)
-    File.delete(output) if File.exists?(output)
-
-    builddir = "#{Dir.pwd}/build-#{type}-#{File.basename(output)}"
-    @garbage << builddir
-
-    Dir.mkdir(builddir) if !File.directory?(builddir)
-
-    Dir.chdir root do
-      tar("#{builddir}/data.tar", paths)
-
-      # TODO(sissel): Make a helper method.
-      system(*["gzip", "-f", "#{builddir}/data.tar"])
-
-      generate_md5sums(builddir, paths)
-      generate_specfile(builddir, paths)
-    end
-
-    Dir.chdir(builddir) do
-      build(params)
-    end
-  end # def assemble
 
   def generate_specfile(builddir, paths)
     spec = template.result(binding)
@@ -114,13 +64,6 @@ class FPM::Package
     md5sums
   end
 
-  def checksum(paths)
-    md5sums = []
-    paths.each do |path|
-      md5sums += %x{find #{path} -type f -print0 | xargs -0 md5sum}.split("\n")
-    end
-  end # def checksum
-
   # TODO [Jay]: make this better...?
   def type
     self.class.name.split(':').last.downcase
@@ -129,10 +72,13 @@ class FPM::Package
   def template
     @template ||= begin
       tpl = File.read(
-        "#{File.dirname(__FILE__)}/../../templates/#{type}.erb"
+        "#{FPM::DIRS[:templates]}/#{type}.erb"
       )
       ERB.new(tpl, nil, "<>")
     end
   end
 
+  def default_output
+    "#{name}-#{version}-#{iteration}.#{architecture}.#{type}"
+  end
 end
