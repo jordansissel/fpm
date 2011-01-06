@@ -94,20 +94,15 @@ p :exists => File.directory?(builddir)
   # TODO: [Jay] make this better.
   def package_class_for(type)
     ({
-      :deb => FPM::Deb,
-      :rpm => FPM::Rpm
+      :deb => FPM::Deb
     })[:"#{type}"]
   end
 
   # TODO: [Jay] make this better.
   def source_class_for(type)
     case type.to_s
-    when 'gem'
-      FPM::Gem
     when 'dir'
       FPM::Dir
-    when 'tar'
-      FPM::Tar
     else
       raise ArgumentError, "unknown package type #{type.inspect}"
     end
