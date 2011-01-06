@@ -22,11 +22,6 @@ class FPM::Builder
     @garbage ||= []
   end
 
-  # the spec or control file
-  def spec
-    @spec ||= @source.render(@package.template)
-  end
-
   attr_reader :paths
   attr_reader :package
   attr_reader :source
@@ -113,7 +108,9 @@ private
   end
 
   def generate_specfile
-    File.open(@package.specfile(builddir), "w") { |f| f.puts spec }
+    File.open(@package.specfile(builddir), "w") do |f|
+      f.puts @package.render_spec
+    end
   end
 
   def generate_md5sums
