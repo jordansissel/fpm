@@ -61,25 +61,11 @@ def main(args)
 
   opts.parse!(args)
 
-  if !settings.package_path
-    $stderr.puts "No package file given to manage. Give with -p PACKAGEFILE"
-    return 1
-  end
-
-  package = FPM::Deb.new
-  package.name = settings.package_name
-  package.version = settings.version
-  package.maintainer = settings.maintainer if settings.maintainer
-  package.architecture = (settings.architecture or %x{uname -m}.chomp)
-  package.dependencies = (settings.dependencies or [])
-
   p settings
-  package.assemble({
-    "output" => settings.package_path,
-    "root" => settings.chdir,
-    "paths" => args, # Remainder of args are paths.
-  })
+  FPM::Builder.new(settings, args).assemble!
+
+  return 0
 end # def main
 
-ret = main(ARGV) 
+ret = main(ARGV)
 exit(ret != nil ? ret : 0)
