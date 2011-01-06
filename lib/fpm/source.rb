@@ -3,7 +3,7 @@ require "fpm/namespace"
 # Abstract class for a "thing to build a package from"
 class FPM::Source
   # standard package metadata
-  *%w(
+  %w(
     name
     version
     iteration
