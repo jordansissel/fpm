@@ -66,7 +66,7 @@ class FPM::Source
     pkg_cls.new(self)
   end
 
-private
+  private
   def tar(output, paths)
     dirs = []
     paths.each do |path|
