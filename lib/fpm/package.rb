@@ -103,13 +103,6 @@ class FPM::Package
     md5sums
   end
 
-  def checksum(paths)
-    md5sums = []
-    paths.each do |path|
-      md5sums += %x{find #{path} -type f -print0 | xargs -0 md5sum}.split("\n")
-    end
-  end # def checksum
-
   # TODO [Jay]: make this better...?
   def type
     self.class.name.split(':').last.downcase
