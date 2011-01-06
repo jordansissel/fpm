@@ -51,7 +51,8 @@ class FPM::Builder
     @tar_path ||= "#{builddir}/data.tar"
   end
 
-  def assemble!(params={})
+  # Assemble the package
+  def assemble!
     output.gsub!(/VERSION/, "#{@source[:version]}-#{@source[:iteration]}")
     output.gsub!(/ARCH/, @package.architecture)
 
