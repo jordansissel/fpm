@@ -1,13 +1,13 @@
-Package: <%= @name %>
-Version: <%= @version %>-<%= @iteration %>
-Architecture: <%= @architecture %>
-Maintainer: <%= @maintainer or "<unknown>" %>
-<% if @dependencies.size > 0 %>
-Depends: <%= @dependencies.join(", ") %>
+Package: <%= name %>
+Version: <%= version %>-<%= iteration %>
+Architecture: <%= architecture %>
+Maintainer: <%= maintainer or "<unknown>" %>
+<% if dependencies.size > 0 %>
+Depends: <%= dependencies.join(", ") %>
 <% end %>
 Standards-Version: 3.9.1
-Section: <%= @category or "unknown" %> 
+Section: <%= category or "unknown" %> 
 Priority: extra
-Homepage: <%= @url or "http://nourlgiven.example.com/" %>
-Description: <%= @summary or "no summary given" %>
-  <%= @summary or "no description given"%>
+Homepage: <%= url or "http://nourlgiven.example.com/" %>
+Description: <%= summary or "no summary given" %>
+  <%= summary or "no description given"%>
