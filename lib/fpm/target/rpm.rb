@@ -1,3 +1,5 @@
+require "fpm/package"
+
 class FPM::Target::Rpm < FPM::Package
   def assemble(params)
     # TODO [Jay] a lot of this is duplication from deb.rb,

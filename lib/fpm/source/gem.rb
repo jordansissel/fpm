@@ -1,5 +1,5 @@
 require 'fpm/namespace'
-
+require "fpm/source"
 require 'rubygems/package'
 
 class FPM::Source::Gem < FPM::Source
