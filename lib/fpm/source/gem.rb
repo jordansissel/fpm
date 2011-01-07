@@ -75,7 +75,7 @@ class FPM::Source::Gem < FPM::Source
     installdir = "#{tmpdir}/#{::Gem::dir}"
     ::FileUtils.mkdir_p(installdir)
     args = ["gem", "install", "--quiet", "--no-ri", "--no-rdoc",
-       "--install-dir", installdir, @paths.first]
+       "--install-dir", installdir, "--ignore-dependencies", @paths.first]
     system(*args)
     tar(tar_path, ".", tmpdir)
 
