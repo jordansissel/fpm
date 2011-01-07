@@ -3,7 +3,17 @@ Version: <%= version %>-<%= iteration %>
 Architecture: <%= architecture %>
 Maintainer: <%= maintainer or "<unknown>" %>
 <% if dependencies.size > 0 %>
-Depends: <%= dependencies.join(", ") %>
+<%
+  properdeps = dependencies.collect do |d|
+    if d =~ /\(/
+      d
+    else
+      # Convert strings 'foo >= bar' to 'foo (>= bar)'
+      da = d.split(/ +/)
+      "#{da[0]} (#{da[1]} #{da[2]})"
+    end
+  end
+%>Depends: <%= properdeps.join(", ") %>
 <% end %>
 Standards-Version: 3.9.1
 Section: <%= category or "unknown" %> 
