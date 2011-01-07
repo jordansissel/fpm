@@ -32,7 +32,7 @@ class FPM::Source
 
     # override the inferred data with the passed-in data
     params.each do |k,v|
-      self[k] = v
+      self[k] = v if v != nil
     end
 
   end
