@@ -67,7 +67,7 @@ class FPM::Source
   end
 
   private
-  def tar(output, paths)
+  def tar(output, paths, chdir=".")
     dirs = []
     paths.each do |path|
       while path != "/" and path != "."
@@ -75,7 +75,9 @@ class FPM::Source
         path = File.dirname(path)
       end
     end # paths.each
-    system(*["tar", "--owner=root", "--group=root", "-cf", output, "--no-recursion", *dirs]) if dirs.any?
-    system(*["tar", "--owner=root", "--group=root", "-rf", output, *paths])
+    system(*["tar", "-C", chdir, "--owner=root", "--group=root", 
+           "-cf", output, "--no-recursion", *dirs]) if dirs.any?
+    system(*["tar", "-C", chdir,
+           "--owner=root", "--group=root", "-rf", output, *paths])
   end # def tar
 end
