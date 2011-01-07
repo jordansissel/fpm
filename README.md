@@ -48,6 +48,20 @@ It ships with 'fpm' and 'fpm-npm' tools.
 I currently only support producing deb packages, but rpm and other package
 support would be trivial - I just need time or patches.
 
+## Things that are in the works or should work:
+
+Sources:
+
+* gem (even autodownloaded for you)
+* directories
+* rpm
+* node packages (npm)
+
+Targets:
+
+* deb
+* rpm
+
 ## Use case: Package up an installation.
 
     # Normal build steps.
