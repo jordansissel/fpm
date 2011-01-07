@@ -51,7 +51,7 @@ class FPM::Builder
     output.gsub!(/VERSION/, "#{@source[:version]}-#{@source[:iteration]}")
     output.gsub!(/ARCH/, @package.architecture)
 
-    File.delete(output) if File.exists?(output)
+    File.delete(output) if File.exists?(output) && !File.directory?(output)
 
     make_builddir!
 

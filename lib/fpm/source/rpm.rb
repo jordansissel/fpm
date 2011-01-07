@@ -10,12 +10,16 @@ class FPM::Source::RPM < FPM::Source
     #self[:description] = %x{rpm -q --qf '%{description}' -p #{@paths.first}}
     self[:dependencies] = %x{rpm -qRp #{@paths.first}}.split("\n")\
       .collect { |line| line.strip }
+
+    @rpm = @paths.first
+    @paths = %x{rpm -qlp #{@paths.first}}.split("\n")
+
   end
 
   def make_tarball!(tar_path)
     tmpdir = "#{tar_path}.dir"
     ::Dir.mkdir(tmpdir)
-    system("rpm2cpio #{@paths.first} | (cd #{tmpdir}; cpio -i --make-directories)")
+    system("rpm2cpio #{@rpm} | (cd #{tmpdir}; cpio -i --make-directories)")
     tar(tar_path, ".", tmpdir)
 
     # TODO(sissel): Make a helper method.
