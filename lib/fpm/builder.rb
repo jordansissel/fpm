@@ -37,10 +37,13 @@ class FPM::Builder
     )
 
     @package = package_class_for(settings.package_type).new(@source)
-
     @paths = paths
 
     @output = settings.package_path
+
+    # TODO(sissel): If no package_path, then try to infer things
+    # from the source package information and the target package
+    # output type.
     if @output
       @output.gsub! /VERSION/, @source[:version]
       @output.gsub! /ARCH/, @package.architecture

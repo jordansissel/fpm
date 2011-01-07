@@ -1,6 +1,3 @@
-#!/usr/bin/env ruby
-#
-
 require "erb"
 require "fpm/namespace"
 require "fpm/package"
