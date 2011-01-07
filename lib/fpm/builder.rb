@@ -40,14 +40,6 @@ class FPM::Builder
     @paths = paths
 
     @output = settings.package_path
-
-    # TODO(sissel): If no package_path, then try to infer things
-    # from the source package information and the target package
-    # output type.
-    if @output
-      @output.gsub! /VERSION/, @source[:version]
-      @output.gsub! /ARCH/, @package.architecture
-    end
   end # def initialize
 
   def tar_path
