@@ -1,6 +1,3 @@
-# eruby_subtype=spec
-%define rbname <%= spec.name %>
-
 Name: <%= @name %>
 Version: <%= @version %>
 Release: <%= @iteration %>
@@ -15,13 +12,17 @@ License: <%= @license %>
 Source0:  %{_sourcedir}/data.tar.gz
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
+<% if @dependencies && !@dependencies.empty? %>
 Requires: <%= @dependencies.join(", ") %>
+<% end %>
 
 %description
 <%= @summary %>
 
 %prep
-#noop
+echo "PREP"
+pwd
+tar -zvxf %SOURCE0
 
 %build
 #noop
@@ -35,6 +36,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-<%= paths %>
+<%= @source.paths.join("\n") %>
 
 %changelog
