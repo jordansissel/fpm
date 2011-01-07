@@ -2,7 +2,7 @@ require 'fpm/namespace'
 
 require 'rubygems/package'
 
-class FPM::Gem < FPM::Source
+class FPM::Source::Gem < FPM::Source
 
   def get_metadata
     File.open(@path, 'r') do |f|

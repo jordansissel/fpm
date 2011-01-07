@@ -1,4 +1,4 @@
-class FPM::Rpm < FPM::Package
+class FPM::Target::Rpm < FPM::Package
   def assemble(params)
     # TODO [Jay] a lot of this is duplication from deb.rb,
     # and can be factored out.

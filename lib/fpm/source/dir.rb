@@ -1,4 +1,4 @@
-class FPM::Dir < FPM::Source
+class FPM::Source::Dir < FPM::Source
   def get_metadata
     self[:name] = File.basename(File.expand_path(root))
   end

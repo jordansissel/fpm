@@ -92,19 +92,22 @@ private
 
   # TODO: [Jay] make this better.
   def package_class_for(type)
-    ({
-      :deb => FPM::Deb
-    })[:"#{type}"]
+    type = FPM::Target::constants.find { |c| c.downcase == type }
+    if !type
+      raise ArgumentError, "unknown package type #{type.inspect}"
+    end
+
+    return FPM::Target.const_get(type)
   end
 
   # TODO: [Jay] make this better.
   def source_class_for(type)
-    case type.to_s
-    when 'dir'
-      FPM::Dir
-    else
+    type = FPM::Source::constants.find { |c| c.downcase == type }
+    if !type
       raise ArgumentError, "unknown package type #{type.inspect}"
     end
+
+    return FPM::Source.const_get(type)
   end
 
   def cleanup!
