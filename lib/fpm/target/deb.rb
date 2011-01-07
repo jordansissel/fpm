@@ -5,7 +5,7 @@ require "erb"
 require "fpm/namespace"
 require "fpm/package"
 
-class FPM::Deb < FPM::Package
+class FPM::Target::Deb < FPM::Package
   # Debian calls x86_64 "amd64"
   def architecture
     if @architecture == "x86_64"
