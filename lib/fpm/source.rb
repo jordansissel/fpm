@@ -28,22 +28,27 @@ class FPM::Source
     @paths = paths
     @root = root
 
+    get_source 
     get_metadata
 
     # override the inferred data with the passed-in data
     params.each do |k,v|
       self[k] = v if v != nil
     end
-
-  end
+  end # def initialize
 
   # this method should take the paths and root and infer as much
   # about the package as it can.
   def get_metadata
     raise NoMethodError,
       "Please subclass FPM::Source and define get_metadata"
-  end
+  end # def get_metadata
 
+  # This method should be overridden by package sources that need to do any
+  # kind of fetching.
+  def get_source
+    # noop by default
+  end # def get_source
   def make_tarball!(tar_path)
     raise NoMethodError,
       "Please subclass FPM::Source and define make_tarball!(tar_path)"
