@@ -28,7 +28,7 @@ class FPM::Source
     @paths = paths
     @root = root
 
-    get_source 
+    get_source(params)
     get_metadata
 
     # override the inferred data with the passed-in data
@@ -46,9 +46,10 @@ class FPM::Source
 
   # This method should be overridden by package sources that need to do any
   # kind of fetching.
-  def get_source
+  def get_source(params)
     # noop by default
   end # def get_source
+
   def make_tarball!(tar_path)
     raise NoMethodError,
       "Please subclass FPM::Source and define make_tarball!(tar_path)"

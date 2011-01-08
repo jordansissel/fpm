@@ -5,18 +5,21 @@ require "rubygems"
 require "fileutils"
 
 class FPM::Source::Gem < FPM::Source
-  def get_source
+  def get_source(params)
     gem = @paths.first
     looks_like_name_re = /^[A-Za-z0-9_-]+$/
     if !File.exists?(gem) 
       if gem =~ looks_like_name_re
-        # TODO(sissel): Use the Gem API
-        download(gem)
+        download(gem, params[:version])
       else
         raise "Path '#{gem}' is not a file and does not appear to be the name of a rubygem."
       end
     end
   end # def get_source
+
+  def can_recurse_dependencies
+    true
+  end
 
   def download(gem_name, version=nil)
     # This code mostly mutated from rubygem's fetch_command.rb
@@ -27,10 +30,11 @@ class FPM::Source::Gem < FPM::Source
     dep = ::Gem::Dependency.new gem_name, version
     # How to handle prerelease? Some extra magic options?
     #dep.prerelease = options[:prerelease]
-
+    
     specs_and_sources, errors =
       ::Gem::SpecFetcher.fetcher.fetch_with_errors(dep, false, true, false)
     spec, source_uri = specs_and_sources.sort_by { |s,| s.version }.last
+
 
     if spec.nil? then
       raise "Invalid gem? Name: #{gem_name}, Version: #{version}, Errors: #{errors}"
