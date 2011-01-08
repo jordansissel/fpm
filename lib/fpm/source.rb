@@ -50,7 +50,7 @@ class FPM::Source
     # noop by default
   end # def get_source
 
-  def make_tarball!(tar_path)
+  def make_tarball!(tar_path, builddir)
     raise NoMethodError,
       "Please subclass FPM::Source and define make_tarball!(tar_path)"
   end

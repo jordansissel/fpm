@@ -59,6 +59,11 @@ def main(args)
     opts.on("-s SOURCE_TYPE", "what to build the package from") do |st|
       settings.source_type = st
     end
+
+    opts.on("--prefix PREFIX",
+            "A path to prefix files with when building the target package. This may not be necessary for all source types. For example, the 'gem' type will prefix with your gem directory (gem env | grep -A1 PATHS:)") do |prefix|
+      settings.prefix = prefix
+    end
   end # OptionParser
 
   opts.parse!(args)
