@@ -33,7 +33,8 @@ class FPM::Builder
     @source  = source_class_for(settings.source_type || 'dir').new(
       paths, root,
       :version => settings.version,
-      :name => settings.package_name
+      :name => settings.package_name,
+      :prefix => settings.prefix
     )
 
     @package = package_class_for(settings.package_type).new(@source)
@@ -57,7 +58,7 @@ class FPM::Builder
     make_builddir!
 
     ::Dir.chdir root do
-      @source.make_tarball!(tar_path)
+      @source.make_tarball!(tar_path, builddir)
 
       generate_md5sums
       generate_specfile
