@@ -40,6 +40,7 @@ class FPM::Builder
     @paths = paths
 
     @output = settings.package_path
+    @recurse_dependencies = settings.recurse_dependencies
   end # def initialize
 
   def tar_path
@@ -48,7 +49,7 @@ class FPM::Builder
 
   # Assemble the package
   def assemble!
-    output.gsub!(/VERSION/, "#{@source[:version]}-#{@source[:iteration]}")
+    output.gsub!(/VERSION/, "#{@source[:version]}-#{@package.iteration}")
     output.gsub!(/ARCH/, @package.architecture)
 
     File.delete(output) if File.exists?(output) && !File.directory?(output)
@@ -70,15 +71,17 @@ class FPM::Builder
     end
 
     cleanup!
+
   end # def assemble!
 
-private
+  private
   def builddir
     @builddir ||= File.expand_path(
       "#{Dir.pwd}/build-#{@package.type}-#{File.basename(output)}"
     )
   end
 
+  private
   def make_builddir!
     FileUtils.rm_rf builddir
     garbage << builddir
@@ -86,6 +89,7 @@ private
   end
 
   # TODO: [Jay] make this better.
+  private
   def package_class_for(type)
     type = FPM::Target::constants.find { |c| c.downcase == type }
     if !type
@@ -96,6 +100,7 @@ private
   end
 
   # TODO: [Jay] make this better.
+  private
   def source_class_for(type)
     type = FPM::Source::constants.find { |c| c.downcase == type }
     if !type
@@ -105,29 +110,31 @@ private
     return FPM::Source.const_get(type)
   end
 
+  private
   def cleanup!
     return [] if garbage.empty?
     FileUtils.rm_rf(garbage) && garbage.clear
   end
 
+  private
   def generate_specfile
     File.open(@package.specfile(builddir), "w") do |f|
       f.puts @package.render_spec
     end
   end
 
+  private
   def generate_md5sums
     md5sums = checksum(paths)
     File.open("#{builddir}/md5sums", "w") { |f| f.puts md5sums }
     md5sums
   end
 
+  private
   def checksum(paths)
     md5sums = []
     paths.each do |path|
       md5sums += %x{find #{path} -type f -print0 | xargs -0 md5sum}.split("\n")
     end
   end # def checksum
-
-
 end
