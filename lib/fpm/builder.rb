@@ -40,12 +40,12 @@ class FPM::Builder
     @paths = paths
     @package = package_class_for(settings.package_type).new(@source)
     # Append dependencies given from settings (-d flag for fpm)
-    @package.dependencies += settings.dependencies
+    @package.dependencies += settings.dependencies if settings.dependencies
 
     @output = settings.package_path
     @recurse_dependencies = settings.recurse_dependencies
   end # def initialize
-
+  
   def tar_path
     @tar_path ||= "#{builddir}/data.tar"
   end
