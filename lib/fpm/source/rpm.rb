@@ -16,7 +16,7 @@ class FPM::Source::RPM < FPM::Source
 
   end
 
-  def make_tarball!(tar_path)
+  def make_tarball!(tar_path, builddir)
     tmpdir = "#{tar_path}.dir"
     ::Dir.mkdir(tmpdir)
     system("rpm2cpio #{@rpm} | (cd #{tmpdir}; cpio -i --make-directories)")
