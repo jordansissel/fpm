@@ -68,7 +68,9 @@ def main(args)
 
   opts.parse!(args)
 
-  FPM::Builder.new(settings, args).assemble!
+  builder = FPM::Builder.new(settings, args)
+  builder.assemble!
+  puts "Created #{builder.output}"
 
   return 0
 end # def main
