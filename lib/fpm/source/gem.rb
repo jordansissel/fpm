@@ -74,7 +74,7 @@ class FPM::Source::Gem < FPM::Source
     end # File.open (the gem)
   end # def get_metadata
 
-  def make_tarball!(tar_path)
+  def make_tarball!(tar_path, builddir)
     tmpdir = "#{tar_path}.dir"
     installdir = "#{tmpdir}/#{::Gem::dir}"
     ::FileUtils.mkdir_p(installdir)
