@@ -33,13 +33,13 @@ class FPM::Source::Gem < FPM::Source
     
     if ::Gem::SpecFetcher.fetcher.respond_to?(:fetch_with_errors)
       specs_and_sources, errors =
-        ::Gem::SpecFetcher.fetcher.fetch_with_errors(dep, false, true, false)
+        ::Gem::SpecFetcher.fetcher.fetch_with_errors(dep, true, true, false)
     else
       specs_and_sources = 
-        ::Gem::SpecFetcher.fetcher.fetch(dep, false)
+        ::Gem::SpecFetcher.fetcher.fetch(dep, true)
+      errors = "???"
     end
     spec, source_uri = specs_and_sources.sort_by { |s,| s.version }.last
-
 
     if spec.nil? then
       raise "Invalid gem? Name: #{gem_name}, Version: #{version}, Errors: #{errors}"
