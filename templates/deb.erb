@@ -5,15 +5,27 @@ Maintainer: <%= maintainer or "<unknown>" %>
 <% if dependencies.size > 0 %>
 <%
   properdeps = dependencies.collect do |d|
+    # Convert strings 'foo >= bar' to 'foo (>= bar)'
     if d =~ /\(/
-      d
+      # nothing
     else
-      # Convert strings 'foo >= bar' to 'foo (>= bar)'
       da = d.split(/ +/)
-      "#{da[0]} (#{da[1]} #{da[2]})"
+      d = "#{da[0]} (#{da[1]} #{da[2]})"
+    end
+
+    # Convert gem ~> X.Y.Z to '>= X.Y.Z' and << X.Y+1.0
+    if d =~ /\(~>/
+      name, version = d.gsub(/[()~>]/, "").split(/ +/)[0..1]
+      nextversion = version.split(".").collect { |v| v.to_i }
+      nextversion[1] += 1
+      nextversion[2] = 0 
+      nextversion = nextversion.join(".")
+      ["#{name} (>= #{version})", "#{name} (<< #{nextversion})"]
+    else
+      d
     end
   end
-%>Depends: <%= properdeps.join(", ") %>
+%>Depends: <%= properdeps.flatten.join(", ") %>
 <% end %>
 Standards-Version: 3.9.1
 Section: <%= category or "unknown" %> 
