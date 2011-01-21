@@ -31,8 +31,13 @@ class FPM::Source::Gem < FPM::Source
     # How to handle prerelease? Some extra magic options?
     #dep.prerelease = options[:prerelease]
     
-    specs_and_sources, errors =
-      ::Gem::SpecFetcher.fetcher.fetch_with_errors(dep, false, true, false)
+    if ::Gem::SpecFetcher.fetcher.respond_to?(:fetch_with_errors)
+      specs_and_sources, errors =
+        ::Gem::SpecFetcher.fetcher.fetch_with_errors(dep, false, true, false)
+    else
+      specs_and_sources = 
+        ::Gem::SpecFetcher.fetcher.fetch(dep, false)
+    end
     spec, source_uri = specs_and_sources.sort_by { |s,| s.version }.last
 
 
@@ -67,7 +72,12 @@ class FPM::Source::Gem < FPM::Source
         self[:category] = 'Languages/Development/Ruby'
 
         self[:dependencies] = spec.runtime_dependencies.map do |dep|
-          reqs = dep.requirement.to_s.gsub(/,/, '')
+          # rubygems 1.3.5 doesn't have 'Gem::Dependency#requirement'
+          if dep.respond_to?(:requirement)
+            reqs = dep.requirement.to_s.gsub(/,/, '')
+          else
+            reqs = dep.version_requirements
+          end
           "rubygem-#{dep.name} #{reqs}"
         end
       end # ::Gem::Package
