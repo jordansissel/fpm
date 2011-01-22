@@ -41,6 +41,7 @@ class FPM::Builder
     @package = package_class_for(settings.package_type).new(@source)
     # Append dependencies given from settings (-d flag for fpm)
     @package.dependencies += settings.dependencies if settings.dependencies
+    @package.architecture = settings.architecture if settings.architecture
 
     @output = settings.package_path
     @recurse_dependencies = settings.recurse_dependencies
