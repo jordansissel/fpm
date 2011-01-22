@@ -94,7 +94,7 @@ class FPM::Builder
   # TODO: [Jay] make this better.
   private
   def package_class_for(type)
-    type = FPM::Target::constants.find { |c| c.downcase == type }
+    type = FPM::Target::constants.find { |c| c.downcase.to_s == type }
     if !type
       raise ArgumentError, "unknown package type #{type.inspect}"
     end
@@ -105,7 +105,7 @@ class FPM::Builder
   # TODO: [Jay] make this better.
   private
   def source_class_for(type)
-    type = FPM::Source::constants.find { |c| c.downcase == type }
+    type = FPM::Source::constants.find { |c| c.downcase.to_s == type }
     if !type
       raise ArgumentError, "unknown package type #{type.inspect}"
     end

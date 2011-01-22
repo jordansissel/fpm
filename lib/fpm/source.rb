@@ -75,6 +75,7 @@ class FPM::Source
   private
   def tar(output, paths, chdir=".")
     dirs = []
+    paths = [ paths ] if paths.is_a? String
     paths.each do |path|
       while path != "/" and path != "."
         dirs << path if !dirs.include?(path) 
