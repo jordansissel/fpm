@@ -14,6 +14,10 @@ class FPM::Target::Rpm < FPM::Package
            "--define", "_sourcedir #{Dir.pwd}",
            "--define", "_rpmdir #{params[:output]}",
            "#{name}.spec"]
-    system(*args)
+    ret = system(*args)
+    if !ret
+      raise "rpmbuild failed"
+    end
+
   end
 end

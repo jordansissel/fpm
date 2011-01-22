@@ -91,7 +91,10 @@ class FPM::Source::Gem < FPM::Source
     args = ["gem", "install", "--quiet", "--no-ri", "--no-rdoc",
        "--install-dir", installdir, "--ignore-dependencies", @paths.first]
     system(*args)
-    tar(tar_path, ".", tmpdir)
+    
+    @paths = [ ::Gem::dir ]
+    tar(tar_path, ".#{@paths.first}", tmpdir)
+    FileUtils.rm_r(tmpdir)
 
     # TODO(sissel): Make a helper method.
     system(*["gzip", "-f", tar_path])

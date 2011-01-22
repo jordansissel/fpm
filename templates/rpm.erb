@@ -12,8 +12,22 @@ License: <%= @license %>
 Source0:  %{_sourcedir}/data.tar.gz
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
-<% if @dependencies && !@dependencies.empty? %>
-Requires: <%= @dependencies.join(", ") %>
+<% if !dependencies.empty? %>
+<%
+  properdeps = dependencies.collect do |d|
+    # Convert gem ~> X.Y.Z to '>= X.Y.Z' and < X.Y+1.0
+    if d =~ /\~>/
+      name, version = d.gsub(/[()~>]/, "").split(/ +/)[0..1]
+      nextversion = version.split(".").collect { |v| v.to_i }
+      nextversion[1] += 1
+      nextversion[2] = 0 
+      nextversion = nextversion.join(".")
+      ["#{name} >= #{version}", "#{name} < #{nextversion}"]
+    else
+      d
+    end
+  end
+%>Requires: <%= properdeps.join(", ") %>
 <% end %>
 
 %description
@@ -33,9 +47,9 @@ tar -zvxf %SOURCE0
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-
 %files
 %defattr(-,root,root,-)
-<%= @source.paths.join("\n") %>
+<%# Trim leading '.' from paths if they are './blah...' %>
+<%= @source.paths.collect { |p| p.gsub(/^\.\//, "/") }.join("\n") %>
 
 %changelog
