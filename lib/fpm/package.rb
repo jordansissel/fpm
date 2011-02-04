@@ -48,7 +48,7 @@ class FPM::Package
     @version = source[:version] # || fail
 
     @dependencies = source[:dependencies] || []
-    @iteration = source[:iteration] || 1
+    @iteration = source[:iteration] #nil if no iteration, which is handled properly
     @url = source[:url] || "http://nourlgiven.example.com/no/url/given"
     @category = source[:category] || "default"
     @license = source[:license] || "unknown"
@@ -87,6 +87,9 @@ class FPM::Package
   end
 
   def default_output
-    "#{name}-#{version}-#{iteration}.#{architecture}.#{type}"
+    hyphen_strings = [ name, version, iteration ].compact
+    dot_strings = [ architecture, type ].compact
+    group_separator = '.'
+    [ hyphen_strings.join('-'), dot_strings.join('.') ].join(group_separator)
   end
 end
