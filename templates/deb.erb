@@ -1,5 +1,5 @@
 Package: <%= name %>
-Version: <%= version %>-<%= iteration %>
+Version: <%= version %><%= iteration && '-'+iteration.to_s %>
 Architecture: <%= architecture %>
 Maintainer: <%= maintainer or "<unknown>" %>
 <% if dependencies.size > 0 %>

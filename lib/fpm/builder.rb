@@ -54,7 +54,8 @@ class FPM::Builder
 
   # Assemble the package
   def assemble!
-    output.gsub!(/VERSION/, "#{@source[:version]}-#{@package.iteration}")
+    version_a = [ @source[:version], @package.iteration ].compact
+    output.gsub!(/VERSION/, version_a.join('-'))
     output.gsub!(/ARCH/, @package.architecture)
 
     File.delete(output) if File.exists?(output) && !File.directory?(output)
