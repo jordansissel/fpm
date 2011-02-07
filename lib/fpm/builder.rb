@@ -34,7 +34,8 @@ class FPM::Builder
       paths, root,
       :version => settings.version,
       :name => settings.package_name,
-      :prefix => settings.prefix
+      :prefix => settings.prefix,
+      :suffix => settings.suffix
     )
 
     @paths = paths
