@@ -48,30 +48,32 @@ class FPM::Package
     @version = source[:version] # || fail
 
     @dependencies = source[:dependencies] || []
-    @iteration = source[:iteration] #nil if no iteration, which is handled properly
+    # Iteration can be nil. If nil, the fpm package implementation is expected
+    # to handle any default value that should be instead.
+    @iteration = source[:iteration] 
     @url = source[:url] || "http://nourlgiven.example.com/no/url/given"
     @category = source[:category] || "default"
     @license = source[:license] || "unknown"
     @maintainer = source[:maintainer] || "<#{ENV["USER"]}@#{Socket.gethostname}>"
     @architecture = source[:architecture] || %x{uname -m}.chomp
     @summary = source[:summary] || "no summary given"
-  end
+  end # def initialize
 
   def generate_specfile(builddir, paths)
     spec = template.result(binding)
     File.open(specfile(builddir), "w") { |f| f.puts spec }
-  end
+  end # def generate_specfile
 
   def generate_md5sums(builddir, paths)
     md5sums = self.checksum(paths)
     File.open("#{builddir}/md5sums", "w") { |f| f.puts md5sums }
     md5sums
-  end
+  end # def generate_md5sums
 
   # TODO [Jay]: make this better...?
   def type
     self.class.name.split(':').last.downcase
-  end
+  end # def type
 
   def template
     @template ||= begin
@@ -80,16 +82,17 @@ class FPM::Package
       )
       ERB.new(tpl, nil, "<>")
     end
-  end
+  end # def template
 
   def render_spec
     template.result(binding)
-  end
+  end # def render_spec
 
   def default_output
-    hyphen_strings = [ name, version, iteration ].compact
-    dot_strings = [ architecture, type ].compact
-    group_separator = '.'
-    [ hyphen_strings.join('-'), dot_strings.join('.') ].join(group_separator)
-  end
+    if iteration
+      "#{name}-#{version}-#{iteration}.#{architecture}.#{type}"
+    else
+      "#{name}-#{version}.#{architecture}.#{type}"
+    end
+  end # def default_output
 end
