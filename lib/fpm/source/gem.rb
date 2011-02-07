@@ -63,7 +63,7 @@ class FPM::Source::Gem < FPM::Source
           self[field] = spec.send(field)
         end
 
-        self[:name] = "rubygem-#{spec.name}"
+        self[:name] = "rubygem#{self[:suffix]}-#{spec.name}"
         self[:maintainer] = spec.author
         self[:url] = spec.homepage
 
@@ -78,7 +78,7 @@ class FPM::Source::Gem < FPM::Source
           else
             reqs = dep.version_requirements
           end
-          "rubygem-#{dep.name} #{reqs}"
+          "rubygem#{self[:suffix]}-#{dep.name} #{reqs}"
         end
       end # ::Gem::Package
     end # File.open (the gem)

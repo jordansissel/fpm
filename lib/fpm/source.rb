@@ -28,6 +28,7 @@ class FPM::Source
     @paths = paths
     @root = root
 
+    self[:suffix] = params[:suffix]
     get_source(params)
     get_metadata
 
