@@ -74,9 +74,9 @@ def main(args)
       settings.edit = true
     end
 
-    opts.on("-x REGEX", "--exclude REGEX",
-            "Exclude paths matching pattern(regexp)") do |regex|
-      settings.exclude << regex
+    opts.on("-x PATTERN", "--exclude PATTERN",
+            "Exclude paths matching pattern (according to tar --exclude)") do |pattern|
+      settings.exclude << pattern
     end # -x / --exclude
 
   end # OptionParser
