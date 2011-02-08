@@ -29,6 +29,9 @@ infrastructure, I have no interest in Debian policy and RedHat packaging
 guidelines - I have interest in my group's own style culture and have a very strong
 interest in getting work done.
 
+(This is not to say that you can't create packages with FPM that obey Debian or
+RedHat policies, you can and should if that is what you desire)
+
 The goal of FPM is to be able to easily build platform-native packages.
 
 * Creating packages easily (deb, rpm, etc)
