@@ -83,9 +83,21 @@ class FPM::Source
         path = File.dirname(path)
       end
     end # paths.each
-    system(*["tar", "-C", chdir, "--owner=root", "--group=root", 
-           "-cf", output, "--no-recursion", *dirs]) if dirs.any?
-    system(*["tar", "-C", chdir,
-           "--owner=root", "--group=root", "-rf", output, *paths])
+
+    excludes = self[:exclude].map { |e| ["--exclude", e] }.flatten
+    # TODO(sissel): To properly implement excludes as regexps, we
+    # will need to find files ourselves. That may be more work
+    # than it is worth. For now, rely on tar's --exclude.
+    dir_tar = ["tar", "-C", chdir, "--owner=root", "--group=root" ] \
+              + excludes \
+              + ["-cf", output, "--no-recursion" ] \
+              + dirs
+    system(*dir_tar) if dirs.any?
+
+    files_tar = [ "tar", "-C", chdir ] \
+                + excludes \
+                + [ "--owner=root", "--group=root", "-rf", output ] \
+                + paths
+    system(*files_tar)
   end # def tar
 end

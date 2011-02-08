@@ -11,6 +11,7 @@ require "fpm"
 
 def main(args)
   settings = OpenStruct.new
+  settings.exclude = []
 
   opts = OptionParser.new do |opts|
     opts.banner = "Usage: #{$0} [options]"
@@ -68,6 +69,16 @@ def main(args)
             "A path to prefix files with when building the target package. This may not be necessary for all source types. For example, the 'gem' type will prefix with your gem directory (gem env | grep -A1 PATHS:)") do |prefix|
       settings.prefix = prefix
     end
+
+    opts.on("-e", "--edit", "Edit the specfile before building") do
+      settings.edit = true
+    end
+
+    opts.on("-x PATTERN", "--exclude PATTERN",
+            "Exclude paths matching pattern (according to tar --exclude)") do |pattern|
+      settings.exclude << pattern
+    end # -x / --exclude
+
   end # OptionParser
 
   opts.parse!(args)
