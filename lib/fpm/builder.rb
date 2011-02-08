@@ -36,7 +36,10 @@ class FPM::Builder
       :name => settings.package_name,
       :prefix => settings.prefix,
       :suffix => settings.suffix
+      :exclude => settings.exclude,
     )
+
+    @edit = !!settings.edit
 
     @paths = paths
     @package = package_class_for(settings.package_type).new(@source)
@@ -67,6 +70,7 @@ class FPM::Builder
 
       generate_md5sums
       generate_specfile
+      edit_specfile if @edit
     end
 
     ::Dir.chdir(builddir) do
@@ -126,6 +130,16 @@ class FPM::Builder
   def generate_specfile
     File.open(@package.specfile(builddir), "w") do |f|
       f.puts @package.render_spec
+    end
+  end
+
+  private
+  def edit_specfile
+    editor = ENV['FPM_EDITOR'] || ENV['EDITOR'] || 'vi'
+    system("#{editor} '#{package.specfile(builddir)}'")
+    unless File.size? package.specfile(builddir)
+      puts "Empty specfile.  Aborting."
+      exit 1
     end
   end
 
