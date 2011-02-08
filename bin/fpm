@@ -11,6 +11,7 @@ require "fpm"
 
 def main(args)
   settings = OpenStruct.new
+  settings.exclude = []
 
   opts = OptionParser.new do |opts|
     opts.banner = "Usage: #{$0} [options]"
@@ -68,6 +69,12 @@ def main(args)
     opts.on("-e", "--edit", "Edit the specfile before building") do
       settings.edit = true
     end
+
+    opts.on("-x REGEX", "--exclude REGEX",
+            "Exclude paths matching pattern(regexp)") do |regex|
+      settings.exclude << regex
+    end # -x / --exclude
+
   end # OptionParser
 
   opts.parse!(args)
