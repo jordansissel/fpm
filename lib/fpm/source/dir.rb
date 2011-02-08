@@ -10,15 +10,21 @@ class FPM::Source::Dir < FPM::Source
     if self[:prefix]
       self[:prefix] = self[:prefix][1..-1] if self[:prefix] =~ /^\//
       # Prefix all files with a path.
-      FileUtils.mkdir_p(self[:prefix])
+      ::FileUtils.mkdir_p(self[:prefix])
       paths.each do |path|
         # Trim @root (--chdir)
         path = path[@root.size .. -1] if path.start_with?(@root)
 
         # Copy to self[:prefix] (aka --prefix)
-        dest = "#{builddir}/tarbuild/#{self[:prefix]}/#{path}"
-        FileUtils.mkdir_p(dest)
+        if File.directory?(path)
+          dest = "#{builddir}/tarbuild/#{self[:prefix]}/#{path}"
+        else
+          dest = "#{builddir}/tarbuild/#{self[:prefix]}/#{File.dirname(path)}"
+        end
+
+        ::FileUtils.mkdir_p(dest)
         rsync = ["rsync", "-a", path, dest]
+        p rsync
         system(*rsync)
 
         # FileUtils.cp_r is pretty silly about how it copies files in some
@@ -26,10 +32,8 @@ class FPM::Source::Dir < FPM::Source
         # Use rsync instead..
         #FileUtils.cp_r(path, dest)
       end
+
       ::Dir.chdir("#{builddir}/tarbuild") do
-        puts "TAR"
-        puts tar_path
-        puts "#{builddir}/tarbuild"
         system("ls #{builddir}/tarbuild")
         tar(tar_path, ".")
       end
@@ -39,5 +43,5 @@ class FPM::Source::Dir < FPM::Source
 
     # TODO(sissel): Make a helper method.
     system(*["gzip", "-f", tar_path])
-  end
-end
+  end # def make_tarball!
+end # class FPM::Source::Dir
