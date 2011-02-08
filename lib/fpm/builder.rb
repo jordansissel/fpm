@@ -35,7 +35,7 @@ class FPM::Builder
       :version => settings.version,
       :name => settings.package_name,
       :prefix => settings.prefix,
-      :suffix => settings.suffix
+      :suffix => settings.suffix,
       :exclude => settings.exclude
     )
 
