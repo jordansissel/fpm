@@ -35,7 +35,7 @@ class FPM::Builder
       :version => settings.version,
       :name => settings.package_name,
       :prefix => settings.prefix,
-      :exclude => settings.exclude,
+      :exclude => settings.exclude
     )
 
     @edit = !!settings.edit
