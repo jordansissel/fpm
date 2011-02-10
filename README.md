@@ -62,5 +62,5 @@ Targets:
 
 ## Other Documentation
 
-See the wiki for more docs:  https://github.com/jordansissel/fpm/wiki
+(See the wiki for more docs)[https://github.com/jordansissel/fpm/wiki]
 
