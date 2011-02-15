@@ -11,7 +11,7 @@ class FPM::Source::Dir < FPM::Source
       self[:prefix] = self[:prefix][1..-1] if self[:prefix] =~ /^\//
       # Prefix all files with a path.
       ::FileUtils.mkdir_p(self[:prefix])
-      paths.each do |path|
+      @paths.each do |path|
         # Trim @root (--chdir)
         path = path[@root.size .. -1] if path.start_with?(@root)
 
@@ -31,6 +31,11 @@ class FPM::Source::Dir < FPM::Source
         # cases (funky permissions, etc)
         # Use rsync instead..
         #FileUtils.cp_r(path, dest)
+      end
+
+      # Prefix paths with 'prefix' if necessary.
+      if self[:prefix]
+        @paths = @paths.collect { |p| File.join("/", self[:prefix], p) }
       end
 
       ::Dir.chdir("#{builddir}/tarbuild") do
