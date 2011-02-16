@@ -11,9 +11,9 @@ default: package
 
 .PHONY: clean
 clean:
-	rm $(NAME)-* $(NAME)_* || true
-	rm -r $(TARDIR) || true
-	rm *.deb
+	rm -f $(NAME)-* $(NAME)_* || true
+	rm -fr $(TARDIR) || true
+	rm -f *.deb
 
 $(TARBALL):
 	wget "$(DOWNLOAD)"
@@ -23,5 +23,5 @@ $(TARDIR): $(TARBALL)
 
 .PHONY: package
 package: $(TARDIR)
-	fpm -s dir -t deb -v $(VERSION) -n $(NAME) -d "sun-java6-bin" \
-		-a all -d "sun-java6-jre" --prefix $(PREFIX) -C $(TARDIR) .
+	fpm -s dir -t deb -v $(VERSION) -n $(NAME) -d "sun-java6-bin (> 0)" \
+		-a all -d "sun-java6-jre (> 0)" --prefix $(PREFIX) -C $(TARDIR) .
