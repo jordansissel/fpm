@@ -4,7 +4,7 @@ Usage:
 
 Should make the package. Try installing:
 
-    sudo dpkg -i jruby-1.6.0.RC2-1.amd64.deb
+    sudo dpkg -i jruby-1.6.0.RC2-1.all.deb
 
 Now try it:
 
