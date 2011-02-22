@@ -23,5 +23,5 @@ $(TARDIR): $(TARBALL)
 
 .PHONY: package
 package: $(TARDIR)
-	fpm -s dir -t deb -v $(VERSION) -n $(NAME) -d "sun-java6-bin (> 0)" \
-		-a all -d "sun-java6-jre (> 0)" --prefix $(PREFIX) -C $(TARDIR) .
+	fpm -s dir -t deb -v $(VERSION) -n $(NAME) -d "sun-java6-bin (>> 0)" \
+		-a all -d "sun-java6-jre (>> 0)" --prefix $(PREFIX) -C $(TARDIR) .
