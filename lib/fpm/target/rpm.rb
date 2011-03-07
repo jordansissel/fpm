@@ -7,7 +7,7 @@ class FPM::Target::Rpm < FPM::Package
 
   def build!(params)
     raise "No package name given. Can't assemble package" if !@name
-    Dir.mkdir("BUILD")
+    %w(BUILD RPMS SRPMS SOURCES SPECS).each { |d| Dir.mkdir(d) }
     args = ["rpmbuild", "-ba", 
            "--define", "buildroot #{Dir.pwd}/BUILD",
            "--define", "_topdir #{Dir.pwd}",
@@ -16,7 +16,7 @@ class FPM::Target::Rpm < FPM::Package
            "#{name}.spec"]
     ret = system(*args)
     if !ret
-      raise "rpmbuild failed"
+      raise "rpmbuild failed (exit code: #{ret}"
     end
 
     Dir["#{Dir.pwd}/RPMS/**/*.rpm"].each do |path|
