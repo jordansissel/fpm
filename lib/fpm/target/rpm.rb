@@ -16,7 +16,7 @@ class FPM::Target::Rpm < FPM::Package
            "#{name}.spec"]
     ret = system(*args)
     if !ret
-      raise "rpmbuild failed (exit code: #{ret}"
+      raise "rpmbuild failed (exit code: #{$?.exitstatus})"
     end
 
     Dir["#{Dir.pwd}/RPMS/**/*.rpm"].each do |path|
