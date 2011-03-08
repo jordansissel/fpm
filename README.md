@@ -60,6 +60,17 @@ Targets:
 * deb
 * rpm
 
+## Something broken?
+
+FPM lacks automated testing (though I have that planned).
+
+To compensate for lack of automated testing, should you find any bugs that
+would prevent you from using fpm yourself, please let me know (file a ticket,
+find me on IRC, email me, etc) and I'll fix it as quickly as I can (usually
+blocker bugs get fixed within a few minutes of me finding out about such a bug)
+
+If you have feature requests, feel free to send them my way.
+
 ## Other Documentation
 
 [See the wiki for more docs](https://github.com/jordansissel/fpm/wiki)
