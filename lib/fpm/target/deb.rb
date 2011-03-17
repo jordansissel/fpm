@@ -27,5 +27,13 @@ class FPM::Target::Deb < FPM::Package
     system("ar -qc #{params[:output]} debian-binary control.tar.gz data.tar.gz")
 
   end # def build
+
+  def default_output
+    if iteration
+      "#{name}_#{version}-#{iteration}_#{architecture}.#{type}"
+    else
+      "#{name}_#{version}_#{architecture}.#{type}"
+    end
+  end # def default_output
 end # class FPM::Deb
 
