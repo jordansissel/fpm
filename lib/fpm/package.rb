@@ -45,7 +45,9 @@ class FPM::Package
     @source = source
 
     @name = source[:name] # || fail
-    @version = source[:version] # || fail
+
+    # Default version is 1.0 in case nobody told us a specific version.
+    @version = source[:version] || "1.0"
 
     @dependencies = source[:dependencies] || []
     # Iteration can be nil. If nil, the fpm package implementation is expected
