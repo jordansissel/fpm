@@ -9,7 +9,7 @@ class FPM::Builder
   def output
     @output ||= begin
       o = @package.default_output
-      if o.start_with? '/'
+      if o[0,1] == "/"
         o
       else 
         File.join(@working_dir, o)
