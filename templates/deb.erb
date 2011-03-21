@@ -4,25 +4,28 @@ Architecture: <%= architecture %>
 Maintainer: <%= maintainer or "<unknown>" %>
 <% if dependencies.size > 0 %>
 <%
-  properdeps = dependencies.collect do |d|
+  properdeps = dependencies.collect do |dep|
     # Convert strings 'foo >= bar' to 'foo (>= bar)'
-    if d =~ /\(/
+    if dep =~ /\(/
       # nothing
     else
-      da = d.split(/ +/)
-      d = "#{da[0]} (#{da[1]} #{da[2]})"
+      da = dep.split(/ +/)
+      if da.size == 1
+        da += [">", "0"]
+      end
+      dep = "#{da[0]} (#{da[1]} #{da[2]})"
     end
 
     # Convert gem ~> X.Y.Z to '>= X.Y.Z' and << X.Y+1.0
-    if d =~ /\(~>/
-      name, version = d.gsub(/[()~>]/, "").split(/ +/)[0..1]
+    if dep =~ /\(~>/
+      name, version = dep.gsub(/[()~>]/, "").split(/ +/)[0..1]
       nextversion = version.split(".").collect { |v| v.to_i }
       nextversion[1] += 1
       nextversion[2] = 0 
       nextversion = nextversion.join(".")
       ["#{name} (>= #{version})", "#{name} (<< #{nextversion})"]
     else
-      d
+      dep
     end
   end
 %>Depends: <%= properdeps.flatten.join(", ") %>

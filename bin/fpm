@@ -14,8 +14,6 @@ def main(args)
   settings.exclude = []
 
   opts = OptionParser.new do |opts|
-    opts.banner = "Usage: #{$0} [options]"
-    
     # TODO(sissel): Maybe this should be '-o OUTPUT' ?
     opts.on("-p PACKAGEFILE", "--package PACKAGEFILE",
             "The package file to manage") do |path|
@@ -82,6 +80,24 @@ def main(args)
   end # OptionParser
 
   opts.parse!(args)
+
+  ok = true
+  if settings.package_type.nil?
+    $stderr.puts "Missing package target type (no -t flag?)"
+    ok = false
+  end
+
+  if settings.source_type.nil?
+    $stderr.puts "Missing package source type (no -s flag?)"
+    ok = false
+  end
+
+  if !ok
+    $stderr.puts "There were errors; see above."
+    $stderr.puts 
+    $stderr.puts opts.help
+    return 1
+  end
 
   builder = FPM::Builder.new(settings, args)
   builder.assemble!
