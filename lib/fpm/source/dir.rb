@@ -8,9 +8,10 @@ class FPM::Source::Dir < FPM::Source
 
   def make_tarball!(tar_path, builddir)
     if self[:prefix]
+      # Trim leading '/' from prefix
       self[:prefix] = self[:prefix][1..-1] if self[:prefix] =~ /^\//
-      # Prefix all files with a path.
-      ::FileUtils.mkdir_p(self[:prefix])
+
+      # Prefix all files with a path if given.
       @paths.each do |path|
         # Trim @root (--chdir)
         path = path[@root.size .. -1] if path.start_with?(@root)
