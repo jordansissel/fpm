@@ -60,7 +60,7 @@ class FPM::Source::Gem < FPM::Source
           summary
           version
         ).each do |field|
-          self[field] = spec.send(field)
+          self[field.to_sym] = spec.send(field) rescue "unknown"
         end
 
         self[:name] = "rubygem#{self[:suffix]}-#{spec.name}"
