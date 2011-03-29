@@ -71,15 +71,20 @@ class FPM::Source::Gem < FPM::Source
         # package managers.  Need to decide how to handle this.
         self[:category] = 'Languages/Development/Ruby'
 
-        self[:dependencies] = spec.runtime_dependencies.map do |dep|
+        self[:dependencies] = []
+        spec.runtime_dependencies.map do |dep|
           # rubygems 1.3.5 doesn't have 'Gem::Dependency#requirement'
           if dep.respond_to?(:requirement)
             reqs = dep.requirement.to_s.gsub(/,/, '')
           else
             reqs = dep.version_requirements
           end
-          "rubygem#{self[:suffix]}-#{dep.name} #{reqs}"
-        end
+
+          # Some reqs can be ">= a, < b" versions, let's handle that.
+          reqs.to_s.split(/, */).each do |req|
+            self[:dependencies] << "rubygem#{self[:suffix]}-#{dep.name} #{req}"
+          end
+        end # runtime_dependencies
       end # ::Gem::Package
     end # File.open (the gem)
   end # def get_metadata
