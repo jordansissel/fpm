@@ -1,5 +1,6 @@
 require "fpm/source"
 require "fileutils"
+require "fpm/rubyfixes"
 
 class FPM::Source::Dir < FPM::Source
   def get_metadata
