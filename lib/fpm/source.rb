@@ -76,6 +76,8 @@ class FPM::Source
   private
   def tar(output, paths, chdir=".")
     dirs = []
+
+    # Include all directory entries at the top of the tarball
     paths = [ paths ] if paths.is_a? String
     paths.each do |path|
       while path != "/" and path != "."
@@ -83,8 +85,17 @@ class FPM::Source
         path = File.dirname(path)
       end
     end # paths.each
+    
+    # Want directories to be sorted thusly: [ "/usr", "/usr/bin" ]
+    # Why? tar and some package managers sometimes fail if the tar is created
+    # like: [ "/opt/fizz", "/opt" ]
+    # dpkg -i will fail if /opt doesn't exist, sorting it by length ensures
+    # /opt is created before /opt/fizz.
+    dirs.sort! { |a,b| a.size <=> b.size }
+    paths.sort! { |a,b| a.size <=> b.size }
 
     excludes = self[:exclude].map { |e| ["--exclude", e] }.flatten
+
     # TODO(sissel): To properly implement excludes as regexps, we
     # will need to find files ourselves. That may be more work
     # than it is worth. For now, rely on tar's --exclude.
