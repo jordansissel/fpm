@@ -19,6 +19,8 @@ class FPM::Source::Dir < FPM::Source
 
         # Copy to self[:prefix] (aka --prefix)
         if File.directory?(path)
+          # Turn 'path' into 'path/' so rsync copies it properly.
+          path = "#{path}/" if path[-1,1] != "/"
           dest = "#{builddir}/tarbuild/#{self[:prefix]}/#{path}"
         else
           dest = "#{builddir}/tarbuild/#{self[:prefix]}/#{File.dirname(path)}"
