@@ -8,6 +8,9 @@ Package maintainers work hard and take a lot of shit. You can't please everyone.
 
 It helps you build packages quickly (Packages like RPM and DEB formats).
 
+Here is a presentation I gave on fpm at BayLISA: <http://goo.gl/sWs3Z> (I
+included speaker notes you can read, too)
+
 At BayLISA in April 2011, I gave a talk about fpm. At the end, I asked "What
 can I package for you?"
 
