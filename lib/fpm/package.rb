@@ -8,6 +8,11 @@ class FPM::Package
   # The version of this package (the upstream version)
   attr_accessor :version
 
+  # The epoch version of this package
+  # This is used most when an upstream package changes it's versioning
+  # style so standard comparisions wouldn't work.
+  attr_accessor :epoch
+
   # The iteration of this package.
   #   Debian calls this 'release' and is the last '-NUMBER' in the version
   #   RedHat has this as 'Release' in the .spec file
@@ -48,6 +53,7 @@ class FPM::Package
 
     # Default version is 1.0 in case nobody told us a specific version.
     @version = source[:version] || "1.0"
+    @epoch = source[:epoch]
 
     @dependencies = source[:dependencies] || []
     # Iteration can be nil. If nil, the fpm package implementation is expected

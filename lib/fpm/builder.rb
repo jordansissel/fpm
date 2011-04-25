@@ -33,6 +33,7 @@ class FPM::Builder
     @source  = source_class_for(settings.source_type || 'dir').new(
       paths, root,
       :version => settings.version,
+      :epoch => settings.epoch,
       :name => settings.package_name,
       :prefix => settings.prefix,
       :suffix => settings.suffix,
@@ -47,6 +48,7 @@ class FPM::Builder
     # Append dependencies given from settings (-d flag for fpm)
     @package.dependencies += settings.dependencies if settings.dependencies
     @package.architecture = settings.architecture if settings.architecture
+    #@package.epoch = settings.epoch # nil is OK
 
     @output = settings.package_path
     @recurse_dependencies = settings.recurse_dependencies

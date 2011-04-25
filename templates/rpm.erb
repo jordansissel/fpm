@@ -1,5 +1,8 @@
 Name: <%= @name %>
 Version: <%= @version %>
+<% if @epoch %>
+Epoch: <%= @epoch %>
+<% end %>
 Release: <%= @iteration or 1 %>
 Summary: <%= @summary %>
 BuildArch: <%= architecture %>
