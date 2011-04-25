@@ -22,55 +22,60 @@ def main(args)
       else
         settings.package_path = "#{Dir.pwd}/#{path}"
       end
-    end
+    end # --package
 
     opts.on("-n PACKAGENAME", "--name PACKAGENAME",
             "What name to give to the package") do |name|
       settings.package_name = name
-    end
+    end # --name
 
     opts.on("-v VERSION", "--version VERSION",
             "version to give the package") do |version|
-      settings.version = version
-    end
+      settings.version = version 
+    end # --version
+
+    opts.on("--epoch EPOCH",
+            "(optional) Set epoch value for this package.") do |epoch|
+      settings.epoch = epoch
+    end # --epoch
 
     opts.on("-d DEPENDENCY", "--depends DEPENDENCY") do |dep|
       settings.dependencies ||= []
       settings.dependencies << dep
-    end
+    end # --depends
 
     opts.on("-a ARCHITECTURE", "--architecture ARCHITECTURE") do |arch|
       settings.architecture = arch
-    end
+    end # --architecture
 
     opts.on("-m MAINTAINER", "--maintainer MAINTAINER") do |maintainer|
       settings.maintainer = maintainer
-    end
+    end # --maintainer
 
     opts.on("-C DIRECTORY", "Change directory before searching for files") do |dir|
       settings.chdir = dir
-    end
+    end # -C
 
     opts.on("-t PACKAGE_TYPE", "the type of package you want to create") do |type|
       settings.package_type = type
-    end
+    end # -t
 
     opts.on("-s SOURCE_TYPE", "what to build the package from") do |st|
       settings.source_type = st
-    end
+    end # -s 
 
     opts.on("-S PACKAGE_SUFFIX", "which suffix to append to package and dependances") do |sfx|
       settings.suffix = sfx
-    end
+    end # -S
 
     opts.on("--prefix PREFIX",
             "A path to prefix files with when building the target package. This may not be necessary for all source types. For example, the 'gem' type will prefix with your gem directory (gem env | grep -A1 PATHS:)") do |prefix|
       settings.prefix = prefix
-    end
+    end # --prefix
 
     opts.on("-e", "--edit", "Edit the specfile before building") do
       settings.edit = true
-    end
+    end # --edit
 
     opts.on("-x PATTERN", "--exclude PATTERN",
             "Exclude paths matching pattern (according to tar --exclude)") do |pattern|
