@@ -30,6 +30,9 @@ Maintainer: <%= maintainer or "<unknown>" %>
   end
 %>Depends: <%= properdeps.flatten.join(", ") %>
 <% end %>
+<% if !provides.empty? %>
+Provides: <%= provides.join(", ") %>
+<% end %>
 Standards-Version: 3.9.1
 Section: <%= category or "unknown" %> 
 Priority: extra
