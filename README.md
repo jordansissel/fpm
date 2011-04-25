@@ -4,6 +4,24 @@
 
 Package maintainers work hard and take a lot of shit. You can't please everyone. So, if you're a maintainer: Thanks for maintaining packages!
 
+## What is fpm?
+
+It helps you build packages quickly (Packages like RPM and DEB formats).
+
+Here is a presentation I gave on fpm at BayLISA: <http://goo.gl/sWs3Z> (I
+included speaker notes you can read, too)
+
+At BayLISA in April 2011, I gave a talk about fpm. At the end, I asked "What
+can I package for you?"
+
+Someone asked for memcached.
+
+Google for 'memcached', download the source, unpack, ./configure, make, make
+install, fpm, deploy.
+
+In 60 seconds, starting from nothing, I had both an RPM and a .DEB of memcached
+ready to deploy.
+
 ## Backstory
 
 Sometimes packaging is done wrong (because you can't do it right for all
