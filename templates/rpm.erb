@@ -34,6 +34,9 @@ BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
   end
 %>Requires: <%= properdeps.join(", ") %>
 <% end %>
+<% provides.each do |prov| %>
+Provides: <%= prov %>
+<% end %>
 
 %description
 <%= @summary %>

@@ -43,6 +43,10 @@ class FPM::Package
   # Array of dependencies.
   attr_accessor :dependencies
 
+  # Array of things this package provides.
+  # (Not all packages support this)
+  attr_accessor :provides
+
   # a summary or description of the package
   attr_accessor :summary
   
@@ -65,6 +69,7 @@ class FPM::Package
     @maintainer = source[:maintainer] || "<#{ENV["USER"]}@#{Socket.gethostname}>"
     @architecture = source[:architecture] || %x{uname -m}.chomp
     @summary = source[:summary] || "no summary given"
+    @provides = source[:provides] || []
   end # def initialize
 
   def generate_specfile(builddir, paths)

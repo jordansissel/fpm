@@ -38,7 +38,8 @@ class FPM::Builder
       :prefix => settings.prefix,
       :suffix => settings.suffix,
       :exclude => settings.exclude,
-      :maintainer => settings.maintainer
+      :maintainer => settings.maintainer,
+      :provides => []
     )
 
     @edit = !!settings.edit
@@ -47,8 +48,9 @@ class FPM::Builder
     @package = package_class_for(settings.package_type).new(@source)
     # Append dependencies given from settings (-d flag for fpm)
     @package.dependencies += settings.dependencies if settings.dependencies
+    # Append provides given from settings (--provides flag for fpm)
+    @package.provides += settings.provides if settings.provides
     @package.architecture = settings.architecture if settings.architecture
-    #@package.epoch = settings.epoch # nil is OK
 
     @output = settings.package_path
     @recurse_dependencies = settings.recurse_dependencies

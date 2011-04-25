@@ -44,6 +44,11 @@ def main(args)
       settings.dependencies << dep
     end # --depends
 
+    opts.on("--provides PROVIDES") do |thing|
+      settings.provides ||= []
+      settings.provides << thing
+    end # --depends
+
     opts.on("-a ARCHITECTURE", "--architecture ARCHITECTURE") do |arch|
       settings.architecture = arch
     end # --architecture
