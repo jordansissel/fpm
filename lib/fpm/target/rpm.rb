@@ -7,6 +7,8 @@ class FPM::Target::Rpm < FPM::Package
 
   def build!(params)
     raise "No package name given. Can't assemble package" if !@name
+    # TODO(sissel): Abort if 'rpmbuild' tool not found.
+
     %w(BUILD RPMS SRPMS SOURCES SPECS).each { |d| Dir.mkdir(d) }
     args = ["rpmbuild", "-ba", 
            "--define", "buildroot #{Dir.pwd}/BUILD",
