@@ -95,7 +95,7 @@ class FPM::Source::Gem < FPM::Source
     if self[:prefix]
       installdir = "#{tmpdir}/#{self[:prefix]}"
       # TODO(sissel): Overwriting @paths is bad mojo and confusing...
-      @paths = self[:prefix]
+      @paths = [ self[:prefix] ]
     else
       installdir = "#{tmpdir}/#{::Gem::dir}"
       @paths = [ ::Gem::dir ]
