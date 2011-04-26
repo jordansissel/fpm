@@ -91,13 +91,20 @@ class FPM::Source::Gem < FPM::Source
 
   def make_tarball!(tar_path, builddir)
     tmpdir = "#{tar_path}.dir"
-    installdir = "#{tmpdir}/#{::Gem::dir}"
+    gem = @paths.first
+    if self[:prefix]
+      installdir = "#{tmpdir}/#{self[:prefix]}"
+      # TODO(sissel): Overwriting @paths is bad mojo and confusing...
+      @paths = self[:prefix]
+    else
+      installdir = "#{tmpdir}/#{::Gem::dir}"
+      @paths = [ ::Gem::dir ]
+    end
     ::FileUtils.mkdir_p(installdir)
     args = ["gem", "install", "--quiet", "--no-ri", "--no-rdoc",
-       "--install-dir", installdir, "--ignore-dependencies", @paths.first]
+       "--install-dir", installdir, "--ignore-dependencies", gem]
     system(*args)
     
-    @paths = [ ::Gem::dir ]
     tar(tar_path, ".#{@paths.first}", tmpdir)
     FileUtils.rm_r(tmpdir)
 
