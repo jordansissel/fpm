@@ -87,6 +87,14 @@ def main(args)
       settings.exclude << pattern
     end # -x / --exclude
 
+    opts.on("--postinst POSTINST") do |postinst|
+      settings.postinst = postinst
+    end # --postinst
+    
+    opts.on("--prerm PRERM") do |prerm|
+      settings.prerm = prerm
+    end #--prerm
+    
   end # OptionParser
 
   opts.parse!(args)

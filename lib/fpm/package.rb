@@ -49,7 +49,10 @@ class FPM::Package
 
   # a summary or description of the package
   attr_accessor :summary
-  
+
+  # source to postinst and prerm scripts
+  attr_accessor :postinst, :prerm
+
   def initialize(source)
     @source = source
 
@@ -70,6 +73,8 @@ class FPM::Package
     @architecture = source[:architecture] || %x{uname -m}.chomp
     @summary = source[:summary] || "no summary given"
     @provides = source[:provides] || []
+    @prerm = source[:prerm]
+    @postinst = source[:postinst]    
   end # def initialize
 
   def generate_specfile(builddir, paths)
