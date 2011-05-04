@@ -39,7 +39,8 @@ class FPM::Builder
       :suffix => settings.suffix,
       :exclude => settings.exclude,
       :maintainer => settings.maintainer,
-      :provides => []
+      :provides => [],
+      :gembinpath => settings.gem_bin_path
     )
 
     @edit = !!settings.edit

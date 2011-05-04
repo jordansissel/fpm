@@ -87,6 +87,11 @@ def main(args)
       settings.exclude << pattern
     end # -x / --exclude
 
+    opts.on("--gem-bin-path DIRECTORY",
+            "A directory where gem executables are installed") do |gembinpath|
+      settings.gem_bin_path = gembinpath
+    end # --gem-bin-path
+
   end # OptionParser
 
   opts.parse!(args)
