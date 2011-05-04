@@ -71,6 +71,8 @@ class FPM::Source::Gem < FPM::Source
         # package managers.  Need to decide how to handle this.
         self[:category] = 'Languages/Development/Ruby'
 
+        self[:executables] = spec.executables
+
         self[:dependencies] = []
         spec.runtime_dependencies.map do |dep|
           # rubygems 1.3.5 doesn't have 'Gem::Dependency#requirement'
@@ -104,8 +106,17 @@ class FPM::Source::Gem < FPM::Source
     args = ["gem", "install", "--quiet", "--no-ri", "--no-rdoc",
        "--install-dir", installdir, "--ignore-dependencies", gem]
     system(*args)
-    
-    tar(tar_path, ".#{@paths.first}", tmpdir)
+
+    if not self[:executables].empty? and self[:gembinpath]
+      gembinpath = "#{tmpdir}/#{self[:gembinpath]}"
+      FileUtils.mkdir_p(gembinpath)
+      self[:executables].each do |ex|
+        FileUtils.cp("#{installdir}/bin/#{ex}", gembinpath)
+        @paths << "#{self[:gembinpath]}/#{ex}"
+      end
+    end
+
+    tar(tar_path, @paths.map { |p| ".#{p}" }, tmpdir)
     FileUtils.rm_r(tmpdir)
 
     # TODO(sissel): Make a helper method.
