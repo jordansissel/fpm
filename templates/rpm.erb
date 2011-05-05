@@ -1,19 +1,19 @@
-Name: <%= @name %>
-Version: <%= @version %>
-<% if @epoch %>
-Epoch: <%= @epoch %>
+Name: <%= name %>
+Version: <%= version %>
+<% if epoch %>
+Epoch: <%= epoch %>
 <% end %>
-Release: <%= @iteration or 1 %>
-Summary: <%= @summary %>
+Release: <%= iteration or 1 %>
+Summary: <%= description %>
 BuildArch: <%= architecture %>
 AutoReqProv: no
 
-Group: <%= @category %>
+Group: <%= category %>
 <%#
 TODO: [Jay] rpms require a license
 let's detect it intelligently
 %>
-License: <%= @license %> 
+License: <%= license %> 
 Source0:  %{_sourcedir}/data.tar.gz
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
@@ -39,7 +39,7 @@ Provides: <%= prov %>
 <% end %>
 
 %description
-<%= @summary %>
+<%= description %>
 
 %prep
 echo "PREP"
@@ -54,6 +54,26 @@ tar -zvxf %SOURCE0
 
 %clean
 rm -rf $RPM_BUILD_ROOT
+
+<% if scripts["pre-install"] %>
+%pre
+<%= File.read(scripts["pre-install"]) %>
+<% end %>
+
+<% if scripts["post-install"] %>
+%post
+<%= File.read(scripts["post-install"]) %>
+<% end %>
+
+<% if scripts["pre-uninstall"] %>
+%preun
+<%= File.read(scripts["pre-uninstall"]) %>
+<% end %>
+
+<% if scripts["post-uninstall"] %>
+%postun
+<%= File.read(scripts["post-uninstall"]) %>
+<% end %>
 
 %files
 %defattr(-,root,root,-)
