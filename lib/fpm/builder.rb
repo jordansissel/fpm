@@ -39,6 +39,8 @@ class FPM::Builder
       :suffix => settings.suffix,
       :exclude => settings.exclude,
       :maintainer => settings.maintainer,
+      :postinst => settings.postinst,
+      :prerm => settings.prerm,
       :provides => []
     )
 

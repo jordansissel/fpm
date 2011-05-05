@@ -17,8 +17,12 @@ class FPM::Target::Deb < FPM::Package
   end
 
   def build!(params)
+    # place the postinst prerm files
+    system("cp #{self.postinst} ./postinst") if self.postinst
+    system("cp #{self.prerm} ./prerm") if self.prerm
+    
     # Make the control
-    system("tar -zcf control.tar.gz control md5sums")
+    system("tar -zcf control.tar.gz control md5sums #{self.postinst && "postinst"} #{self.prerm && "prerm"}")
 
     # create debian-binary
     File.open("debian-binary", "w") { |f| f.puts "2.0" }
