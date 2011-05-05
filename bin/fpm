@@ -13,6 +13,9 @@ def main(args)
   settings = OpenStruct.new
   settings.exclude = []
 
+  # Maintainer scripts - https://github.com/jordansissel/fpm/issues/18
+  settings.scripts ||= {} 
+
   opts = OptionParser.new do |opts|
     # TODO(sissel): Maybe this should be '-o OUTPUT' ?
     opts.on("-p PACKAGEFILE", "--package PACKAGEFILE",
@@ -87,14 +90,34 @@ def main(args)
       settings.exclude << pattern
     end # -x / --exclude
 
-    opts.on("--postinst POSTINST") do |postinst|
-      settings.postinst = File.expand_path(postinst)
-    end # --postinst
-    
-    opts.on("--prerm PRERM") do |prerm|
-      settings.prerm = File.expand_path(prerm)
-    end #--prerm
-    
+    opts.on("--post-install SCRIPTPATH",
+            "Add a post-install action. This script will be included in the" \
+            " resulting package") do |path|
+      settings.scripts["post-install"] = File.expand_path(path)
+    end # --post-install
+
+    opts.on("--pre-install SCRIPTPATH",
+            "Add a pre-install action. This script will be included in the" \
+            " resulting package") do |path|
+      settings.scripts["pre-install"] = File.expand_path(path)
+    end # --pre-install
+
+    opts.on("--pre-uninstall SCRIPTPATH",
+            "Add a pre-uninstall action. This script will be included in the" \
+            " resulting package") do |path|
+      settings.scripts["pre-uninstall"] = File.expand_path(path)
+    end # --pre-uninstall
+
+    opts.on("--post-uninstall SCRIPTPATH",
+            "Add a post-uninstall action. This script will be included in the" \
+            " resulting package") do |path|
+      settings.scripts["post-uninstall"] = File.expand_path(path)
+    end # --post-uninstall
+
+    opts.on("--description DESCRIPTION",
+            "Add a description for this package.") do |description|
+      settings.description = description
+    end # --description
   end # OptionParser
 
   opts.parse!(args)

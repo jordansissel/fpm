@@ -11,7 +11,7 @@ class FPM::Source
     maintainer
     category
     url
-    summary
+    description
   ).each do |attr|
     attr = :"#{attr}"
     define_method(attr) { self[attr] }

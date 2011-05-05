@@ -48,10 +48,10 @@ class FPM::Package
   attr_accessor :provides
 
   # a summary or description of the package
-  attr_accessor :summary
+  attr_accessor :description
 
-  # source to postinst and prerm scripts
-  attr_accessor :postinst, :prerm
+  # hash of paths for maintainer/package scripts (postinstall, etc)
+  attr_accessor :scripts
 
   def initialize(source)
     @source = source
@@ -71,10 +71,9 @@ class FPM::Package
     @license = source[:license] || "unknown"
     @maintainer = source[:maintainer] || "<#{ENV["USER"]}@#{Socket.gethostname}>"
     @architecture = source[:architecture] || %x{uname -m}.chomp
-    @summary = source[:summary] || "no summary given"
+    @description = source[:description] || "no description given"
     @provides = source[:provides] || []
-    @prerm = source[:prerm]
-    @postinst = source[:postinst]    
+    @scripts = source[:scripts]
   end # def initialize
 
   def generate_specfile(builddir, paths)

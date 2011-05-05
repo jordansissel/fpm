@@ -17,19 +17,34 @@ class FPM::Target::Deb < FPM::Package
   end
 
   def build!(params)
+    control_files = [ "control", "md5sums" ]
     # place the postinst prerm files
-    system("cp #{self.postinst} ./postinst") if self.postinst
-    system("cp #{self.prerm} ./prerm") if self.prerm
+    self.scripts.each do |name, path|
+      case name
+        when "pre-install"
+          system("cp #{path} ./preinst")
+          control_files << "preinst"
+        when "post-install"
+          system("cp #{path} ./postinst")
+          control_files << "postinst"
+        when "pre-uninstall"
+          system("cp #{path} ./prerm")
+          control_files << "prerm"
+        when "post-uninstall"
+          system("cp #{path} ./postrm")
+          control_files << "postrm"
+        else raise "Unsupported script name '#{name}' (path: #{path})"
+      end # case name
+    end # self.scripts.each
     
     # Make the control
-    system("tar -zcf control.tar.gz control md5sums #{self.postinst && "postinst"} #{self.prerm && "prerm"}")
+    system("tar -zcf control.tar.gz #{control_files.join(" ")}")
 
     # create debian-binary
     File.open("debian-binary", "w") { |f| f.puts "2.0" }
 
     # pack up the .deb
     system("ar -qc #{params[:output]} debian-binary control.tar.gz data.tar.gz")
-
   end # def build
 
   def default_output

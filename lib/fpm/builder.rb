@@ -39,9 +39,8 @@ class FPM::Builder
       :suffix => settings.suffix,
       :exclude => settings.exclude,
       :maintainer => settings.maintainer,
-      :postinst => settings.postinst,
-      :prerm => settings.prerm,
-      :provides => []
+      :provides => [],
+      :description => settings.description
     )
 
     @edit = !!settings.edit
@@ -53,6 +52,7 @@ class FPM::Builder
     # Append provides given from settings (--provides flag for fpm)
     @package.provides += settings.provides if settings.provides
     @package.architecture = settings.architecture if settings.architecture
+    @package.scripts = settings.scripts
 
     @output = settings.package_path
     @recurse_dependencies = settings.recurse_dependencies
