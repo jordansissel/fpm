@@ -28,6 +28,12 @@ BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
       nextversion[2] = 0 
       nextversion = nextversion.join(".")
       ["#{name} >= #{version}", "#{name} < #{nextversion}"]
+    # Convert gem >= A.B.C <= X.Y.Z to '>= A.B.C' and '<= X.Y.Z'
+    elsif d =~ /\d [<>]=? \d/
+      puts d
+      # split out version numbers with their equality sign
+      name, lower_version, upper_version = d.scan(/([\w-]+) ([<>]=? [\d\.]+) ([<>]=? [\d\.]+)/)[0]
+      ["#{name} #{lower_version}", "#{name} #{upper_version}"]
     else
       d
     end
