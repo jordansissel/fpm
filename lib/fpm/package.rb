@@ -70,7 +70,7 @@ class FPM::Package
     @category = source[:category] || "default"
     @license = source[:license] || "unknown"
     @maintainer = source[:maintainer] || "<#{ENV["USER"]}@#{Socket.gethostname}>"
-    @architecture = source[:architecture] || %x{uname -m}.chomp
+    @architecture = source[:architecture] || %x{dpkg --print-architecture}.chomp
     @description = source[:description] || "no description given"
     @provides = source[:provides] || []
     @scripts = source[:scripts]
