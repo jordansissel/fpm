@@ -12,6 +12,7 @@ class FPM::Source
     category
     url
     description
+    summary
   ).each do |attr|
     attr = :"#{attr}"
     define_method(attr) { self[attr] }
