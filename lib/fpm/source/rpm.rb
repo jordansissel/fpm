@@ -7,7 +7,7 @@ class FPM::Source::RPM < FPM::Source
     self[:version] = %x{rpm -q --qf '%{version}' -p #{@paths.first}}
     self[:iteration] = %x{rpm -q --qf '%{release}' -p #{@paths.first}}
     self[:summary] = %x{rpm -q --qf '%{summary}' -p #{@paths.first}}
-    #self[:description] = %x{rpm -q --qf '%{description}' -p #{@paths.first}}
+    self[:description] = %x{rpm -q --qf '%{description}' -p #{@paths.first}}
     self[:dependencies] = %x{rpm -qRp #{@paths.first}}.split("\n")\
       .collect { |line| line.strip }
 

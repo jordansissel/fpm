@@ -47,7 +47,10 @@ class FPM::Package
   # (Not all packages support this)
   attr_accessor :provides
 
-  # a summary or description of the package
+  # a one-line summary of the package
+  attr_accessor :summary
+
+  # a description of the package
   attr_accessor :description
 
   # hash of paths for maintainer/package scripts (postinstall, etc)
@@ -72,6 +75,8 @@ class FPM::Package
     @maintainer = source[:maintainer] || "<#{ENV["USER"]}@#{Socket.gethostname}>"
     @architecture = source[:architecture] || %x{uname -m}.chomp
     @description = source[:description].gsub(/^\s*$/," .") || "no description given"
+    # make sure summary is only one line!
+    @summary = source[:summary].split(/\n+/)[0] || "no summary given"
     @provides = source[:provides] || []
     @scripts = source[:scripts]
   end # def initialize
