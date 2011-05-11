@@ -40,7 +40,8 @@ class FPM::Builder
       :exclude => settings.exclude,
       :maintainer => settings.maintainer,
       :provides => [],
-      :description => settings.description
+      :description => settings.description,
+      :url => settings.url
     )
 
     @edit = !!settings.edit
