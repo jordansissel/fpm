@@ -71,9 +71,7 @@ class FPM::Package
     @license = source[:license] || "unknown"
     @maintainer = source[:maintainer] || "<#{ENV["USER"]}@#{Socket.gethostname}>"
     @architecture = source[:architecture] || %x{uname -m}.chomp
-    # RPM barfs on blank lines in the description. Hack around it.
-    # TODO(sissel): This belongs in the rpm template, not here.
-    @description = source[:description].gsub(/^\s*$/," .") || "no description given"
+    @description = source[:description] || "no description given"
     @provides = source[:provides] || []
     @scripts = source[:scripts]
   end # def initialize

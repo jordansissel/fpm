@@ -46,8 +46,10 @@ BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 Provides: <%= prov %>
 <% end %>
 
+<%# rpm rejects descriptions with blank lines (even between content), so hack
+    around it by replacing blank lines with ' .' %>
 %description
-<%= description %>
+<%= description.gsub(/^\s*$/, " .") %>
 
 %prep
 echo "PREP"
