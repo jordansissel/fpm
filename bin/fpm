@@ -118,6 +118,11 @@ def main(args)
             "Add a description for this package.") do |description|
       settings.description = description
     end # --description
+
+    opts.on("--url URL",
+            "Add a url for this package.") do |url|
+      settings.url = url
+    end # --url
   end # OptionParser
 
   opts.parse!(args)
