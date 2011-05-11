@@ -4,7 +4,8 @@ Version: <%= version %>
 Epoch: <%= epoch %>
 <% end %>
 Release: <%= iteration or 1 %>
-Summary: <%= description %>
+<%# use the first line of the description as the summary %>
+Summary: <%= description.split("\n").first %>
 BuildArch: <%= architecture %>
 AutoReqProv: no
 
