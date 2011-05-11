@@ -50,9 +50,6 @@ class FPM::Package
   # a summary or description of the package
   attr_accessor :description
 
-  # a url for the package
-  attr_accessor :url
-
   # hash of paths for maintainer/package scripts (postinstall, etc)
   attr_accessor :scripts
 
