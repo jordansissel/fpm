@@ -109,6 +109,7 @@ class RPMFile
       # header 'entries' are an 
       #   int32 (tag id), int32 (tag type), int32  (offset), uint32 (count)
       #
+      # See rpm's header.c, the headerLoad method function for reference.
 
       entry_size = 16
       len = @rpm.signature.index_length * entry_size
@@ -117,11 +118,37 @@ class RPMFile
       data = @rpm.file.read(@rpm.signature.data_length)
 
       (0 ... @rpm.signature.index_length).each do |i|
+        offset = i * entry_size
         entry_data = tag_data[i * entry_size, entry_size]
         entry = entry_data.unpack("NNNN")
-        entry << data
+        entry << entry_data
         tag = Tag.new(*entry)
         @tags << tag
+
+        # TODO(sissel): This section is pretty F'd up.
+        # Maybe I should just support RPM 3 (centos5 and fedora14 do it)
+        if i == 0  # first tag
+          # First tag must be <100 (if not, it is an 'old' package and
+          # therefore we fabricate a 'region' tag that goes in first.
+          if tag.tag_as_int >= 100 
+            puts "LEGACY"
+            # 7 == :binary (region tag type), 61 = :header_image
+            legacy_tag = Tag.new(7, 61, entry_size, 0 - @rpm.signature.data_length, data)
+            @tags.unshift(legacy_tag)
+          else
+            rdl = ril = nil
+            if tag.offset > 0
+              rdl = (data[offset,1].unpack("C")).first
+              ril = rdl / entry_size
+            else
+              ril = @rpm.signature.index_length
+              rdl = ril * entry_size
+              tag.tag = 61 # :header_image
+            end
+            tag.offset = -rdl
+          end
+        end # first tag handling
+
         #ap tag.tag => {
           #:type => tag.type, 
           #:offset => tag.offset,
@@ -144,6 +171,7 @@ class RPMFile
 
     # This data can be found mostly in rpmtag.h
     TAG = {
+      61 => :header_image,
       62 => :signature,
       267 => :dsa,
       268 => :rsa,
@@ -183,6 +211,10 @@ class RPMFile
     def tag
       Tag::TAG[@tag] or @tag
     end # def tag
+
+    def tag_as_int
+      @tag
+    end
 
     def type
       Tag::TYPE[@type] or @type
