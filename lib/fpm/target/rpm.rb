@@ -1,6 +1,20 @@
 require "fpm/package"
 
 class FPM::Target::Rpm < FPM::Package
+  def architecture
+    case @architecture
+      when nil
+        return %x{uname -m}.chomp   # default to current arch
+      when "native"
+        return %x{uname -m}.chomp   # 'native' is current arch
+      when "all"
+        # Translate fpm "all" arch to what it means in RPM.
+        return "noarch"
+      else 
+        return @architecture
+    end
+  end # def architecture
+
   def specfile(builddir)
     "#{builddir}/#{name}.spec"
   end

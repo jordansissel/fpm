@@ -3,14 +3,25 @@ require "fpm/namespace"
 require "fpm/package"
 
 class FPM::Target::Deb < FPM::Package
-  # Debian calls x86_64 "amd64"
   def architecture
-    if @architecture == "x86_64"
-      "amd64"
-    else
-      @architecture
+    if @architecture.nil? or @architecture == "native"
+      # Default architecture should be 'native' which we'll need
+      # to ask the system about.
+      arch = %x{dpkg --print-architecture}.chomp
+      if $?.exitstatus != 0
+        arch = %x{uname -m}
+        @logger.warn("Can't find 'dpkg' tool (need it to get default " \
+                     "architecture!). Please specificy --architecture " \
+                     "specifically. (Defaulting now to #{arch})")
+      end
+      @architecture = arch
+    elsif @architecture == "x86_64"
+      # Debian calls x86_64 "amd64"
+      @architecture = "amd64"
     end
-  end
+    
+    return @architecture
+  end # def architecture
 
   def specfile(builddir)
     "#{builddir}/control"
