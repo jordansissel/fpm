@@ -1,5 +1,8 @@
+require "ap"
 
 class RPMFile 
+  attr_reader :file
+
   def initialize(file)
     if file.is_a?(String)
       file = File.new(file, "r")
@@ -22,12 +25,16 @@ class RPMFile
     attr_accessor :signature_type #short signature_type;
     attr_accessor :reserved #char reserved[16];
     #}
+    #
+    attr_accessor :length
     
     def read(file)
       # Use 'A' here instead of 'a' to trim nulls.
-      data = file.read(96).unpack("A4CCnnA66nnA16")
+      @length = 96
+      data = file.read(@length).unpack("A4CCnnA66nnA16")
       @magic, @major, @minor, @type, @archnum, @name, \
         @osnum, @signature_type, @reserved = data
+
       return nil
     end # def read
 
@@ -43,19 +50,21 @@ class RPMFile
     HEADER_MAGIC = "\x8e\xad\xe8\x01\x00\x00\x00\x00"
 
     attr_accessor :magic  # 8-byte string magic
+    attr_accessor :index_length  # rpmlib calls this field 'il' unhelpfully
+    attr_accessor :data_length   # rpmlib calls this field 'dl' unhelpfully
 
-    # is 'il' index length?
-    attr_accessor :il     # rpmlib calls this field 'il' unhelpfully
-
-    # what is 'dl' ?
-    attr_accessor :dl     # rpmlib calls this field 'dl' unhelpfully
+    attr_accessor :length
 
     def read(file)
+      # TODO(sissel): in RPM version major (@lead.major) < 3, there is no
+      # header magic? RPM's code seems to confirm.
+
       # Signature reads 16 bytes (4 x int32)
-      data = file.read(16).unpack("a8NN")
-      @magic, @il, @dl = data
+      @length = 16
+      data = file.read(@length).unpack("a8NN")
+      @magic, @index_length, @data_length = data
       validate
-      # data[0..1] is compared against rpm_header_magic
+      # data[0..1] is compared against HEADER_MAGIC
       # data[2] must be between [0, 32] inclusive
       # data[3] must be between [0, 8192] inclusive
     end # def raed
@@ -70,16 +79,130 @@ class RPMFile
               "expected #{::RPMFile::Signature::HEADER_MAGIC.inspect}"
       end
 
-      if !(0..32).include?(@il)
-        raise "Invalid 'il' value #{@il}, expected to be in range [0..32]"
+      if !(0..32).include?(@index_length)
+        raise "Invalid 'index_length' value #{@index_length}, expected to be in range [0..32]"
       end
 
-      if !(0..8192).include?(@dl)
-        raise "Invalid 'il' value #{@dl}, expected to be in range [0..8192]"
+      if !(0..8192).include?(@data_length)
+        raise "Invalid 'data_length' value #{@data_length}, expected to be in range [0..8192]"
       end
     end # def validate
   end # class ::RPMFile::Signature
 
+  class Header
+    attr_reader :tags
+    attr_reader :length
+
+    def initialize(rpm)
+      @rpm = rpm
+      @tags = []
+    end
+
+    def read
+      # At this point assume we've read and consumed the lead and signature.
+      #len = @rpm.signature.index_length + @rpm.signature
+      #
+      # header size is 
+      #     ( @rpm.signature.index_length * size of a header entry )
+      #     + @rpm.signature.data_length
+      #
+      # header 'entries' are an 
+      #   int32 (tag id), int32 (tag type), int32  (offset), uint32 (count)
+      #
+
+      entry_size = 16
+      len = @rpm.signature.index_length * entry_size
+      #+ @rpm.signature.data_length
+      tag_data = @rpm.file.read(len)
+      data = @rpm.file.read(@rpm.signature.data_length)
+
+      (0 ... @rpm.signature.index_length).each do |i|
+        entry_data = tag_data[i * entry_size, entry_size]
+        entry = entry_data.unpack("NNNN")
+        entry << data
+        tag = Tag.new(*entry)
+        @tags << tag
+        #ap tag.tag => {
+          #:type => tag.type, 
+          #:offset => tag.offset,
+          #:count => tag.count,
+          #:value => tag.value,
+        #}
+      end # each index
+      @length = (@rpm.signature.index_length * entry_size) + @rpm.signature.data_length
+    end # def read
+
+    def write
+    end # def write
+  end # class ::RPMFile::Header
+
+  class Tag
+    attr_accessor :tag
+    attr_accessor :type
+    attr_accessor :offset
+    attr_accessor :count
+
+    # This data can be found mostly in rpmtag.h
+    TAG = {
+      62 => :signature,
+      267 => :dsa,
+      268 => :rsa,
+      269 => :sha1,
+      1000 => :name,
+      1002 => :release,
+      1004 => :summary,
+      1005 => :description,
+      1007 => :buildhost,
+      1124 => :payload_format,
+      1125 => :payload_compressor,
+    }
+
+    # See 'rpmTagType' enum in rpmtag.h
+    TYPE = {
+      0 => :null,
+      1 => :char,
+      2 => :int8,
+      3 => :int16,
+      4 => :int32,
+      5 => :int64,
+      6 => :string,
+      7 => :binary,
+      8 => :string_array,
+      9 => :i18nstring,
+    }
+
+    def initialize(tag_id, type, offset, count, data)
+      @tag = tag_id
+      @type = type
+      @offset = offset
+      @count = count
+
+      @data = data
+    end # def initialize
+
+    def tag
+      Tag::TAG[@tag] or @tag
+    end # def tag
+
+    def type
+      Tag::TYPE[@type] or @type
+    end # def type
+
+    def value
+      case type
+        when :string
+          return @data[@offset .. -1].gsub(/\0.*/, "")
+        when :binary
+          return @data[@offset, @count]
+        when :int32
+          return @data[@offset, 4].unpack("N")
+        when :int16
+          return @data[@offset, 2].unpack("n")
+      end
+    end # def value
+  end # class Tag
+
+  public
   def lead
     if @lead.nil?
       @lead = ::RPMFile::Lead.new
@@ -88,6 +211,7 @@ class RPMFile
     return @lead
   end # def lead
 
+  public
   def signature
     lead
 
@@ -105,8 +229,26 @@ class RPMFile
     return @signature
   end # def signature
 
+  public
   def header
-    # Not supported yet
+    signature
+    if @header.nil?
+      @header = ::RPMFile::Header.new(self)
+      @header.read
+    end
+    return @header
     # http://docs.fedoraproject.org/en-US/Fedora_Draft_Documentation/0.1/html/RPM_Guide/ch15s03s03.html
   end
+
+  # Returns a file descriptor. On first invocation, it seeks to the start of the payload
+  public
+  def payload
+    header
+    if @payload.nil?
+      @payload = @file.clone
+      @payload.seek(@lead.length + @signature.length + @header.length, IO::SEEK_SET)
+    end
+
+    return @payload
+  end # def payload
 end # class RPMFile
