@@ -26,7 +26,7 @@ class FPM::Source::Gem < FPM::Source
     # Code use permissible by rubygems's "GPL or these conditions below"
     # http://rubygems.rubyforge.org/rubygems-update/LICENSE_txt.html
 
-    puts "Trying to download #{gem_name} (version=#{version})"
+    puts "Trying to download #{gem_name} (version=#{version || 'latest'})"
     dep = ::Gem::Dependency.new gem_name, version
     # How to handle prerelease? Some extra magic options?
     #dep.prerelease = options[:prerelease]
@@ -70,6 +70,13 @@ class FPM::Source::Gem < FPM::Source
         # TODO [Jay]: this will be different for different
         # package managers.  Need to decide how to handle this.
         self[:category] = 'Languages/Development/Ruby'
+
+        # if the gemspec has extensions defined, then this should be a 'native' arch.
+        if !spec.extensions.empty?
+          self[:architecture] = "native"
+        else
+          self[:architecture] = "all"
+        end
 
         self[:dependencies] = []
         spec.runtime_dependencies.map do |dep|

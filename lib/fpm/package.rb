@@ -1,5 +1,6 @@
 require "fpm/namespace"
 require "socket" # for Socket.gethostname
+require "logger"
 
 class FPM::Package 
   # The name of this package
@@ -55,6 +56,7 @@ class FPM::Package
 
   def initialize(source)
     @source = source
+    @logger = Logger.new(STDERR)
 
     @name = source[:name] # || fail
 
@@ -70,7 +72,11 @@ class FPM::Package
     @category = source[:category] || "default"
     @license = source[:license] || "unknown"
     @maintainer = source[:maintainer] || "<#{ENV["USER"]}@#{Socket.gethostname}>"
-    @architecture = source[:architecture] || %x{uname -m}.chomp
+
+    # If @architecture is nil, the target package should provide a default.
+    # Special 'architecture' values include "all" (aka rpm's noarch, debian's all)
+    # Another special includes "native" which will be the current platform's arch.
+    @architecture = source[:architecture]
     @description = source[:description] || "no description given"
     @provides = source[:provides] || []
     @scripts = source[:scripts]
