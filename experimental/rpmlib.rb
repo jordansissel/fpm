@@ -24,7 +24,7 @@ class RPMFile
     #}
     
     def read(file)
-      data = file.read(96).unpack("A4CCssA66ssA16")
+      data = file.read(96).unpack("A4CCssa66ssa16")
       @magic, @major, @minor, @type, @archnum, @name, \
         @osnum, @signature_type, @reserved = data
       return nil
@@ -32,7 +32,7 @@ class RPMFile
 
     def write(file)
       data = [ @magic, @major, @minor, @type, @archnum, @name, \
-               @osnum, @signature_type, @reserved ].pack("A4CCssA66ssA16")
+               @osnum, @signature_type, @reserved ].pack("A4CCssa66ssa16")
       file.write(data)
     end # def write
   end # class ::RPMFile::Lead
@@ -44,4 +44,13 @@ class RPMFile
     end
     return @lead
   end # def lead
+
+  def signature
+    # Not supported yet.
+  end # def signature
+
+  def header
+    # Not supported yet
+    # http://docs.fedoraproject.org/en-US/Fedora_Draft_Documentation/0.1/html/RPM_Guide/ch15s03s03.html
+  end
 end # class RPMFile
