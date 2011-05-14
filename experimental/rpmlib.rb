@@ -1,5 +1,9 @@
 require "ap"
 
+# Much of the code here is derived from knowledge gained by reading the rpm
+# source code and this site:
+# http://www.rpm.org/max-rpm/s1-rpm-file-format-rpm-file-format.html
+
 class RPMFile 
   attr_reader :file
 
@@ -27,6 +31,17 @@ class RPMFile
     #}
     #
     attr_accessor :length
+
+    def type
+      case @type
+      when 0
+        return :binary
+      when 1
+        return :source
+      else
+        raise "Unknown package 'type' value #{@type}"
+      end
+    end # def type
     
     def read(file)
       # Use 'A' here instead of 'a' to trim nulls.
@@ -93,6 +108,12 @@ class RPMFile
     attr_reader :tags
     attr_reader :length
 
+    attr_accessor :magic  # 8-byte string magic
+    attr_accessor :index_length  # rpmlib calls this field 'il' unhelpfully
+    attr_accessor :data_length   # rpmlib calls this field 'dl' unhelpfully
+
+    HEADER_MAGIC = "\x8e\xad\xe8\x01\x00\x00\x00\x00"
+
     def initialize(rpm)
       @rpm = rpm
       @tags = []
@@ -111,13 +132,20 @@ class RPMFile
       #
       # See rpm's header.c, the headerLoad method function for reference.
 
-      entry_size = 16
-      len = @rpm.signature.index_length * entry_size
-      #+ @rpm.signature.data_length
-      tag_data = @rpm.file.read(len)
-      data = @rpm.file.read(@rpm.signature.data_length)
+      # Header always starts with HEADER_MAGIC + index_length(2bytes) +
+      # data_length(2bytes)
+      @length = 16
+      data = @rpm.file.read(@length).unpack("a8NN")
+      # TODO(sissel): @index_length is really a count, rename?
+      @magic, @index_length, @data_length = data
+      validate
 
-      (0 ... @rpm.signature.index_length).each do |i|
+      entry_size = 16 # tag id, type, offset, count == 16 bytes
+      index_size = @index_length * entry_size
+      tag_data = @rpm.file.read(index_size)
+      data = @rpm.file.read(@data_length)
+
+      (0 ... @index_length).each do |i|
         offset = i * entry_size
         entry_data = tag_data[i * entry_size, entry_size]
         entry = entry_data.unpack("NNNN")
@@ -131,22 +159,23 @@ class RPMFile
           # First tag must be <100 (if not, it is an 'old' package and
           # therefore we fabricate a 'region' tag that goes in first.
           if tag.tag_as_int >= 100 
-            puts "LEGACY"
+            # I don't really feel like supporting this. If you need it, please let me know.
+            raise "Unsupported RPM (Legacy RPM?)"
             # 7 == :binary (region tag type), 61 = :header_image
-            legacy_tag = Tag.new(7, 61, entry_size, 0 - @rpm.signature.data_length, data)
-            @tags.unshift(legacy_tag)
-          else
-            rdl = ril = nil
-            if tag.offset > 0
-              rdl = (data[offset,1].unpack("C")).first
-              ril = rdl / entry_size
-            else
-              ril = @rpm.signature.index_length
-              rdl = ril * entry_size
-              tag.tag = 61 # :header_image
-            end
-            tag.offset = -rdl
+            #legacy_tag = Tag.new(7, 61, entry_size, 0 - @rpm.signature.data_length, data)
+            #@tags.unshift(legacy_tag)
           end
+
+          rdl = ril = nil
+          if tag.offset > 0
+            rdl = -(data[offset,1].unpack("C")).first
+            ril = rdl / entry_size
+          else
+            ril = @rpm.signature.index_length
+            rdl = ril * entry_size
+            tag.tag = 61 # :header_image
+          end
+          tag.offset = -rdl
         end # first tag handling
 
         #ap tag.tag => {
@@ -156,11 +185,27 @@ class RPMFile
           #:value => tag.value,
         #}
       end # each index
-      @length = (@rpm.signature.index_length * entry_size) + @rpm.signature.data_length
+      #@length = (@rpm.signature.index_length * entry_size) + @rpm.signature.data_length
     end # def read
 
     def write
     end # def write
+
+    def validate
+      # TODO(sissel): raise real exceptions
+      if @magic != ::RPMFile::Signature::HEADER_MAGIC
+        raise "Signature magic did not match; got #{@magic.inspect}, " \
+              "expected #{::RPMFile::Signature::HEADER_MAGIC.inspect}"
+      end
+
+      if !(0..32).include?(@index_length)
+        raise "Invalid 'index_length' value #{@index_length}, expected to be in range [0..32]"
+      end
+
+      if !(0..8192).include?(@data_length)
+        raise "Invalid 'data_length' value #{@data_length}, expected to be in range [0..8192]"
+      end
+    end # def validate
   end # class ::RPMFile::Header
 
   class Tag
@@ -263,7 +308,8 @@ class RPMFile
 
   public
   def header
-    signature
+    #signature
+    lead
     if @header.nil?
       @header = ::RPMFile::Header.new(self)
       @header.read
