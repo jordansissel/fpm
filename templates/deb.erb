@@ -9,9 +9,10 @@ Maintainer: <%= maintainer or "<unknown>" %>
     if dep =~ /\(/
       # nothing
     else
+      # If the dependency is simply a name, turn it into 'name (>= 0)'
       da = dep.split(/ +/)
       if da.size == 1
-        da += [">", "0"]
+        da += [">=", "0"]
       end
       dep = "#{da[0]} (#{da[1]} #{da[2]})"
     end
