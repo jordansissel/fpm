@@ -5,6 +5,9 @@ Gem::Specification.new do |spec|
     files += Dir["#{dir}/**/*"]
   end
 
+  files << "LICENSE"
+  files << "CONTRIBUTORS"
+
   spec.name = "fpm"
   spec.version = "0.2.26"
   spec.summary = "fpm - package building and mangling"
