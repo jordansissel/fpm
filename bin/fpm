@@ -8,10 +8,14 @@ require "erb"
 
 $: << "#{File.dirname(__FILE__)}/../lib"
 require "fpm"
+require "fpm/flags"
 
 def main(args)
   settings = OpenStruct.new
   settings.exclude = []
+
+  # Source-specific settings/flags go here.
+  settings.source = {}
 
   # Maintainer scripts - https://github.com/jordansissel/fpm/issues/18
   settings.scripts ||= {} 
@@ -124,6 +128,9 @@ def main(args)
       settings.url = url
     end # --url
   end # OptionParser
+
+  # Add extra flags.
+  FPM::Source::Gem.flags(FPM::Flags.new(opts, "gem", "gem source only"), settings)
 
   opts.parse!(args)
 
