@@ -6,7 +6,7 @@ Gem::Specification.new do |spec|
   end
 
   spec.name = "fpm"
-  spec.version = "0.2.25"
+  spec.version = "0.2.26"
   spec.summary = "fpm - package building and mangling"
   spec.description = "Turn directories into packages. Fix broken packages. Win the package building game."
   spec.add_dependency("json")
