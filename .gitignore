@@ -1,3 +1,4 @@
 .*.sw[a-z]
 build-*/*
 fpm.wiki
+*.pyc
