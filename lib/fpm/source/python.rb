@@ -17,6 +17,8 @@ class FPM::Source::Python < FPM::Source
 
     if !File.exists?(package) 
       download(package, params[:version])
+    else
+      @paths = [ File.expand_path(package) ]
     end
   end # def get_source
 
