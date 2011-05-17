@@ -92,8 +92,9 @@ class FPM::Builder
       })
     end
 
-    cleanup!
+    garbage << @source.garbage if @source.respond_to?(:garbage)
 
+    cleanup!
   end # def assemble!
 
   private
