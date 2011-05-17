@@ -45,11 +45,15 @@ class get_metadata(Command):
       data["architecture"] = "all"
     # end if
 
-    dependencies = []
+    dependencies = None
     try:
       dependencies = self.distribution.install_requires
     except:
       pass
+    
+    # In some cases (Mysql-Python) 'dependencies' is none, not empty.
+    if dependencies is None:
+      dependencies = []
 
     final_deps = []
     dep_re = re.compile("([^<>= ]+)(?:\s*([<>=]{1,2})\s*(.*))?$")
