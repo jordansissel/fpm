@@ -16,15 +16,20 @@ class FPM::Source::Python < FPM::Source
     end
 
     if !File.exists?(package) 
-      download(package)
+      download(package, params[:version])
     end
   end # def get_source
 
-  def download(package)
+  def download(package, version=nil)
     puts "Trying to download #{package} (using easy_install)"
     @tmpdir = ::Dir.mktmpdir("python-build", ::Dir.pwd)
 
-    system("easy_install", "--editable", "--build-directory", @tmpdir, package)
+    if version.nil?
+      want_pkg = "#{package}"
+    else
+      want_pkg = "#{package}==#{version}"
+    end
+    system("easy_install", "--editable", "--build-directory", @tmpdir, want_pkg)
 
     # easy_install will put stuff in @tmpdir/packagename/, flatten that.
     #  That is, we want @tmpdir/setup.py, and start with
@@ -60,7 +65,11 @@ class FPM::Source::Python < FPM::Source
     self[:version] = metadata["version"]
     self[:name] = "python#{self[:suffix]}-#{metadata["name"]}"
     self[:url] = metadata["url"]
-    self[:dependencies] = metadata["dependencies"]
+
+    self[:dependencies] = metadata["dependencies"].collect do |dep|
+      name, cmp, version = dep.split
+      "python#{self[:suffix]}-#{name} #{cmp} #{version}"
+    end
   end # def get_metadata
 
   def make_tarball!(tar_path, builddir)
