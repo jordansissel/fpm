@@ -1,6 +1,7 @@
 from distutils.core import Command
 import json
 import re
+import time
 
 # Note, the last time I coded python daily was at Google, so it's entirely
 # possible some of my techniques below are outdated or bad.
@@ -51,14 +52,17 @@ class get_metadata(Command):
       pass
 
     final_deps = []
-    dep_re = re.compile("([^<>= ]+)\s*([<>=]{1,2})\s*(.*)$")
+    dep_re = re.compile("([^<>= ]+)(?:\s*([<>=]{1,2})\s*(.*))?$")
     for dep in dependencies:
       # python deps are strings that look like:
       # "packagename"
       # "packagename >= version"
       # Replace 'packagename' with 'python#{suffix}-packagename'
       m = dep_re.match(dep)
-      if len(m.groups()) == 1:
+      if m is None:
+        print "Bad dep: %s" % dep
+        time.sleep(3)
+      elif m.groups()[1] is None:
         name, cond, version = m.groups()[0], ">=", 0
       else:
         name, cond, version = m.groups()
