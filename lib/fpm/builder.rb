@@ -41,7 +41,8 @@ class FPM::Builder
       :maintainer => settings.maintainer,
       :provides => [],
       :description => settings.description,
-      :url => settings.url
+      :url => settings.url,
+      :settings => settings.source
     )
 
     @edit = !!settings.edit

@@ -5,6 +5,13 @@ require "rubygems"
 require "fileutils"
 
 class FPM::Source::Gem < FPM::Source
+  def self.flags(opts, settings)
+    opts.on("--bin-path DIRECTORY",
+            "The directory to install gem executables") do |path|
+      settings.source[:bin_path] = path
+    end
+  end # def flags
+
   def get_source(params)
     gem = @paths.first
     looks_like_name_re = /^[A-Za-z0-9_-]+$/
@@ -102,17 +109,26 @@ class FPM::Source::Gem < FPM::Source
     if self[:prefix]
       installdir = "#{tmpdir}/#{self[:prefix]}"
       # TODO(sissel): Overwriting @paths is bad mojo and confusing...
+      # Maybe we shouldn't?
       @paths = [ self[:prefix] ]
     else
-      installdir = "#{tmpdir}/#{::Gem::dir}"
+      installdir = File.join(tmpdir, ::Gem::dir)
       @paths = [ ::Gem::dir ]
     end
+
     ::FileUtils.mkdir_p(installdir)
     args = ["gem", "install", "--quiet", "--no-ri", "--no-rdoc",
-       "--install-dir", installdir, "--ignore-dependencies", gem]
+       "--install-dir", installdir, "--ignore-dependencies"]
+    if self[:settings][:bin_path]
+      args += ["--bindir", File.join(tmpdir, self[:settings][:bin_path])]
+      @paths << self[:settings][:bin_path]
+    end
+
+    args << gem
     system(*args)
     
-    tar(tar_path, ".#{@paths.first}", tmpdir)
+    # make paths relative  (/foo becomes ./foo)
+    tar(tar_path, @paths.collect {|p| ".#{p}"}, tmpdir)
     FileUtils.rm_r(tmpdir)
 
     # TODO(sissel): Make a helper method.
