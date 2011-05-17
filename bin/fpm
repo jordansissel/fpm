@@ -72,7 +72,7 @@ def main(args)
       settings.source_type = st
     end # -s 
 
-    opts.on("-S PACKAGE_SUFFIX", "which suffix to append to package and dependances") do |sfx|
+    opts.on("-S PACKAGE_SUFFIX", "which suffix to append to package and dependencies") do |sfx|
       settings.suffix = sfx
     end # -S
 
