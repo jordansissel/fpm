@@ -69,6 +69,7 @@ It ships with 'fpm' and 'fpm-npm' tools.
 Sources:
 
 * gem (even autodownloaded for you)
+* python modules (autodownload for you)
 * directories
 * rpm
 * node packages (npm)
