@@ -1,3 +1,6 @@
+0.2.28 (May 18, 2011)
+  - Use --replaces as "Obsoletes" in rpms.
+
 0.2.27 (May 18, 2011)
   - If present, DEBEMAIL and DEBFULLNAME environment variables will be used as
     the default maintainer. Previously the default was simply <$user@$hostname>
