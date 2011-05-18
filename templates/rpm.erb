@@ -45,6 +45,10 @@ BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 <% provides.each do |prov| %>
 Provides: <%= prov %>
 <% end %>
+<%# The closes equivalent in RPM to "replaces" is "Obsoletes" %>
+<% replaces.each do |repl| %>
+Obsoletes: <%= repl %>
+<% end %>
 
 <%# rpm rejects descriptions with blank lines (even between content), so hack
     around it by replacing blank lines with ' .' %>
