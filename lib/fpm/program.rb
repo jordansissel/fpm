@@ -54,6 +54,8 @@ class FPM::Program
 
     # Add extra flags from plugins
     FPM::Source::Gem.flags(FPM::Flags.new(opts, "gem", "gem source only"), @settings)
+    FPM::Source::Python.flags(FPM::Flags.new(opts, "python", "python source only"),
+                              @settings)
     
     # Process fpmrc first
     fpmrc(opts)

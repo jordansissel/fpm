@@ -119,6 +119,7 @@ class FPM::Source::Gem < FPM::Source
     ::FileUtils.mkdir_p(installdir)
     args = ["gem", "install", "--quiet", "--no-ri", "--no-rdoc",
        "--install-dir", installdir, "--ignore-dependencies"]
+    p :make_tarball => metadata
     if self[:settings][:bin_path]
       args += ["--bindir", File.join(tmpdir, self[:settings][:bin_path])]
       @paths << self[:settings][:bin_path]
