@@ -40,6 +40,7 @@ class FPM::Builder
       :exclude => settings.exclude,
       :maintainer => settings.maintainer,
       :provides => [],
+      :replaces => [],
       :description => settings.description,
       :url => settings.url,
       :settings => settings.source
@@ -53,6 +54,7 @@ class FPM::Builder
     @package.dependencies += settings.dependencies if settings.dependencies
     # Append provides given from settings (--provides flag for fpm)
     @package.provides += settings.provides if settings.provides
+    @package.replaces += settings.replaces if settings.replaces
     @package.architecture = settings.architecture if settings.architecture
     @package.scripts = settings.scripts
 

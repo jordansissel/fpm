@@ -2,37 +2,16 @@ Package: <%= name %>
 Version: <%= "#{epoch}:" if epoch %><%= version %><%= iteration && '-'+iteration.to_s %>
 Architecture: <%= architecture %>
 Maintainer: <%= maintainer or "<unknown>" %>
-<% if dependencies.size > 0 %>
-<%
-  properdeps = dependencies.collect do |dep|
-    # Convert strings 'foo >= bar' to 'foo (>= bar)'
-    if dep =~ /\(/
-      # nothing
-    else
-      # If the dependency is simply a name, turn it into 'name (>= 0)'
-      da = dep.split(/ +/)
-      if da.size == 1
-        da += [">=", "0"]
-      end
-      dep = "#{da[0]} (#{da[1]} #{da[2]})"
-    end
-
-    # Convert gem ~> X.Y.Z to '>= X.Y.Z' and << X.Y+1.0
-    if dep =~ /\(~>/
-      name, version = dep.gsub(/[()~>]/, "").split(/ +/)[0..1]
-      nextversion = version.split(".").collect { |v| v.to_i }
-      nextversion[1] += 1
-      nextversion[2] = 0 
-      nextversion = nextversion.join(".")
-      ["#{name} (>= #{version})", "#{name} (<< #{nextversion})"]
-    else
-      dep
-    end
-  end
-%>Depends: <%= properdeps.flatten.join(", ") %>
+<% if !dependencies.empty? %>
+<%   properdeps = dependencies.collect { |d| fix_dependency(d) }.flatten %>
+Depends: <%= properdeps.flatten.join(", ") %>
 <% end %>
 <% if !provides.empty? %>
 Provides: <%= provides.join(", ") %>
+<% end %>
+<% if !replaces.empty? %>
+<%   properrepl = replaces.collect { |d| fix_dependency(d) }.flatten %>
+Replaces: <%= properrepl.flatten.join(", ") %>
 <% end %>
 Standards-Version: 3.9.1
 Section: <%= category or "unknown" %> 
