@@ -1,0 +1,18 @@
+0.2.27 (May 18, 2011)
+  - If present, DEBEMAIL and DEBFULLNAME environment variables will be used as
+    the default maintainer. Previously the default was simply <$user@$hostname>
+    https://github.com/jordansissel/fpm/issues/37
+  - Add '--replaces' flag for specifying packages replaced by the one you are
+    building. This only functions in .deb packages now until I find a suitable
+    synonym in RPM.
+  - Add --python-bin and --python-easyinstall flags. This lets you choose specific
+    python and easy_install tools to use when building. Default is simply
+    'python' and 'easy_install' respectively.
+  - Add support for ~/.fpmrc - The format of this file is the same as the flags.
+    One flag per line. https://github.com/jordansissel/fpm/issues/38
+    Example:
+      --python-bin=/usr/bin/python2.7
+      --python-easyinstall=/usr/bin/easy_install2.7
+    
+0.2.26 and earlier
+  No changelist tracked. My bad, yo.
