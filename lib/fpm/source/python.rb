@@ -38,7 +38,6 @@ class FPM::Source::Python < FPM::Source
   end # def get_source
 
   def download(package, version=nil)
-    p metadata
     puts "Trying to download #{package} (using: #{self[:settings][:easy_install]})"
     @tmpdir = ::Dir.mktmpdir("python-build", ::Dir.pwd)
 
