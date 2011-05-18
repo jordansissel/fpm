@@ -67,5 +67,31 @@ class FPM::Target::Deb < FPM::Package
       "#{name}_#{v}_#{architecture}.#{type}"
     end
   end # def default_output
+
+  def fix_dependency(dep)
+    # Convert strings 'foo >= bar' to 'foo (>= bar)'
+    if dep =~ /\(/
+      # nothing
+    else
+      # If the dependency is simply a name, turn it into 'name (>= 0)'
+      da = dep.split(/ +/)
+      if da.size == 1
+        da += [">=", "0"]
+      end
+      dep = "#{da[0]} (#{da[1]} #{da[2]})"
+    end
+
+    # Convert gem ~> X.Y.Z to '>= X.Y.Z' and << X.Y+1.0
+    if dep =~ /\(~>/
+      name, version = dep.gsub(/[()~>]/, "").split(/ +/)[0..1]
+      nextversion = version.split(".").collect { |v| v.to_i }
+      nextversion[1] += 1
+      nextversion[2] = 0
+      nextversion = nextversion.join(".")
+      return ["#{name} (>= #{version})", "#{name} (<< #{nextversion})"]
+    else
+      return dep
+    end
+  end # def fix_dependency
 end # class FPM::Deb
 

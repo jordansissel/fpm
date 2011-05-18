@@ -23,6 +23,12 @@ class FPM::Target::Rpm < FPM::Package
     raise "No package name given. Can't assemble package" if !@name
     # TODO(sissel): Abort if 'rpmbuild' tool not found.
 
+    if !replaces.empty?
+      $stderr.puts "Warning: RPM does not support 'replaces'"
+      $stderr.puts "If you have suggstions as to what --replaces means to RPM"
+      $stderr.puts "Please let me know: https://github.com/jordansissel/fpm/issues"
+    end
+
     %w(BUILD RPMS SRPMS SOURCES SPECS).each { |d| Dir.mkdir(d) }
     args = ["rpmbuild", "-ba", 
            "--define", "buildroot #{Dir.pwd}/BUILD",

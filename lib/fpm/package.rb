@@ -48,6 +48,10 @@ class FPM::Package
   # (Not all packages support this)
   attr_accessor :provides
 
+  # Array of things this package replaces.
+  # (Not all packages support this)
+  attr_accessor :replaces
+
   # a summary or description of the package
   attr_accessor :description
 
@@ -79,6 +83,7 @@ class FPM::Package
     @architecture = source[:architecture]
     @description = source[:description] || "no description given"
     @provides = source[:provides] || []
+    @replaces = source[:replaces] || []
     @scripts = source[:scripts]
   end # def initialize
 
