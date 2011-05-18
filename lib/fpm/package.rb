@@ -75,7 +75,26 @@ class FPM::Package
     @url = source[:url] || "http://nourlgiven.example.com/no/url/given"
     @category = source[:category] || "default"
     @license = source[:license] || "unknown"
-    @maintainer = source[:maintainer] || "<#{ENV["USER"]}@#{Socket.gethostname}>"
+    #@maintainer = source[:maintainer] || "<#{ENV["USER"]}@#{Socket.gethostname}>"
+    @maintainer = source[:maintainer]
+
+    # Default maintainer if none given.
+    if @maintainer.nil? or @maintainer.empty?
+      # Reference
+      # http://www.debian.org/doc/manuals/maint-guide/first.en.html
+      # http://wiki.debian.org/DeveloperConfiguration
+      # https://github.com/jordansissel/fpm/issues/37
+      if ENV.include?("DEBEMAIL") and ENV.include?("DEBFULLNAME")
+        # Use DEBEMAIL and DEBFULLNAME as the default maintainer if available.
+        @maintainer = "#{ENV["DEBFULLNAME"]} <#{ENV["DEBEMAIL"]}>"
+      else
+        # TODO(sissel): Maybe support using 'git config' for a default as well?
+        # git config --get user.name, etc can be useful.
+        #
+        # Otherwise default to user@currenthost
+        @maintainer = "<#{ENV["USER"]}@#{Socket.gethostname}>"
+      end
+    end
 
     # If @architecture is nil, the target package should provide a default.
     # Special 'architecture' values include "all" (aka rpm's noarch, debian's all)
