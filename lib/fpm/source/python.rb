@@ -7,6 +7,21 @@ require "tmpdir"
 require "json"
 
 class FPM::Source::Python < FPM::Source
+  def self.flags(opts, settings)
+    settings.source[:python] = "python"
+    settings.source[:easy_install] = "easy_install"
+
+    opts.on("--bin PYTHON_BINARY_LOCATION",
+            "The path to the python you want to run. Default is 'python'") do |path|
+      settings.source[:python] = path
+    end
+
+    opts.on("--easyinstall EASY_INSTALL_PATH",
+            "The path to your easy_install tool. Default is 'easy_install'") do |path|
+      settings.source[:easy_install] = path
+    end
+  end # def flags
+
   def get_source(params)
     package = @paths.first
     if ["setup.py", "."].include?(package)
@@ -23,7 +38,8 @@ class FPM::Source::Python < FPM::Source
   end # def get_source
 
   def download(package, version=nil)
-    puts "Trying to download #{package} (using easy_install)"
+    p metadata
+    puts "Trying to download #{package} (using: #{self[:settings][:easy_install]})"
     @tmpdir = ::Dir.mktmpdir("python-build", ::Dir.pwd)
 
     if version.nil?
@@ -31,7 +47,8 @@ class FPM::Source::Python < FPM::Source
     else
       want_pkg = "#{package}==#{version}"
     end
-    system("easy_install", "--editable", "--build-directory", @tmpdir, want_pkg)
+
+    system(self[:settings][:easy_install], "--editable", "--build-directory", @tmpdir, want_pkg)
 
     # easy_install will put stuff in @tmpdir/packagename/, flatten that.
     #  That is, we want @tmpdir/setup.py, and start with
@@ -55,7 +72,7 @@ class FPM::Source::Python < FPM::Source
     end
 
     pylib = File.expand_path(File.dirname(__FILE__))
-    setup_cmd = "env PYTHONPATH=#{pylib} python #{setup_py} --command-packages=pyfpm get_metadata"
+    setup_cmd = "env PYTHONPATH=#{pylib} #{self[:settings][:python]} #{setup_py} --command-packages=pyfpm get_metadata"
     output = ::Dir.chdir(File.dirname(setup_py)) { `#{setup_cmd}` }
     puts output
     metadata = JSON.parse(output[/\{.*\}/msx])
@@ -81,7 +98,7 @@ class FPM::Source::Python < FPM::Source
     # Some setup.py's assume $PWD == current directory of setup.py, so let's
     # chdir first.
     ::Dir.chdir(dir) do
-      system("python", "setup.py", "bdist")
+      system(self[:settings][:python], "setup.py", "bdist")
     end
 
     dist_tar = ::Dir.glob(File.join(dir, "dist", "*.tar.gz")).first

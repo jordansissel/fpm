@@ -29,6 +29,8 @@ class FPM::Source
     @root = root
 
     self[:suffix] = params[:suffix]
+    self[:settings] = params[:settings]
+
     get_source(params)
     get_metadata
 
