@@ -26,7 +26,8 @@ class FPM::Source::Tar < FPM::Source
       when :bzip2; flags += " -j"
       when :gzip; flags += " -z"
     end
-    puts("tar #{flags}")
+    #puts("tar #{flags}")
+    #sleep 5
     system("tar #{flags}")
 
     if self[:prefix]
