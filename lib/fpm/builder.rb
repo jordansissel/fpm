@@ -33,6 +33,7 @@ class FPM::Builder
     @source  = source_class_for(settings.source_type || 'dir').new(
       paths, root,
       :version => settings.version,
+      :iteration => settings.iteration,
       :epoch => settings.epoch,
       :name => settings.package_name,
       :prefix => settings.prefix,
