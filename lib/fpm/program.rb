@@ -104,6 +104,11 @@ class FPM::Program
       @settings.version = version 
     end # --version
 
+    opts.on("--iteration ITERATION",
+            "(optional) Set the iteration value for this package.") do |iteration|
+      @settings.iteration = iteration
+    end # --iteration
+
     opts.on("--epoch EPOCH",
             "(optional) Set epoch value for this package.") do |epoch|
       @settings.epoch = epoch
