@@ -56,12 +56,13 @@ Obsoletes: <%= repl %>
 <%= description.gsub(/^\s*$/, " .") %>
 
 %prep
-echo "PREP"
-pwd
-tar -zvxf %SOURCE0
+# noop
 
 %build
-#noop
+# some rpm implementations delete the build dir and then recreate it by
+# default, for some reason. Whatever, let's work around it.
+cd $RPM_BUILD_ROOT
+tar -zvxf %SOURCE0
 
 %install
 #noop
