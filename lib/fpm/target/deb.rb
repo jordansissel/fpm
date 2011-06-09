@@ -1,6 +1,7 @@
 require "erb"
 require "fpm/namespace"
 require "fpm/package"
+require "fpm/errors"
 
 class FPM::Target::Deb < FPM::Package
   def architecture
@@ -25,6 +26,18 @@ class FPM::Target::Deb < FPM::Package
 
   def specfile(builddir)
     "#{builddir}/control"
+  end
+
+  def name
+    if @name =~ /[A-Z]/
+      @logger.fatal("Debian tools (dpkg/apt) don't do well with packages " \
+        "that use capital letters in the name. In some cases it will " \
+        "automatically downcase them, in others it will not. It is confusing." \
+        "Best to not use any capital letters at all.")
+      raise FPM::InvalidPackageConfiguration.new(
+        "package name '#{@name}' contains capital letters, bad.")
+    end
+    return @name
   end
 
   def build!(params)
