@@ -15,7 +15,9 @@ class FPM::Source::Dir < FPM::Source
       # Prefix all files with a path if given.
       @paths.each do |path|
         # Trim @root (--chdir)
-        path = path[@root.size .. -1] if path.start_with?(@root)
+        if @root != "." and path.start_with?(@root)
+          path = path[@root.size .. -1] 
+        end
 
         # Copy to self[:prefix] (aka --prefix)
         if File.directory?(path)
