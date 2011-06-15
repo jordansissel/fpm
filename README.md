@@ -78,6 +78,7 @@ Targets:
 
 * deb
 * rpm
+* solaris
 
 ## Something broken?
 
