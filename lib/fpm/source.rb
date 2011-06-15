@@ -101,16 +101,21 @@ class FPM::Source
     # TODO(sissel): To properly implement excludes as regexps, we
     # will need to find files ourselves. That may be more work
     # than it is worth. For now, rely on tar's --exclude.
-    dir_tar = ["tar", "-C", chdir, "--owner=root", "--group=root" ] \
+    dir_tar = ["tar", "--owner=root", "--group=root" ] \
               + excludes \
               + ["-cf", output, "--no-recursion" ] \
               + dirs
-    system(*dir_tar) if dirs.any?
 
-    files_tar = [ "tar", "-C", chdir ] \
+    ::Dir.chdir(chdir) do
+      system(*dir_tar) if dirs.any?
+    end
+
+    files_tar = [ "tar" ] \
                 + excludes \
                 + [ "--owner=root", "--group=root", "-rf", output ] \
                 + paths
-    system(*files_tar)
+    ::Dir.chdir(chdir) do
+      system(*files_tar)
+    end
   end # def tar
-end
+end # class FPM::Source
