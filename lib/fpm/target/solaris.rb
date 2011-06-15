@@ -45,24 +45,27 @@ class FPM::Target::Solaris < FPM::Package
     Dir.mkdir("data")
     system("gzip -d data.tar.gz");
     Dir.chdir("data") do
-      system("tar -vxf ../data.tar");
+      system("tar -xf ../data.tar");
     end
 
-    system("(echo 'i pkginfo'; pkgproto data=/) > Prototype")
+    #system("(echo 'i pkginfo'; pkgproto data=/) > Prototype")
 
     # Generate the package 'Prototype' file
     # TODO(sissel): allow setting default file owner.
-    #File.open("Prototype", "w") do |prototype|
-      #IO.popen("tar -tf data.tar | pkgproto").each_line do |line|
-        #type, klass, path, mode, user, group = line.split
-        ## Override pkgproto
-        #user = "root"
-        #group = "root"
-        #prototype.puts([type, klass, "/#{path}", mode, user, group].join(" "))
-      #end
-    #end
+    File.open("Prototype", "w") do |prototype|
+      prototype.puts("i pkginfo")
+      # TODO(sissel): preinstall/postinstall
+      IO.popen("pkgproto data=/").each_line do |line|
+        type, klass, path, mode, user, group = line.split
+        # Override stuff in pkgproto
+        # TODO(sissel): Make this tunable?
+        user = "root"
+        group = "root"
+        prototype.puts([type, klass, path, mode, user, group].join(" "))
+      end # popen "pkgproto ..."
+    end # File prototype
 
-    # Should create a directory named by the package name.
+    # Should create a package directory named by the package name.
     system("pkgmk -o -d .")
 
     # Convert the 'package directory' built above to a real solaris package.
