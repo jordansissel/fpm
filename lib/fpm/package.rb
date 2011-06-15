@@ -111,11 +111,16 @@ class FPM::Package
     File.open(specfile(builddir), "w") { |f| f.puts spec }
   end # def generate_specfile
 
-  def generate_md5sums(builddir, paths)
-    md5sums = self.checksum(paths)
-    File.open("#{builddir}/md5sums", "w") { |f| f.puts md5sums }
-    md5sums
-  end # def generate_md5sums
+  # nobody needs md5sums by default.
+  def needs_md5sums
+    false
+  end # def needs_md5sums
+
+  #def generate_md5sums(builddir, paths)
+    #md5sums = self.checksum(paths)
+    #File.open("#{builddir}/md5sums", "w") { |f| f.puts md5sums }
+    #md5sums
+  #end # def generate_md5sums
 
   # TODO [Jay]: make this better...?
   def type
