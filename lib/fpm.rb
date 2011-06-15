@@ -4,6 +4,7 @@ require "fpm/builder"
 require "fpm/package"
 require "fpm/target/deb"
 require "fpm/target/rpm"
+require "fpm/target/solaris"
 
 require "fpm/source"
 require "fpm/source/dir"

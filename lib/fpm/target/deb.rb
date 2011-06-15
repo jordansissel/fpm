@@ -4,6 +4,10 @@ require "fpm/package"
 require "fpm/errors"
 
 class FPM::Target::Deb < FPM::Package
+  def needs_md5sums
+    true
+  end # def needs_md5sums
+
   def architecture
     if @architecture.nil? or @architecture == "native"
       # Default architecture should be 'native' which we'll need

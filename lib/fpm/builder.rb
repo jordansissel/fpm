@@ -84,7 +84,7 @@ class FPM::Builder
     ::Dir.chdir root do
       @source.make_tarball!(tar_path, builddir)
 
-      generate_md5sums
+      generate_md5sums if @package.needs_md5sums
       generate_specfile
       edit_specfile if @edit
     end
