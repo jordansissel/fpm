@@ -96,21 +96,49 @@ class FPM::Source
     dirs.sort! { |a,b| a.size <=> b.size }
     paths.sort! { |a,b| a.size <=> b.size }
 
+
+    # Solaris's tar is pretty neutered, so implement --exclude and such
+    # ourselves.
+    # TODO(sissel): May need to implement our own tar file generator
+    # so we can enforce file ownership. Again, solaris' tar doesn't support
+    # --owner, etc.
+    #paths = []
+    #dirs.each do |dir|
+      #Dir.glob(File.join(dir, "**", "*")).each do |path|
+        #next if excludesFile.fnmatch?(
+      #end
+    #end
+
     excludes = self[:exclude].map { |e| ["--exclude", e] }.flatten
 
     # TODO(sissel): To properly implement excludes as regexps, we
     # will need to find files ourselves. That may be more work
     # than it is worth. For now, rely on tar's --exclude.
-    dir_tar = ["tar", "-C", chdir, "--owner=root", "--group=root" ] \
+    dir_tar = [tar_cmd, "--owner=root", "--group=root" ] \
               + excludes \
               + ["-cf", output, "--no-recursion" ] \
               + dirs
-    system(*dir_tar) if dirs.any?
 
-    files_tar = [ "tar", "-C", chdir ] \
+    ::Dir.chdir(chdir) do
+      system(*dir_tar) if dirs.any?
+    end
+
+    files_tar = [ tar_cmd ] \
                 + excludes \
                 + [ "--owner=root", "--group=root", "-rf", output ] \
                 + paths
-    system(*files_tar)
+    ::Dir.chdir(chdir) do
+      system(*files_tar)
+    end
   end # def tar
-end
+
+  def tar_cmd 
+    # Rely on gnu tar for solaris.
+    case %x{uname -s}.chomp
+    when "SunOS"
+      return "gtar"
+    else
+      return "tar"
+    end
+  end # def tar_cmd
+end # class FPM::Source

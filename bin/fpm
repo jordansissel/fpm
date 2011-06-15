@@ -6,6 +6,16 @@ $: << File.join(File.dirname(__FILE__), "..", "lib")
 require "fpm"
 require "fpm/program"
 
+if $DEBUG
+  module Kernel
+    alias :orig_system :system
+    def system(*args)
+      p :system => args
+      orig_system(*args)
+    end
+  end
+end
+
 program = FPM::Program.new
 ret = program.run(ARGV)
 exit(ret.nil? ? 0 : ret)
