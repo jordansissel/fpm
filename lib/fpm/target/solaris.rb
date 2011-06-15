@@ -54,6 +54,9 @@ class FPM::Target::Solaris < FPM::Package
     # TODO(sissel): allow setting default file owner.
     File.open("Prototype", "w") do |prototype|
       prototype.puts("i pkginfo")
+      prototype.puts("i preinstall") if self.scripts["pre-install"]
+      prototype.puts("i postinstall") if self.scripts["post-install"]
+
       # TODO(sissel): preinstall/postinstall
       IO.popen("pkgproto data=/").each_line do |line|
         type, klass, path, mode, user, group = line.split
