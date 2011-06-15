@@ -34,13 +34,19 @@ class FPM::Target::Deb < FPM::Package
 
   def name
     if @name =~ /[A-Z]/
-      @logger.fatal("Debian tools (dpkg/apt) don't do well with packages " \
+      @logger.warn("Debian tools (dpkg/apt) don't do well with packages " \
         "that use capital letters in the name. In some cases it will " \
         "automatically downcase them, in others it will not. It is confusing." \
         "Best to not use any capital letters at all.")
-      raise FPM::InvalidPackageConfiguration.new(
-        "package name '#{@name}' contains capital letters, bad.")
+      @name = @name.downcase
     end
+
+    if @name.include?("_")
+      @logger.info("Package name '#{@name}' includes underscores, converting" \
+                   " to dashes")
+      @name = @name.gsub(/[_]/, "-")
+    end
+
     return @name
   end
 
