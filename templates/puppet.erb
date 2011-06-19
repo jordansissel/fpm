@@ -1,0 +1,8 @@
+class <%= name %>::package {
+
+  file {
+<% @source.paths.each do |path| %>
+    "<%= path %>":
+<% end %>
+
+}
