@@ -1,8 +1,22 @@
 class <%= name %>::package {
 
   file {
-<% @source.paths.each do |path| %>
+<% paths.each do |path|
+     stat = File.lstat(path)
+     params = {}
+     if stat.directory?
+       params[:ensure] = "directory"
+     elsif stat.symlink?
+       params[:ensure] = "link"
+       params[:target] = File.readlink(path)
+       stat = File.stat(path)
+     else
+       params[:ensure] = "file"
+     end
+     settings = params.collect { |k,v| "#{k} = \"#{v}\"" }.join(",")
+-%>
     "<%= path %>":
-<% end %>
+      <%= settings %>
+<% end -%>
 
 }

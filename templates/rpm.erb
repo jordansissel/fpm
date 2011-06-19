@@ -1,10 +1,10 @@
 Name: <%= name %>
 Version: <%= version %>
-<% if epoch %>
+<% if epoch -%>
 Epoch: <%= epoch %>
-<% end %>
+<% end -%>
 Release: <%= iteration or 1 %>
-<%# use the first line of the description as the summary %>
+<%# use the first line of the description as the summary -%>
 Summary: <%= description.split("\n").first %>
 BuildArch: <%= architecture %>
 AutoReqProv: no
@@ -13,13 +13,13 @@ Group: <%= category %>
 <%#
 TODO: [Jay] rpms require a license
 let's detect it intelligently
-%>
+-%>
 License: <%= license %> 
 URL: <%= url or "http://nourlgiven.example.com/" %>
 Source0:  %{_sourcedir}/data.tar.gz
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
-<% if !dependencies.empty? %>
+<% if !dependencies.empty? -%>
 <%
   properdeps = dependencies.collect do |d|
     # Convert gem ~> X.Y.Z to '>= X.Y.Z' and < X.Y+1.0
@@ -40,18 +40,17 @@ BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
       d
     end
   end
-%>Requires: <%= properdeps.join(", ") %>
-<% end %>
-<% provides.each do |prov| %>
+-%>Requires: <%= properdeps.join(", ") %>
+<% end -%>
+<% provides.each do |prov| -%>
 Provides: <%= prov %>
-<% end %>
-<%# The closes equivalent in RPM to "replaces" is "Obsoletes" %>
-<% replaces.each do |repl| %>
+<% end -%>
+<% replaces.each do |repl| -%>
+<%# The closes equivalent in RPM to "replaces" is "Obsoletes" -%>
 Obsoletes: <%= repl %>
-<% end %>
-
+<% end -%>
 <%# rpm rejects descriptions with blank lines (even between content), so hack
-    around it by replacing blank lines with ' .' %>
+    around it by replacing blank lines with ' .' -%>
 %description
 <%= description.gsub(/^\s*$/, " .") %>
 
@@ -70,30 +69,30 @@ tar -zxf %SOURCE0
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-<% if scripts["pre-install"] %>
+<% if scripts["pre-install"] -%>
 %pre
 <%= File.read(scripts["pre-install"]) %>
-<% end %>
 
-<% if scripts["post-install"] %>
+<% end -%>
+<% if scripts["post-install"] -%>
 %post
 <%= File.read(scripts["post-install"]) %>
-<% end %>
 
-<% if scripts["pre-uninstall"] %>
+<% end -%>
+<% if scripts["pre-uninstall"] -%>
 %preun
 <%= File.read(scripts["pre-uninstall"]) %>
-<% end %>
 
-<% if scripts["post-uninstall"] %>
+<% end -%>
+<% if scripts["post-uninstall"] -%>
 %postun
 <%= File.read(scripts["post-uninstall"]) %>
-<% end %>
 
+<% end -%>
 %files
 %defattr(-,root,root,-)
-<%# Trim leading '.' from paths if they are './blah...' %>
-<%# Also ensure paths start with '/' %>
+<%# Trim leading '.' from paths if they are './blah...' -%>
+<%# Also ensure paths start with '/' -%>
 <%= @source.paths.collect { |p| p.gsub(/^\.\//, "/").gsub(/^[^\/]/, "/\\0") }.join("\n") %>
 
 %changelog
