@@ -118,6 +118,7 @@ class FPM::Source
               + excludes \
               + ["-cf", output, "--no-recursion" ] \
               + dirs
+    p :dirs => dirs
 
     ::Dir.chdir(chdir) do
       system(*dir_tar) if dirs.any?

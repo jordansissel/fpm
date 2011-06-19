@@ -104,6 +104,12 @@ class FPM::Target::Deb < FPM::Package
       dep = "#{da[0]} (#{da[1]} #{da[2]})"
     end
 
+    name = dep[/^[^ \(]/] 
+    if name =~ /[A-Z]/
+      @logger.warn("Downcasing dependnecy '#{name}' because deb packages " \
+                   " don't work so good with uppercase names")
+    end
+
     # Convert gem ~> X.Y.Z to '>= X.Y.Z' and << X.Y+1.0
     if dep =~ /\(~>/
       name, version = dep.gsub(/[()~>]/, "").split(/ +/)[0..1]
