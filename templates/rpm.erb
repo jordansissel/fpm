@@ -62,7 +62,7 @@ Obsoletes: <%= repl %>
 # some rpm implementations delete the build dir and then recreate it by
 # default, for some reason. Whatever, let's work around it.
 cd $RPM_BUILD_ROOT
-tar -zvxf %SOURCE0
+tar -zxf %SOURCE0
 
 %install
 #noop

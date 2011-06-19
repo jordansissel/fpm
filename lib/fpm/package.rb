@@ -106,10 +106,11 @@ class FPM::Package
     @scripts = source[:scripts]
   end # def initialize
 
-  def generate_specfile(builddir, paths)
-    spec = template.result(binding)
-    File.open(specfile(builddir), "w") { |f| f.puts spec }
-  end # def generate_specfile
+  # TODO(sissel): not needed anymore
+  #def generate_specfile(builddir, paths)
+    #spec = template.result(binding)
+    #File.open(specfile(builddir), "w") { |f| f.puts spec }
+  #end # def generate_specfile
 
   # nobody needs md5sums by default.
   def needs_md5sums
@@ -137,6 +138,15 @@ class FPM::Package
   end # def template
 
   def render_spec
+    # find all files in paths given.
+    paths = []
+    @source.paths.each do |path|
+      entries = Dir.new(path).to_a
+      entries.each do |entry|
+        if File.directory?(entry)
+
+      end
+    end
     template.result(binding)
   end # def render_spec
 
@@ -147,4 +157,4 @@ class FPM::Package
       "#{name}-#{version}.#{architecture}.#{type}"
     end
   end # def default_output
-end
+end # class FPM::Package
