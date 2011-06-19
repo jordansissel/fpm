@@ -1,4 +1,6 @@
-require 'fileutils'
+require "fileutils"
+require "pathname"
+
 class FPM::Builder
   # where is the package's root?
   def root
