@@ -154,4 +154,16 @@ class FPM::Package
       "#{name}-#{version}.#{architecture}.#{type}"
     end
   end # def default_output
+
+  def fixpath(path)
+    if path.first != "/" 
+      path = File.join(@source.root, path)
+    end
+    return path if File.symlink?(path)
+    realpath = Pathname.new(path).realpath.to_s
+    re = Regexp.new("^#{Regexp.escape(@source.root)}")
+    realpath.gsub!(re, "")
+    #p :realpath => [path, realpath]
+    return realpath
+  end # def fixpath
 end # class FPM::Package
