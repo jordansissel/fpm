@@ -45,6 +45,5 @@ class FPM::Target::Rpm < FPM::Package
       # This should only output one rpm, should we verify this?
       system("mv", path, params[:output])
     end
-
-  end
-end
+  end # def build!
+end # class FPM::Target::RPM

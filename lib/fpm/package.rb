@@ -1,6 +1,7 @@
 require "fpm/namespace"
 require "socket" # for Socket.gethostname
 require "logger"
+require "find" # for Find.find (directory walking)
 
 class FPM::Package 
   # The name of this package
@@ -133,7 +134,7 @@ class FPM::Package
       tpl = File.read(
         "#{FPM::DIRS[:templates]}/#{type}.erb"
       )
-      ERB.new(tpl, nil, "<>")
+      ERB.new(tpl, nil, "-")
     end
   end # def template
 
@@ -141,12 +142,9 @@ class FPM::Package
     # find all files in paths given.
     paths = []
     @source.paths.each do |path|
-      entries = Dir.new(path).to_a
-      entries.each do |entry|
-        if File.directory?(entry)
-
-      end
+      Find.find(path) { |p| paths << p }
     end
+    #@logger.info(:paths => paths.sort)
     template.result(binding)
   end # def render_spec
 
@@ -157,4 +155,17 @@ class FPM::Package
       "#{name}-#{version}.#{architecture}.#{type}"
     end
   end # def default_output
+
+  def fixpath(path)
+    p :fixpath => path
+    if path.first != "/" 
+      path = File.join(@source.root, path)
+    end
+    return path if File.symlink?(path)
+    realpath = Pathname.new(path).realpath.to_s
+    re = Regexp.new("^#{Regexp.escape(@source.root)}")
+    realpath.gsub!(re, "")
+    p :fixpath => {:path => realpath, :caller => caller[0] }
+    return realpath
+  end # def fixpath
 end # class FPM::Package

@@ -1,4 +1,6 @@
-require 'fileutils'
+require "fileutils"
+require "pathname"
+
 class FPM::Builder
   # where is the package's root?
   def root
@@ -83,6 +85,22 @@ class FPM::Builder
 
     ::Dir.chdir root do
       @source.make_tarball!(tar_path, builddir)
+
+      # Hack to unpack before generating the spec, etc.
+      # Need to formalize this feature.
+      # Perhaps something like @package.prepare
+      if @package.respond_to?(:unpack_data_to)
+        data_tarball = File.join(builddir, "data.tar.gz")
+        FileUtils.mkdir_p(output)
+        Dir.chdir(output) do
+          FileUtils.mkdir_p(@package.unpack_data_to)
+          system("gzip -d #{data_tarball}")
+          Dir.chdir(@package.unpack_data_to) do
+            @source.root = Dir.pwd
+            system("tar -xf #{data_tarball.gsub(/\.gz$/, "")}")
+          end
+        end
+      end
 
       generate_md5sums if @package.needs_md5sums
       generate_specfile

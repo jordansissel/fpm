@@ -124,5 +124,5 @@ class FPM::Target::Deb < FPM::Package
       return dep
     end
   end # def fix_dependency
-end # class FPM::Deb
+end # class FPM::Target::Deb
 
