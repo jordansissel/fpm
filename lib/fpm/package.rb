@@ -144,6 +144,7 @@ class FPM::Package
     @source.paths.each do |path|
       Find.find(path) { |p| paths << p }
     end
+    #@logger.info(:paths => paths.sort)
     template.result(binding)
   end # def render_spec
 
@@ -156,6 +157,7 @@ class FPM::Package
   end # def default_output
 
   def fixpath(path)
+    p :fixpath => path
     if path.first != "/" 
       path = File.join(@source.root, path)
     end
@@ -163,7 +165,7 @@ class FPM::Package
     realpath = Pathname.new(path).realpath.to_s
     re = Regexp.new("^#{Regexp.escape(@source.root)}")
     realpath.gsub!(re, "")
-    #p :realpath => [path, realpath]
+    p :fixpath => {:path => realpath, :caller => caller[0] }
     return realpath
   end # def fixpath
 end # class FPM::Package

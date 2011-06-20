@@ -23,7 +23,8 @@ class FPM::Source
   end
 
   attr_reader :paths
-  attr_reader :root
+  attr_accessor :root
+
   def initialize(paths, root, params={})
     @paths = paths
     @root = root

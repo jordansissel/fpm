@@ -21,6 +21,10 @@ class FPM::Target::Puppet < FPM::Package
     "#{builddir}/package.pp"
   end # def specfile
 
+  def unpack_data_to
+    "files"
+  end
+
   def build!(params)
     # TODO(sissel): Support these somehow, perhaps with execs and files.
     self.scripts.each do |name, path|
@@ -34,14 +38,8 @@ class FPM::Target::Puppet < FPM::Package
 
     Dir.mkdir(params[:output])
     builddir = Dir.pwd
-    data_tarball = File.join(builddir, "data.tar.gz")
 
     Dir.chdir(params[:output]) do
-      # Unpack data.tar.gz
-      Dir.mkdir("files")
-      system("gzip -d #{data_tarball}");
-      Dir.chdir("files") { system("tar -xf #{data_tarball.gsub(/.gz$/, "")}") }
-
       Dir.mkdir("manifests")
       FileUtils.cp(specfile(builddir), "manifests")
     end
