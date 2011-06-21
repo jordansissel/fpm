@@ -197,6 +197,7 @@ class FPM::Builder
   def checksum(paths)
     md5sums = []
     paths.each do |path|
+      next if !File.exists?(path)
       md5sums += %x{find #{path} -type f -print0 | xargs -0 md5sum}.split("\n")
     end
   end # def checksum
