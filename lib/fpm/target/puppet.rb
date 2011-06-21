@@ -5,19 +5,6 @@ require "fpm/errors"
 require "etc"
 require "ftools"
 
-#class ::Dir
-  #class << self
-    #alias :orig_mkdir :mkdir
-#
-    #def mkdir(*args)
-      ##p :mkdir => { :args => args, :caller => caller }
-      #orig_mkdir(*args)
-    #end
-  #end
-#end
-
-require "fileutils" # for FileUtils
-
 # TODO(sissel): Add dependency checking support.
 # IIRC this has to be done as a 'checkinstall' step.
 class FPM::Target::Puppet < FPM::Package
@@ -29,10 +16,6 @@ class FPM::Target::Puppet < FPM::Package
     return @architecture
   end # def architecture
 
-  def specfile(builddir)
-    "#{builddir}/package.pp"
-  end # def specfile
-  
   # Default specfile generator just makes one specfile, whatever that is for
   # this package.
   def generate_specfile(builddir)
@@ -63,18 +46,6 @@ class FPM::Target::Puppet < FPM::Package
       end
     end
   end # def generate_specfile
-
-  # Override render_spec so we can generate multiple files for puppet.
-  # The package.pp, package/remove.pp, 
-  def render_spec
-    # find all files in paths given.
-    paths = []
-    @source.paths.each do |path|
-      Find.find(path) { |p| paths << p }
-    end
-    #@logger.info(:paths => paths.sort)
-    template.result(binding)
-  end # def render_spec
 
   def unpack_data_to
     "files"
@@ -117,12 +88,14 @@ class FPM::Target::Puppet < FPM::Package
     name
   end # def default_output
 
+  # This method is used by the puppet manifest template
   def puppetsort(hash)
     # TODO(sissel): Implement sorting that follows the puppet style guide
     # Such as, 'ensure' goes first, etc.
     return hash.to_a
   end # def puppetsort
 
+  # Helper for user lookup
   def uid2user(uid)
     begin
       pwent = Etc.getpwuid(uid)
@@ -134,6 +107,7 @@ class FPM::Target::Puppet < FPM::Package
     end
   end # def uid2user
 
+  # Helper for group lookup
   def gid2group(gid)
     begin
       grent = Etc.getgrgid(gid)

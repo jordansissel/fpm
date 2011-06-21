@@ -29,6 +29,9 @@ class FPM::Builder
   attr_reader :source
 
   def initialize(settings, paths=[])
+    @logger = Logger.new(STDERR)
+    @logger.level = $DEBUG ? Logger::DEBUG : Logger::WARN
+
     @working_dir = Dir.pwd
     root = settings.chdir || '.'
     paths = ['.'] if paths.empty?
@@ -135,23 +138,29 @@ class FPM::Builder
   # TODO: [Jay] make this better.
   private
   def package_class_for(type)
-    type = FPM::Target::constants.find { |c| c.downcase.to_s == type }
-    if !type
+    realtype = FPM::Target.constants.find { |c| c.downcase.to_s == type }
+    if !realtype
+      valid_types = FPM::Target.constants.collect { |c| c.downcase }
+      @logger.fatal("No such package target type #{type.inspect}; " \
+                    "Valid types: #{valid_types.join(", ")}")
       raise ArgumentError, "unknown package type #{type.inspect}"
     end
 
-    return FPM::Target.const_get(type)
+    return FPM::Target.const_get(realtype)
   end
 
   # TODO: [Jay] make this better.
   private
   def source_class_for(type)
-    type = FPM::Source::constants.find { |c| c.downcase.to_s == type }
-    if !type
+    realtype = FPM::Source::constants.find { |c| c.downcase.to_s == type }
+    if !realtype
+      valid_types = FPM::Source.constants.collect { |c| c.downcase }
+      @logger.fatal("No such package source type #{type.inspect}; " \
+                    "Valid types: #{valid_types.join(", ")}")
       raise ArgumentError, "unknown package type #{type.inspect}"
     end
 
-    return FPM::Source.const_get(type)
+    return FPM::Source.const_get(realtype)
   end
 
   private
