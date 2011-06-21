@@ -14,7 +14,7 @@ class FPM::Target::Deb < FPM::Package
       # to ask the system about.
       arch = %x{dpkg --print-architecture}.chomp
       if $?.exitstatus != 0
-        arch = %x{uname -m}
+        arch = %x{uname -m}.chomp
         @logger.warn("Can't find 'dpkg' tool (need it to get default " \
                      "architecture!). Please specificy --architecture " \
                      "specifically. (Defaulting now to #{arch})")

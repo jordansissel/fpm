@@ -26,6 +26,9 @@ class FPM::Source
   attr_accessor :root
 
   def initialize(paths, root, params={})
+    @logger = Logger.new(STDERR)
+    @logger.level = $DEBUG ? Logger::DEBUG : Logger::WARN
+
     @paths = paths
     @root = root
 
@@ -119,7 +122,6 @@ class FPM::Source
               + excludes \
               + ["-cf", output, "--no-recursion" ] \
               + dirs
-    p :dirs => dirs
 
     ::Dir.chdir(chdir) do
       system(*dir_tar) if dirs.any?
