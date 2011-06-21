@@ -2,10 +2,12 @@ class <%= name %>::package::remove {
   $version = "<%= version %>"
   $iteration = "<%= iteration %>"
 
+  fail("DO NOT USE THIS. IT IS NOT WELL DEFINED YET.")
+
   file {
 <% paths.each do |path| -%>
     "<%= fixpath(path) %>":
-      <%= settings %>;
+      ensure => absent;
 <% end # paths.each -%>
   }
 }

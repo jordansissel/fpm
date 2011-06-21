@@ -62,6 +62,7 @@ class FPM::Package
   def initialize(source)
     @source = source
     @logger = Logger.new(STDERR)
+    @logger.level = $DEBUG ? Logger::DEBUG : Logger::WARN
 
     @name = source[:name] # || fail
 
@@ -119,10 +120,9 @@ class FPM::Package
 
   def template(path=nil)
     path ||= "#{type}.erb"
-    @template ||= begin
-      tpl = File.read("#{FPM::DIRS[:templates]}/#{path}")
-      ERB.new(tpl, nil, "-")
-    end
+    @logger.info("Reading template: #{path}")
+    tpl = File.read("#{FPM::DIRS[:templates]}/#{path}")
+    return ERB.new(tpl, nil, "-")
   end # def template
 
   def render_spec
@@ -152,15 +152,15 @@ class FPM::Package
   end # def default_output
 
   def fixpath(path)
-    p :fixpath => path
     if path.first != "/" 
       path = File.join(@source.root, path)
     end
     return path if File.symlink?(path)
+    @logger.info(:fixpath => path)
     realpath = Pathname.new(path).realpath.to_s
     re = Regexp.new("^#{Regexp.escape(@source.root)}")
     realpath.gsub!(re, "")
-    p :fixpath => {:path => realpath, :caller => caller[0] }
+    @logger.info(:fixpath_result => realpath)
     return realpath
   end # def fixpath
 end # class FPM::Package

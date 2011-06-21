@@ -3,17 +3,18 @@ require "fpm/namespace"
 require "fpm/package"
 require "fpm/errors"
 require "etc"
+require "ftools"
 
-class ::Dir
-  class << self
-    alias :orig_mkdir :mkdir
-
-    def mkdir(*args)
-      p :mkdir => { :args => args, :caller => caller }
-      orig_mkdir(*args)
-    end
-  end
-end
+#class ::Dir
+  #class << self
+    #alias :orig_mkdir :mkdir
+#
+    #def mkdir(*args)
+      ##p :mkdir => { :args => args, :caller => caller }
+      #orig_mkdir(*args)
+    #end
+  #end
+#end
 
 require "fileutils" # for FileUtils
 
@@ -36,18 +37,29 @@ class FPM::Target::Puppet < FPM::Package
   # this package.
   def generate_specfile(builddir)
     paths = []
-    @source.paths.each do |path|
-      Find.find(path) { |p| paths << p }
+    @logger.info("PWD: #{File.join(builddir, unpack_data_to)}")
+    fileroot = File.join(builddir, unpack_data_to)
+    Dir.chdir(fileroot) do
+      Find.find(".") do |p|
+        next if p == "."
+        paths << p
+      end
     end
+    @logger.info(paths[-1])
     manifests = %w{package.pp package/remove.pp}
-    manifests.each do |name|
-      dir = File.join(builddir, File.dirname(name))
+
+    ::Dir.mkdir(File.join(builddir, "manifests"))
+    manifests.each do |manifest|
+      dir = File.join(builddir, "manifests", File.dirname(manifest))
       @logger.info("manifests targeting: #{dir}")
-      Dir.mkdir(dir) if !File.directory?(dir)
+      ::Dir.mkdir(dir) if !File.directory?(dir)
       
-      @logger.info("Generating #{name}")
-      File.open(File.join(builddir, name), "w") do |f|
-        f.puts template(File.join("puppet", "#{name}.erb")).result(binding)
+      File.open(File.join(builddir, "manifests", manifest), "w") do |f|
+        @logger.info("manifest: #{f.path}")
+        template = template(File.join("puppet", "#{manifest}.erb"))
+        ::Dir.chdir(fileroot) do
+          f.puts template.result(binding)
+        end
       end
     end
   end # def generate_specfile
@@ -63,6 +75,7 @@ class FPM::Target::Puppet < FPM::Package
     #@logger.info(:paths => paths.sort)
     template.result(binding)
   end # def render_spec
+
   def unpack_data_to
     "files"
   end
@@ -84,15 +97,18 @@ class FPM::Target::Puppet < FPM::Package
                     "exists. Delete it or choose another output (-p flag)")
     end
 
-    Dir.mkdir(params[:output])
-    builddir = Dir.pwd
+    ::Dir.mkdir(params[:output])
+    builddir = ::Dir.pwd
 
-    Dir.chdir(params[:output]) do
-      Dir.mkdir("manifests")
-      FileUtils.cp(specfile(builddir), "manifests")
+    # Copy 'files' from builddir to :output/files
+    Find.find("files", "manifests") do |path|
+      @logger.info("Copying path: #{path}")
+      if File.directory?(path)
+        ::Dir.mkdir(File.join(params[:output], path))
+      else
+        File.copy(path, File.join(params[:output], path))
+      end
     end
-    # Files are now in the 'files' path
-    # Generate a manifest 'package.pp' with all the information from
   end # def build!
 
   # The directory we create should just be the name of the package as the

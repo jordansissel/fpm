@@ -91,8 +91,7 @@ class FPM::Builder
       # Perhaps something like @package.prepare
       if @package.respond_to?(:unpack_data_to)
         data_tarball = File.join(builddir, "data.tar.gz")
-        FileUtils.mkdir_p(output)
-        Dir.chdir(output) do
+        Dir.chdir(builddir) do
           FileUtils.mkdir_p(@package.unpack_data_to)
           system("gzip -d #{data_tarball}")
           Dir.chdir(@package.unpack_data_to) do
