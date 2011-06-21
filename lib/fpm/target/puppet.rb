@@ -4,6 +4,17 @@ require "fpm/package"
 require "fpm/errors"
 require "etc"
 
+class ::Dir
+  class << self
+    alias :orig_mkdir :mkdir
+
+    def mkdir(*args)
+      p :mkdir => { :args => args, :caller => caller }
+      orig_mkdir(*args)
+    end
+  end
+end
+
 require "fileutils" # for FileUtils
 
 # TODO(sissel): Add dependency checking support.
@@ -20,7 +31,38 @@ class FPM::Target::Puppet < FPM::Package
   def specfile(builddir)
     "#{builddir}/package.pp"
   end # def specfile
+  
+  # Default specfile generator just makes one specfile, whatever that is for
+  # this package.
+  def generate_specfile(builddir)
+    paths = []
+    @source.paths.each do |path|
+      Find.find(path) { |p| paths << p }
+    end
+    manifests = %w{package.pp package/remove.pp}
+    manifests.each do |name|
+      dir = File.join(builddir, File.dirname(name))
+      @logger.info("manifests targeting: #{dir}")
+      Dir.mkdir(dir) if !File.directory?(dir)
+      
+      @logger.info("Generating #{name}")
+      File.open(File.join(builddir, name), "w") do |f|
+        f.puts template(File.join("puppet", "#{name}.erb")).result(binding)
+      end
+    end
+  end # def generate_specfile
 
+  # Override render_spec so we can generate multiple files for puppet.
+  # The package.pp, package/remove.pp, 
+  def render_spec
+    # find all files in paths given.
+    paths = []
+    @source.paths.each do |path|
+      Find.find(path) { |p| paths << p }
+    end
+    #@logger.info(:paths => paths.sort)
+    template.result(binding)
+  end # def render_spec
   def unpack_data_to
     "files"
   end
@@ -35,6 +77,12 @@ class FPM::Target::Puppet < FPM::Package
         when "post-uninstall"
       end # case name
     end # self.scripts.each
+
+    if File.exists?(params[:output])
+      # TODO(sissel): Allow folks to choose output?
+      @logger.error("Puppet module directory '#{params[:output]}' already " \
+                    "exists. Delete it or choose another output (-p flag)")
+    end
 
     Dir.mkdir(params[:output])
     builddir = Dir.pwd

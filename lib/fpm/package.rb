@@ -107,33 +107,20 @@ class FPM::Package
     @scripts = source[:scripts]
   end # def initialize
 
-  # TODO(sissel): not needed anymore
-  #def generate_specfile(builddir, paths)
-    #spec = template.result(binding)
-    #File.open(specfile(builddir), "w") { |f| f.puts spec }
-  #end # def generate_specfile
-
   # nobody needs md5sums by default.
   def needs_md5sums
     false
   end # def needs_md5sums
-
-  #def generate_md5sums(builddir, paths)
-    #md5sums = self.checksum(paths)
-    #File.open("#{builddir}/md5sums", "w") { |f| f.puts md5sums }
-    #md5sums
-  #end # def generate_md5sums
 
   # TODO [Jay]: make this better...?
   def type
     self.class.name.split(':').last.downcase
   end # def type
 
-  def template
+  def template(path=nil)
+    path ||= "#{type}.erb"
     @template ||= begin
-      tpl = File.read(
-        "#{FPM::DIRS[:templates]}/#{type}.erb"
-      )
+      tpl = File.read("#{FPM::DIRS[:templates]}/#{path}")
       ERB.new(tpl, nil, "-")
     end
   end # def template
@@ -147,6 +134,14 @@ class FPM::Package
     #@logger.info(:paths => paths.sort)
     template.result(binding)
   end # def render_spec
+
+  # Default specfile generator just makes one specfile, whatever that is for
+  # this package.
+  def generate_specfile(builddir)
+    File.open(specfile(builddir), "w") do |f|
+      f.puts render_spec
+    end
+  end # def generate_specfile
 
   def default_output
     if iteration

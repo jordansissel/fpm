@@ -163,13 +163,13 @@ class FPM::Builder
 
   private
   def generate_specfile
-    File.open(@package.specfile(builddir), "w") do |f|
-      f.puts @package.render_spec
-    end
+    @package.generate_specfile(builddir)
   end
 
   private
   def edit_specfile
+    # TODO(sissel): support editing multiple files for targets like
+    # puppet which generate multiple manifests.
     editor = ENV['FPM_EDITOR'] || ENV['EDITOR'] || 'vi'
     system("#{editor} '#{package.specfile(builddir)}'")
     unless File.size? package.specfile(builddir)
