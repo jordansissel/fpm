@@ -120,8 +120,10 @@ class FPM::Source::Gem < FPM::Source
     args = ["gem", "install", "--quiet", "--no-ri", "--no-rdoc",
        "--install-dir", installdir, "--ignore-dependencies"]
     if self[:settings][:bin_path]
-      args += ["--bindir", File.join(tmpdir, self[:settings][:bin_path])]
+      tmp_bin_path = File.join(tmpdir, self[:settings][:bin_path])
+      args += ["--bindir", tmp_bin_path]
       @paths << self[:settings][:bin_path]
+      FileUtils.mkdir_p(tmp_bin_path) # Fixes #27
     end
 
     args << gem
