@@ -15,7 +15,7 @@ class FPM::Source::Gem < FPM::Source
   def get_source(params)
     gem = @paths.first
     looks_like_name_re = /^[A-Za-z0-9_-]+$/
-    if !File.exists?(gem) 
+    if !File.exists?(gem)
       if gem =~ looks_like_name_re
         download(gem, params[:version])
       else
@@ -37,12 +37,12 @@ class FPM::Source::Gem < FPM::Source
     dep = ::Gem::Dependency.new gem_name, version
     # How to handle prerelease? Some extra magic options?
     #dep.prerelease = options[:prerelease]
-    
+
     if ::Gem::SpecFetcher.fetcher.respond_to?(:fetch_with_errors)
       specs_and_sources, errors =
         ::Gem::SpecFetcher.fetcher.fetch_with_errors(dep, true, true, false)
     else
-      specs_and_sources = 
+      specs_and_sources =
         ::Gem::SpecFetcher.fetcher.fetch(dep, true)
       errors = "???"
     end
@@ -126,7 +126,7 @@ class FPM::Source::Gem < FPM::Source
 
     args << gem
     system(*args)
-    
+
     # make paths relative  (/foo becomes ./foo)
     tar(tar_path, @paths.collect {|p| ".#{p}"}, tmpdir)
     FileUtils.rm_r(tmpdir)
