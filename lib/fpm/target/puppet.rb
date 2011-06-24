@@ -3,7 +3,7 @@ require "fpm/namespace"
 require "fpm/package"
 require "fpm/errors"
 require "etc"
-require "ftools"
+require "fileutils"
 
 # TODO(sissel): Add dependency checking support.
 # IIRC this has to be done as a 'checkinstall' step.
@@ -77,7 +77,7 @@ class FPM::Target::Puppet < FPM::Package
       if File.directory?(path)
         ::Dir.mkdir(File.join(params[:output], path))
       else
-        File.copy(path, File.join(params[:output], path))
+        FileUtils.cp(path, File.join(params[:output], path))
       end
     end
   end # def build!
