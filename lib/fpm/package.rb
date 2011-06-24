@@ -152,7 +152,7 @@ class FPM::Package
   end # def default_output
 
   def fixpath(path)
-    if path.first != "/" 
+    if path[0,1] != "/" 
       path = File.join(@source.root, path)
     end
     return path if File.symlink?(path)
