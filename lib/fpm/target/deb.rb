@@ -116,8 +116,9 @@ class FPM::Target::Deb < FPM::Package
     if dep =~ /\(~>/
       name, version = dep.gsub(/[()~>]/, "").split(/ +/)[0..1]
       nextversion = version.split(".").collect { |v| v.to_i }
-      nextversion[1] += 1
-      nextversion[2] = 0
+      l = nextversion.length
+      nextversion[l-2] += 1
+      nextversion[l-1] = 0
       nextversion = nextversion.join(".")
       return ["#{name} (>= #{version})", "#{name} (<< #{nextversion})"]
     else
