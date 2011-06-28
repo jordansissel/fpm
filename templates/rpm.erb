@@ -26,8 +26,9 @@ BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
     if d =~ /\~>/
       name, version = d.gsub(/[()~>]/, "").split(/ +/)[0..1]
       nextversion = version.split(".").collect { |v| v.to_i }
-      nextversion[1] += 1
-      nextversion[2] = 0 
+      l = nextversion.length
+      nextversion[l-2] += 1
+      nextversion[l-1] = 0 
       nextversion = nextversion.join(".")
       ["#{name} >= #{version}", "#{name} < #{nextversion}"]
     # Convert gem >= A.B.C <= X.Y.Z to '>= A.B.C' and '<= X.Y.Z'
