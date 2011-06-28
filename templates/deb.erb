@@ -20,8 +20,7 @@ Homepage: <%= url or "http://nourlgiven.example.com/" %>
 Description: <%= name %> (FPM-generated package)
 <% max_len = 74 -%>
 <% if description -%>
-<%= description.gsub(/^$/, ".").gsub(/(.{1,#{max_len}})( +|$)\n?|(.{#{max_len}})/,"  \\1\\3\n") %>
+<%= description.gsub(/^$/, ".").gsub(/(.{1,#{max_len}})( +|$)\n?|(.{#{max_len}})/,"  \\1\\3\n") -%>
 <% else -%>
 <%= "no description given" %>
 <% end -%>
-
