@@ -15,9 +15,12 @@ class FPM::Program
     @settings.provides = []
     @settings.replaces = []
     @settings.source = {}   # source settings
+    @settings.target = {}   # target settings
 
     # Maintainer scripts - https://github.com/jordansissel/fpm/issues/18
     @settings.scripts ||= {} 
+
+    @help = nil
   end # def initialize
 
   def run(args)
@@ -38,7 +41,7 @@ class FPM::Program
     if !ok
       $stderr.puts "There were errors; see above."
       $stderr.puts 
-      $stderr.puts opts.help
+      $stderr.puts @help
       return 1
     end
 
@@ -56,12 +59,17 @@ class FPM::Program
     FPM::Source::Gem.flags(FPM::Flags.new(opts, "gem", "gem source only"), @settings)
     FPM::Source::Python.flags(FPM::Flags.new(opts, "python", "python source only"),
                               @settings)
-    
+		FPM::Target::Deb.flags(FPM::Flags.new(opts, "deb", "deb target only"), @settings)  
+  
     # Process fpmrc first
     fpmrc(opts)
 
     # Proces normal flags now.
     remaining = opts.parse(args)
+    
+    # need to print help in a different scope
+    @help = opts.help
+
     return remaining
   end # def options
 
@@ -197,5 +205,6 @@ class FPM::Program
             "Add a url for this package.") do |url|
       @settings.url = url
     end # --url
+
   end # def default_options
 end # class FPM::Program
