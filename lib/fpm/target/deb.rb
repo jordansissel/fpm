@@ -4,6 +4,16 @@ require "fpm/package"
 require "fpm/errors"
 
 class FPM::Target::Deb < FPM::Package
+
+  def self.flags(opts, settings)
+    settings.target[:deb] = "deb"
+
+    opts.on("--ignore-iteration-in-dependencies",
+            "For = dependencies, allow iterations on the specified version.  Default is to be specific.") do |x|
+      settings.target[:ignore_iteration] = true
+    end
+  end
+
   def needs_md5sums
     true
   end # def needs_md5sums
@@ -107,7 +117,7 @@ class FPM::Target::Deb < FPM::Package
     name_re = /^[^ \(]+/
     name = dep[name_re] 
     if name =~ /[A-Z]/
-      @logger.warn("Downcasing dependnecy '#{name}' because deb packages " \
+      @logger.warn("Downcasing dependency '#{name}' because deb packages " \
                    " don't work so good with uppercase names")
       dep.gsub!(name_re) { |n| n.downcase }
     end
@@ -121,6 +131,13 @@ class FPM::Target::Deb < FPM::Package
       nextversion[l-1] = 0
       nextversion = nextversion.join(".")
       return ["#{name} (>= #{version})", "#{name} (<< #{nextversion})"]
+    # ignore iterations for = dependencies if flag specified
+    elsif m = dep.match(/(\S+)\s+\(= (.+)\)/) && self.settings[:ignore_iteration]
+			name, version = m[1..2]
+			nextversion = version.split('.').collect { |v| v.to_i }
+			nextversion[-1] += 1
+			nextversion = nextversion.join(".")
+			return ["#{name} (>= #{version})", "#{name} (<< #{nextversion})"]
     else
       return dep
     end
