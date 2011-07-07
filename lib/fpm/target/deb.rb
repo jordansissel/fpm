@@ -132,12 +132,12 @@ class FPM::Target::Deb < FPM::Package
       nextversion = nextversion.join(".")
       return ["#{name} (>= #{version})", "#{name} (<< #{nextversion})"]
     # ignore iterations for = dependencies if flag specified
-    elsif m = dep.match(/(\S+)\s+\(= (.+)\)/) && self.settings[:ignore_iteration]
-			name, version = m[1..2]
-			nextversion = version.split('.').collect { |v| v.to_i }
-			nextversion[-1] += 1
-			nextversion = nextversion.join(".")
-			return ["#{name} (>= #{version})", "#{name} (<< #{nextversion})"]
+    elsif (m = dep.match(/(\S+)\s+\(= (.+)\)/)) && self.settings[:ignore_iteration]
+      name, version = m[1..2]
+      nextversion = version.split('.').collect { |v| v.to_i }
+      nextversion[-1] += 1
+      nextversion = nextversion.join(".")
+      return ["#{name} (>= #{version})", "#{name} (<< #{nextversion})"]
     else
       return dep
     end
