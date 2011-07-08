@@ -22,6 +22,6 @@
     Example:
       --python-bin=/usr/bin/python2.7
       --python-easyinstall=/usr/bin/easy_install2.7
-    
+
 0.2.26 and earlier
   No changelist tracked. My bad, yo.

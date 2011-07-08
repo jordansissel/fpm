@@ -34,7 +34,7 @@ class FPM::Target::Deb < FPM::Package
       # Debian calls x86_64 "amd64"
       @architecture = "amd64"
     end
-    
+
     return @architecture
   end # def architecture
 
@@ -80,7 +80,7 @@ class FPM::Target::Deb < FPM::Package
         else raise "Unsupported script name '#{name}' (path: #{path})"
       end # case name
     end # self.scripts.each
-    
+
     # Make the control
     system("tar -zcf control.tar.gz #{control_files.join(" ")}")
 
@@ -115,7 +115,7 @@ class FPM::Target::Deb < FPM::Package
     end
 
     name_re = /^[^ \(]+/
-    name = dep[name_re] 
+    name = dep[name_re]
     if name =~ /[A-Z]/
       @logger.warn("Downcasing dependency '#{name}' because deb packages " \
                    " don't work so good with uppercase names")
@@ -149,4 +149,3 @@ class FPM::Target::Deb < FPM::Package
     end
   end # def fix_dependency
 end # class FPM::Target::Deb
-
