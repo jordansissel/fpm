@@ -16,7 +16,7 @@ class FPM::Source::Dir < FPM::Source
       @paths.each do |path|
         # Trim @root (--chdir)
         if @root != "." and path.start_with?(@root)
-          path = path[@root.size .. -1] 
+          path = path[@root.size .. -1]
         end
 
         # Copy to self[:prefix] (aka --prefix)

@@ -109,7 +109,7 @@ class FPM::Program
 
     opts.on("-v VERSION", "--version VERSION",
             "version to give the package") do |version|
-      @settings.version = version 
+      @settings.version = version
     end # --version
 
     opts.on("--iteration ITERATION",
@@ -152,7 +152,7 @@ class FPM::Program
 
     opts.on("-s SOURCE_TYPE", "what to build the package from") do |st|
       @settings.source_type = st
-    end # -s 
+    end # -s
 
     opts.on("-S PACKAGE_SUFFIX", "which suffix to append to package and dependencies") do |sfx|
       @settings.suffix = sfx

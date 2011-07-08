@@ -48,6 +48,6 @@ packages with fpm in debian. It will likely require a one-time addition to
 site.py (/usr/lib/python2.6/site.py) or some other PYTHONPATH hackery, though
 I don't know just yet.
 
-It will also require special setup.py invocations as Debian has patched distutils to 
+It will also require special setup.py invocations as Debian has patched distutils to
 install python packages, by default, to a place that requires again the
 python-central/support tools to run to make them work.
