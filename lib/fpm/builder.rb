@@ -47,6 +47,7 @@ class FPM::Builder
       :maintainer => settings.maintainer,
       :provides => [],
       :replaces => [],
+      :conflicts => [],
       :description => settings.description,
       :url => settings.url,
       :settings => settings.source
@@ -63,6 +64,7 @@ class FPM::Builder
     # Append provides given from settings (--provides flag for fpm)
     @package.provides += settings.provides if settings.provides
     @package.replaces += settings.replaces if settings.replaces
+    @package.conflicts += settings.conflicts if settings.conflicts
     @package.architecture = settings.architecture if settings.architecture
     @package.scripts = settings.scripts
 

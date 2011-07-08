@@ -14,6 +14,7 @@ class FPM::Program
     @settings.exclude = []  # Paths to exclude in packaging
     @settings.provides = []
     @settings.replaces = []
+    @settings.conflicts = []
     @settings.source = {}   # source settings
     @settings.target = {}   # target settings
 
@@ -129,6 +130,10 @@ class FPM::Program
     opts.on("--provides PROVIDES") do |thing|
       @settings.provides << thing
     end # --provides
+
+    opts.on("--conflicts CONFLICTS") do |thing|
+      @settings.conflicts << thing
+    end # --conflicts
 
     opts.on("--replaces REPLACES") do |thing|
       @settings.replaces << thing
