@@ -13,7 +13,7 @@ class FPM::Builder
       o = @package.default_output
       if o[0,1] == "/"
         o
-      else 
+      else
         File.join(@working_dir, o)
       end
     end
@@ -69,7 +69,7 @@ class FPM::Builder
     @output = settings.package_path
     @recurse_dependencies = settings.recurse_dependencies
   end # def initialize
-  
+
   def tar_path
     @tar_path ||= "#{builddir}/data.tar"
   end
