@@ -55,6 +55,11 @@ class get_metadata(Command):
     if dependencies is None:
       dependencies = []
 
+    # Some cases (like paramiko) dependencies is actually just a string, not a
+    # list
+    if isinstance(dependencies, str):
+      dependencies = [dependencies]
+
     final_deps = []
     dep_re = re.compile("([^<>= ]+)(?:\s*([<>=]{1,2})\s*(.*))?$")
     for dep in dependencies:
