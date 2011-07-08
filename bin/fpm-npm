@@ -61,8 +61,8 @@ Dir.glob("#{builddir}/usr/lib/node/.npm/*/*") do |path|
   # So we'll specify deps of {v}-1 <= x <= {v}-999999....
   depends = Dir.glob("#{path}/dependson/*@*") \
     .collect { |p| PACKAGEPREFIX + File.basename(p) } \
-    .collect { |p| n,v = p.split("@"); 
-      ["#{n} (>= #{v}-1)", "#{n} (<= #{v}-99999999999999)"] 
+    .collect { |p| n,v = p.split("@");
+      ["#{n} (>= #{v}-1)", "#{n} (<= #{v}-99999999999999)"]
   }.flatten
 
   if package["author"]
@@ -73,7 +73,7 @@ Dir.glob("#{builddir}/usr/lib/node/.npm/*/*") do |path|
     maintainer = "#{m["name"]} <#{m["email"]}>"
   end
 
-  pkgcmd = [ "fpm", 
+  pkgcmd = [ "fpm",
     "-n", "#{PACKAGEPREFIX}#{package["name"]}",
     "-v", package["version"],
     "-m", maintainer,

@@ -50,7 +50,7 @@ class get_metadata(Command):
       dependencies = self.distribution.install_requires
     except:
       pass
-    
+
     # In some cases (Mysql-Python) 'dependencies' is none, not empty.
     if dependencies is None:
       dependencies = []

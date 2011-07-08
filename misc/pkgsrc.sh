@@ -11,7 +11,7 @@ if [ ! -f "build/usr/local/bin/bmake" ] ; then
   # TODO(sissel): Maybe bootstrap ourselves.
   echo "This script requires pkgsrc to be bootstrapped in a specific way."
   echo "I expected to find file: build/usr/local/bin/bmake and did not"
-  echo 
+  echo
   echo "Bootstrap with:"
   echo "SH=/bin/bash ./bootstrap/bootstrap --unprivileged --prefix $PWD/build/usr/local --pkgdbdir $PWD/pkgdb"
   exit 1
@@ -37,7 +37,7 @@ for target in $TARGETS; do
   set --
 
   eval "$(bmake -C $target show-vars-eval VARS="PKGNAME PKGVERSION")"
-  name="$(echo "$PKGNAME" | sed -e "s/-$PKGVERSION\$//")" 
+  name="$(echo "$PKGNAME" | sed -e "s/-$PKGVERSION\$//")"
   orig_version=${PKGVERSION}
   version=${PKGVERSION}-pkgsrc
 
@@ -52,8 +52,8 @@ for target in $TARGETS; do
     clean package || exit 1
 
   # Start building fpm args
-  set -- -n "$name" -v "$version" --prefix $LOCALBASE 
-  
+  set -- -n "$name" -v "$version" --prefix $LOCALBASE
+
   # Skip the pkgsrc package metadata files
   set -- "$@" --exclude '+*'
 
@@ -64,9 +64,9 @@ for target in $TARGETS; do
     set -- "$@" -d "$PKGNAME (= $PKGVERSION-pkgsrc)"
   done
 
-  set -- -s tar -t deb "$@" 
-  set -- "$@" packages/All/$name-$orig_version.tgz 
-  fpm "$@" 
+  set -- -s tar -t deb "$@"
+  set -- "$@" packages/All/$name-$orig_version.tgz
+  fpm "$@"
 done
-  
+
 

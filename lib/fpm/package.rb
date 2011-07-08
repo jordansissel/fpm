@@ -3,7 +3,7 @@ require "socket" # for Socket.gethostname
 require "logger"
 require "find" # for Find.find (directory walking)
 
-class FPM::Package 
+class FPM::Package
   # The name of this package
   attr_accessor :name
 
@@ -18,7 +18,7 @@ class FPM::Package
   # The iteration of this package.
   #   Debian calls this 'release' and is the last '-NUMBER' in the version
   #   RedHat has this as 'Release' in the .spec file
-  #   FreeBSD calls this 'PORTREVISION' 
+  #   FreeBSD calls this 'PORTREVISION'
   # If left unpicked, it defaults to 1.
   attr_accessor :iteration
 
@@ -83,7 +83,7 @@ class FPM::Package
     @dependencies = source[:dependencies] || []
     # Iteration can be nil. If nil, the fpm package implementation is expected
     # to handle any default value that should be instead.
-    @iteration = source[:iteration] 
+    @iteration = source[:iteration]
     @url = source[:url] || "http://nourlgiven.example.com/no/url/given"
     @category = source[:category] || "default"
     @license = source[:license] || "unknown"
@@ -119,8 +119,8 @@ class FPM::Package
     @scripts = source[:scripts]
     @config_files = source[:config_files] || []
 
-		# Target-specific settings, mirrors :settings metadata in FPM::Source
-		@settings = params[:settings] || {}
+    # Target-specific settings, mirrors :settings metadata in FPM::Source
+    @settings = params[:settings] || {}
   end # def initialize
 
   # nobody needs md5sums by default.
@@ -167,7 +167,7 @@ class FPM::Package
   end # def default_output
 
   def fixpath(path)
-    if path[0,1] != "/" 
+    if path[0,1] != "/"
       path = File.join(@source.root, path)
     end
     return path if File.symlink?(path)

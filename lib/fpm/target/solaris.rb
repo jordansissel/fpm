@@ -11,7 +11,7 @@ class FPM::Target::Solaris < FPM::Package
     when nil, "native"
       @architecture = %x{uname -p}.chomp
     end
-    # "all" is a valid arch according to 
+    # "all" is a valid arch according to
     # http://www.bolthole.com/solaris/makeapackage.html
 
     return @architecture
