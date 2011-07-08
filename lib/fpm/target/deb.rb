@@ -105,16 +105,15 @@ class FPM::Target::Deb < FPM::Package
   end # def default_output
 
   def fix_dependency(dep)
-    # Convert strings 'foo >= bar' to 'foo (>= bar)'
-    if dep =~ /\(/
+    # Ignore complex dependencies with multiple packages or version numbers
+    if dep =~ /[\(,\|]/
       # nothing
     else
-      # If the dependency is simply a name, turn it into 'name (>= 0)'
       da = dep.split(/ +/)
-      if da.size == 1
-        da += [">=", "0"]
+      if da.size > 1
+        # Convert strings 'foo >= bar' to 'foo (>= bar)'
+        dep = "#{da[0]} (#{da[1]} #{da[2]})"
       end
-      dep = "#{da[0]} (#{da[1]} #{da[2]})"
     end
 
     name_re = /^[^ \(]+/
