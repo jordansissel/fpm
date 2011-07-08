@@ -6,9 +6,9 @@ Maintainer: <%= maintainer or "<unknown>" %>
 <%   properdeps = dependencies.collect { |d| fix_dependency(d) }.flatten -%>
 Depends: <%= properdeps.flatten.join(", ") %>
 <% end -%>
-<% if !conflicts.empty? %>
+<% if !conflicts.empty? -%>
 Conflicts: <%= conflicts.join(", ") %>
-<% end %>
+<% end -%>
 <% if !provides.empty? -%>
 Provides: <%= provides.join(", ") -%>
 <% end -%>
