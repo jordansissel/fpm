@@ -103,8 +103,8 @@ class FPM::Target::Deb < FPM::Package
 
   def fix_dependency(dep)
     # Convert strings 'foo >= bar' to 'foo (>= bar)'
-    if dep =~ /\(/
-      # nothing
+    if dep =~ /[\(,\|]/
+      # Don't "fix" ones that could appear well formed already.
     else
       # If the dependency is simply a name, turn it into 'name (>= 0)'
       da = dep.split(/ +/)
