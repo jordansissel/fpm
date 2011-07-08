@@ -47,7 +47,11 @@ class FPM::Source::Python < FPM::Source
       want_pkg = "#{package}==#{version}"
     end
 
-    system(self[:settings][:easy_install], "--editable", "--build-directory", @tmpdir, want_pkg)
+    return_value = system(self[:settings][:easy_install], "--editable", "--build-directory", @tmpdir, want_pkg)
+
+    if return_value.nil?
+        raise "The execution of #{self[:settings][:easy_install]} failed"
+    end
 
     # easy_install will put stuff in @tmpdir/packagename/, flatten that.
     #  That is, we want @tmpdir/setup.py, and start with
