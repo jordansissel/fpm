@@ -17,6 +17,7 @@ class FPM::Program
     @settings.conflicts = []
     @settings.source = {}   # source settings
     @settings.target = {}   # target settings
+    @settings.conffiles ||= []
 
     # Maintainer scripts - https://github.com/jordansissel/fpm/issues/18
     @settings.scripts ||= {} 
@@ -142,6 +143,10 @@ class FPM::Program
     opts.on("--replaces REPLACES") do |thing|
       @settings.replaces << thing
     end # --replaces
+
+    opts.on("--conffile CONFFILE") do |thing|
+      @settings.conffiles << thing
+    end
 
     opts.on("-a ARCHITECTURE", "--architecture ARCHITECTURE") do |arch|
       @settings.architecture = arch
