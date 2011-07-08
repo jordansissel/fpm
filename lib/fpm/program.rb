@@ -14,8 +14,10 @@ class FPM::Program
     @settings.exclude = []  # Paths to exclude in packaging
     @settings.provides = []
     @settings.replaces = []
+    @settings.conflicts = []
     @settings.source = {}   # source settings
     @settings.target = {}   # target settings
+    @settings.config_files ||= []
 
     # Maintainer scripts - https://github.com/jordansissel/fpm/issues/18
     @settings.scripts ||= {}
@@ -126,13 +128,26 @@ class FPM::Program
       @settings.dependencies << dep
     end # --depends
 
+    opts.on("--category SECTION_OR_GROUP") do |thing|
+      @settings.category = thing
+    end # --category
+
     opts.on("--provides PROVIDES") do |thing|
       @settings.provides << thing
     end # --provides
 
+    opts.on("--conflicts CONFLICTS") do |thing|
+      @settings.conflicts << thing
+    end # --conflicts
+
     opts.on("--replaces REPLACES") do |thing|
       @settings.replaces << thing
     end # --replaces
+
+    opts.on("--config-files PATH",
+            "(optional) Treat path as a configuration file. Uses conffiles in deb or %config in rpm. (/etc/package.conf)") do |thing|
+      @settings.config_files << thing
+    end
 
     opts.on("-a ARCHITECTURE", "--architecture ARCHITECTURE") do |arch|
       @settings.architecture = arch
