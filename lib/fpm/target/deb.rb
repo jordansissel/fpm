@@ -97,12 +97,10 @@ class FPM::Target::Deb < FPM::Package
   end # def build
 
   def default_output
-    v = version
-    v = "#{epoch}:#{v}" if epoch
     if iteration
-      "#{name}_#{v}-#{iteration}_#{architecture}.#{type}"
+      "#{name}_#{version}-#{iteration}_#{architecture}.#{type}"
     else
-      "#{name}_#{v}_#{architecture}.#{type}"
+      "#{name}_#{version}_#{architecture}.#{type}"
     end
   end # def default_output
 
