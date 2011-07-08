@@ -7,7 +7,7 @@ Maintainer: <%= maintainer or "<unknown>" %>
 Depends: <%= properdeps.flatten.join(", ") %>
 <% end -%>
 <% if !provides.empty? -%>
-Provides: <%= provides.join(", ") -%>
+Provides: <%= provides.join(", ") %>
 <% end -%>
 <% if !replaces.empty? -%>
 <%   properrepl = replaces.collect { |d| fix_dependency(d) }.flatten -%>
@@ -17,10 +17,10 @@ Standards-Version: 3.9.1
 Section: <%= category or "unknown" %>
 Priority: extra
 Homepage: <%= url or "http://nourlgiven.example.com/" %>
-Description: <%= name %> (FPM-generated package)
-<% max_len = 74 -%>
-<% if description -%>
-<%= description.gsub(/^$/, ".").gsub(/(.{1,#{max_len}})( +|$)\n?|(.{#{max_len}})/,"  \\1\\3\n") -%>
-<% else -%>
-<%= "no description given" %>
+<% lines = (description or "no descriptio given").split("\n") -%>
+<% firstline = lines.first -%>
+<% remainder = lines[1..-1] -%>
+Description: <%= firstline %>
+<% if !remainder.nil? -%>
+<%= remainder.collect { |l| l = "." if l =~ /^ *$/; " #{l}" }.join("\n") %>
 <% end -%>
