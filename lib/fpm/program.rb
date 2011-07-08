@@ -20,7 +20,7 @@ class FPM::Program
     @settings.config_files ||= []
 
     # Maintainer scripts - https://github.com/jordansissel/fpm/issues/18
-    @settings.scripts ||= {} 
+    @settings.scripts ||= {}
 
     @help = nil
   end # def initialize
@@ -42,7 +42,7 @@ class FPM::Program
 
     if !ok
       $stderr.puts "There were errors; see above."
-      $stderr.puts 
+      $stderr.puts
       $stderr.puts @help
       return 1
     end
@@ -61,14 +61,14 @@ class FPM::Program
     FPM::Source::Gem.flags(FPM::Flags.new(opts, "gem", "gem source only"), @settings)
     FPM::Source::Python.flags(FPM::Flags.new(opts, "python", "python source only"),
                               @settings)
-		FPM::Target::Deb.flags(FPM::Flags.new(opts, "deb", "deb target only"), @settings)  
-  
+    FPM::Target::Deb.flags(FPM::Flags.new(opts, "deb", "deb target only"), @settings)
+
     # Process fpmrc first
     fpmrc(opts)
 
     # Proces normal flags now.
     remaining = opts.parse(args)
-    
+
     # need to print help in a different scope
     @help = opts.help
 
@@ -80,7 +80,7 @@ class FPM::Program
     return if !ENV.include?("HOME")
     rcpath = File.expand_path("~/.fpmrc")
     return if !File.exists?(rcpath)
-    
+
     # fpmrc exists, read it as flags, one per line.
     File.new(rcpath, "r").each do |line|
       flag = line.chomp
@@ -111,7 +111,7 @@ class FPM::Program
 
     opts.on("-v VERSION", "--version VERSION",
             "version to give the package") do |version|
-      @settings.version = version 
+      @settings.version = version
     end # --version
 
     opts.on("--iteration ITERATION",
@@ -167,7 +167,7 @@ class FPM::Program
 
     opts.on("-s SOURCE_TYPE", "what to build the package from") do |st|
       @settings.source_type = st
-    end # -s 
+    end # -s
 
     opts.on("-S PACKAGE_SUFFIX", "which suffix to append to package and dependencies") do |sfx|
       @settings.suffix = sfx

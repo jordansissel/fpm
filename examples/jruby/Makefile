@@ -15,7 +15,7 @@ clean:
 	rm -f $(NAME)-* $(NAME)_* || true
 	rm -fr $(TARDIR) || true
 	rm -f *.deb
-        rm -f *.rpm
+	rm -f *.rpm
 
 $(TARBALL):
 	wget "$(DOWNLOAD)"
