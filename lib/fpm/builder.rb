@@ -55,7 +55,9 @@ class FPM::Builder
     @edit = !!settings.edit
 
     @paths = paths
-    @package = package_class_for(settings.package_type).new(@source)
+    @package = package_class_for(settings.package_type).new(@source, 
+			:settings => settings.target
+		)
     # Append dependencies given from settings (-d flag for fpm)
     @package.dependencies += settings.dependencies if settings.dependencies
     # Append provides given from settings (--provides flag for fpm)
