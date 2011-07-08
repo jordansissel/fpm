@@ -87,11 +87,11 @@ class FPM::Source
     paths = [ paths ] if paths.is_a? String
     paths.each do |path|
       while path != "/" and path != "."
-        dirs << path if !dirs.include?(path) 
+        dirs << path if !dirs.include?(path)
         path = File.dirname(path)
       end
     end # paths.each
-    
+
     # Want directories to be sorted thusly: [ "/usr", "/usr/bin" ]
     # Why? tar and some package managers sometimes fail if the tar is created
     # like: [ "/opt/fizz", "/opt" ]
@@ -136,7 +136,7 @@ class FPM::Source
     end
   end # def tar
 
-  def tar_cmd 
+  def tar_cmd
     # Rely on gnu tar for solaris.
     case %x{uname -s}.chomp
     when "SunOS"

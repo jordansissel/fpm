@@ -115,7 +115,7 @@ class FPM::Target::Deb < FPM::Package
     end
 
     name_re = /^[^ \(]+/
-    name = dep[name_re] 
+    name = dep[name_re]
     if name =~ /[A-Z]/
       @logger.warn("Downcasing dependency '#{name}' because deb packages " \
                    " don't work so good with uppercase names")

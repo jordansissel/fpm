@@ -23,11 +23,11 @@ class RPMFile::Header
     # At this point assume we've read and consumed the lead and signature.
     #len = @rpm.signature.index_length + @rpm.signature
     #
-    # header size is 
+    # header size is
     #     ( @rpm.signature.index_length * size of a header entry )
     #     + @rpm.signature.data_length
     #
-    # header 'entries' are an 
+    # header 'entries' are an
     #   int32 (tag id), int32 (tag type), int32  (offset), uint32 (count)
     #
     # See rpm's header.c, the headerLoad method function for reference.
@@ -43,7 +43,7 @@ class RPMFile::Header
     @index_size = @index_count * entry_size
     tag_data = @rpm.file.read(@index_size)
     data = @rpm.file.read(@data_length)
-    
+
     #ap :data => data
 
     (0 ... @index_count).each do |i|
@@ -55,7 +55,7 @@ class RPMFile::Header
       @tags << tag
 
       #ap tag.tag => {
-        #:type => tag.type, 
+        #:type => tag.type,
         #:offset => tag.offset,
         #:count => tag.count,
         #:value => (tag.value rescue "???"),
