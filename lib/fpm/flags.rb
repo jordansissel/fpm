@@ -10,7 +10,7 @@ class FPM::Flags
   def on(*args, &block)
     fixed_args = args.collect do |arg|
       if arg =~ /^--/
-        "--#{@flag_prefix}-#{arg.gsub(/^--/, "")}" 
+        "--#{@flag_prefix}-#{arg.gsub(/^--/, "")}"
       else
         "(#{@help_prefix}) #{arg}"
       end

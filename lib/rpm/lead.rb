@@ -2,7 +2,7 @@ require File.join(File.dirname(__FILE__), "namespace")
 
 class RPMFile::Lead
   #struct rpmlead {
-  attr_accessor :magic #unsigned char magic[4]; 
+  attr_accessor :magic #unsigned char magic[4];
   attr_accessor :major #unsigned char major;
   attr_accessor :minor #unsigned char minor;
   attr_accessor :type  #short type;
@@ -12,7 +12,7 @@ class RPMFile::Lead
   attr_accessor :signature_type #short signature_type;
   attr_accessor :reserved #char reserved[16];
   #}
-  
+
   attr_accessor :length
 
   def initialize(rpm)
@@ -29,7 +29,7 @@ class RPMFile::Lead
       raise "Unknown package 'type' value #{@type}"
     end
   end # def type
-  
+
   def read
     # Use 'A' here instead of 'a' to trim nulls.
     @length = 96

@@ -30,7 +30,7 @@ class FPM::Source::Python < FPM::Source
       return
     end
 
-    if !File.exists?(package) 
+    if !File.exists?(package)
       download(package, params[:version])
     else
       @paths = [ File.expand_path(package) ]

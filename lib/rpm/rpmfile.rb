@@ -8,7 +8,7 @@ require File.join(File.dirname(__FILE__), "tag")
 # source code, but mostly it started making more sense after reading this site:
 # http://www.rpm.org/max-rpm/s1-rpm-file-format-rpm-file-format.html
 
-class RPMFile 
+class RPMFile
   attr_reader :file
 
   def initialize(file)
