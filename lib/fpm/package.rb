@@ -59,7 +59,10 @@ class FPM::Package
   # hash of paths for maintainer/package scripts (postinstall, etc)
   attr_accessor :scripts
 
-  def initialize(source)
+	# target-specific settings
+	attr_accessor :settings
+
+  def initialize(source, params={})
     @source = source
     @logger = Logger.new(STDERR)
     @logger.level = $DEBUG ? Logger::DEBUG : Logger::WARN
@@ -106,6 +109,9 @@ class FPM::Package
     @provides = source[:provides] || []
     @replaces = source[:replaces] || []
     @scripts = source[:scripts]
+
+		# Target-specific settings, mirrors :settings metadata in FPM::Source
+		@settings = params[:settings] || {}
   end # def initialize
 
   # nobody needs md5sums by default.
