@@ -14,7 +14,7 @@ Group: <%= category %>
 TODO: [Jay] rpms require a license
 let's detect it intelligently
 -%>
-License: <%= license %> 
+License: <%= license %>
 URL: <%= url or "http://nourlgiven.example.com/" %>
 Source0:  %{_sourcedir}/data.tar.gz
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
@@ -28,7 +28,7 @@ BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
       nextversion = version.split(".").collect { |v| v.to_i }
       l = nextversion.length
       nextversion[l-2] += 1
-      nextversion[l-1] = 0 
+      nextversion[l-1] = 0
       nextversion = nextversion.join(".")
       ["#{name} >= #{version}", "#{name} < #{nextversion}"]
     # Convert gem >= A.B.C <= X.Y.Z to '>= A.B.C' and '<= X.Y.Z'
