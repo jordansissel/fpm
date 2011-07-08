@@ -8,7 +8,7 @@ Should make the package. Try installing:
 
 Now try it:
 
-    % /opt/jruby/bin/jirb 
+    % /opt/jruby/bin/jirb
     >> require "java"
     => true
     >> java.lang.System.out.println("Hello")
