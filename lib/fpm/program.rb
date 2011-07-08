@@ -17,7 +17,7 @@ class FPM::Program
     @settings.conflicts = []
     @settings.source = {}   # source settings
     @settings.target = {}   # target settings
-    @settings.conffiles ||= []
+    @settings.config_files ||= []
 
     # Maintainer scripts - https://github.com/jordansissel/fpm/issues/18
     @settings.scripts ||= {} 
@@ -144,8 +144,9 @@ class FPM::Program
       @settings.replaces << thing
     end # --replaces
 
-    opts.on("--conffile CONFFILE") do |thing|
-      @settings.conffiles << thing
+    opts.on("--config-files PATH",
+            "(optional) Treat path as a configuration file. Uses conffiles in deb or %config in rpm. (/etc/package.conf)") do |thing|
+      @settings.config_files << thing
     end
 
     opts.on("-a ARCHITECTURE", "--architecture ARCHITECTURE") do |arch|

@@ -68,7 +68,7 @@ class FPM::Builder
     @package.architecture = settings.architecture if settings.architecture
     @package.category = settings.category if settings.category
     @package.scripts = settings.scripts
-    @package.conffiles = settings.conffiles
+    @package.config_files = settings.config_files
 
     @output = settings.package_path
     @recurse_dependencies = settings.recurse_dependencies

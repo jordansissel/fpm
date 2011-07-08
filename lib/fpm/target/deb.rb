@@ -81,8 +81,8 @@ class FPM::Target::Deb < FPM::Package
       end # case name
     end # self.scripts.each
     
-    if self.conffiles.any?
-      File.open('conffiles', 'w'){ |f| f.puts(conffiles.join("\n")) }
+    if self.config_files.any?
+      File.open('conffiles', 'w'){ |f| f.puts(config_files.join("\n")) }
       control_files << 'conffiles'
     end
 
