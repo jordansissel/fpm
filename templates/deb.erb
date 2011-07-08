@@ -21,9 +21,8 @@ Section: <%= category or "unknown" %>
 Priority: extra
 Homepage: <%= url or "http://nourlgiven.example.com/" %>
 <% lines = (description or "no description given").split("\n") -%>
-<% firstline = lines.first -%>
-<% remainder = lines[1..-1] -%>
+<% firstline, *remainder = lines -%>
 Description: <%= firstline %>
-<% if !remainder.nil? -%>
+<% if remainder.any? -%>
 <%= remainder.collect { |l| l =~ /^ *$/ ? " ." : " #{l}" }.join("\n") %>
 <% end -%>
