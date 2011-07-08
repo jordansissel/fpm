@@ -34,7 +34,7 @@ class FPM::Target::Deb < FPM::Package
       # Debian calls x86_64 "amd64"
       @architecture = "amd64"
     end
-    
+
     return @architecture
   end # def architecture
 
@@ -80,7 +80,7 @@ class FPM::Target::Deb < FPM::Package
         else raise "Unsupported script name '#{name}' (path: #{path})"
       end # case name
     end # self.scripts.each
-    
+
     # Make the control
     system("tar -zcf control.tar.gz #{control_files.join(" ")}")
 
@@ -149,4 +149,3 @@ class FPM::Target::Deb < FPM::Package
     end
   end # def fix_dependency
 end # class FPM::Target::Deb
-
