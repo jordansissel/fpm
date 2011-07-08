@@ -122,6 +122,12 @@ class FPM::Target::Deb < FPM::Package
       dep.gsub!(name_re) { |n| n.downcase }
     end
 
+    if dep =~ /_/
+      @logger.warn("Replacing underscores with dashes in '#{dep}' because " \
+                   "debs don't like underscores")
+      dep.gsub!("_", "-")
+    end
+
     # Convert gem ~> X.Y.Z to '>= X.Y.Z' and << X.Y+1.0
     if dep =~ /\(~>/
       name, version = dep.gsub(/[()~>]/, "").split(/ +/)[0..1]
