@@ -81,6 +81,11 @@ class FPM::Target::Deb < FPM::Package
       end # case name
     end # self.scripts.each
     
+    if self.conffiles.any?
+      File.open('conffiles', 'w'){ |f| f.puts(conffiles.join("\n")) }
+      control_files << 'conffiles'
+    end
+
     # Make the control
     system("tar -zcf control.tar.gz #{control_files.join(" ")}")
 

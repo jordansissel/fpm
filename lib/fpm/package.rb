@@ -63,6 +63,9 @@ class FPM::Package
   # hash of paths for maintainer/package scripts (postinstall, etc)
   attr_accessor :scripts
 
+  # Array of configuration files
+  attr_accessor :conffiles
+
 	# target-specific settings
 	attr_accessor :settings
 
@@ -114,6 +117,7 @@ class FPM::Package
     @replaces = source[:replaces] || []
     @conflicts = source[:conflicts] || []
     @scripts = source[:scripts]
+    @conffiles = source[:conffiles] || []
 
 		# Target-specific settings, mirrors :settings metadata in FPM::Source
 		@settings = params[:settings] || {}
