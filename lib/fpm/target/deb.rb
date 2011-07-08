@@ -81,6 +81,11 @@ class FPM::Target::Deb < FPM::Package
       end # case name
     end # self.scripts.each
 
+    if self.config_files.any?
+      File.open('conffiles', 'w'){ |f| f.puts(config_files.join("\n")) }
+      control_files << 'conffiles'
+    end
+
     # Make the control
     system("tar -zcf control.tar.gz #{control_files.join(" ")}")
 
@@ -92,26 +97,22 @@ class FPM::Target::Deb < FPM::Package
   end # def build
 
   def default_output
-    v = version
-    v = "#{epoch}:#{v}" if epoch
     if iteration
-      "#{name}_#{v}-#{iteration}_#{architecture}.#{type}"
+      "#{name}_#{version}-#{iteration}_#{architecture}.#{type}"
     else
-      "#{name}_#{v}_#{architecture}.#{type}"
+      "#{name}_#{version}_#{architecture}.#{type}"
     end
   end # def default_output
 
   def fix_dependency(dep)
-    # Convert strings 'foo >= bar' to 'foo (>= bar)'
     if dep =~ /[\(,\|]/
       # Don't "fix" ones that could appear well formed already.
     else
-      # If the dependency is simply a name, turn it into 'name (>= 0)'
       da = dep.split(/ +/)
-      if da.size == 1
-        da += [">=", "0"]
+      if da.size > 1
+        # Convert strings 'foo >= bar' to 'foo (>= bar)'
+        dep = "#{da[0]} (#{da[1]} #{da[2]})"
       end
-      dep = "#{da[0]} (#{da[1]} #{da[2]})"
     end
 
     name_re = /^[^ \(]+/
