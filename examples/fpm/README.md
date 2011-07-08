@@ -16,4 +16,4 @@ Should make the package. Try installing:
 
 Now try it:
 
-    $ /opt/fpm/bin/fpm --help 
+    $ /opt/fpm/bin/fpm --help

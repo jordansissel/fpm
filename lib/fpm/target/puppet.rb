@@ -36,7 +36,7 @@ class FPM::Target::Puppet < FPM::Package
       dir = File.join(builddir, "manifests", File.dirname(manifest))
       @logger.info("manifests targeting: #{dir}")
       ::Dir.mkdir(dir) if !File.directory?(dir)
-      
+
       File.open(File.join(builddir, "manifests", manifest), "w") do |f|
         @logger.info("manifest: #{f.path}")
         template = template(File.join("puppet", "#{manifest}.erb"))
