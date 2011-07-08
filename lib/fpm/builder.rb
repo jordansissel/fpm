@@ -66,6 +66,7 @@ class FPM::Builder
     @package.replaces += settings.replaces if settings.replaces
     @package.conflicts += settings.conflicts if settings.conflicts
     @package.architecture = settings.architecture if settings.architecture
+    @package.category = settings.category if settings.category
     @package.scripts = settings.scripts
 
     @output = settings.package_path

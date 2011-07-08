@@ -127,6 +127,10 @@ class FPM::Program
       @settings.dependencies << dep
     end # --depends
 
+    opts.on("--category SECTION_OR_GROUP") do |thing|
+      @settings.category = thing
+    end # --category
+
     opts.on("--provides PROVIDES") do |thing|
       @settings.provides << thing
     end # --provides
