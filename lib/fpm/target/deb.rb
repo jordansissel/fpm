@@ -105,9 +105,8 @@ class FPM::Target::Deb < FPM::Package
   end # def default_output
 
   def fix_dependency(dep)
-    # Ignore complex dependencies with multiple packages or version numbers
     if dep =~ /[\(,\|]/
-      # nothing
+      # Don't "fix" ones that could appear well formed already.
     else
       da = dep.split(/ +/)
       if da.size > 1
