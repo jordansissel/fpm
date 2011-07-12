@@ -14,6 +14,8 @@ class FPM::Source::Tar < FPM::Source
       compression = :bipz2
     elsif input_tarball =~ /\.tar\.gz$/
       compression = :gzip
+    elsif input_tarball =~ /\.tar\.xz$/
+      compression = :lzma
     else
       compression = :none
     end
@@ -25,6 +27,7 @@ class FPM::Source::Tar < FPM::Source
     case compression
       when :bzip2; flags += " -j"
       when :gzip; flags += " -z"
+      when :lzma; flags += " --lzma"
     end
     #puts("tar #{flags}")
     #sleep 5
