@@ -87,7 +87,7 @@ class FPM::Target::Deb < FPM::Package
     end
 
     # Make the control
-    system("tar -zcf control.tar.gz #{control_files.join(" ")}")
+    system("tar -zcf control.tar.gz #{control_files.map{ |f| "./#{f}" }.join(" ")}")
 
     # create debian-binary
     File.open("debian-binary", "w") { |f| f.puts "2.0" }
