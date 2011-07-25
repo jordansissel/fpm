@@ -83,6 +83,11 @@ class get_metadata(Command):
     data["dependencies"] = final_deps
 
     #print json.dumps(data, indent=2)
-    print json.dumps(data, indent=2)
+    try:
+      print json.dumps(data, indent=2)
+    except AttributeError, e:
+      # For Python 2.5 and Debian's python-json
+      print json.write(data)
+
   # def run
 # class list_dependencies
