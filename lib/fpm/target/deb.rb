@@ -12,6 +12,10 @@ class FPM::Target::Deb < FPM::Package
             "For = dependencies, allow iterations on the specified version.  Default is to be specific.") do |x|
       settings.target[:ignore_iteration] = true
     end
+
+    opts.on("--pre-depends DEPENDENCY", "Add DEPENDENCY as Pre-Depends.") do |dep|
+      (settings.target[:pre_depends] ||= []) << dep
+    end
   end
 
   def needs_md5sums
@@ -149,4 +153,8 @@ class FPM::Target::Deb < FPM::Package
       return dep
     end
   end # def fix_dependency
+
+  def pre_dependencies
+    self.settings[:pre_depends] || []
+  end # def pre_dependencies
 end # class FPM::Target::Deb
