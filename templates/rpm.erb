@@ -15,7 +15,12 @@ TODO: [Jay] rpms require a license
 let's detect it intelligently
 -%>
 License: <%= license %>
-URL: <%= url or "http://nourlgiven.example.com/" %>
+<% if url and url.length > 0 -%>
+<% actualurl = url -%>
+<% else -%>
+<% actualurl = "http://nourlgiven.example.com/" -%>
+<% end -%>
+URL: <%= actualurl %>
 Source0:  %{_sourcedir}/data.tar.gz
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
