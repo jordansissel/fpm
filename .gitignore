@@ -4,6 +4,7 @@
 # build byproducts
 build-*/*
 fpm.wiki
+*.gem
 
 # python
 *.pyc
