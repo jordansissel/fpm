@@ -19,6 +19,14 @@ class FPM::Target::Rpm < FPM::Package
     "#{builddir}/#{name}.spec"
   end
 
+  def url
+    if @url.nil? || @url.empty?
+      'http://nourlgiven.example.com'
+    else
+      @url
+    end
+  end
+
   def build!(params)
     raise "No package name given. Can't assemble package" if !@name
     # TODO(sissel): Abort if 'rpmbuild' tool not found.
