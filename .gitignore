@@ -1,4 +1,9 @@
+# vim
 .*.sw[a-z]
+
+# build byproducts
 build-*/*
 fpm.wiki
+
+# python
 *.pyc
