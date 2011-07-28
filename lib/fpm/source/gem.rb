@@ -10,6 +10,10 @@ class FPM::Source::Gem < FPM::Source
             "The directory to install gem executables") do |path|
       settings.source[:bin_path] = path
     end
+    opts.on("--package-prefix PREFIX",
+            "Prefix for gem packages") do |package_prefix|
+      settings.source[:package_prefix] = package_prefix
+    end
   end # def flags
 
   def get_source(params)
@@ -70,7 +74,12 @@ class FPM::Source::Gem < FPM::Source
           self[field.to_sym] = spec.send(field) rescue "unknown"
         end
 
-        self[:name] = "rubygem#{self[:suffix]}-#{spec.name}"
+        if self[:settings][:package_prefix]
+          self[:package_prefix] = self[:settings][:package_prefix]
+        else
+          self[:package_prefix] = "rubygem"
+        end
+        self[:name] = "#{self[:package_prefix]}#{self[:suffix]}-#{spec.name}"
         self[:maintainer] = spec.author
         self[:url] = spec.homepage
 
@@ -96,7 +105,7 @@ class FPM::Source::Gem < FPM::Source
 
           # Some reqs can be ">= a, < b" versions, let's handle that.
           reqs.to_s.split(/, */).each do |req|
-            self[:dependencies] << "rubygem#{self[:suffix]}-#{dep.name} #{req}"
+            self[:dependencies] << "#{self[:package_prefix]}#{self[:suffix]}-#{dep.name} #{req}"
           end
         end # runtime_dependencies
       end # ::Gem::Package
