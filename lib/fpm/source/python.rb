@@ -1,5 +1,6 @@
 require "fpm/namespace"
 require "fpm/source"
+require "fpm/util"
 require "rubygems/package"
 require "rubygems"
 require "fileutils"
@@ -47,11 +48,7 @@ class FPM::Source::Python < FPM::Source
       want_pkg = "#{package}==#{version}"
     end
 
-    return_value = system(self[:settings][:easy_install], "--editable", "--build-directory", @tmpdir, want_pkg)
-
-    if return_value.nil?
-        raise "The execution of #{self[:settings][:easy_install]} failed"
-    end
+    safesystem(self[:settings][:easy_install], "--editable", "--build-directory", @tmpdir, want_pkg)
 
     # easy_install will put stuff in @tmpdir/packagename/, flatten that.
     #  That is, we want @tmpdir/setup.py, and start with
@@ -101,7 +98,7 @@ class FPM::Source::Python < FPM::Source
     # Some setup.py's assume $PWD == current directory of setup.py, so let's
     # chdir first.
     ::Dir.chdir(dir) do
-      system(self[:settings][:python], "setup.py", "bdist")
+      safesystem(self[:settings][:python], "setup.py", "bdist")
     end
 
     dist_tar = ::Dir.glob(File.join(dir, "dist", "*.tar.gz")).first
@@ -110,7 +107,7 @@ class FPM::Source::Python < FPM::Source
 
     @paths = [ "." ]
 
-    system("cp", dist_tar, "#{tar_path}.gz")
+    safesystem("cp", dist_tar, "#{tar_path}.gz")
   end # def make_tarball!
 
   def garbage
