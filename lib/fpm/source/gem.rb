@@ -3,6 +3,7 @@ require "fpm/source"
 require "rubygems/package"
 require "rubygems"
 require "fileutils"
+require "fpm/util"
 
 class FPM::Source::Gem < FPM::Source
   def self.flags(opts, settings)
@@ -136,14 +137,14 @@ class FPM::Source::Gem < FPM::Source
     end
 
     args << gem
-    system(*args)
+    safesystem(*args)
 
     # make paths relative  (/foo becomes ./foo)
     tar(tar_path, @paths.collect {|p| ".#{p}"}, tmpdir)
     FileUtils.rm_r(tmpdir)
 
     # TODO(sissel): Make a helper method.
-    system(*["gzip", "-f", tar_path])
+    safesystem(*["gzip", "-f", tar_path])
   end
 
 end # class FPM::Source::Gem

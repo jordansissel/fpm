@@ -1,4 +1,5 @@
 require "fileutils"
+require "fpm/util"
 require "pathname"
 
 class FPM::Builder
@@ -102,10 +103,10 @@ class FPM::Builder
         data_tarball = File.join(builddir, "data.tar.gz")
         Dir.chdir(builddir) do
           FileUtils.mkdir_p(@package.unpack_data_to)
-          system("gzip -d #{data_tarball}")
+          safesystem("gzip -d #{data_tarball}")
           Dir.chdir(@package.unpack_data_to) do
             @source.root = Dir.pwd
-            system("tar -xf #{data_tarball.gsub(/\.gz$/, "")}")
+            safesystem("tar -xf #{data_tarball.gsub(/\.gz$/, "")}")
           end
         end
       end
@@ -185,7 +186,7 @@ class FPM::Builder
     # TODO(sissel): support editing multiple files for targets like
     # puppet which generate multiple manifests.
     editor = ENV['FPM_EDITOR'] || ENV['EDITOR'] || 'vi'
-    system("#{editor} '#{package.specfile(builddir)}'")
+    safesystem("#{editor} '#{package.specfile(builddir)}'")
     unless File.size? package.specfile(builddir)
       puts "Empty specfile.  Aborting."
       exit 1

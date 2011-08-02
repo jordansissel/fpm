@@ -1,4 +1,5 @@
 require "fpm/package"
+require "fpm/util"
 
 class FPM::Target::Rpm < FPM::Package
   def architecture
@@ -44,14 +45,11 @@ class FPM::Target::Rpm < FPM::Package
            "--define", "_sourcedir #{Dir.pwd}",
            "--define", "_rpmdir #{Dir.pwd}/RPMS",
            "#{name}.spec"]
-    ret = system(*args)
-    if !ret
-      raise "rpmbuild failed (exit code: #{$?.exitstatus})"
-    end
+    safesystem(*args)
 
     Dir["#{Dir.pwd}/RPMS/**/*.rpm"].each do |path|
       # This should only output one rpm, should we verify this?
-      system("mv", path, params[:output])
+      safesystem("mv", path, params[:output])
     end
   end # def build!
 end # class FPM::Target::RPM
