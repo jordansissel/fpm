@@ -21,6 +21,12 @@ class FPM::Source::Python < FPM::Source
             "The path to your easy_install tool. Default is 'easy_install'") do |path|
       settings.source[:easy_install] = path
     end
+
+    opts.on("--package-prefix PREFIX",
+            "Prefix for python packages") do |package_prefix|
+      settings.source[:package_prefix] = package_prefix
+    end
+
   end # def flags
 
   def get_source(params)
@@ -78,16 +84,22 @@ class FPM::Source::Python < FPM::Source
     metadata = JSON.parse(output[/\{.*\}/msx])
     #p metadata
 
+    if self[:settings][:package_prefix]
+      self[:package_prefix] = self[:settings][:package_prefix]
+    else
+      self[:package_prefix] = "python"
+    end
+
     self[:architecture] = metadata["architecture"]
     self[:description] = metadata["description"]
     self[:license] = metadata["license"]
     self[:version] = metadata["version"]
-    self[:name] = "python#{self[:suffix]}-#{metadata["name"]}"
+    self[:name] = "#{self[:package_prefix]}#{self[:suffix]}-#{metadata["name"]}"
     self[:url] = metadata["url"]
 
     self[:dependencies] = metadata["dependencies"].collect do |dep|
       name, cmp, version = dep.split
-      "python#{self[:suffix]}-#{name} #{cmp} #{version}"
+      "#{self[:package_prefix]}#{self[:suffix]}-#{name} #{cmp} #{version}"
     end
   end # def get_metadata
 
