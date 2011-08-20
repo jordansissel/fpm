@@ -2,6 +2,7 @@ require "erb"
 require "fpm/namespace"
 require "fpm/package"
 require "fpm/errors"
+require "fpm/util"
 
 # TODO(sissel): Add dependency checking support.
 # IIRC this has to be done as a 'checkinstall' step.
@@ -25,10 +26,10 @@ class FPM::Target::Solaris < FPM::Package
     self.scripts.each do |name, path|
       case name
         when "pre-install"
-          system("cp #{path} ./preinstall")
+          safesystem("cp #{path} ./preinstall")
           File.chmod(0755, "./preinstall")
         when "post-install"
-          system("cp #{path} ./postinstall")
+          safesystem("cp #{path} ./postinstall")
           File.chmod(0755, "./postinstall")
         when "pre-uninstall"
           raise FPM::InvalidPackageConfiguration.new(
@@ -43,9 +44,9 @@ class FPM::Target::Solaris < FPM::Package
 
     # Unpack data.tar.gz so we can build a package from it.
     Dir.mkdir("data")
-    system("gzip -d data.tar.gz");
+    safesystem("gzip -d data.tar.gz");
     Dir.chdir("data") do
-      system("tar -xf ../data.tar");
+      safesystem("tar -xf ../data.tar");
     end
 
     #system("(echo 'i pkginfo'; pkgproto data=/) > Prototype")
@@ -69,10 +70,10 @@ class FPM::Target::Solaris < FPM::Package
     end # File prototype
 
     # Should create a package directory named by the package name.
-    system("pkgmk -o -d .")
+    safesystem("pkgmk -o -d .")
 
     # Convert the 'package directory' built above to a real solaris package.
-    system("pkgtrans -s . #{params[:output]} #{name}")
+    safesystem("pkgtrans -s . #{params[:output]} #{name}")
   end # def build
 
   def default_output
