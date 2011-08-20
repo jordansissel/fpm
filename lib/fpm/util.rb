@@ -1,7 +1,7 @@
-def safesystem(*call)
-  return_val = system(*call)
-  if !return_val
-    raise "'#{call}' failed with error code: #{$?.exitstatus}"
+def safesystem(*args)
+  success = system(*args)
+  if !success
+    raise "'system(#{args.inspect})' failed with error code: #{$?.exitstatus}"
   end
-  return return_val
+  return success
 end # def safesystem
