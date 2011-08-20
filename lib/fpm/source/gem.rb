@@ -86,7 +86,8 @@ class FPM::Source::Gem < FPM::Source
         end
 
         # make sure we have a description
-        self[:description] = [ self[:description], self[:summary], "N/A" ].detect { |t| !t.strip == "" }
+        descriptions = [ self[:description], self[:summary], "#{spec.name} - no description given" ]
+        self[:description] = descriptions.detect { |d| !(d.nil? or d.strip.empty?) }
 
         self[:dependencies] = []
         spec.runtime_dependencies.map do |dep|
