@@ -7,6 +7,8 @@ require "fpm/util"
 
 class FPM::Source::Gem < FPM::Source
   def self.flags(opts, settings)
+    settings.source[:gem] = "gem"
+
     opts.on("--bin-path DIRECTORY",
             "The directory to install gem executables") do |path|
       settings.source[:bin_path] = path
@@ -14,6 +16,12 @@ class FPM::Source::Gem < FPM::Source
     opts.on("--package-prefix PREFIX",
             "Prefix for gem packages") do |package_prefix|
       settings.source[:package_prefix] = package_prefix
+    end
+
+    opts.on("--gem PATH_TO_GEM",
+            "The path to the 'gem' tool (defaults to 'gem' and searches " \
+            "your $PATH)") do |path|
+      settings.source[:gem] = path
     end
   end # def flags
 
@@ -131,7 +139,7 @@ class FPM::Source::Gem < FPM::Source
     end
 
     ::FileUtils.mkdir_p(installdir)
-    args = ["gem", "install", "--quiet", "--no-ri", "--no-rdoc",
+    args = [self[:settings][:gem], "install", "--quiet", "--no-ri", "--no-rdoc",
        "--install-dir", installdir, "--ignore-dependencies", "-E"]
     if self[:settings][:bin_path]
       tmp_bin_path = File.join(tmpdir, self[:settings][:bin_path])
