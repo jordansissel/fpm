@@ -1,4 +1,5 @@
 require "fpm/namespace"
+require "fpm/util"
 
 # Abstract class for a "thing to build a package from"
 class FPM::Source
@@ -124,7 +125,7 @@ class FPM::Source
               + dirs
 
     ::Dir.chdir(chdir) do
-      system(*dir_tar) if dirs.any?
+      safesystem(*dir_tar) if dirs.any?
     end
 
     files_tar = [ tar_cmd ] \
@@ -132,7 +133,7 @@ class FPM::Source
                 + [ "--owner=root", "--group=root", "-rf", output ] \
                 + paths
     ::Dir.chdir(chdir) do
-      system(*files_tar)
+      safesystem(*files_tar)
     end
   end # def tar
 

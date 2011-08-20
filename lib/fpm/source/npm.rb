@@ -1,5 +1,6 @@
 require "fpm/namespace"
 require "fpm/source"
+require "fpm/util"
 require "fileutils"
 
 class FPM::Source::Npm < FPM::Source
@@ -25,11 +26,11 @@ class FPM::Source::Npm < FPM::Source
     ::FileUtils.mkdir_p(installdir)
     args = ["gem", "install", "--quiet", "--no-ri", "--no-rdoc",
        "--install-dir", installdir, "--ignore-dependencies", @paths.first]
-    system(*args)
+    safesystem(*args)
     tar(tar_path, ".", tmpdir)
 
     # TODO(sissel): Make a helper method.
-    system(*["gzip", "-f", tar_path])
+    safesystem(*["gzip", "-f", tar_path])
   end
 
 end # class FPM::Source::Gem

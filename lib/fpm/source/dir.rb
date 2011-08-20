@@ -1,6 +1,7 @@
 require "fpm/source"
 require "fileutils"
 require "fpm/rubyfixes"
+require "fpm/util"
 
 class FPM::Source::Dir < FPM::Source
   def get_metadata
@@ -31,7 +32,7 @@ class FPM::Source::Dir < FPM::Source
         ::FileUtils.mkdir_p(dest)
         rsync = ["rsync", "-a", path, dest]
         p rsync
-        system(*rsync)
+        safesystem(*rsync)
 
         # FileUtils.cp_r is pretty silly about how it copies files in some
         # cases (funky permissions, etc)
@@ -45,7 +46,7 @@ class FPM::Source::Dir < FPM::Source
       end
 
       ::Dir.chdir("#{builddir}/tarbuild") do
-        system("ls #{builddir}/tarbuild")
+        safesystem("ls #{builddir}/tarbuild")
         tar(tar_path, ".")
       end
     else
@@ -53,6 +54,6 @@ class FPM::Source::Dir < FPM::Source
     end
 
     # TODO(sissel): Make a helper method.
-    system(*["gzip", "-f", tar_path])
+    safesystem(*["gzip", "-f", tar_path])
   end # def make_tarball!
 end # class FPM::Source::Dir

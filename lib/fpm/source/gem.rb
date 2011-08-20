@@ -3,12 +3,17 @@ require "fpm/source"
 require "rubygems/package"
 require "rubygems"
 require "fileutils"
+require "fpm/util"
 
 class FPM::Source::Gem < FPM::Source
   def self.flags(opts, settings)
     opts.on("--bin-path DIRECTORY",
             "The directory to install gem executables") do |path|
       settings.source[:bin_path] = path
+    end
+    opts.on("--package-prefix PREFIX",
+            "Prefix for gem packages") do |package_prefix|
+      settings.source[:package_prefix] = package_prefix
     end
   end # def flags
 
@@ -70,7 +75,12 @@ class FPM::Source::Gem < FPM::Source
           self[field.to_sym] = spec.send(field) rescue "unknown"
         end
 
-        self[:name] = "rubygem#{self[:suffix]}-#{spec.name}"
+        if self[:settings][:package_prefix]
+          self[:package_prefix] = self[:settings][:package_prefix]
+        else
+          self[:package_prefix] = "rubygem"
+        end
+        self[:name] = "#{self[:package_prefix]}#{self[:suffix]}-#{spec.name}"
         self[:maintainer] = spec.author
         self[:url] = spec.homepage
 
@@ -100,7 +110,7 @@ class FPM::Source::Gem < FPM::Source
 
           # Some reqs can be ">= a, < b" versions, let's handle that.
           reqs.to_s.split(/, */).each do |req|
-            self[:dependencies] << "rubygem#{self[:suffix]}-#{dep.name} #{req}"
+            self[:dependencies] << "#{self[:package_prefix]}#{self[:suffix]}-#{dep.name} #{req}"
           end
         end # runtime_dependencies
       end # ::Gem::Package
@@ -131,14 +141,14 @@ class FPM::Source::Gem < FPM::Source
     end
 
     args << gem
-    system(*args)
+    safesystem(*args)
 
     # make paths relative  (/foo becomes ./foo)
     tar(tar_path, @paths.collect {|p| ".#{p}"}, tmpdir)
     FileUtils.rm_r(tmpdir)
 
     # TODO(sissel): Make a helper method.
-    system(*["gzip", "-f", tar_path])
+    safesystem(*["gzip", "-f", tar_path])
   end
 
 end # class FPM::Source::Gem
