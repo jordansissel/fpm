@@ -11,6 +11,7 @@ class FPM::Source::Python < FPM::Source
   def self.flags(opts, settings)
     settings.source[:python] = "python"
     settings.source[:easy_install] = "easy_install"
+    settings.source[:pypi] ="http://pypi.python.org/simple"
 
     opts.on("--bin PYTHON_BINARY_LOCATION",
             "The path to the python you want to run. Default is 'python'") do |path|
@@ -22,11 +23,15 @@ class FPM::Source::Python < FPM::Source
       settings.source[:easy_install] = path
     end
 
+    opts.on("--pypi PYPI_SERVER",
+            "PyPi Server uri for retrieving packages. Default is 'http://pypi.python.org/simple'") do |pypi|
+      settings.source[:pypi] = pypi
+    end
+
     opts.on("--package-prefix PREFIX",
             "Prefix for python packages") do |package_prefix|
       settings.source[:package_prefix] = package_prefix
     end
-
   end # def flags
 
   def get_source(params)
@@ -54,7 +59,8 @@ class FPM::Source::Python < FPM::Source
       want_pkg = "#{package}==#{version}"
     end
 
-    safesystem(self[:settings][:easy_install], "--editable", "--build-directory", @tmpdir, want_pkg)
+    safesystem(self[:settings][:easy_install], "-i", self[:settings][:pypi],
+               "--editable", "--build-directory", @tmpdir, want_pkg)
 
     # easy_install will put stuff in @tmpdir/packagename/, flatten that.
     #  That is, we want @tmpdir/setup.py, and start with
