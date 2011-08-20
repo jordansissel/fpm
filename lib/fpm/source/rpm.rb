@@ -1,4 +1,5 @@
 require "fpm/source"
+require "fpm/util"
 
 class FPM::Source::RPM < FPM::Source
   def get_metadata
@@ -18,10 +19,10 @@ class FPM::Source::RPM < FPM::Source
   def make_tarball!(tar_path, builddir)
     tmpdir = "#{tar_path}.dir"
     ::Dir.mkdir(tmpdir)
-    system("rpm2cpio #{@rpm} | (cd #{tmpdir}; cpio -i --make-directories)")
+    safesystem("rpm2cpio #{@rpm} | (cd #{tmpdir}; cpio -i --make-directories)")
     tar(tar_path, ".", tmpdir)
     @paths = ["."]
     # TODO(sissel): Make a helper method.
-    system(*["gzip", "-f", tar_path])
+    safesystem(*["gzip", "-f", tar_path])
   end
 end

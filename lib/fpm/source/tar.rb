@@ -1,6 +1,7 @@
-require "fpm/source"
-require "fileutils"
 require "fpm/rubyfixes"
+require "fpm/source"
+require "fpm/util"
+require "fileutils"
 
 class FPM::Source::Tar < FPM::Source
   def get_metadata
@@ -31,7 +32,7 @@ class FPM::Source::Tar < FPM::Source
     end
     #puts("tar #{flags}")
     #sleep 5
-    system("tar #{flags}")
+    safesystem("tar #{flags}")
 
     if self[:prefix]
       @paths = [self[:prefix]]
@@ -44,6 +45,6 @@ class FPM::Source::Tar < FPM::Source
     end
 
     # TODO(sissel): Make a helper method.
-    system(*["gzip", "-f", tar_path])
+    safesystem(*["gzip", "-f", tar_path])
   end # def make_tarball!
 end # class FPM::Source::Dir

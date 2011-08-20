@@ -1,5 +1,6 @@
 require "fpm/namespace"
 require "fpm/source"
+require "fpm/util"
 require "rubygems/package"
 require "rubygems"
 require "fileutils"
@@ -20,6 +21,12 @@ class FPM::Source::Python < FPM::Source
             "The path to your easy_install tool. Default is 'easy_install'") do |path|
       settings.source[:easy_install] = path
     end
+
+    opts.on("--package-prefix PREFIX",
+            "Prefix for python packages") do |package_prefix|
+      settings.source[:package_prefix] = package_prefix
+    end
+
   end # def flags
 
   def get_source(params)
@@ -47,11 +54,7 @@ class FPM::Source::Python < FPM::Source
       want_pkg = "#{package}==#{version}"
     end
 
-    return_value = system(self[:settings][:easy_install], "--editable", "--build-directory", @tmpdir, want_pkg)
-
-    if return_value.nil?
-        raise "The execution of #{self[:settings][:easy_install]} failed"
-    end
+    safesystem(self[:settings][:easy_install], "--editable", "--build-directory", @tmpdir, want_pkg)
 
     # easy_install will put stuff in @tmpdir/packagename/, flatten that.
     #  That is, we want @tmpdir/setup.py, and start with
@@ -81,16 +84,22 @@ class FPM::Source::Python < FPM::Source
     metadata = JSON.parse(output[/\{.*\}/msx])
     #p metadata
 
+    if self[:settings][:package_prefix]
+      self[:package_prefix] = self[:settings][:package_prefix]
+    else
+      self[:package_prefix] = "python"
+    end
+
     self[:architecture] = metadata["architecture"]
     self[:description] = metadata["description"]
     self[:license] = metadata["license"]
     self[:version] = metadata["version"]
-    self[:name] = "python#{self[:suffix]}-#{metadata["name"]}"
+    self[:name] = "#{self[:package_prefix]}#{self[:suffix]}-#{metadata["name"]}"
     self[:url] = metadata["url"]
 
     self[:dependencies] = metadata["dependencies"].collect do |dep|
       name, cmp, version = dep.split
-      "python#{self[:suffix]}-#{name} #{cmp} #{version}"
+      "#{self[:package_prefix]}#{self[:suffix]}-#{name} #{cmp} #{version}"
     end
   end # def get_metadata
 
@@ -101,7 +110,7 @@ class FPM::Source::Python < FPM::Source
     # Some setup.py's assume $PWD == current directory of setup.py, so let's
     # chdir first.
     ::Dir.chdir(dir) do
-      system(self[:settings][:python], "setup.py", "bdist")
+      safesystem(self[:settings][:python], "setup.py", "bdist")
     end
 
     dist_tar = ::Dir.glob(File.join(dir, "dist", "*.tar.gz")).first
@@ -110,7 +119,7 @@ class FPM::Source::Python < FPM::Source
 
     @paths = [ "." ]
 
-    system("cp", dist_tar, "#{tar_path}.gz")
+    safesystem("cp", dist_tar, "#{tar_path}.gz")
   end # def make_tarball!
 
   def garbage
