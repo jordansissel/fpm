@@ -85,6 +85,9 @@ class FPM::Source::Gem < FPM::Source
           self[:architecture] = "all"
         end
 
+        # make sure we have a description
+        self[:description] = [ self[:description], self[:summary], "N/A" ].detect { |t| !t.strip == "" }
+
         self[:dependencies] = []
         spec.runtime_dependencies.map do |dep|
           # rubygems 1.3.5 doesn't have 'Gem::Dependency#requirement'
