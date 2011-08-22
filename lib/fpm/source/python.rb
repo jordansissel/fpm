@@ -99,7 +99,7 @@ class FPM::Source::Python < FPM::Source
     self[:architecture] = metadata["architecture"]
     self[:description] = metadata["description"]
     self[:license] = metadata["license"]
-    self[:version] = metadata["version"]
+    self[:version] = metadata["version"].gsub(/-/, "_")
     self[:name] = "#{self[:package_prefix]}#{self[:suffix]}-#{metadata["name"]}"
     self[:url] = metadata["url"]
 
