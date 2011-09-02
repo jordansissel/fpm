@@ -28,6 +28,16 @@ class FPM::Target::Rpm < FPM::Package
     end
   end
 
+  def version
+    if @version.kind_of?(String) and @version.include?("-")
+      @logger.info("Package version '#{@version}' includes dashes, converting" \
+                   " to underscores")
+      @version = @version.gsub(/-/, "_")
+    end
+
+    return @version
+  end
+
   def build!(params)
     raise "No package name given. Can't assemble package" if !@name
     # TODO(sissel): Abort if 'rpmbuild' tool not found.
