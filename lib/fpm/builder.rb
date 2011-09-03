@@ -204,7 +204,12 @@ class FPM::Builder
   def checksum(paths)
     paths.collect do |path|
       if File.directory? path
-        %x{find #{path} -type f -printf %P\\\\0 | xargs -0 md5sum}.split("\n")
+       # This should work for both cases where we use -C or not ...
+        %x{ find #{path} -type f -print0 | xargs -0 md5sum }.split("\n").collect do |i|
+          # Remove leading path and "./" from the md5sum output if present ...
+          i = i.split(/\s+/)
+          "%s  %s" % [i[0], i[1].sub(/#{path}\//, '').sub(/\.\//, '')]
+        end
       elsif File.exists? path
         %x{md5sum #{path}}
       else
