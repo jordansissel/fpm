@@ -31,7 +31,7 @@ class FPM::Source::Dir < FPM::Source
 
         ::FileUtils.mkdir_p(dest)
         rsync = ["rsync", "-a", path, dest]
-        p rsync
+        p rsync if $DEBUG
         safesystem(*rsync)
 
         # FileUtils.cp_r is pretty silly about how it copies files in some
@@ -46,10 +46,12 @@ class FPM::Source::Dir < FPM::Source
       end
 
       ::Dir.chdir("#{builddir}/tarbuild") do
-        safesystem("ls #{builddir}/tarbuild")
+        safesystem("ls #{builddir}/tarbuild") if $DEBUG
         tar(tar_path, ".")
       end
     else
+      # Prefix everything with "./" as per the Debian way if needed ...
+      path = paths[0].match(/^(\.\/|\.)/) ? paths[0] : "./%s" % paths[0]
       tar(tar_path, paths)
     end
 
