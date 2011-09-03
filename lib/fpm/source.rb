@@ -121,11 +121,15 @@ class FPM::Source
     # than it is worth. For now, rely on tar's --exclude.
     dir_tar = [tar_cmd, "--owner=root", "--group=root" ] \
               + excludes \
-              + ["-cf", output, "--no-recursion" ] \
-              + dirs
+              + ["-cf", output, "--no-recursion" ]
 
-    ::Dir.chdir(chdir) do
-      safesystem(*dir_tar) if dirs.any?
+    # Only if directories and paths do not have duplicates ...
+    dirs -= paths
+
+    if dirs.any?
+      ::Dir.chdir(chdir) do
+        safesystem *(dir_tar += dirs)
+      end
     end
 
     files_tar = [ tar_cmd ] \
