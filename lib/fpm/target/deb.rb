@@ -17,6 +17,12 @@ class FPM::Target::Deb < FPM::Package
     opts.on("--pre-depends DEPENDENCY", "Add DEPENDENCY as Pre-Depends.") do |dep|
       (settings.target[:pre_depends] ||= []) << dep
     end
+
+    # Take care about the case when we want custom control file but still use fpm ...
+    opts.on("--custom-control FILEPATH",
+            "Custom version of the Debian control file.") do |control|
+      settings.target[:control] = File.expand_path(control)
+    end
   end
 
   def needs_md5sums
@@ -67,6 +73,15 @@ class FPM::Target::Deb < FPM::Package
 
   def build!(params)
     control_files = [ "control", "md5sums" ]
+
+    # Use custom Debian control file when given ...
+    if self.settings[:control]
+      %x{cp #{self.settings[:control]} ./control 2> /dev/null 2>&1}
+      @logger.warn("Unable to process custom Debian control file (exit " \
+                   "code: #{$?.exitstatus}). Falling back to default " \
+                   "template.") unless $?.exitstatus == 0
+    end
+
     # place the postinst prerm files
     self.scripts.each do |name, path|
       case name
