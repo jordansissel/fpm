@@ -1,7 +1,7 @@
 task :default => [:package]
 
 task :test do
-  system("cd test; ruby alltests.rb")
+  system("make -C test")
 end
 
 task :package => [:test, :package_real]  do
