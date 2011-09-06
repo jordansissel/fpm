@@ -1,0 +1,7 @@
+run() {
+  fpm -s gem -t deb -v 3.1.0 rails
+
+  file=rubygem-rails_3.1.0_all.deb
+  dpkg -c $file | fex '{6:}' > $output
+  rm $file
+}
