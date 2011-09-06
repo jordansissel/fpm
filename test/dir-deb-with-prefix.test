@@ -1,0 +1,17 @@
+#!/bin/sh
+
+run() {
+  mkdir -p $tmpdir/{a,b,c}/{d,e,f}
+  touch $tmpdir/a/hello
+  touch $tmpdir/a/d/hello
+  touch $tmpdir/c/d/hello
+
+  prefix=/opt/foo/bar
+
+  fpm -s dir -t deb -n testing -a all --prefix $prefix -C $tmpdir 
+
+  file=testing_1.0_all.deb
+  dpkg -c $file | fex '{6:}' > $output
+
+  rm $file
+}
