@@ -1,3 +1,5 @@
+I have not kept this file up to date very well... Sorry :(
+
 0.2.29 (May 20, 2011)
   - Add 'tar' source support. Useful for binary releases to repackage as rpms
     and debs. Example:
