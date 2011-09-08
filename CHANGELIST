@@ -1,4 +1,8 @@
-I have not kept this file up to date very well... Sorry :(
+0.3.9 (Sep 8, 2011)
+  - Fix bug in 'dir' source that breaks full paths
+  - Added a bunch of tests (yaay)
+
+0.3.8 and earlier: I have not kept this file up to date very well... Sorry :(
 
 0.2.29 (May 20, 2011)
   - Add 'tar' source support. Useful for binary releases to repackage as rpms
