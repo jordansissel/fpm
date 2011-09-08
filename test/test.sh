@@ -2,15 +2,25 @@
 
 fpm() {
   ../bin/fpm "$@" > $debugout 2> $debugerr
+  status=$?
+
+  if [ "$status" -ne 0 ] ; then
+    fail
+  fi
+  return $status
 }
 
 cleanup() {
   rm -f $tmpout $debugout $debugerr
   [ ! -z "$tmpdir" ] && rm -r $tmpdir
+
+  # Run clean if defined.
+  if type clean 2> /dev/null | grep -q "function" ; then
+    clean
+  fi
 }
 
 main() {
-  set -e
   test="$1"
   tmpdir=$(mktemp -d)
   debugout=$(mktemp)
@@ -28,19 +38,25 @@ main() {
   diff -u $output $expected
   diffstatus=$?
 
-  cleanup
-
   if [ $diffstatus -ne 0 ] ; then
-    echo "Fail: $test"
-    echo "FPM STDOUT"
-    cat $debugout
-    echo "FPM STDERR"
-    cat $debugerr
-    return 1
+    fail
   else
-    echo "OK: $test"
-    return 0
+    ok
   fi
+}
+
+fail() { 
+  echo "Fail: $test"
+  sed -e 's/^/stdout: /' $debugout
+  sed -e 's/^/stderr: /' $debugerr
+  cleanup
+  exit 1
+}
+
+ok() {
+  echo "OK: $test"
+  cleanup
+  exit 0
 }
 
 main "$@"

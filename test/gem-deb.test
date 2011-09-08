@@ -1,7 +1,13 @@
-run() {
-  fpm -s gem -t deb -v 3.1.0 rails
+RAILS_VERSION=3.1.0
 
-  file=rubygem-rails_3.1.0_all.deb
+run() {
+  fpm -s gem -t deb -v $RAILS_VERSION rails
+
+  file=rubygem-rails_${RAILS_VERSION}_all.deb
   dpkg -c $file | fex '{6:}' > $output
   rm $file
+}
+
+clean() {
+  rm rails-${RAILS_VERSION}.gem
 }
