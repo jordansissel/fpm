@@ -50,9 +50,7 @@ class FPM::Source::Dir < FPM::Source
         tar(tar_path, ".")
       end
     else
-      # Prefix everything with "./" as per the Debian way if needed ...
-      path = paths.map { |p| p.match(/^(\.\/|\.)/) ? p : "./%s" % p }
-      tar(tar_path, path)
+      tar(tar_path, paths)
     end
 
     # TODO(sissel): Make a helper method.
