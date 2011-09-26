@@ -60,7 +60,7 @@ class FPM::Source::Python < FPM::Source
     end
 
     safesystem(self[:settings][:easy_install], "-i", self[:settings][:pypi],
-               "--editable", "--build-directory", @tmpdir, want_pkg)
+               "--editable", "-U", "--build-directory", @tmpdir, want_pkg)
 
     # easy_install will put stuff in @tmpdir/packagename/, flatten that.
     #  That is, we want @tmpdir/setup.py, and start with
