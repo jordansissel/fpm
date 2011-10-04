@@ -20,7 +20,8 @@ Google for 'memcached', download the source, unpack, ./configure, make, make
 install, fpm, deploy.
 
 In 60 seconds, starting from nothing, I had both an RPM and a .DEB of memcached
-ready to deploy.
+ready to deploy, and I didn't need to know how to use rpmbuild, rpm specfiles,
+dh_make, debian control files, etc.
 
 ## Backstory
 
