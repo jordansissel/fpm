@@ -1,3 +1,10 @@
+0.3.10 (Oct 10, 2011)
+  - Allow taking a list of files/inputs on stdin with '-' or with the --inputs
+    flag. (Matt Patterson)
+  - (python) pass -U to easy_install (Khalid Goudeaux)
+  - (debian) quote paths in md5sum calls (Matt Patterson)
+  - (debian) quiet stderr from dpkg --print-architecture
+
 0.3.9 (Sep 8, 2011)
   - Fix bug in 'dir' source that breaks full paths
   - Added a bunch of tests (yaay)
