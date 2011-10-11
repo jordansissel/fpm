@@ -5,7 +5,7 @@ test: $(TESTS)
 
 .PHONY: $(TESTS)
 $(TESTS):
-	@sh test.sh $@
+	@bash test.sh $@
 
 clean:
 	rm *.deb *.rpm *.gem
