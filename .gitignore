@@ -8,3 +8,6 @@ fpm.wiki
 
 # python
 *.pyc
+
+# RVM
+.rvmrc
