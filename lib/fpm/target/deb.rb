@@ -33,7 +33,7 @@ class FPM::Target::Deb < FPM::Package
     if @architecture.nil? or @architecture == "native"
       # Default architecture should be 'native' which we'll need
       # to ask the system about.
-      arch = %x{dpkg --print-architecture}.chomp
+      arch = %x{dpkg --print-architecture 2> /dev/null}.chomp
       if $?.exitstatus != 0
         arch = %x{uname -m}.chomp
         @logger.warn("Can't find 'dpkg' tool (need it to get default " \
