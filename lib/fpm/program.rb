@@ -18,6 +18,8 @@ class FPM::Program
     @settings.source = {}   # source settings
     @settings.target = {}   # target settings
     @settings.config_files ||= []
+    @settings.inputs_path = nil # file path to read a list of paths from
+    @settings.paths = [] # Paths to include in the package
 
     # Maintainer scripts - https://github.com/jordansissel/fpm/issues/18
     @settings.scripts ||= {}
@@ -27,7 +29,7 @@ class FPM::Program
 
   def run(args)
     $: << File.expand_path(File.join(File.dirname(__FILE__), "..", "lib"))
-    paths = options(args)
+    extracted_args = options(args)
 
     ok = true
     if @settings.package_type.nil?
@@ -39,6 +41,9 @@ class FPM::Program
       $stderr.puts "Missing package source type (no -s flag?)"
       ok = false
     end
+
+    paths = process_paths(extracted_args)
+    ok = false if paths == :errors
 
     if !ok
       $stderr.puts "There were errors; see above."
@@ -52,6 +57,39 @@ class FPM::Program
     puts "Created #{builder.output}"
     return 0
   end # def run
+
+  def process_paths(args)
+    paths_iolike = args
+    read_from_stdin = args.length == 1 && args.first == '-'
+
+    ok = true
+    if @settings.inputs_path 
+      if read_from_stdin
+        $stderr.puts "Error: setting --inputs conflicts with passing '-' as the only argument"
+        ok = false
+      end
+      unless File.file?(@settings.inputs_path)
+        $stderr.puts "Error: '#{@settings.inputs_path}' does not exist"
+        ok = false
+      end
+    end
+
+    return :errors if !ok
+
+    if read_from_stdin
+      paths_iolike = $stdin
+    end
+    if @settings.inputs_path
+      paths_iolike = File.open(@settings.inputs_path, 'r')
+    end
+
+    paths = []
+    paths_iolike.each do |entry|
+      paths << entry.strip
+    end
+    paths_iolike.close if paths_iolike.respond_to?(:close)
+    paths
+  end # def process_paths
 
   def options(args)
     opts = OptionParser.new
@@ -220,6 +258,16 @@ class FPM::Program
             "Add a url for this package.") do |url|
       @settings.url = url
     end # --url
+
+    opts.on("--inputs FILEPATH",
+            "The path to a file containing a newline-separated list of " \
+            "files and dirs to package.") do |path|
+      settings.source[:inputs] = path
+    end
+
+    opts.separator "Pass - as the only argument to have the list of " \
+                   "files and dirs read from STDIN " \
+                   "(e.g. fpm -s dir -t deb - < FILELIST)"
 
   end # def default_options
 end # class FPM::Program
