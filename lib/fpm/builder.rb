@@ -211,7 +211,7 @@ class FPM::Builder
           "%s  %s" % [i[0], i[1].sub(/#{path}\//, '').sub(/\.\//, '')]
         end
       elsif File.exists? path
-        %x{md5sum #{path}}
+        %x{md5sum "#{path}"}
       else
         next
       end
