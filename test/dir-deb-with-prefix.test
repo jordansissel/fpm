@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 run() {
   mkdir -p $tmpdir/{a,b,c}/{d,e,f}
@@ -11,7 +11,7 @@ run() {
   fpm -s dir -t deb -n testing -a all --prefix $prefix -C $tmpdir 
 
   file=testing_1.0_all.deb
-  dpkg -c $file | fex '{6:}' > $output
+  dpkg -c $file | awk '{$1=$2=$3=$4=$5="";print}' | sed -e 's/^ *//' | sort > $output
 
   rm $file
 }

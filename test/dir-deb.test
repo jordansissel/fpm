@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 run() {
   mkdir -p $tmpdir/{a,b,c}/{d,e,f}
@@ -11,7 +11,7 @@ run() {
   fpm -s dir -t deb -n testing -a all $tmpdir
 
   file=testing_1.0_all.deb
-  dpkg -c $file | fex '{6:}' | sort > $output
+  dpkg -c $file | awk '{$1=$2=$3=$4=$5="";print}' | sed -e 's/^ *//' | sort > $output
   #ar p $file data.tar.gz | tar -ztf - | sort > $output
   sed -e "s,TMPDIR,$(basename $tmpdir)," $expected.template > $expected
 
