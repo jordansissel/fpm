@@ -59,13 +59,13 @@ Obsoletes: <%= repl %>
 # noop
 
 %build
+# noop
+
+%install
 # some rpm implementations delete the build dir and then recreate it by
 # default, for some reason. Whatever, let's work around it.
 cd $RPM_BUILD_ROOT
 tar -zxf %SOURCE0
-
-%install
-#noop
 
 %clean
 rm -rf $RPM_BUILD_ROOT
