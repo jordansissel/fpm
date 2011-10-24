@@ -28,6 +28,14 @@ class FPM::Target::Rpm < FPM::Package
     end
   end
 
+  def iteration
+    if @iteration.nil? || @iteration.empty?
+      '1'
+    else
+      @iteration
+    end
+  end
+
   def version
     if @version.kind_of?(String) and @version.include?("-")
       @logger.info("Package version '#{@version}' includes dashes, converting" \
