@@ -30,11 +30,12 @@ class FPM::Target::Rpm < FPM::Package
 
   def iteration
     if @iteration.nil? || @iteration.empty?
-      '1'
+      # Default iteration value of 1 makes sense.
+      return '1'
     else
-      @iteration
+      return @iteration
     end
-  end
+  end # def iteration
 
   def version
     if @version.kind_of?(String) and @version.include?("-")
