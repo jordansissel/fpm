@@ -26,7 +26,12 @@ class FPM::Target::Deb < FPM::Package
   end
 
   def needs_md5sums
-    true
+    case %x{uname -s}.chomp
+    when "Darwin"
+      return false
+    else
+      return true
+    end
   end # def needs_md5sums
 
   def architecture
@@ -72,7 +77,10 @@ class FPM::Target::Deb < FPM::Package
   end
 
   def build!(params)
-    control_files = [ "control", "md5sums" ]
+    control_files = [ "control" ]
+    if File.exists? "./md5sums"
+      control_files << "md5sums"
+    end
 
     # Use custom Debian control file when given ...
     if self.settings[:control]
