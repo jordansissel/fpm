@@ -153,7 +153,7 @@ class FPM::Program
     end # --version
 
     opts.on("--iteration ITERATION",
-            "(optional) Set the iteration value for this package.") do |iteration|
+            "(optional) Set the iteration value for this package ('release' for RPM).") do |iteration|
       @settings.iteration = iteration
     end # --iteration
 
