@@ -142,10 +142,12 @@ class FPM::Source
   end # def tar
 
   def tar_cmd
-    # Rely on gnu tar for solaris.
+    # Rely on gnu tar for solaris and OSX.
     case %x{uname -s}.chomp
     when "SunOS"
       return "gtar"
+    when "Darwin"
+      return "gnutar"
     else
       return "tar"
     end
