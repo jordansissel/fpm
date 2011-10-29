@@ -63,7 +63,7 @@ class FPM::Program
     read_from_stdin = args.length == 1 && args.first == '-'
 
     ok = true
-    if @settings.inputs_path 
+    if @settings.inputs_path
       if read_from_stdin
         $stderr.puts "Error: setting --inputs conflicts with passing '-' as the only argument"
         ok = false

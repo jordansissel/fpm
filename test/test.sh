@@ -45,7 +45,7 @@ main() {
   fi
 }
 
-fail() { 
+fail() {
   echo "Fail: $test"
   sed -e 's/^/stdout: /' $debugout
   sed -e 's/^/stderr: /' $debugerr
