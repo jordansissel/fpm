@@ -262,7 +262,7 @@ class FPM::Program
     opts.on("--inputs FILEPATH",
             "The path to a file containing a newline-separated list of " \
             "files and dirs to package.") do |path|
-      settings.source[:inputs] = path
+      @settings.source[:inputs] = path
     end
 
     opts.separator "Pass - as the only argument to have the list of " \
