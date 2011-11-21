@@ -46,6 +46,7 @@ class FPM::Builder
       :suffix => settings.suffix,
       :exclude => settings.exclude,
       :maintainer => settings.maintainer,
+      :basedir => settings.basedir,
       :provides => [],
       :replaces => [],
       :conflicts => [],

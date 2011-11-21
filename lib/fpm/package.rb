@@ -66,6 +66,9 @@ class FPM::Package
   # Array of configuration files
   attr_accessor :config_files
 
+  # solaris basedir
+  attr_accessor :basedir
+
 	# target-specific settings
 	attr_accessor :settings
 
@@ -118,6 +121,7 @@ class FPM::Package
     @conflicts = source[:conflicts] || []
     @scripts = source[:scripts]
     @config_files = source[:config_files] || []
+    @basedir = source[:basedir] || "/usr/local"
 
     # Target-specific settings, mirrors :settings metadata in FPM::Source
     @settings = params[:settings] || {}

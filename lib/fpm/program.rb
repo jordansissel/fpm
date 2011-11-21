@@ -20,6 +20,7 @@ class FPM::Program
     @settings.config_files ||= []
     @settings.inputs_path = nil # file path to read a list of paths from
     @settings.paths = [] # Paths to include in the package
+    @settings.basedir = nil # basedir for Solaris packages
 
     # Maintainer scripts - https://github.com/jordansissel/fpm/issues/18
     @settings.scripts ||= {}
@@ -215,6 +216,10 @@ class FPM::Program
             "A path to prefix files with when building the target package. This may not be necessary for all source types. For example, the 'gem' type will prefix with your gem directory (gem env | grep -A1 PATHS:)") do |prefix|
       @settings.prefix = prefix
     end # --prefix
+
+    opts.on("-b BASEDIR", "--basedir BASEDIR", "the basedir to use for Solaris packages") do |basedir|
+      @settings.basedir = basedir
+    end
 
     opts.on("-e", "--edit", "Edit the specfile before building") do
       @settings.edit = true
