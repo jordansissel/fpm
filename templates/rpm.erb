@@ -96,6 +96,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root,-)
 <%# Trim leading '.' from paths if they are './blah...' -%>
 <%# Also ensure paths start with '/' -%>
+<%= @config_files.collect { |c| '%config ' + c.gsub(/^\.\//, "/").gsub(/^[^\/]/, "/\\0") }.join("\n") %>
 <%= @source.paths.collect { |p| p.gsub(/^\.\//, "/").gsub(/^[^\/]/, "/\\0") }.join("\n") %>
 
 %changelog
