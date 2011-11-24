@@ -26,9 +26,17 @@ class FPM::Target::Rpm < FPM::Package
     # find all files in paths given.
     paths = []
     @source.paths.each do |path|
-      # files can only be listed once in the spec
-      Find.find(path) { |p| paths << p unless @config_files.include?(p) }
+      Find.find(path) { |p| paths << p }
     end
+
+    # Ensure all paths are absolute and don't start with '.'
+    paths.collect! { |p| p.gsub(/^\.\//, "/").gsub(/^[^\/]/, "/\\0") }
+    @config_files.collect! { |c| c.gsub(/^\.\//, "/").gsub(/^[^\/]/, "/\\0") }
+
+    # Remove config files from the main path list, as files cannot be listed
+    # twice (rpmbuild complains).
+    paths -= @config_files
+
     #@logger.info(:paths => paths.sort)
     template.result(binding)
   end # def render_spec
