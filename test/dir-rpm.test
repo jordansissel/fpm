@@ -8,7 +8,7 @@ run() {
 
   fpm -s dir -t rpm -n testing -a all $tmpdir
 
-  file=testing-1.0.noarch.rpm
+  file=testing-1.0-1.noarch.rpm
   rpm -qlp $file > $output
   sed -e "s,TMPDIR,$(basename $tmpdir)," $expected.template > $expected
 
