@@ -94,16 +94,16 @@ class FPM::Target::Deb < FPM::Package
     self.scripts.each do |name, path|
       case name
         when "pre-install"
-          safesystem("cp #{path} ./preinst")
+          safesystem("cp", "#{path}", "./preinst")
           control_files << "preinst"
         when "post-install"
-          safesystem("cp #{path} ./postinst")
+          safesystem("cp", "#{path}", "./postinst")
           control_files << "postinst"
         when "pre-uninstall"
-          safesystem("cp #{path} ./prerm")
+          safesystem("cp", "#{path}", "./prerm")
           control_files << "prerm"
         when "post-uninstall"
-          safesystem("cp #{path} ./postrm")
+          safesystem("cp", "#{path}", "./postrm")
           control_files << "postrm"
         else raise "Unsupported script name '#{name}' (path: #{path})"
       end # case name
@@ -115,13 +115,13 @@ class FPM::Target::Deb < FPM::Package
     end
 
     # Make the control
-    safesystem("tar -zcf control.tar.gz #{control_files.map{ |f| "./#{f}" }.join(" ")}")
+    safesystem("tar", "-zcf", "control.tar.gz", *control_files)
 
     # create debian-binary
     File.open("debian-binary", "w") { |f| f.puts "2.0" }
 
     # pack up the .deb
-    safesystem("ar -qc #{params[:output]} debian-binary control.tar.gz data.tar.gz")
+    safesystem("ar", "-qc", "#{params[:output]}", "debian-binary", "control.tar.gz", "data.tar.gz")
   end # def build
 
   def default_output
