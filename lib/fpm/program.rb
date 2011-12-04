@@ -18,7 +18,6 @@ class FPM::Program
     @settings.source = {}   # source settings
     @settings.target = {}   # target settings
     @settings.config_files ||= []
-    @settings.inputs_path = nil # file path to read a list of paths from
     @settings.paths = [] # Paths to include in the package
 
     # Maintainer scripts - https://github.com/jordansissel/fpm/issues/18
@@ -63,13 +62,13 @@ class FPM::Program
     read_from_stdin = args.length == 1 && args.first == '-'
 
     ok = true
-    if @settings.inputs_path 
+    if @settings.source[:inputs]
       if read_from_stdin
         $stderr.puts "Error: setting --inputs conflicts with passing '-' as the only argument"
         ok = false
       end
-      unless File.file?(@settings.inputs_path)
-        $stderr.puts "Error: '#{@settings.inputs_path}' does not exist"
+      unless File.file?(@settings.source[:inputs])
+        $stderr.puts "Error: '#{@settings.source[:inputs]}' does not exist"
         ok = false
       end
     end
@@ -79,8 +78,8 @@ class FPM::Program
     if read_from_stdin
       paths_iolike = $stdin
     end
-    if @settings.inputs_path
-      paths_iolike = File.open(@settings.inputs_path, 'r')
+    if @settings.source[:inputs]
+      paths_iolike = File.open(@settings.source[:inputs], 'r')
     end
 
     paths = []
