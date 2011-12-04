@@ -104,7 +104,13 @@ class FPM::Program
     fpmrc(opts)
 
     # Proces normal flags now.
-    remaining = opts.parse(args)
+    begin
+      remaining = opts.parse(args)
+    rescue OptionParser::MissingArgument, OptionParser::InvalidOption
+      $stderr.puts $!.to_s  
+      $stderr.puts opts
+      exit 2
+    end
 
     # need to print help in a different scope
     @help = opts.help
