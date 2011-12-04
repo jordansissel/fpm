@@ -130,7 +130,8 @@ class FPM::Target::Deb < FPM::Package
     end
 
     # Make the control
-    safesystem("tar", "--numeric-owner --owner=root --group=root -zcf", "control.tar.gz", *control_files)
+    safesystem("tar", "--numeric-owner", "--owner=root", "--group=root",
+               "-zcf", "control.tar.gz", *control_files)
 
     # create debian-binary
     File.open("debian-binary", "w") { |f| f.puts "2.0" }
