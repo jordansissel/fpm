@@ -116,8 +116,8 @@ class FPM::Target::Deb < FPM::Package
     self.scripts.each do |name, path|
       ctrl_type, ctrl_file = CONTROL_FILES[name]
       if ctrl_file
-        safesystem("cp #{path} ./#{ctrl_file}")
-        safesystem("chmod a+x ./#{ctrl_file}") if ctrl_type == :script
+        safesystem("cp",  path, "./#{ctrl_file}")
+        safesystem("chmod", "a+x", "./#{ctrl_file}") if ctrl_type == :script
         control_files << ctrl_file
       else
         raise "Unsupported script name '#{name}' (path: #{path})"
@@ -130,14 +130,13 @@ class FPM::Target::Deb < FPM::Package
     end
 
     # Make the control
-    safesystem("tar --numeric-owner --owner=root --group=root -zcf control.tar.gz " \
-               "#{control_files.map{ |f| "./#{f}" }.join(" ")}")
+    safesystem("tar", "--numeric-owner --owner=root --group=root -zcf", "control.tar.gz", *control_files)
 
     # create debian-binary
     File.open("debian-binary", "w") { |f| f.puts "2.0" }
 
     # pack up the .deb
-    safesystem("ar -qc #{params[:output]} debian-binary control.tar.gz data.tar.gz")
+    safesystem("ar", "-qc", "#{params[:output]}", "debian-binary", "control.tar.gz", "data.tar.gz")
   end # def build
 
   def default_output
