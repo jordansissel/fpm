@@ -5,12 +5,12 @@
 ./usr/lib/ruby/gems/1.8/
 ./usr/lib/ruby/gems/1.8/bin/
 ./usr/lib/ruby/gems/1.8/bin/rails
-./usr/lib/ruby/gems/1.8/specifications/
-./usr/lib/ruby/gems/1.8/specifications/rails-3.1.0.gemspec
+./usr/lib/ruby/gems/1.8/cache/
+./usr/lib/ruby/gems/1.8/cache/rails-3.1.0.gem
+./usr/lib/ruby/gems/1.8/doc/
 ./usr/lib/ruby/gems/1.8/gems/
 ./usr/lib/ruby/gems/1.8/gems/rails-3.1.0/
 ./usr/lib/ruby/gems/1.8/gems/rails-3.1.0/bin/
 ./usr/lib/ruby/gems/1.8/gems/rails-3.1.0/bin/rails
-./usr/lib/ruby/gems/1.8/doc/
-./usr/lib/ruby/gems/1.8/cache/
-./usr/lib/ruby/gems/1.8/cache/rails-3.1.0.gem
+./usr/lib/ruby/gems/1.8/specifications/
+./usr/lib/ruby/gems/1.8/specifications/rails-3.1.0.gemspec
