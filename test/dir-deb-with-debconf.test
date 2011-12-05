@@ -1,0 +1,17 @@
+#!/bin/bash
+
+run() {
+  mkdir -p $tmpdir/prefix
+  touch $tmpdir/config
+  touch $tmpdir/templates
+
+  fpm -s dir -t deb -n testing -a all \
+  --deb-config $tmpdir/config \
+  --deb-templates $tmpdir/templates \
+  $tmpdir/prefix
+
+  file=testing_1.0_all.deb
+  dpkg -I $file | grep "\(config\)\|\(templates\)" > $output
+
+  rm $file
+}
