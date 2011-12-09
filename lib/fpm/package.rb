@@ -66,6 +66,9 @@ class FPM::Package
   # Array of configuration files
   attr_accessor :config_files
 
+  # Package path prefix
+  attr_accessor :prefix
+
 	# target-specific settings
 	attr_accessor :settings
 
@@ -118,6 +121,7 @@ class FPM::Package
     @conflicts = source[:conflicts] || []
     @scripts = source[:scripts]
     @config_files = source[:config_files] || []
+    @prefix = source[:prefix] || "/"
 
     # Target-specific settings, mirrors :settings metadata in FPM::Source
     @settings = params[:settings] || {}
