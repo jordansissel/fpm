@@ -59,7 +59,8 @@ class FPM::Target::Solaris < FPM::Package
       prototype.puts("i postinstall") if self.scripts["post-install"]
 
       # TODO(sissel): preinstall/postinstall
-      IO.popen("pkgproto data=/").each_line do |line|
+      # strip @prefix, since BASEDIR will set prefix via the pkginfo file
+      IO.popen("pkgproto data/#{@prefix}=").each_line do |line|
         type, klass, path, mode, user, group = line.split
         # Override stuff in pkgproto
         # TODO(sissel): Make this tunable?
