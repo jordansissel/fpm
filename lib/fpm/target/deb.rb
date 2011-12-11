@@ -130,7 +130,7 @@ class FPM::Target::Deb < FPM::Package
     end
 
     # Make the control
-    safesystem("tar", "--numeric-owner", "--owner=root", "--group=root",
+    safesystem(tar_cmd, "--numeric-owner", "--owner=0", "--group=0",
                "-zcf", "control.tar.gz", *control_files)
 
     # create debian-binary
