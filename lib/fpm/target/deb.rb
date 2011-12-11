@@ -6,6 +6,16 @@ require "fpm/util"
 
 class FPM::Target::Deb < FPM::Package
 
+  # Supported Debian control files
+  CONTROL_FILES = {
+    "pre-install"       => [:script, "preinst"],
+    "post-install"      => [:script, "postinst"],
+    "pre-uninstall"     => [:script, "prerm"],
+    "post-uninstall"    => [:script, "postrm"],
+    "debconf-config"    => [:script, "config"],
+    "debconf-templates" => [:text,   "templates"]
+  }
+
   def self.flags(opts, settings)
     settings.target[:deb] = "deb"
 
@@ -22,6 +32,18 @@ class FPM::Target::Deb < FPM::Package
     opts.on("--custom-control FILEPATH",
             "Custom version of the Debian control file.") do |control|
       settings.target[:control] = File.expand_path(control)
+    end
+    
+    # Add custom debconf config file
+    opts.on("--config SCRIPTPATH",
+            "Add SCRIPTPATH as debconf config file.") do |config|
+      settings.scripts["debconf-config"] = File.expand_path(config)
+    end
+    
+    # Add custom debconf templates file
+    opts.on("--templates FILEPATH",
+            "Add FILEPATH as debconf templates file.") do |templates|
+      settings.scripts["debconf-templates"] = File.expand_path(templates)
     end
   end
 
@@ -90,23 +112,16 @@ class FPM::Target::Deb < FPM::Package
                    "template.") unless $?.exitstatus == 0
     end
 
-    # place the postinst prerm files
+    # place the control files
     self.scripts.each do |name, path|
-      case name
-        when "pre-install"
-          safesystem("cp #{path} ./preinst")
-          control_files << "preinst"
-        when "post-install"
-          safesystem("cp #{path} ./postinst")
-          control_files << "postinst"
-        when "pre-uninstall"
-          safesystem("cp #{path} ./prerm")
-          control_files << "prerm"
-        when "post-uninstall"
-          safesystem("cp #{path} ./postrm")
-          control_files << "postrm"
-        else raise "Unsupported script name '#{name}' (path: #{path})"
-      end # case name
+      ctrl_type, ctrl_file = CONTROL_FILES[name]
+      if ctrl_file
+        safesystem("cp",  path, "./#{ctrl_file}")
+        safesystem("chmod", "a+x", "./#{ctrl_file}") if ctrl_type == :script
+        control_files << ctrl_file
+      else
+        raise "Unsupported script name '#{name}' (path: #{path})"
+      end
     end # self.scripts.each
 
     if self.config_files.any?
@@ -115,13 +130,14 @@ class FPM::Target::Deb < FPM::Package
     end
 
     # Make the control
-    safesystem("tar -zcf control.tar.gz #{control_files.map{ |f| "./#{f}" }.join(" ")}")
+    safesystem("tar", "--numeric-owner", "--owner=root", "--group=root",
+               "-zcf", "control.tar.gz", *control_files)
 
     # create debian-binary
     File.open("debian-binary", "w") { |f| f.puts "2.0" }
 
     # pack up the .deb
-    safesystem("ar -qc #{params[:output]} debian-binary control.tar.gz data.tar.gz")
+    safesystem("ar", "-qc", "#{params[:output]}", "debian-binary", "control.tar.gz", "data.tar.gz")
   end # def build
 
   def default_output

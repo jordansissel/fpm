@@ -20,6 +20,27 @@ class FPM::Target::Rpm < FPM::Package
     "#{builddir}/#{name}.spec"
   end
 
+  # Override inherited method so we can properly substitute in configuration
+  # files which require special directives in the spec file.
+  def render_spec
+    # find all files in paths given.
+    paths = []
+    @source.paths.each do |path|
+      Find.find(path) { |p| paths << p }
+    end
+
+    # Ensure all paths are absolute and don't start with '.'
+    paths.collect! { |p| p.gsub(/^\.\//, "/").gsub(/^[^\/]/, "/\\0") }
+    @config_files.collect! { |c| c.gsub(/^\.\//, "/").gsub(/^[^\/]/, "/\\0") }
+
+    # Remove config files from the main path list, as files cannot be listed
+    # twice (rpmbuild complains).
+    paths -= @config_files
+
+    #@logger.info(:paths => paths.sort)
+    template.result(binding)
+  end # def render_spec
+
   def url
     if @url.nil? || @url.empty?
       'http://nourlgiven.example.com'
@@ -27,6 +48,15 @@ class FPM::Target::Rpm < FPM::Package
       @url
     end
   end
+
+  def iteration
+    if @iteration.nil? || @iteration.empty?
+      # Default iteration value of 1 makes sense.
+      return '1'
+    else
+      return @iteration
+    end
+  end # def iteration
 
   def version
     if @version.kind_of?(String) and @version.include?("-")

@@ -1,3 +1,5 @@
+%define __jar_repack 0
+
 Name: <%= name %>
 Version: <%= version %>
 <% if epoch -%>
@@ -92,8 +94,8 @@ rm -rf $RPM_BUILD_ROOT
 <% end -%>
 %files
 %defattr(-,root,root,-)
-<%# Trim leading '.' from paths if they are './blah...' -%>
-<%# Also ensure paths start with '/' -%>
-<%= @source.paths.collect { |p| p.gsub(/^\.\//, "/").gsub(/^[^\/]/, "/\\0") }.join("\n") %>
+<%# Output config files and then regular files. -%>
+<%= @config_files.collect { |c| '%config ' + c }.join("\n") %>
+<%= paths.join("\n") %>
 
 %changelog
