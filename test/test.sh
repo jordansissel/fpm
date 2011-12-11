@@ -22,10 +22,10 @@ cleanup() {
 
 main() {
   test="$1"
-  tmpdir=$(mktemp -d)
-  debugout=$(mktemp)
-  debugerr=$(mktemp)
-  output=$(mktemp)
+  tmpdir=$(mktemp -d tmp/fpm.XXXXXXXXXX)
+  debugout=$(mktemp tmp/fpm.XXXXXXXXXX)
+  debugerr=$(mktemp tmp/fpm.XXXXXXXXXX)
+  output=$(mktemp tmp/fpm.XXXXXXXXXX)
   expected=${1%.test}.out
 
   echo "Loading $test"
