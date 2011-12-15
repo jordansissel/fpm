@@ -134,4 +134,4 @@ class FPM::Source::Python < FPM::Source
     return trash
   end # def garbage
 
-end # class FPM::Source::Gem
+end # class FPM::Source::Python
