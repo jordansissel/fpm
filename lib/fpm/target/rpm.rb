@@ -86,4 +86,38 @@ class FPM::Target::Rpm < FPM::Package
       safesystem("mv", path, params[:output])
     end
   end # def build!
+  
+  def fix_dependency(dep)
+     if dep =~ /[\(,\|]/
+       # Don't "fix" ones that could appear well formed already.
+     else
+       da = dep.split(/ +/)
+       if da.size > 1
+         # Convert strings 'foo >= bar' to 'foo (>= bar)'
+         dep = "#{da[0]} #{da[1]} #{da[2]}"
+       end
+     end
+
+     # Convert gem ~> X.Y.Z to '>= X.Y.Z' and < X.Y+1.0
+     if dep =~ /\~>/
+       name, version = dep.gsub(/[()~>]/, "").split(/ +/)[0..1]
+       nextversion = version.split(".").collect { |v| v.to_i }
+       l = nextversion.length
+       nextversion[l-2] += 1
+       nextversion[l-1] = 0
+       nextversion = nextversion.join(".")
+       ["#{name} >= #{version}", "#{name} < #{nextversion}"]
+     elsif dep =~ /\d [<>]=? [0-9.+] [<>]=? \d/
+       # Convert gem >= A.B.C <= X.Y.Z to '>= A.B.C' and '<= X.Y.Z'
+       puts dep
+       # split out version numbers with their equality sign
+       name, lower_version, upper_version = dep.scan(/([\w-]+) ([<>]=? [\d\.]+) ([<>]=? [\d\.]+)/)[0]
+       ["#{name} #{lower_version}", "#{name} #{upper_version}"]
+     elsif dep =~ /!=/
+       name, version = dep.gsub(/!=/, "").split(/ +/)[0..1]
+       ["#{name} > #{version}", "#{name} < #{version}"]      
+     else
+       dep
+     end
+   end # def fix_dependency
 end # class FPM::Target::RPM
