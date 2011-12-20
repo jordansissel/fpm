@@ -7,7 +7,7 @@ Epoch: <%= epoch %>
 <% end -%>
 Release: <%= iteration or 1 %>
 <%# use the first line of the description as the summary -%>
-Summary: <%= description.split("\n").first.empty? "_" :  description.split("\n").first %>
+Summary: <%= description.split("\n").first.empty? ? "_" :  description.split("\n").first %>
 BuildArch: <%= architecture %>
 AutoReqProv: no
 
