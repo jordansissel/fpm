@@ -7,7 +7,7 @@ Epoch: <%= epoch %>
 <% end -%>
 Release: <%= iteration or 1 %>
 <%# use the first line of the description as the summary -%>
-Summary: <%= description.split("\n").first %>
+Summary: <%= description.split("\n").first.empty? ? "_" :  description.split("\n").first %>
 BuildArch: <%= architecture %>
 AutoReqProv: no
 
@@ -23,26 +23,7 @@ BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 <% if !dependencies.empty? -%>
 <%
-  properdeps = dependencies.collect do |d|
-    # Convert gem ~> X.Y.Z to '>= X.Y.Z' and < X.Y+1.0
-    if d =~ /\~>/
-      name, version = d.gsub(/[()~>]/, "").split(/ +/)[0..1]
-      nextversion = version.split(".").collect { |v| v.to_i }
-      l = nextversion.length
-      nextversion[l-2] += 1
-      nextversion[l-1] = 0
-      nextversion = nextversion.join(".")
-      ["#{name} >= #{version}", "#{name} < #{nextversion}"]
-    elsif d =~ /\d [<>]=? [0-9.+] [<>]=? \d/
-      # Convert gem >= A.B.C <= X.Y.Z to '>= A.B.C' and '<= X.Y.Z'
-      puts d
-      # split out version numbers with their equality sign
-      name, lower_version, upper_version = d.scan(/([\w-]+) ([<>]=? [\d\.]+) ([<>]=? [\d\.]+)/)[0]
-      ["#{name} #{lower_version}", "#{name} #{upper_version}"]
-    else
-      d
-    end
-  end
+  properdeps =  dependencies.collect { |d| fix_dependency(d) }
 -%>Requires: <%= properdeps.join(", ") %>
 <% end -%>
 <% provides.each do |prov| -%>
