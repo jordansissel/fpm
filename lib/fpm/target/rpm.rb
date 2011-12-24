@@ -101,6 +101,7 @@ class FPM::Target::Rpm < FPM::Package
      # Convert gem ~> X.Y.Z to '>= X.Y.Z' and < X.Y+1.0
      if dep =~ /\~>/
        name, version = dep.gsub(/[()~>]/, "").split(/ +/)[0..1]
+       version = "#{version}.0" unless version.include?('.')
        nextversion = version.split(".").collect { |v| v.to_i }
        l = nextversion.length
        nextversion[l-2] += 1
@@ -115,7 +116,7 @@ class FPM::Target::Rpm < FPM::Package
        ["#{name} #{lower_version}", "#{name} #{upper_version}"]
      elsif dep =~ /!=/
        name, version = dep.gsub(/!=/, "").split(/ +/)[0..1]
-       ["#{name} > #{version}", "#{name} < #{version}"]      
+       ["#{name} > #{version}"]
      else
        dep
      end
