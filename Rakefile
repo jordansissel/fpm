@@ -1,7 +1,17 @@
+require 'rake/testtask'
+
 task :default => [:package]
 
 task :test do
   system("make -C test")
+  Rake::Task[:minitest].invoke # Run these tests as well.
+  # Eventually all the tests should be minitest-run or initiated.
+end
+
+# MiniTest tests
+Rake::TestTask.new do |t|
+  t.pattern = 'test/fpm/*.rb'
+  t.name = 'minitest'
 end
 
 task :package => [:test, :package_real]  do
