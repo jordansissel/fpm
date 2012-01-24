@@ -61,7 +61,7 @@ class get_metadata(Command):
       dependencies = [dependencies]
 
     final_deps = []
-    dep_re = re.compile("([^<>= ]+)(?:\s*([<>=]{1,2})\s*(.*))?$")
+    dep_re = re.compile("([^<>= ]+)(?:\s*([<>=]{1,2})\s*([^,]*))?(?:,\s*([<>=]{1,2})\s*(.*))?$")
     for dep in dependencies:
       # python deps are strings that look like:
       # "packagename"
@@ -74,10 +74,17 @@ class get_metadata(Command):
       elif m.groups()[1] is None:
         name, cond, version = m.groups()[0], ">=", 0
       else:
-        name, cond, version = m.groups()
+        groups = m.groups()
+        name, cond, version = groups[0:3]
+        if groups[3] is not None:
+          final_deps.append("%s %s %s" % (groups[0],
+                                          self._replace_deprecated(groups[3]),
+                                          groups[4]))
       # end if
 
-      final_deps.append("%s %s %s" % (name, cond, version))
+      final_deps.append("%s %s %s" % (name,
+                                      self._replace_deprecated(cond),
+                                      version))
     # end for i in dependencies
 
     data["dependencies"] = final_deps
@@ -90,4 +97,9 @@ class get_metadata(Command):
       print json.write(data)
 
   # def run
+
+  def _replace_deprecated(self, sign):
+    """Replace deprecated operators"""
+    return {'<': '<<', '>': '>>'}.get(sign, sign)
+
 # class list_dependencies
