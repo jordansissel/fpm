@@ -100,8 +100,14 @@ class FPM::Source::Python < FPM::Source
     self[:description] = metadata["description"]
     self[:license] = metadata["license"]
     self[:version] = metadata["version"]
-    self[:name] = "#{self[:package_prefix]}#{self[:suffix]}-#{metadata["name"]}"
     self[:url] = metadata["url"]
+
+    # sanitize name
+    if metadata["name"].start_with? "#{self[:package_prefix]}-"
+      self[:name] = metadata["name"]
+    else
+      self[:name] = "#{self[:package_prefix]}#{self[:suffix]}-#{metadata["name"]}"
+    end
 
     self[:dependencies] = metadata["dependencies"].collect do |dep|
       name, cmp, version = dep.split
