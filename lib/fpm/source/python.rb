@@ -102,7 +102,11 @@ class FPM::Source::Python < FPM::Source
     self[:version] = metadata["version"]
     self[:url] = metadata["url"]
 
-    # sanitize name
+    # Sanitize package name.
+    # Some PyPI packages can be named 'python-foo', so we don't want to end up
+    # with a package named 'python-python-foo'.
+    # But we want packages named like 'pythonweb' to be suffixed
+    # 'python-pythonweb'.
     if metadata["name"].start_with? "#{self[:package_prefix]}-"
       self[:name] = metadata["name"]
     else
