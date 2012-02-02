@@ -100,12 +100,22 @@ class FPM::Source::Python < FPM::Source
     self[:description] = metadata["description"]
     self[:license] = metadata["license"]
     self[:version] = metadata["version"]
-    self[:name] = "#{self[:package_prefix]}#{self[:suffix]}-#{metadata["name"]}"
     self[:url] = metadata["url"]
+
+    # Sanitize package name.
+    # Some PyPI packages can be named 'python-foo', so we don't want to end up
+    # with a package named 'python-python-foo'.
+    # But we want packages named like 'pythonweb' to be suffixed
+    # 'python-pythonweb'.
+    if metadata["name"].start_with? "#{self[:package_prefix]}-"
+      self[:name] = metadata["name"]
+    else
+      self[:name] = "#{self[:package_prefix]}#{self[:suffix]}-#{metadata["name"]}"
+    end
 
     self[:dependencies] = metadata["dependencies"].collect do |dep|
       name, cmp, version = dep.split
-      if name.start_with? self[:package_prefix]
+      if name.start_with? "#{self[:package_prefix]}-"
         name.gsub!(/^#{self[:package_prefix]}-/, "")
       end
       "#{self[:package_prefix]}#{self[:suffix]}-#{name} #{cmp} #{version}"
