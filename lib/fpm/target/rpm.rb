@@ -76,6 +76,10 @@ class FPM::Target::Rpm < FPM::Package
     return @version
   end
 
+  def defines
+    self.settings[:rpmbuild_define] || []
+  end
+
   def build!(params)
     raise "No package name given. Can't assemble package" if !@name
     # TODO(sissel): Abort if 'rpmbuild' tool not found.
