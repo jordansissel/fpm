@@ -1,7 +1,12 @@
+require 'fpm/namespace'
 require 'fpm/source'
 require 'fpm/util'
 
 class FPM::Source::Deb < FPM::Source
+  def self.flags(opts, settings)
+    settings.source[:deb] = "deb"
+  end
+
   def get_metadata
     @deb = @paths.first
     self[:name]    = %x{dpkg-deb --showformat='${Package}'     -W #{@deb}}.chomp
