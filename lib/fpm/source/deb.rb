@@ -1,7 +1,7 @@
 require 'fpm/source'
 require 'fpm/util'
 
-class FPM::Source::DEB < FPM::Source
+class FPM::Source::Deb < FPM::Source
   def get_metadata
     @deb = @paths.first
     self[:name]    = %x{dpkg-deb --showformat='${Package}'     -W #{@deb}}.chomp
