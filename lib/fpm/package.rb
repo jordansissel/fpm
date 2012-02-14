@@ -145,12 +145,14 @@ class FPM::Package
   end # def template
 
   def render_spec
-    # find all files in paths given.
-    paths = []
-    @source.paths.each do |path|
-      Find.find(path) { |p| paths << p }
+    if @settings[:deb] != "deb"
+      # find all files in paths given.
+      paths = []
+      @source.paths.each do |path|
+        Find.find(path) { |p| paths << p }
+      end
+      #@logger.info(:paths => paths.sort)
     end
-    #@logger.info(:paths => paths.sort)
     template.result(binding)
   end # def render_spec
 
