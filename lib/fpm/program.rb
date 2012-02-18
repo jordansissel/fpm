@@ -108,7 +108,7 @@ class FPM::Program
     begin
       remaining = opts.parse(args)
     rescue OptionParser::MissingArgument, OptionParser::InvalidOption
-      $stderr.puts $!.to_s  
+      $stderr.puts $!.to_s
       $stderr.puts opts
       exit 2
     end
@@ -167,6 +167,14 @@ class FPM::Program
             "(optional) Set epoch value for this package.") do |epoch|
       @settings.epoch = epoch
     end # --epoch
+
+    opts.on("--license LICENSE", "(optional) Sets the license for this package.") do |license|
+      @settings.license = license
+    end # --license
+
+    opts.on("--vendor VENDOR", "(optional) Sets the vendor for this package.") do |vendor|
+      @settings.vendor = vendor
+    end # --vendor
 
     opts.on("-d DEPENDENCY", "--depends DEPENDENCY") do |dep|
       @settings.dependencies << dep

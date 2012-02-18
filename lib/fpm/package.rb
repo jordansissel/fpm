@@ -39,6 +39,9 @@ class FPM::Package
   # A identifier representing the license. Any string is fine.
   attr_accessor :license
 
+  # A identifier representing the vendor. Any string is fine.
+  attr_accessor :vendor
+
   # What architecture is this package for?
   attr_accessor :architecture
 
@@ -90,6 +93,7 @@ class FPM::Package
     @url = source[:url] || "http://nourlgiven.example.com/no/url/given"
     @category = source[:category] || "default"
     @license = source[:license] || "unknown"
+    @vendor = source[:vendor] || "none"
     #@maintainer = source[:maintainer] || "<#{ENV["USER"]}@#{Socket.gethostname}>"
     @maintainer = source[:maintainer]
 
