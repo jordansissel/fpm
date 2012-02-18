@@ -1,11 +1,11 @@
 Package: <%= name %>
 Version: <%= "#{epoch}:" if epoch %><%= version %><%= iteration && '-'+iteration.to_s %>
 License: <%= license %>
+Vendor: <%= vendor %>
 Architecture: <%= architecture %>
 Maintainer: <%= maintainer or "<unknown>" %>
 <% if !dependencies.empty? -%>
 <%   properdeps = dependencies.collect { |d| fix_dependency(d) }.flatten -%>
-Vendor: <%= vendor %>
 Depends: <%= properdeps.flatten.join(", ") %>
 <% end -%>
 <% if !pre_dependencies.empty? -%>
