@@ -51,6 +51,8 @@ class FPM::Builder
       :conflicts => [],
       :description => settings.description,
       :url => settings.url,
+      :license => settings.license,
+      :vendor => settings.vendor,
       :settings => settings.source
     )
 
