@@ -83,7 +83,9 @@ Targets:
 
 ## Something broken?
 
-FPM lacks automated testing (though I have that planned).
+FPM lacks much automated testing. It does have:
+* BASH-based acceptance tests for finished packages
+* MiniTest-based unit tests (in their infancy)
 
 To compensate for lack of automated testing, should you find any bugs that
 would prevent you from using fpm yourself, please let me know (file a ticket,
