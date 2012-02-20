@@ -1,0 +1,9 @@
+Package: test-data
+Version: 1.0
+Architecture: all
+Maintainer: <testdude@example.com>
+Standards-Version: 3.9.1
+Section: default
+Priority: extra
+Homepage: http://nourlgiven.example.com/no/url/given
+Description: no description given
