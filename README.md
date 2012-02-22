@@ -98,3 +98,6 @@ If you have feature requests, feel free to send them my way.
 
 [See the wiki for more docs](https://github.com/jordansissel/fpm/wiki)
 
+## Related Projects
+
+You may also find the 'multipkg' project appealing: https://github.com/ytoolshed/multipkg
