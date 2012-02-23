@@ -10,10 +10,12 @@ Gem::Specification.new do |spec|
   files << "CHANGELIST"
 
   spec.name = "fpm"
-  spec.version = "0.3.12"
+  spec.version = "0.4.0"
   spec.summary = "fpm - package building and mangling"
   spec.description = "Convert directories, rpms, python eggs, rubygems, and more to rpms, debs, solaris packages and more. Win at package management without wasting pointless hours debugging bad rpm specs!"
   spec.add_dependency("json")
+  spec.add_dependency("backports", "2.3.0")
+  spec.add_development_dependency("rush")
   spec.files = files
   spec.require_paths << "lib"
   spec.bindir = "bin"
