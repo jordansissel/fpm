@@ -5,6 +5,8 @@ require "fpm/errors"
 require "fpm/util"
 
 class FPM::Target::Deb < FPM::Package
+  # Installed size
+  attr_accessor :installed_size
 
   # Supported Debian control files
   CONTROL_FILES = {
@@ -45,6 +47,11 @@ class FPM::Target::Deb < FPM::Package
             "Add FILEPATH as debconf templates file.") do |templates|
       settings.scripts["debconf-templates"] = File.expand_path(templates)
     end
+
+    opts.on("--installed-size BYTES",
+            "The installed size, in bytes") do |installed_size_s|
+      settings.target[:installed_size] = installed_size_s.to_i
+    end # --installed-size
   end
 
   def needs_md5sums
@@ -55,6 +62,10 @@ class FPM::Target::Deb < FPM::Package
       return true
     end
   end # def needs_md5sums
+
+  def needs_installed_size
+    true
+  end
 
   def architecture
     if @architecture.nil? or @architecture == "native"
