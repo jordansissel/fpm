@@ -1,7 +1,7 @@
 require "fpm/namespace"
 require "socket" # for Socket.gethostname
 require "logger"
-require "find" # for Find.find (directory walking)
+require "tmpdir"
 
 class FPM::Package
   # The name of this package
@@ -19,7 +19,9 @@ class FPM::Package
   #   Debian calls this 'release' and is the last '-NUMBER' in the version
   #   RedHat has this as 'Release' in the .spec file
   #   FreeBSD calls this 'PORTREVISION'
-  # If left unpicked, it defaults to 1.
+  #
+  # Iteration can be nil. If nil, the fpm package implementation is expected
+  # to handle any default value that should be instead.
   attr_accessor :iteration
 
   # Who maintains this package? This could be the upstream author
@@ -40,6 +42,7 @@ class FPM::Package
   attr_accessor :license
 
   # A identifier representing the vendor. Any string is fine.
+  # This is usually who produced the software.
   attr_accessor :vendor
 
   # What architecture is this package for?
@@ -69,121 +72,110 @@ class FPM::Package
   # Array of configuration files
   attr_accessor :config_files
 
-  # Package path prefix
-  attr_accessor :prefix
+  # Any other attributes specific to this package.
+  # This is where you'd put rpm, deb, or other specific attributes.
+  attr_accessor :attributes
 
-	# target-specific settings
-	attr_accessor :settings
+  private
 
-  def initialize(source, params={})
-    @source = source
+  def initialize
     @logger = Logger.new(STDERR)
     @logger.level = $DEBUG ? Logger::DEBUG : Logger::WARN
 
-    @name = source[:name] # || fail
-
     # Default version is 1.0 in case nobody told us a specific version.
-    @version = source[:version] || "1.0"
-    @epoch = source[:epoch]
+    @version = 1.0
+    @epoch = 1
+    @dependencies = []
+    @iteration = nil
+    @url = nil
+    @category = "default"
+    @license = "unknown"
+    @vendor = "none"
 
-    @dependencies = source[:dependencies] || []
-    # Iteration can be nil. If nil, the fpm package implementation is expected
-    # to handle any default value that should be instead.
-    @iteration = source[:iteration]
-    @url = source[:url] || "http://nourlgiven.example.com/no/url/given"
-    @category = source[:category] || "default"
-    @license = source[:license] || "unknown"
-    @vendor = source[:vendor] || "none"
-    #@maintainer = source[:maintainer] || "<#{ENV["USER"]}@#{Socket.gethostname}>"
-    @maintainer = source[:maintainer]
+    # Attributes for this specific package 
+    @attributes = {}
 
-    # Default maintainer if none given.
-    if @maintainer.nil? or @maintainer.empty?
-      # Reference
-      # http://www.debian.org/doc/manuals/maint-guide/first.en.html
-      # http://wiki.debian.org/DeveloperConfiguration
-      # https://github.com/jordansissel/fpm/issues/37
-      if ENV.include?("DEBEMAIL") and ENV.include?("DEBFULLNAME")
-        # Use DEBEMAIL and DEBFULLNAME as the default maintainer if available.
-        @maintainer = "#{ENV["DEBFULLNAME"]} <#{ENV["DEBEMAIL"]}>"
-      else
-        # TODO(sissel): Maybe support using 'git config' for a default as well?
-        # git config --get user.name, etc can be useful.
-        #
-        # Otherwise default to user@currenthost
-        @maintainer = "<#{ENV["USER"]}@#{Socket.gethostname}>"
-      end
+    # Reference
+    # http://www.debian.org/doc/manuals/maint-guide/first.en.html
+    # http://wiki.debian.org/DeveloperConfiguration
+    # https://github.com/jordansissel/fpm/issues/37
+    if ENV.include?("DEBEMAIL") and ENV.include?("DEBFULLNAME")
+      # Use DEBEMAIL and DEBFULLNAME as the default maintainer if available.
+      @maintainer = "#{ENV["DEBFULLNAME"]} <#{ENV["DEBEMAIL"]}>"
+    else
+      # TODO(sissel): Maybe support using 'git config' for a default as well?
+      # git config --get user.name, etc can be useful.
+      #
+      # Otherwise default to user@currenthost
+      @maintainer = "<#{ENV["USER"]}@#{Socket.gethostname}>"
     end
 
     # If @architecture is nil, the target package should provide a default.
     # Special 'architecture' values include "all" (aka rpm's noarch, debian's all)
     # Another special includes "native" which will be the current platform's arch.
-    @architecture = source[:architecture]
-    @description = source[:description] || "no description given"
-    @provides = source[:provides] || []
-    @replaces = source[:replaces] || []
-    @conflicts = source[:conflicts] || []
-    @scripts = source[:scripts]
-    @config_files = source[:config_files] || []
-    @prefix = source[:prefix] || "/"
+    @architecture = "all"
+    @description = "no description given"
 
-    # Target-specific settings, mirrors :settings metadata in FPM::Source
-    @settings = params[:settings] || {}
+    # TODO(sissel): Implement provides, requires, conflicts, etc later.
+    #@provides = []
+    #@conflicts = source[:conflicts] || []
+    #@scripts = source[:scripts]
+    #@config_files = source[:config_files] || []
+    #@prefix = source[:prefix] || "/"
   end # def initialize
 
-  # nobody needs md5sums by default.
-  def needs_md5sums
-    false
-  end # def needs_md5sums
+  # Add a new source to this package.
+  # The exact behavior depends on the kind of package being managed.
+  #
+  # For instance: 
+  #
+  # * for FPM::Package::Dir, << expects a path to a directory or files.
+  # * for FPM::Package::RPM, << expects a path to an rpm.
+  #
+  # The idea is that you can keep pumping in new things to a package
+  # for later conversion or output.
+  #
+  # Implementations are expected to put files relevant to the 'input' in the
+  # staging_path
+  def <<(input)
+    raise NotImplementedError.new
+  end # def <<
 
   # TODO [Jay]: make this better...?
   def type
     self.class.name.split(':').last.downcase
   end # def type
 
-  def template(path=nil)
-    path ||= "#{type}.erb"
-    @logger.info("Reading template: #{path}")
-    tpl = File.read("#{FPM::DIRS[:templates]}/#{path}")
-    return ERB.new(tpl, nil, "-")
-  end # def template
+  # Convert this package to a new package type
+  def convert(klass)
+    pkg = klass.new
+    pkg.instance_variable_set(:@staging_path, staging_path)
 
-  def render_spec
-    # find all files in paths given.
-    paths = []
-    @source.paths.each do |path|
-      Find.find(path) { |p| paths << p }
+    # copy other bits
+    ivars = [
+      :architecture, :attributes, :category, :config_files, :conflicts,
+      :dependencies, :description, :epoch, :iteration, :license, :maintainer,
+      :name, :provides, :replaces, :scripts, :url, :vendor, :version
+    ]
+    ivars.each do |ivar|
+      pkg.instance_variable_set(ivar, instance_variable_get(ivar))
     end
-    #@logger.info(:paths => paths.sort)
-    template.result(binding)
-  end # def render_spec
 
-  # Default specfile generator just makes one specfile, whatever that is for
-  # this package.
-  def generate_specfile(builddir)
-    File.open(specfile(builddir), "w") do |f|
-      f.puts render_spec
-    end
-  end # def generate_specfile
+    return pkg
+  end # def convert
 
-  def default_output
-    if iteration
-      "#{name}-#{version}-#{iteration}.#{architecture}.#{type}"
-    else
-      "#{name}-#{version}.#{architecture}.#{type}"
-    end
-  end # def default_output
+  def output(path)
+    raise NotImplementedError.new("This must be implemented by FPM::Package subclasses")
+  end # def output
 
-  def fixpath(path)
-    if path[0,1] != "/"
-      path = File.join(@source.root, path)
-    end
-    return path if File.symlink?(path)
-    @logger.info(:fixpath => path)
-    realpath = Pathname.new(path).realpath.to_s
-    re = Regexp.new("^#{Regexp.escape(@source.root)}")
-    realpath.gsub!(re, "")
-    @logger.info(:fixpath_result => realpath)
-    return realpath
-  end # def fixpath
+  def staging_path
+    @staging_path ||= ::Dir.mktmpdir(File.join(::Dir.pwd, "package-#{type}-staging"))
+  end # def staging_path
+
+  # Clean up any temporary storage used by this class.
+  def cleanup
+    FileUtils.rm_r(staging_path)
+  end # def cleanup
+
+  public(:type, :initialize, :convert, :output, :<<, :cleanup, :staging_path)
 end # class FPM::Package
