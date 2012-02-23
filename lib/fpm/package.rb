@@ -136,6 +136,11 @@ class FPM::Package
     false
   end # def needs_md5sums
 
+  # nobody needs installed_size by default.
+  def needs_installed_size
+    false
+  end # def needs_installed_size
+
   # TODO [Jay]: make this better...?
   def type
     self.class.name.split(':').last.downcase
