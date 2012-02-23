@@ -112,7 +112,9 @@ class FPM::Builder
           end
         end
       end
-
+      if @package.needs_installed_size
+        @package.installed_size = @package.settings[:installed_size] || get_installed_size
+      end
       generate_md5sums if @package.needs_md5sums
       generate_specfile
       edit_specfile if @edit
@@ -219,4 +221,12 @@ class FPM::Builder
       end
     end.flatten
   end # def checksum
+
+  private
+  def get_installed_size
+    @source.paths.inject(0) do |total, path|
+      next unless File.exists? path
+      total + %x{ du -sb -- #{path} | cut -f1 }.to_i
+    end
+  end #def get_installed_size
 end
