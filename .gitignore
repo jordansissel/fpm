@@ -11,3 +11,6 @@ fpm.wiki
 
 # RVM
 .rvmrc
+
+.yardoc
+coverage
