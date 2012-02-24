@@ -38,7 +38,7 @@ class FPM::Package::Dir < FPM::Package
     # Copy all files from 'path' into staging_path
 
     ::Dir.chdir(@attributes[:chdir] || ".") do
-      p :chdir => ::Dir.pwd, :source => source
+      #p :chdir => ::Dir.pwd, :source => source
       Find.find(source).each do |file|
         next if source == file # ignore the directory itself
         # Translate file paths with attributes like 'prefix' and 'chdir'
