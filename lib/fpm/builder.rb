@@ -57,6 +57,7 @@ class FPM::Builder
     )
 
     @edit = !!settings.edit
+    @postprocess = settings.postprocess
 
     @paths = paths
     @package = package_class_for(settings.package_type).new(@source,
@@ -118,6 +119,7 @@ class FPM::Builder
       generate_md5sums if @package.needs_md5sums
       generate_specfile
       edit_specfile if @edit
+      postprocess_specfile if @postprocess
     end
 
     ::Dir.chdir(builddir) do
@@ -183,6 +185,15 @@ class FPM::Builder
   private
   def generate_specfile
     @package.generate_specfile(builddir)
+  end
+
+  private
+  def postprocess_specfile
+    safesystem("#{@postprocess} '#{package.specfile(builddir)}'")
+    unless File.size? package.specfile(builddir)
+      puts "Empty specfile.  Aborting."
+      exit 1
+    end
   end
 
   private

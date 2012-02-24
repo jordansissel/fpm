@@ -234,6 +234,11 @@ class FPM::Program
       @settings.edit = true
     end # --edit
 
+    opts.on("--post-process SCRIPT",
+            "Run a script on the specfile before building") do |script|
+      @settings.postprocess = script
+    end # --edit
+
     opts.on("-x PATTERN", "--exclude PATTERN",
             "Exclude paths matching pattern (according to tar --exclude)") do |pattern|
       @settings.exclude << pattern
