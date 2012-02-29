@@ -98,6 +98,8 @@ class FPM::Program
     FPM::Source::Gem.flags(FPM::Flags.new(opts, "gem", "gem source only"), @settings)
     FPM::Source::Python.flags(FPM::Flags.new(opts, "python", "python source only"),
                               @settings)
+    FPM::Source::Deb.flags(FPM::Flags.new(opts, "deb", "deb source only"), @settings)
+
     FPM::Target::Deb.flags(FPM::Flags.new(opts, "deb", "deb target only"), @settings)
     FPM::Target::Rpm.flags(FPM::Flags.new(opts, "rpm", "rpm target only"), @settings)
 
