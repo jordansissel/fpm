@@ -1,4 +1,4 @@
-require "fpm/rubyfixes"
+require "backports" # gem backports
 require "fpm/source"
 require "fpm/util"
 require "fileutils"
