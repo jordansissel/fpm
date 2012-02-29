@@ -191,7 +191,7 @@ class FPM::Builder
   def postprocess_specfile
     safesystem("#{@postprocess} '#{package.specfile(builddir)}'")
     unless File.size? package.specfile(builddir)
-      puts "Empty specfile.  Aborting."
+      $stderr.puts "Empty specfile.  Aborting."
       exit 1
     end
   end
