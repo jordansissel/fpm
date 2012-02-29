@@ -1,6 +1,5 @@
 require "backports" # gem backports
 require "fileutils"
-require "fpm/rubyfixes"
 require "fpm/util"
 
 class FPM::Source::Dir < FPM::Source
