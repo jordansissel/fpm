@@ -6,9 +6,9 @@ run() {
   touch $tmpdir/templates
 
   fpm -s dir -t deb -n testing -a all \
-  --deb-config $tmpdir/config \
-  --deb-templates $tmpdir/templates \
-  $tmpdir/prefix
+    --deb-config $tmpdir/config \
+    --deb-templates $tmpdir/templates \
+    $tmpdir/prefix
 
   file=testing_1.0_all.deb
   dpkg -I $file | grep "\(config\)\|\(templates\)" > $output

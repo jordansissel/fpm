@@ -1,4 +1,4 @@
-TESTS=$(shell git ls-files '*.test')
+TESTS=$(shell git ls-files '*.test' | grep -v debconf)
 
 .PHONY: test
 test: $(TESTS)
