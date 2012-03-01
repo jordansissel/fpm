@@ -1,9 +1,18 @@
 require "fpm/namespace"
 require "socket" # for Socket.gethostname
-require "logger"
+require "cabin"
 require "tmpdir"
 
+# This class is the parent of all packages.
+# If you want to implement an FPM package type, you'll inherit from this.
+#
+# There are 
 class FPM::Package
+  include FPM::Util
+
+  # This class is raised if there's something wrong with a setting in the package.
+  class InvalidArgument < StandardError; end
+
   # The name of this package
   attr_accessor :name
 
@@ -28,6 +37,10 @@ class FPM::Package
   # or the package maintainer. You pick.
   attr_accessor :maintainer
 
+  # A identifier representing the vendor. Any string is fine.
+  # This is usually who produced the software.
+  attr_accessor :vendor
+
   # URL for this package.
   # Could be the homepage. Could be the download url. You pick.
   attr_accessor :url
@@ -40,10 +53,6 @@ class FPM::Package
 
   # A identifier representing the license. Any string is fine.
   attr_accessor :license
-
-  # A identifier representing the vendor. Any string is fine.
-  # This is usually who produced the software.
-  attr_accessor :vendor
 
   # What architecture is this package for?
   attr_accessor :architecture
@@ -79,18 +88,12 @@ class FPM::Package
   private
 
   def initialize
-    @logger = Logger.new(STDERR)
-    @logger.level = $DEBUG ? Logger::DEBUG : Logger::WARN
+    @logger = Cabin::Channel.new
+    @logger.subscribe(STDOUT)
+    @logger.level = $DEBUG ? :debug : :info
 
     # Default version is 1.0 in case nobody told us a specific version.
-    @version = 1.0
-    @epoch = 1
     @dependencies = []
-    @iteration = nil
-    @url = nil
-    @category = "default"
-    @license = "unknown"
-    @vendor = "none"
 
     # Attributes for this specific package 
     @attributes = {}
@@ -110,19 +113,57 @@ class FPM::Package
       @maintainer = "<#{ENV["USER"]}@#{Socket.gethostname}>"
     end
 
-    # If @architecture is nil, the target package should provide a default.
-    # Special 'architecture' values include "all" (aka rpm's noarch, debian's all)
-    # Another special includes "native" which will be the current platform's arch.
     @architecture = "all"
     @description = "no description given"
+    @version = 1.0
+    @epoch = 1
+    @iteration = nil
+    @url = nil
+    @category = "default"
+    @license = "unknown"
+    @vendor = "none"
 
-    # TODO(sissel): Implement provides, requires, conflicts, etc later.
-    #@provides = []
-    #@conflicts = source[:conflicts] || []
-    #@scripts = source[:scripts]
-    #@config_files = source[:config_files] || []
-    #@prefix = source[:prefix] || "/"
+    @provides = []
+    @replaces = []
+    @scripts = {}
+    @config_files = []
   end # def initialize
+
+  # TODO [Jay]: make this better...?
+  def type
+    self.class.type
+  end # def type
+
+  def self.type
+    self.name.split(':').last.downcase
+  end # def self.type
+
+  # Convert this package to a new package type
+  def convert(klass)
+    pkg = klass.new
+    pkg.instance_variable_set(:@staging_path, staging_path)
+
+    # copy other bits
+    ivars = [
+      :@architecture, :@attributes, :@category, :@config_files, :@conflicts,
+      :@dependencies, :@description, :@epoch, :@iteration, :@license, :@maintainer,
+      :@name, :@provides, :@replaces, :@scripts, :@url, :@vendor, :@version
+    ]
+    ivars.each do |ivar|
+      pkg.instance_variable_set(ivar, instance_variable_get(ivar))
+    end
+
+    pkg.converted_from(self.class)
+    return pkg
+  end # def convert
+
+  # This method is invoked on a package when it has been covered to a new
+  # package format. The purpose of this method is to do any extra conversion
+  # steps, like translating dependency conditions, etc.
+  def converted_from(origin)
+    # nothing to do by default. Subclasses may implement this.
+    # See the RPM package class for an example.
+  end # def converted
 
   # Add a new source to this package.
   # The exact behavior depends on the kind of package being managed.
@@ -137,33 +178,11 @@ class FPM::Package
   #
   # Implementations are expected to put files relevant to the 'input' in the
   # staging_path
-  def <<(input)
+  def input(thing_to_input)
     raise NotImplementedError.new
-  end # def <<
+  end # def input
 
-  # TODO [Jay]: make this better...?
-  def type
-    self.class.name.split(':').last.downcase
-  end # def type
-
-  # Convert this package to a new package type
-  def convert(klass)
-    pkg = klass.new
-    pkg.instance_variable_set(:@staging_path, staging_path)
-
-    # copy other bits
-    ivars = [
-      :architecture, :attributes, :category, :config_files, :conflicts,
-      :dependencies, :description, :epoch, :iteration, :license, :maintainer,
-      :name, :provides, :replaces, :scripts, :url, :vendor, :version
-    ]
-    ivars.each do |ivar|
-      pkg.instance_variable_set(ivar, instance_variable_get(ivar))
-    end
-
-    return pkg
-  end # def convert
-
+  # Output this package to the given path.
   def output(path)
     raise NotImplementedError.new("This must be implemented by FPM::Package subclasses")
   end # def output
@@ -172,10 +191,47 @@ class FPM::Package
     @staging_path ||= ::Dir.mktmpdir(File.join(::Dir.pwd, "package-#{type}-staging"))
   end # def staging_path
 
+  def build_path
+    @build_path ||= ::Dir.mktmpdir(File.join(::Dir.pwd, "package-#{type}-build"))
+  end # def build_path
+
   # Clean up any temporary storage used by this class.
   def cleanup
     FileUtils.rm_r(staging_path)
+    FileUtils.rm_r(build_path)
   end # def cleanup
 
-  public(:type, :initialize, :convert, :output, :<<, :cleanup, :staging_path)
+  # List all files in the staging_path
+  #
+  # The paths will all be relative to staging_path and will not include that
+  # path.
+  def files
+    # Find will print the path you're searching first, so skip it and return
+    # the rest. Also trim the leading path such that '#{staging_path}/' is removed
+    # from the path before returning.
+    return Find.find(staging_path) \
+      .select { |path| path != staging_path } \
+      .collect { |path| path[staging_path.length + 1.. -1] }
+  end # def files
+ 
+  def template(path)
+    require "erb"
+    template_dir = File.join(File.dirname(__FILE__), "..", "..", "templates")
+    template_path = File.join(template_dir, path)
+    template_code = File.read(template_path)
+    @logger.info("Reading template", :path => template_path)
+    erb = ERB.new(template_code, nil, "-")
+    erb.filename = template_path
+    return erb
+  end # def template
+
+  def to_s(fmt="NAME.TYPE")
+    return fmt.gsub("ARCH", architecture.to_s) \
+      .gsub("NAME", name.to_s) \
+      .gsub("VERSION", version.to_s) \
+      .gsub("EPOCH", epoch.to_s)
+      .gsub("TYPE", type.to_s)
+  end # def to_s
+
+  public(:type, :initialize, :convert, :output, :input, :cleanup, :staging_path, :files, :to_s, :converted_from)
 end # class FPM::Package

@@ -6,12 +6,12 @@ require "find"
 class FPM::Package::Dir < FPM::Package
   private
 
-  def <<(path)
+  def input(path)
     @paths ||= []
     @paths << path
 
     clone(path, staging_path)
-  end # def <<
+  end # def input
 
   def output(dir)
     dir = File.expand_path(dir)
@@ -73,5 +73,5 @@ class FPM::Package::Dir < FPM::Package
     end
   end # def copy
 
-  public(:<<, :output)
+  public(:input, :output)
 end # class FPM::Package::Dir
