@@ -1,4 +1,10 @@
-%define __jar_repack 0
+# Disable the stupid stuff rpm distros include in the build process by default:
+<% %w(prep build install).each do |step| -%>
+<%# These definitions have to be non-empty... I guess... -%>
+#   Disable any <%= step %> shell actions. replace them with simply 'true'
+%define __spec_<%= step %>_post true
+%define __spec_<%= step %>_pre true
+<% end -%>
 
 Name: <%= name %>
 Version: <%= version %>
@@ -12,23 +18,13 @@ BuildArch: <%= architecture %>
 AutoReqProv: no
 
 Group: <%= category %>
-<%#
-TODO: [Jay] rpms require a license
-let's detect it intelligently
--%>
 License: <%= license %>
 Vendor: <%= vendor %>
 URL: <%= url or "http://nourlgiven.example.com/" %>
-<% if !maintainer.empty? -%>
 Packager: <%= maintainer %>
-<% end -%>
-Source0:  %{_sourcedir}/data.tar.gz
-BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
-<% if !dependencies.empty? -%>
-<%
-  properdeps =  dependencies.collect { |d| fix_dependency(d) }
--%>Requires: <%= properdeps.join(", ") %>
+<% dependencies.each do |req| -%>
+Requires: <%= req %>
 <% end -%>
 <% provides.each do |prov| -%>
 Provides: <%= prov %>
@@ -49,13 +45,21 @@ Obsoletes: <%= repl %>
 # noop
 
 %install
-# some rpm implementations delete the build dir and then recreate it by
-# default, for some reason. Whatever, let's work around it.
-cd $RPM_BUILD_ROOT
-tar -zxf %SOURCE0
+<% files.each do |path| -%>
+<%   source = File.join(staging_path, path) -%>
+<%   # Copy to the build_path/BUILD/ to make rpmbuild happy -%>
+<%   target = File.join(build_path, "BUILD", path) -%>
+<%   dir = File.dirname(target) %>
+mkdir -p "<%= dir %>"
+if [ -f "<%= source %>" ] ; then
+  cp "<%= source %>" "<%= target %>"
+elif [ -d "<%= source %>" ] ; then
+  mkdir "<%= target %>"
+fi
+<% end %>
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+# noop
 
 <% if scripts["pre-install"] -%>
 %pre
@@ -80,7 +84,8 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,-)
 <%# Output config files and then regular files. -%>
-<%= @config_files.collect { |c| '%config ' + c }.join("\n") %>
-<%= paths.join("\n") %>
+<%= @config_files.collect { |c| '%config ' + c }.join("\n") -%>
+<%# list only files, not directories? %>
+<%= files.reject { |f| File.directory?(File.join(staging_path, f)) }.collect { |f| "/#{f}" }.join("\n") %>
 
 %changelog
