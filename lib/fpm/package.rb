@@ -1,4 +1,5 @@
 require "fpm/namespace"
+require "fpm/util"
 require "socket" # for Socket.gethostname
 require "cabin"
 require "tmpdir"

@@ -1,9 +1,9 @@
 require "fpm/namespace"
-require "fpm/builder"
 
 require "fpm/package/dir"
 require "fpm/package/gem"
 require "fpm/package/rpm"
+require "fpm/package/python"
 #require "fpm/target/deb"
 #require "fpm/target/rpm"
 #require "fpm/target/solaris"

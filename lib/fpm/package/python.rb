@@ -11,7 +11,7 @@ class FPM::Source::Python < FPM::Source
   def self.flags(opts, settings)
     settings.source[:python] = "python"
     settings.source[:easy_install] = "easy_install"
-    settings.source[:pypi] ="http://pypi.python.org/simple"
+    settings.source[:pypi] = "http://pypi.python.org/simple"
 
     opts.on("--bin PYTHON_BINARY_LOCATION",
             "The path to the python you want to run. Default is 'python'") do |path|
@@ -34,23 +34,20 @@ class FPM::Source::Python < FPM::Source
     end
   end # def flags
 
-  def get_source(params)
-    package = @paths.first
-    if ["setup.py", "."].include?(package)
-      # Assume we're building from an existing python package.
-      # Source already acquired, nothing to do!
-      return
+  def input(package)
+    path_to_package = download_if_necessary(package, version)
+    load_package_info(path_to_package)
+    install_to_staging(path_to_package)
+  end # def input
+
+  def download_if_necessary(package, version=nil)
+    path = package
+    # If it's a path, assume local build.
+    if File.directory?(path) or (File.exists?(path) and File.basename(path) == "setup.py")
+      return path
     end
 
-    if !File.exists?(package)
-      download(package, params[:version])
-    else
-      @paths = [ File.expand_path(package) ]
-    end
-  end # def get_source
-
-  def download(package, version=nil)
-    puts "Trying to download #{package} (using: #{self[:settings][:easy_install]})"
+    @logger.info("Trying to download", :package => package)
     @tmpdir = ::Dir.mktmpdir("python-build", ::Dir.pwd)
 
     if version.nil?
@@ -59,28 +56,32 @@ class FPM::Source::Python < FPM::Source
       want_pkg = "#{package}==#{version}"
     end
 
-    safesystem(self[:settings][:easy_install], "-i", self[:settings][:pypi],
+    # TODO(sissel): support a settable path to 'easy_install'
+    # TODO(sissel): support a tunable for uthe url to pypi
+    safesystem("easy_install", "-i", "http://pypi.python.org/simple",
                "--editable", "-U", "--build-directory", @tmpdir, want_pkg)
 
-    # easy_install will put stuff in @tmpdir/packagename/, flatten that.
-    #  That is, we want @tmpdir/setup.py, and start with
+    # easy_install will put stuff in @tmpdir/packagename/, so find that:
     #  @tmpdir/somepackage/setup.py
     dirs = ::Dir.glob(File.join(@tmpdir, "*"))
     if dirs.length != 1
       raise "Unexpected directory layout after easy_install. Maybe file a bug? The directory is #{@tmpdir}"
     end
-    @paths = dirs
+    return dirs.first
   end # def download
 
-  def get_metadata
-    setup_py = @paths.first
+  def load_package_info(package_path)
     if File.directory?(setup_py)
-      setup_py = File.join(setup_py, "setup.py")
-      @paths = [setup_py]
+      package_path = File.join(setup_py, "setup.py")
     end
 
     if !File.exists?(setup_py)
+      @logger.error("Could not find 'setup.py'", :path => package_path)
       raise "Unable to find python package; tried #{setup_py}"
+    end
+
+    if !attributes.include?(:package_name_prefix)
+      attributes[:package_name_prefix] = "python"
     end
 
     pylib = File.expand_path(File.dirname(__FILE__))
@@ -88,63 +89,51 @@ class FPM::Source::Python < FPM::Source
     output = ::Dir.chdir(File.dirname(setup_py)) { `#{setup_cmd}` }
     puts output
     metadata = JSON.parse(output[/\{.*\}/msx])
-    #p metadata
 
-    if self[:settings][:package_prefix]
-      self[:package_prefix] = self[:settings][:package_prefix]
-    else
-      self[:package_prefix] = "python"
-    end
-
-    self[:architecture] = metadata["architecture"]
-    self[:description] = metadata["description"]
-    self[:license] = metadata["license"]
-    self[:version] = metadata["version"]
-    self[:url] = metadata["url"]
+    self.architecture = metadata["architecture"]
+    self.description = metadata["description"]
+    self.license = metadata["license"]
+    self.version = metadata["version"]
+    self.url = metadata["url"]
 
     # Sanitize package name.
     # Some PyPI packages can be named 'python-foo', so we don't want to end up
     # with a package named 'python-python-foo'.
     # But we want packages named like 'pythonweb' to be suffixed
     # 'python-pythonweb'.
-    if metadata["name"].start_with? "#{self[:package_prefix]}-"
-      self[:name] = metadata["name"]
-    else
-      self[:name] = "#{self[:package_prefix]}#{self[:suffix]}-#{metadata["name"]}"
-    end
+    self.name = fix_name(metadata["name"])
 
-    self[:dependencies] = metadata["dependencies"].collect do |dep|
+    self[:dependencies] += metadata["dependencies"].collect do |dep|
       name, cmp, version = dep.split
-      if name.start_with? "#{self[:package_prefix]}-"
-        name.gsub!(/^#{self[:package_prefix]}-/, "")
-      end
-      "#{self[:package_prefix]}#{self[:suffix]}-#{name} #{cmp} #{version}"
+      name = fix_name(name)
+      "#{name} #{cmp} #{version}"
     end
-  end # def get_metadata
+  end # def load_package_info
 
-  def make_tarball!(tar_path, builddir)
-    setup_py = @paths.first
-    dir = File.dirname(setup_py)
+  def fix_name(name)
+    if name.start_with?("python")
+      # If the python package is called "python-foo" strip the "python-" part while
+      # prepending the package name prefix.
+      return [attributes[:package_name_prefix], name.gsub(/^python-/, "")].join("-")
+    else
+      return [attributes[:package_name_prefix], name].join("-")
+    end
+  end # def fix_name
+
+  def install_to_staging(package_path)
+    dir = File.dirname(package_path)
 
     # Some setup.py's assume $PWD == current directory of setup.py, so let's
     # chdir first.
     ::Dir.chdir(dir) do
-      safesystem(self[:settings][:python], "setup.py", "bdist")
+      # TODO(sissel): Make the path to 'python' tunable
+      # TODO(sissel): Respect '--prefix' somewhow from the caller?
+      safesystem("python", "setup.py", "install", "--prefix", staging_path)
     end
-
-    dist_tar = ::Dir.glob(File.join(dir, "dist", "*.tar.gz")).first
-    puts "Found dist tar: #{dist_tar}"
-    puts "Copying to #{tar_path}"
-
-    @paths = [ "." ]
-
-    safesystem("cp", dist_tar, "#{tar_path}.gz")
+    clean
   end # def make_tarball!
 
-  def garbage
-    trash = []
-    trash << @tmpdir if @tmpdir
-    return trash
-  end # def garbage
-
+  def clean
+    FileUtils.rm_r(@tmpdir)
+  end # def clean
 end # class FPM::Source::Python
