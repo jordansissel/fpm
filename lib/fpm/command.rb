@@ -4,6 +4,7 @@ require "clamp"
 require "ostruct"
 require "fpm"
 
+# The main fpm command entry point.
 class FPM::Command < Clamp::Command
   option "-t", "OUTPUT_TYPE",
     "the type of package you want to create (deb, rpm, solaris, etc)",
@@ -17,11 +18,9 @@ class FPM::Command < Clamp::Command
     "A path to prefix files with when building the target package. This may " \
     "be necessary for all input packages. For example, the 'gem' type will" \
     "prefix with your gem directory automatically."
-
   option ["-p", "--package"], "OUTPUT",
     "The package file path to output.", :default => "NAME-FULLVERSION.ARCH.TYPE"
-  option ["-n", "--name"], "NAME",
-    "The name to give to the package"
+  option ["-n", "--name"], "NAME", "The name to give to the package"
   option "--verbose", :flag, "Enable verbose output"
   option "--debug", :flag, "Enable debug output"
   option ["-v", "--version"], "VERSION",
@@ -32,8 +31,7 @@ class FPM::Command < Clamp::Command
     :default => "1"
   option "--epoch", "EPOCH",
     "The epoch value for this package. RPM and Debian calls this 'epoch'. " \
-    "FreeBSD calls this 'PORTEPOCH'",
-    :default => "1"
+    "FreeBSD calls this 'PORTEPOCH'", :default => "1"
   option "--license", "LICENSE",
     "(optional) license name for this package", :default => "not given"
   option "--vendor", "VENDOR",
@@ -86,49 +84,42 @@ class FPM::Command < Clamp::Command
     @exclude_pattern ||= []
     @exclude_pattern << val
   end # -x / --exclude
-
   option "--post-install", "FILE",
     "a script to be run after package installation" do |val|
     File.expand_path(val) # Get the full path to the script
   end # --post-install
-
   option "--pre-install", "FILE",
     "a script to be run before package installation" do |val|
     File.expand_path(val) # Get the full path to the script
   end # --pre-install
-
   # TODO(sissel): Name the flag --post-remove for clarity
   option "--post-uninstall", "FILE",
     "a script to be run after package removal",
     :attribute_name => :post_remove do |val|
     File.expand_path(val) # Get the full path to the script
   end # --post-uninstall
-
   # TODO(sissel): Name the flag --pre-remove for clarity
   option "--pre-uninstall", "FILE",
     "a script to be run before package removal",
     :attribute_name => :pre_remove do |val|
     File.expand_path(val) # Get the full path to the script
   end # --pre-uninstall
-
-  option "--description", "DESCRIPTION",
-    "Add a description for this package.",
+  option "--description", "DESCRIPTION", "Add a description for this package.",
     :default => "no description"
-
-  option "--url", "URI",
-    "Add a url for this package.",
+  option "--url", "URI", "Add a url for this package.",
     :default => "http://example.com/no-uri-given"
-
   option "--inputs", "INPUTS_PATH",
     "The path to a file containing a newline-separated list of " \
     "files and dirs to use as input."
-
   parameter "[ARGS] ...",
     "Inputs to the source package type. For the 'dir' type, this is the files" \
     " and directories you want to include in the package. For others, like " \
     "'gem', it specifies the packages to download and use as the gem input",
     :attribute_name => :args
 
+  # TODO(sissel): expose 'option' and 'parameter' junk to FPM::Package and subclasses.
+  # Apply those things to this command.
+  #
   # Add extra flags from plugins
   #FPM::Package::Gem.flags(FPM::Flags.new(opts, "gem", "gem only"), @settings)
   #FPM::Package::Python.flags(FPM::Flags.new(opts, "python", "python only"),
@@ -136,6 +127,7 @@ class FPM::Command < Clamp::Command
   #FPM::Package::Deb.flags(FPM::Flags.new(opts, "deb", "deb only"), @settings)
   #FPM::Package::Rpm.flags(FPM::Flags.new(opts, "rpm", "rpm only"), @settings)
   
+  # A new FPM::Command
   def initialize(*args)
     super(*args)
     @conflicts = []
@@ -145,6 +137,7 @@ class FPM::Command < Clamp::Command
     @config_files = []
   end # def initialize
 
+  # Execute this command. See Clamp::Command#execute and Clamp's documentation
   def execute
     @logger = Cabin::Channel.get
     @logger.subscribe(STDOUT)
@@ -204,6 +197,10 @@ class FPM::Command < Clamp::Command
     output.cleanup unless output.nil?
   end # def execute
 
+  # A simple flag validator
+  #
+  # The goal of this class is to ensure the flags and arguments given
+  # are a valid configuration.
   class Validator
     private
 
