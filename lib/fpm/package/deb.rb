@@ -19,41 +19,39 @@ class FPM::Package::Deb < FPM::Package
     "debconf-templates" => [:text,   "templates"]
   }
 
-  def self.flags(opts, settings)
-    settings.target[:deb] = "deb"
+  option "--ignore-iteration-in-dependencies", :flag, 
+            "For '=' (equal) dependencies, allow iterations on the specified " \
+            "version. Default is to be specific. This option allows the same " \
+            "version of a package but any iteration is permitted"
 
-    opts.on("--ignore-iteration-in-dependencies",
-            "For = dependencies, allow iterations on the specified version.  Default is to be specific.") do |x|
-      settings.target[:ignore_iteration] = true
-    end
+  option "--pre-depends", "DEPENDENCY",
+    "Add DEPENDENCY as a Pre-Depends" do |val|
+    @pre_depends ||= []
+    @pre_depends << dep
+  end
 
-    opts.on("--pre-depends DEPENDENCY", "Add DEPENDENCY as Pre-Depends.") do |dep|
-      (settings.target[:pre_depends] ||= []) << dep
-    end
-
-    # Take care about the case when we want custom control file but still use fpm ...
-    opts.on("--custom-control FILEPATH",
-            "Custom version of the Debian control file.") do |control|
-      settings.target[:control] = File.expand_path(control)
-    end
+  # Take care about the case when we want custom control file but still use fpm ...
+  option "--custom-control", "FILEPATH",
+    "Custom version of the Debian control file." do |control|
+    File.expand_path(control)
+  end
     
-    # Add custom debconf config file
-    opts.on("--config SCRIPTPATH",
-            "Add SCRIPTPATH as debconf config file.") do |config|
-      settings.scripts["debconf-config"] = File.expand_path(config)
-    end
+  # Add custom debconf config file
+  option "--config", "SCRIPTPATH",
+    "Add SCRIPTPATH as debconf config file." do |config|
+     File.expand_path(config)
+  end
     
     # Add custom debconf templates file
-    opts.on("--templates FILEPATH",
-            "Add FILEPATH as debconf templates file.") do |templates|
-      settings.scripts["debconf-templates"] = File.expand_path(templates)
-    end
+  option "--templates", "FILEPATH",
+    "Add FILEPATH as debconf templates file." do |templates|
+    File.expand_path(templates)
+  end
 
-    opts.on("--installed-size BYTES",
-            "The installed size, in bytes") do |installed_size_s|
-      settings.target[:installed_size] = installed_size_s.to_i
-    end # --installed-size
-  end # def self.flags
+  option "--installed-size", "BYTES",
+    "The installed size, in bytes" do |installed_size_s|
+    installed_size_s.to_i
+  end
 
   # Return the architecture. This will default to native if not yet set.
   # It will also try to use dpkg and 'uname -m' to figure out what the
