@@ -160,4 +160,4 @@ class FPM::Package::Gem < FPM::Package
   end # def install_to_staging
 
   public(:input, :output)
-end # class FPM::Source::Gem
+end # class FPM::Package::Gem
