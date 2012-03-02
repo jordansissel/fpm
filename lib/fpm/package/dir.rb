@@ -8,14 +8,26 @@ class FPM::Package::Dir < FPM::Package
 
   def input(path)
     @logger.debug("Copying", :input => path)
-    clone(path, staging_path)
+    @logger["method"] = "input"
+    ::Dir.chdir(@attributes[:chdir] || ".") do
+      if @attributes[:prefix]
+        clone(path, File.join(staging_path, @attributes[:prefix]))
+      else
+        clone(path, staging_path)
+      end
+    end
+  ensure
+    @logger.remove("method")
   end # def input
 
   def output(dir)
     dir = File.expand_path(dir)
     ::Dir.chdir(staging_path) do
+      @logger["method"] = "output"
       clone(".", dir)
     end
+  ensure
+    @logger.remove("method")
   end # def output
 
   private
@@ -33,20 +45,13 @@ class FPM::Package::Dir < FPM::Package
   def clone(source, destination)
     # Copy all files from 'path' into staging_path
 
-    ::Dir.chdir(@attributes[:chdir] || ".") do
-      #p :chdir => ::Dir.pwd, :source => source
-      Find.find(source).each do |file|
-        next if source == file && File.directory?(file) # ignore the directory itself
-        # Translate file paths with attributes like 'prefix' and 'chdir'
-        if @attributes[:prefix]
-          target = File.join(destination, @attributes[:prefix], file)
-        else
-          target = File.join(destination, file)
-        end
-
-        copy(file, target)
-      end
+    Find.find(source).each do |file|
+      next if source == file && File.directory?(file) # ignore the directory itself
+      target = File.join(destination, file)
+      copy(file, target)
     end
+    #require "pry"
+    #binding.pry
   end # def clone
 
   def copy(source, destination)
@@ -56,11 +61,12 @@ class FPM::Package::Dir < FPM::Package
     end
 
     # Create a directory if this path is a directory
-    @logger.debug("Copying", :source => source, :destination => destination)
     if File.directory?(source)
+      @logger.debug("Creating", :directory => destination)
       FileUtils.mkdir(destination)
     else
       # Otherwise try copying the file.
+      @logger.debug("Copying", :source => source, :destination => destination)
       begin
         File.link(source, destination)
       rescue Errno::EXDEV

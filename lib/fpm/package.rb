@@ -168,6 +168,9 @@ class FPM::Package
     @dependencies = []
     @scripts = {}
     @config_files = []
+
+    staging_path
+    build_path
   end # def initialize
 
   # TODO [Jay]: make this better...?

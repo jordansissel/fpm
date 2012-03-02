@@ -7,6 +7,11 @@ require "fileutils"
 require "fpm/package/dir"
 require "rush" # for simple file stuff
 
+if $DEBUG or ENV["DEBUG"]
+  Cabin::Channel.get.level = :debug
+  Cabin::Channel.get.subscribe(STDOUT)
+end
+
 describe FPM::Package::Dir do
   before do
     @source = FPM::Package::Dir.new
@@ -63,11 +68,11 @@ describe FPM::Package::Dir do
     file = @tmpdir["hello"]
     file.write "Hello world"
     @source.input(@tmpdir.full_path)
-
     @source.output(@output.full_path)
 
     expected_path = File.join(".", file.full_path)
-    assert_equal(@output[expected_path].contents,
+
+    assert_equal(@output[File.join(prefix, expected_path)].contents,
                  file.contents, "The file #{@tmpdir["hello"].full_path} should appear in the output")
   end
 
