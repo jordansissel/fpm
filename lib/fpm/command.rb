@@ -4,6 +4,17 @@ require "clamp"
 require "ostruct"
 require "fpm"
 
+if $DEBUG
+  Cabin::Channel.get(Kernel).subscribe($stdout)
+  Cabin::Channel.get(Kernel).level = :debug
+end
+
+Dir[File.join(File.dirname(__FILE__), "package", "*.rb")].each do |plugin|
+  Cabin::Channel.get(Kernel).info("Loading plugin", :path => plugin)
+  require plugin
+end
+
+
 # The main fpm command entry point.
 class FPM::Command < Clamp::Command
   option "-t", "OUTPUT_TYPE",
@@ -117,6 +128,10 @@ class FPM::Command < Clamp::Command
     "'gem', it specifies the packages to download and use as the gem input",
     :attribute_name => :args
 
+  FPM::Package.types.each do |name, klass|
+    klass.apply_options(self)
+  end
+
   # TODO(sissel): expose 'option' and 'parameter' junk to FPM::Package and subclasses.
   # Apply those things to this command.
   #
@@ -147,6 +162,8 @@ class FPM::Command < Clamp::Command
       validator.messages.each do |message|
         @logger.error(message)
       end
+
+      @logger.warn("Fix the above problems, and you'll be rolling packages in no time!")
       return 1
     end
 
@@ -193,7 +210,7 @@ class FPM::Command < Clamp::Command
     output.output(output.to_s(package))
     return 0
   ensure
-    input.cleanup
+    input.cleanup unless input.nil?
     output.cleanup unless output.nil?
   end # def execute
 
@@ -217,8 +234,10 @@ class FPM::Command < Clamp::Command
     end # def ok?
 
     def validate
-      mandatory(@command.input_type, "No input package type (-s flag) specified.")
-      mandatory(@command.output_type, "No output package type (-t flag) specified.")
+      mandatory(@command.input_type,
+                "Missing required -s flag. What package source did you want?")
+      mandatory(@command.output_type,
+                "Missing required -t flag. What package output did you want?")
     end # def validate
 
     def mandatory(value, message)
