@@ -1,9 +1,9 @@
 require "fpm/namespace"
-require "fpm/source"
+require "fpm/package"
 require "fpm/util"
 require "fileutils"
 
-class FPM::Package::NPM < FPM::Source
+class FPM::Package::NPM < FPM::Package
   def get_source(params)
     @npm = @paths.first
   end # def get_source
@@ -33,4 +33,4 @@ class FPM::Package::NPM < FPM::Source
     safesystem(*["gzip", "-f", tar_path])
   end
 
-end # class FPM::Source::Gem
+end # class FPM::Package::NPM

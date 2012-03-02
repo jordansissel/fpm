@@ -1,9 +1,9 @@
 require "backports" # gem backports
-require "fpm/source"
+require "fpm/package"
 require "fpm/util"
 require "fileutils"
 
-class FPM::Source::Tar < FPM::Source
+class FPM::Package::Tar < FPM::Package
   def get_metadata
     self[:name] = @paths.first.split(".").first
   end # def get_metadata
@@ -47,4 +47,4 @@ class FPM::Source::Tar < FPM::Source
     # TODO(sissel): Make a helper method.
     safesystem(*["gzip", "-f", tar_path])
   end # def make_tarball!
-end # class FPM::Source::Dir
+end # class FPM::Package::Tar

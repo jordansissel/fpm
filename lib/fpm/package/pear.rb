@@ -1,9 +1,9 @@
 require "fpm/namespace"
-require "fpm/source"
+require "fpm/package"
 require "fileutils"
 require "fpm/util"
 
-class FPM::Package::PEAR < FPM::Source
+class FPM::Package::PEAR < FPM::Package
   def self.flags(opts, settings)
     opts.on("--package-prefix PREFIX",
             "Prefix for PEAR packages") do |package_prefix|
@@ -38,4 +38,4 @@ class FPM::Package::PEAR < FPM::Source
     safesystem(*["gzip", "-f", tar_path])
   end
 
-end # class FPM::Source::Gem
+end # class FPM::Package::PEAR
