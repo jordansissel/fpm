@@ -199,12 +199,24 @@ class FPM::Package
     raise NotImplementedError.new("This must be implemented by FPM::Package subclasses")
   end # def output
 
-  def staging_path
+  def staging_path(path=nil)
     @staging_path ||= ::Dir.mktmpdir(File.join(::Dir.pwd, "package-#{type}-staging"))
+
+    if path.nil?
+      return @staging_path
+    else
+      return File.join(@staging_path, path)
+    end
   end # def staging_path
 
-  def build_path
+  def build_path(path=nil)
     @build_path ||= ::Dir.mktmpdir(File.join(::Dir.pwd, "package-#{type}-build"))
+
+    if path.nil?
+      return @build_path
+    else
+      return File.join(@build_path, path)
+    end
   end # def build_path
 
   # Clean up any temporary storage used by this class.
