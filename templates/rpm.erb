@@ -1,5 +1,5 @@
 # Disable the stupid stuff rpm distros include in the build process by default:
-<% %w(prep build install).each do |step| -%>
+<% %w(prep build install clean).each do |step| -%>
 <%# These definitions have to be non-empty... I guess... -%>
 #   Disable any <%= step %> shell actions. replace them with simply 'true'
 %define __spec_<%= step %>_post true
@@ -84,7 +84,7 @@ fi
 %files
 %defattr(-,root,root,-)
 <%# Output config files and then regular files. -%>
-<%= @config_files.collect { |c| '%config ' + c }.join("\n") -%>
+<%= config_files.collect { |c| '%config ' + c }.join("\n") -%>
 <%# list only files, not directories? %>
 <%= files.reject { |f| File.directory?(File.join(staging_path, f)) }.collect { |f| "/#{f}" }.join("\n") %>
 
