@@ -177,6 +177,8 @@ class FPM::Package
 
   # Convert this package to a new package type
   def convert(klass)
+    @logger.info("Converting #{self.type} to #{klass.type}")
+    @logger.warn("name", :name => @name)
     pkg = klass.new
     pkg.instance_variable_set(:@staging_path, staging_path)
 
@@ -188,6 +190,8 @@ class FPM::Package
       :@config_files
     ]
     ivars.each do |ivar|
+      #@logger.debug("Copying ivar", :ivar => ivar, :value => instance_variable_get(ivar),
+                    #:from => self.type, :to => pkg.type)
       pkg.instance_variable_set(ivar, instance_variable_get(ivar))
     end
 
@@ -217,12 +221,14 @@ class FPM::Package
   # Implementations are expected to put files relevant to the 'input' in the
   # staging_path
   def input(thing_to_input)
-    raise NotImplementedError.new
+    raise NotImplementedError.new("#{self.class.name} does not yet support " \
+                                  "reading #{self.type} packages")
   end # def input
 
   # Output this package to the given path.
   def output(path)
-    raise NotImplementedError.new("This must be implemented by FPM::Package subclasses")
+    raise NotImplementedError.new("#{self.class.name} does not yet support " \
+                                  "creating #{self.type} packages")
   end # def output
 
   def staging_path(path=nil)
