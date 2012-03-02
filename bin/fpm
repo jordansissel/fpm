@@ -5,4 +5,4 @@ $: << File.join(File.dirname(__FILE__), "..", "lib")
 require "fpm"
 require "fpm/command"
 
-exit(FPM::Command.run)
+exit(FPM::Command.run || 0)
