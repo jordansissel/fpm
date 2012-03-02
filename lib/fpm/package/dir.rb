@@ -7,9 +7,7 @@ class FPM::Package::Dir < FPM::Package
   private
 
   def input(path)
-    @paths ||= []
-    @paths << path
-
+    @logger.debug("Copying", :input => path)
     clone(path, staging_path)
   end # def input
 
@@ -40,7 +38,7 @@ class FPM::Package::Dir < FPM::Package
     ::Dir.chdir(@attributes[:chdir] || ".") do
       #p :chdir => ::Dir.pwd, :source => source
       Find.find(source).each do |file|
-        next if source == file # ignore the directory itself
+        next if source == file && File.directory?(file) # ignore the directory itself
         # Translate file paths with attributes like 'prefix' and 'chdir'
         if @attributes[:prefix]
           target = File.join(destination, @attributes[:prefix], file)
@@ -60,6 +58,7 @@ class FPM::Package::Dir < FPM::Package
     end
 
     # Create a directory if this path is a directory
+    @logger.debug("Copying", :source => source, :destination => destination)
     if File.directory?(source)
       FileUtils.mkdir(destination)
     else

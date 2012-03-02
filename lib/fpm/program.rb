@@ -3,7 +3,6 @@ require "erb" # TODO(sissel): Move to the class that needs it.
 require "fpm/namespace"
 require "optparse"
 require "ostruct"
-
 require "fpm"
 require "fpm/flags"
 
@@ -28,9 +27,9 @@ class FPM::Program
 
   def run(args)
     $: << File.expand_path(File.join(File.dirname(__FILE__), "..", "lib"))
-    extracted_args = options(args)
-
+    inputs = options(args)
     ok = true
+
     if @settings.package_type.nil?
       $stderr.puts "Missing package target type (no -t flag?)"
       ok = false
@@ -41,7 +40,8 @@ class FPM::Program
       ok = false
     end
 
-    paths = process_paths(extracted_args)
+    paths = process_paths(remaining_args)
+    
     ok = false if paths == :errors
 
     if !ok
@@ -50,6 +50,7 @@ class FPM::Program
       $stderr.puts @help
       return 1
     end
+
 
     builder = FPM::Builder.new(@settings, paths)
     builder.assemble!
@@ -95,11 +96,11 @@ class FPM::Program
     default_options(opts)
 
     # Add extra flags from plugins
-    FPM::Source::Gem.flags(FPM::Flags.new(opts, "gem", "gem source only"), @settings)
-    FPM::Source::Python.flags(FPM::Flags.new(opts, "python", "python source only"),
+    FPM::Package::Gem.flags(FPM::Flags.new(opts, "gem", "gem only"), @settings)
+    FPM::Package::Python.flags(FPM::Flags.new(opts, "python", "python only"),
                               @settings)
-    FPM::Target::Deb.flags(FPM::Flags.new(opts, "deb", "deb target only"), @settings)
-    FPM::Target::Rpm.flags(FPM::Flags.new(opts, "rpm", "rpm target only"), @settings)
+    #FPM::Package::Deb.flags(FPM::Flags.new(opts, "deb", "deb only"), @settings)
+    FPM::Package::Rpm.flags(FPM::Flags.new(opts, "rpm", "rpm only"), @settings)
 
     # Process fpmrc first
     fpmrc(opts)

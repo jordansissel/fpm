@@ -84,7 +84,7 @@ class FPM::Package::RPM < FPM::Package
       FileUtils.cp(rpmpath, output_path)
     end
 
-    @logger.info("Created rpm", :path => output_path)
+    @logger.log("Created rpm", :path => output_path)
   end # def output
 
   public(:input, :output, :converted_from)

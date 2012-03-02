@@ -1,5 +1,5 @@
 require "fpm/namespace"
-require "fpm/source"
+require "fpm/package"
 require "fpm/util"
 require "rubygems/package"
 require "rubygems"
@@ -7,7 +7,7 @@ require "fileutils"
 require "tmpdir"
 require "json"
 
-class FPM::Source::Python < FPM::Source
+class FPM::Package::Python < FPM::Package
   def self.flags(opts, settings)
     settings.source[:python] = "python"
     settings.source[:easy_install] = "easy_install"
@@ -136,4 +136,4 @@ class FPM::Source::Python < FPM::Source
   def clean
     FileUtils.rm_r(@tmpdir)
   end # def clean
-end # class FPM::Source::Python
+end # class FPM::Package::Python

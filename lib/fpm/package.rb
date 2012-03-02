@@ -86,15 +86,23 @@ class FPM::Package
   # This is where you'd put rpm, deb, or other specific attributes.
   attr_accessor :attributes
 
+  # This method is invoked when subclass occurs.
+  # 
+  # Lets us track all known FPM::Package subclasses
+  def self.inherited(klass)
+    @subclasses ||= {}
+    @subclasses[klass.name.gsub(/.*:/, "").downcase] = klass
+  end # def self.inherited
+
+  # Get a list of all known package classes
+  def self.types
+    return @subclasses
+  end # def self.types
+
   private
 
   def initialize
-    @logger = Cabin::Channel.new
-    @logger.subscribe(STDOUT)
-    @logger.level = $DEBUG ? :debug : :info
-
-    # Default version is 1.0 in case nobody told us a specific version.
-    @dependencies = []
+    @logger = Cabin::Channel.get
 
     # Attributes for this specific package 
     @attributes = {}
@@ -125,7 +133,9 @@ class FPM::Package
     @vendor = "none"
 
     @provides = []
+    @conflicts = []
     @replaces = []
+    @dependencies = []
     @scripts = {}
     @config_files = []
   end # def initialize
@@ -148,7 +158,8 @@ class FPM::Package
     ivars = [
       :@architecture, :@attributes, :@category, :@config_files, :@conflicts,
       :@dependencies, :@description, :@epoch, :@iteration, :@license, :@maintainer,
-      :@name, :@provides, :@replaces, :@scripts, :@url, :@vendor, :@version
+      :@name, :@provides, :@replaces, :@scripts, :@url, :@vendor, :@version,
+      :@config_files
     ]
     ivars.each do |ivar|
       pkg.instance_variable_set(ivar, instance_variable_get(ivar))
@@ -198,8 +209,15 @@ class FPM::Package
 
   # Clean up any temporary storage used by this class.
   def cleanup
-    FileUtils.rm_r(staging_path)
-    FileUtils.rm_r(build_path)
+    if File.directory?(staging_path)
+      @logger.debug("Cleaning up", :path => staging_path)
+      FileUtils.rm_r(staging_path) 
+    end
+
+    if File.directory?(build_path)
+      @logger.debug("Cleaning up", :path => build_path)
+      FileUtils.rm_r(build_path) 
+    end
   end # def cleanup
 
   # List all files in the staging_path
@@ -227,8 +245,11 @@ class FPM::Package
   end # def template
 
   def to_s(fmt="NAME.TYPE")
+    fullversion = version.to_s
+    fullversion += "-#{iteration}" if iteration
     return fmt.gsub("ARCH", architecture.to_s) \
       .gsub("NAME", name.to_s) \
+      .gsub("FULLVERSION", fullversion) \
       .gsub("VERSION", version.to_s) \
       .gsub("EPOCH", epoch.to_s)
       .gsub("TYPE", type.to_s)
