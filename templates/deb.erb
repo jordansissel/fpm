@@ -22,7 +22,6 @@ Provides: <%= provides.join(", ") %>
 <%   properrepl = replaces.collect { |d| fix_dependency(d) }.flatten -%>
 Replaces: <%= properrepl.flatten.join(", ") %>
 <% end -%>
-Standards-Version: 3.9.1
 Section: <%= category or "unknown" %>
 Priority: extra
 Homepage: <%= url or "http://nourlgiven.example.com/" %>
