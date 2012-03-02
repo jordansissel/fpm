@@ -3,7 +3,7 @@ require "fpm/source"
 require "fileutils"
 require "fpm/util"
 
-class FPM::Source::Pear < FPM::Source
+class FPM::Package::PEAR < FPM::Source
   def self.flags(opts, settings)
     opts.on("--package-prefix PREFIX",
             "Prefix for PEAR packages") do |package_prefix|

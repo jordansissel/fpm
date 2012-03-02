@@ -6,7 +6,7 @@ require "fpm/util"
 
 # TODO(sissel): Add dependency checking support.
 # IIRC this has to be done as a 'checkinstall' step.
-class FPM::Target::Solaris < FPM::Package
+class FPM::Package::Solaris < FPM::Package
   def architecture
     case @architecture
     when nil, "native"
