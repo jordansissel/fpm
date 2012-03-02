@@ -8,19 +8,25 @@ module FPM::Util
   # Raised if a safesystem program exits nonzero
   class ProcessFailed < StandardError; end
 
+  # Is the given program in the system's PATH?
+  def program_in_path?(program)
+    # Scan path to find the executable
+    # Do this to help the user get a better error message.
+    envpath = ENV["PATH"].split(":")
+    return envpath.select { |p| File.executable?(File.join(p, program)) }.any?
+  end # def program_in_path
+
   # Run a command safely in a way that gets reports useful errors.
   def safesystem(*args)
     program = args[0]
 
     # Scan path to find the executable
     # Do this to help the user get a better error message.
-    if !program.include("/")
-      envpath = ENV["PATH"].split(":")
-      if envpath.select { |p| File.executable?(File.join(p, program)) }.empty?
-        raise ExecutableNotFound.new(program)
-      end
+    if !program.include?("/") and !program_in_path?(program)
+      raise ExecutableNotFound.new(program)
     end
 
+    @logger.debug("Running command", :args => args)
     success = system(*args)
     if !success
       raise ProcessFailed.new("#{program} failed (exit code #{$?.exitstatus})" \
@@ -41,4 +47,10 @@ module FPM::Util
       return "tar"
     end
   end # def tar_cmd
+
+  # Run a block with a value.
+  # Useful in lieu of assigning variables 
+  def with(value, &block)
+    block.call(value)
+  end # def with
 end # module FPM::Util

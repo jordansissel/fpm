@@ -1,5 +1,5 @@
 Package: <%= name %>
-Version: <%= "#{epoch}:" if epoch %><%= version %><%= iteration && '-'+iteration.to_s %>
+Version: <%= "#{epoch}:" if epoch %><%= version %><%= "-" + iteration.to_s if iteration %>
 License: <%= license %>
 Vendor: <%= vendor %>
 Architecture: <%= architecture %>
@@ -8,10 +8,10 @@ Maintainer: <%= maintainer or "<unknown>" %>
 <%   properdeps = dependencies.collect { |d| fix_dependency(d) }.flatten -%>
 Depends: <%= properdeps.flatten.join(", ") %>
 <% end -%>
-<% if !pre_dependencies.empty? -%>
-<%   properpredeps = pre_dependencies.collect { |d| fix_dependency(d) }.flatten -%>
-Pre-Depends: <%= properpredeps.flatten.join(", ") %>
-<% end -%>
+<%# if !pre_dependencies.empty? -%>
+<%#   properpredeps = pre_dependencies.collect { |d| fix_dependency(d) }.flatten -%>
+#Pre-Depends: <%#= properpredeps.flatten.join(", ") %>
+<%# end -%>
 <% if !conflicts.empty? -%>
 Conflicts: <%= conflicts.join(", ") %>
 <% end -%>
