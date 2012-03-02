@@ -176,7 +176,9 @@ class FPM::Command < Clamp::Command
     @logger.level = :debug if debug? # --debug
 
     input = input_class.new
-    args.each { |arg| input.input(arg) }
+    args.each do |arg| 
+      input.input(arg) 
+    end
 
     input.architecture = architecture
     #input.attributes = {}
@@ -184,10 +186,10 @@ class FPM::Command < Clamp::Command
     input.config_files = config_files
     input.description = description
     input.epoch = epoch
-    input.iteration = iteration
-    input.license = license
-    input.maintainer = maintainer
-    input.name = name
+    input.iteration = iteration unless useful?(maintainer)
+    input.license = license unless useful?(maintainer)
+    input.maintainer = maintainer unless useful?(maintainer)
+    input.name = name unless useful?(name)
     input.scripts[:post_install] = 
     input.url = url
     input.vendor = vendor
@@ -205,6 +207,11 @@ class FPM::Command < Clamp::Command
     input.cleanup unless input.nil?
     output.cleanup unless output.nil?
   end # def execute
+
+  # Is this value useful? (neither nil nor empty)
+  def useful?(value)
+    return !value.nil? && (value.respond_to?(:empty?) && !value.empty?)
+  end # def useful?
 
   # A simple flag validator
   #
@@ -248,6 +255,15 @@ class FPM::Command < Clamp::Command
                   "Invalid output package (-t flag) type #{val.inspect}. " \
                   "Expected one of: #{types.join(", ")}")
       end
+
+      mandatory(@command.args.any?,
+                "No parameters given. You need to pass additional command " \
+                "arguments so that I know what you want to build packages " \
+                "from. For example, for '-s dir' you would pass a list of " \
+                "files and directories. For '-s gem' you would pass a one" \
+                " or more gems to package from. As a full example, this " \
+                "will make an rpm of the 'json' rubygem: " \
+                "`fpm -s gem -t rpm json`")
     end # def validate
 
     def mandatory(value, message)

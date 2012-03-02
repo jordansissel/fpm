@@ -98,10 +98,6 @@ class FPM::Package::Deb < FPM::Package
     return @name
   end # def name
 
-  def input(path)
-    raise NotImplementedError.new("#{self.class.name} does not yet support reading deb packages")
-  end # def input
-
   def output(output_path)
     # Use custom Debian control file when given ...
     FileUtils.mkdir(build_path("control"))
