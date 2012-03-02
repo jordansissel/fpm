@@ -27,10 +27,6 @@ describe FPM::Package::Dir do
     @source.input(@tmpdir.full_path)
     @source.output(@output.full_path)
 
-    #p :input => @tmpdir.full_path
-    #p :output => @output.full_path
-    #p :file => file.full_path
-    #sleep 500
     assert_equal(@output[File.join(".", file.full_path)].contents,
                  file.contents, "The file #{@tmpdir["hello"].full_path} should appear in the output")
   end
@@ -71,9 +67,6 @@ describe FPM::Package::Dir do
     @source.output(@output.full_path)
 
     expected_path = File.join(".", file.full_path)
-    p @output.full_path
-    p expected_path
-    sleep 30
     assert_equal(@output[expected_path].contents,
                  file.contents, "The file #{@tmpdir["hello"].full_path} should appear in the output")
   end
