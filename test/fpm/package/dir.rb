@@ -24,7 +24,7 @@ describe FPM::Package::Dir do
   test "adding a single file" do
     file = @tmpdir["hello"]
     file.write "Hello world"
-    @source << @tmpdir.full_path
+    @source.input(@tmpdir.full_path)
 
     @source.output(@output.full_path)
     assert_equal(@output[File.join(".", file.full_path)].contents,
@@ -35,7 +35,7 @@ describe FPM::Package::Dir do
     dir = @tmpdir.create_dir("a/b/c")
     file = dir.create_file("hello")
     file.write "Hello world"
-    @source << @tmpdir.full_path
+    @source.input(@tmpdir.full_path)
 
     @source.output(@output.full_path)
     assert_equal(@output[File.join(".", file.full_path)].contents,
@@ -49,7 +49,7 @@ describe FPM::Package::Dir do
     end
     files.each { |f| f.write(rand(1000)) }
 
-    @source << @tmpdir.full_path
+    @source.input(@tmpdir.full_path)
     @source.output(@output.full_path)
 
     files.each do |file|
@@ -62,7 +62,7 @@ describe FPM::Package::Dir do
     prefix = @source.attributes[:prefix] = "/usr/local"
     file = @tmpdir["hello"]
     file.write "Hello world"
-    @source << @tmpdir.full_path
+    @source.input(@tmpdir.full_path)
 
     @source.output(@output.full_path)
 
@@ -76,8 +76,7 @@ describe FPM::Package::Dir do
     chdir = @source.attributes[:chdir] = @tmpdir.full_path
     file = @tmpdir["hello"]
     file.write "Hello world"
-    @source << "." # since we chdir, copy the entire root
-
+    @source.input(".") # since we chdir, copy the entire root
     @source.output(@output.full_path)
 
     # path relative to the @output directory.
