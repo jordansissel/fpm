@@ -3,7 +3,7 @@ require "fpm/source"
 require "fpm/util"
 require "fileutils"
 
-class FPM::Source::Npm < FPM::Source
+class FPM::Package::NPM < FPM::Source
   def get_source(params)
     @npm = @paths.first
   end # def get_source

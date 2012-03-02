@@ -5,9 +5,7 @@ require "fpm/errors"
 require "etc"
 require "fileutils"
 
-# TODO(sissel): Add dependency checking support.
-# IIRC this has to be done as a 'checkinstall' step.
-class FPM::Target::Puppet < FPM::Package
+class FPM::Package::Puppet < FPM::Package
   def architecture
     case @architecture
     when nil, "native"
