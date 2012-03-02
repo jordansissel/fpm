@@ -1,3 +1,10 @@
+0.4.0 (???)
+  - Complete rewrite of pretty much everything.
+    * Otherwise, the 'fpm' command functionality should be the same
+    * Please let me know if something broke!
+  - Now has an API (see examples/api directory)
+  - Also has a proper test suite
+
 0.3.12 (Feb 22, 2012)
   - PHP pear source support (fpm -s pear ...) (via Andrew Gaffney)
   - Add --license and --vendor settings (via Pieter Loubser)
