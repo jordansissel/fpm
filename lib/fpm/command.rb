@@ -1,5 +1,6 @@
 require "rubygems"
 require "fpm/namespace"
+require "fpm/util"
 require "clamp"
 require "ostruct"
 require "fpm"
@@ -17,6 +18,7 @@ end
 
 # The main fpm command entry point.
 class FPM::Command < Clamp::Command
+
   option "-t", "OUTPUT_TYPE",
     "the type of package you want to create (deb, rpm, solaris, etc)",
     :attribute_name => :output_type
@@ -160,25 +162,15 @@ class FPM::Command < Clamp::Command
     validator = Validator.new(self)
     if !validator.ok?
       validator.messages.each do |message|
-        @logger.error(message)
+        @logger.warn(message)
       end
 
-      @logger.warn("Fix the above problems, and you'll be rolling packages in no time!")
+      @logger.fatal("Fix the above problems, and you'll be rolling packages in no time!")
       return 1
     end
 
     input_class = FPM::Package.types[input_type]
     output_class = FPM::Package.types[output_type]
-
-    if input_class.nil?
-      @logger.error("Unknown input package type '#{input_type}'", :choices => FPM::Package.types.keys)
-      return 1
-    end
-
-    if output_class.nil?
-      @logger.error("Unknown output package type '#{output_type}'", :choices => FPM::Package.types.keys)
-      return 1
-    end
 
     @logger.level = :info if verbose? # --verbose
     @logger.level = :debug if debug? # --debug
@@ -219,6 +211,7 @@ class FPM::Command < Clamp::Command
   # The goal of this class is to ensure the flags and arguments given
   # are a valid configuration.
   class Validator
+    include FPM::Util
     private
 
     def initialize(command)
@@ -234,14 +227,31 @@ class FPM::Command < Clamp::Command
     end # def ok?
 
     def validate
+      # Make sure the user has passed '-s' and '-t' flags
       mandatory(@command.input_type,
                 "Missing required -s flag. What package source did you want?")
       mandatory(@command.output_type,
                 "Missing required -t flag. What package output did you want?")
+
+      # Verify the types requested are valid
+      types = FPM::Package.types.keys.sort
+      with(@command.input_type) do |val|
+        next if val.nil?
+        mandatory(FPM::Package.types.include?(val),
+                  "Invalid input package -s flag) type #{val.inspect}. " \
+                  "Expected one of: #{types.join(", ")}")
+      end
+
+      with(@command.output_type) do |val|
+        next if val.nil?
+        mandatory(FPM::Package.types.include?(val),
+                  "Invalid output package (-t flag) type #{val.inspect}. " \
+                  "Expected one of: #{types.join(", ")}")
+      end
     end # def validate
 
     def mandatory(value, message)
-      if value.nil?
+      if value.nil? or !value
         @messages << message
         @valid = false
       end
