@@ -13,12 +13,10 @@ class FPM::Package::Dir < FPM::Package
 
   def output(dir)
     dir = File.expand_path(dir)
-    @paths.each do |path|
-      ::Dir.chdir(staging_path) do
-        clone(path, dir)
-      end
+    ::Dir.chdir(staging_path) do
+      clone(".", dir)
     end
-  end
+  end # def output
 
   private
   # Copy a file or directory to a destination
