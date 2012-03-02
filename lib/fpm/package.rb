@@ -86,18 +86,48 @@ class FPM::Package
   # This is where you'd put rpm, deb, or other specific attributes.
   attr_accessor :attributes
 
-  # This method is invoked when subclass occurs.
-  # 
-  # Lets us track all known FPM::Package subclasses
-  def self.inherited(klass)
-    @subclasses ||= {}
-    @subclasses[klass.name.gsub(/.*:/, "").downcase] = klass
-  end # def self.inherited
+  class << self
+    # This method is invoked when subclass occurs.
+    # 
+    # Lets us track all known FPM::Package subclasses
+    def inherited(klass)
+      @subclasses ||= {}
+      @subclasses[klass.name.gsub(/.*:/, "").downcase] = klass
+    end # def self.inherited
 
-  # Get a list of all known package classes
-  def self.types
-    return @subclasses
-  end # def self.types
+    # Get a list of all known package subclasses
+    def types
+      return @subclasses
+    end # def self.types
+
+    # This allows packages to define flags for the fpm command line
+    def option(flag, param, help, options={}, &block)
+      @options ||= []
+      if !flag.is_a?(Array)
+        flag = [flag]
+      end
+
+      flag = flag.collect { |f| "--#{type}-#{f.gsub(/^--/, "")}" }
+      help = "(#{type} only) #{help}"
+      @options << [flag, param, help, options, block]
+    end # def options
+
+    # Apply the options for this package on the clamp command
+    def apply_options(clampcommand)
+      @options ||= []
+      @options.each do |args|
+        flag, param, help, options, block = args
+        clampcommand.option(flag, param, help, options, &block)
+      end
+    end # def apply_options
+
+    # Get the type of this package class.
+    #
+    # For "Foo::Bar::BAZ" this will return "baz"
+    def type
+      self.name.split(':').last.downcase
+    end # def self.type
+  end # class << self
 
   private
 
@@ -144,10 +174,6 @@ class FPM::Package
   def type
     self.class.type
   end # def type
-
-  def self.type
-    self.name.split(':').last.downcase
-  end # def self.type
 
   # Convert this package to a new package type
   def convert(klass)
