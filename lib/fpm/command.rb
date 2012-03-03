@@ -130,9 +130,15 @@ class FPM::Command < Clamp::Command
     "'gem', it specifies the packages to download and use as the gem input",
     :attribute_name => :args
 
+  # package-level settings
+  def settings
+    @settings ||= {}
+  end
+
   FPM::Package.types.each do |name, klass|
     klass.apply_options(self)
   end
+
 
   # TODO(sissel): expose 'option' and 'parameter' junk to FPM::Package and subclasses.
   # Apply those things to this command.
@@ -180,8 +186,15 @@ class FPM::Command < Clamp::Command
       input.input(arg) 
     end
 
+    # Merge in package settings. 
+    # The 'settings' stuff comes in from #apply_options, which goes through
+    # all the options defined in known packages and puts them into our command.
+    # Flags in packages defined as "--foo-bar" become named "--<packagetype>-foo-bar"
+    # They are stored in 'settings' as :gem_foo_bar.
+    input.attributes ||= {}
+    input.attributes.merge(settings)
+
     input.architecture = architecture unless architecture.nil?
-    #input.attributes = {}
     input.category = category unless category.nil?
     input.config_files += config_files
     input.description = description unless description.nil?
