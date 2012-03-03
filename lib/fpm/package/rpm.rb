@@ -79,7 +79,7 @@ class FPM::Package::RPM < FPM::Package
 
   def output(output_path)
     %w(BUILD RPMS SRPMS SOURCES SPECS).each { |d| FileUtils.mkdir_p(File.join(build_path, d)) }
-    args = ["rpmbuild", "-ba",
+    args = ["rpmbuild", "-bb",
       "--define", "buildroot #{build_path}/BUILD",
       "--define", "_topdir #{build_path}",
       "--define", "_sourcedir #{build_path}",
