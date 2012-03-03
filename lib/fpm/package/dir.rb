@@ -2,6 +2,7 @@ require "fpm/package"
 require "backports"
 require "fileutils"
 require "find"
+require "socket"
 
 class FPM::Package::Dir < FPM::Package
   private
@@ -16,6 +17,13 @@ class FPM::Package::Dir < FPM::Package
         clone(path, staging_path)
       end
     end
+
+    # Set some defaults. This is useful because other package types
+    # can include license data from themselves (rpms, gems, etc),
+    # but to make sure a simple dir -> rpm works without having
+    # to specify a license.
+    self.license = "unknown"
+    self.vendor = [ENV["USER"], Socket.gethostname].join("@")
   ensure
     @logger.remove("method")
   end # def input
