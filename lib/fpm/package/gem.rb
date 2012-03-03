@@ -9,25 +9,20 @@ require "fpm/util"
 #
 # This does not currently support 'output'
 class FPM::Package::Gem < FPM::Package
-  private
-  def self.flags(opts, settings)
-    settings.source[:gem] = "gem"
-
-    opts.on("--bin-path DIRECTORY",
-            "The directory to install gem executables") do |path|
-      settings.source[:bin_path] = path
-    end
-    opts.on("--package-prefix PREFIX",
-            "Prefix for gem packages") do |package_prefix|
-      settings.source[:package_prefix] = package_prefix
-    end
-
-    opts.on("--gem PATH_TO_GEM",
-            "The path to the 'gem' tool (defaults to 'gem' and searches " \
-            "your $PATH)") do |path|
-      settings.source[:gem] = path
-    end
-  end # def flags
+  option "--bin-path", "DIRECTORY", "The directory to install gem executables",
+    :default => ::Gem::bindir
+  option "--package-prefix", "NAMEPREFIX",
+    "(DEPRECATED, use --package-name-prefix) Name to prefix the package " \
+    "name with." do |value|
+    @logger.warn("Using deprecated flag: --package-prefix. Please use " \
+                 "--package-name-prefix")
+    value
+  end
+  option "--package-name-prefix", "PREFIX", "Name to prefix the package " \
+    "name with.", :default => "rubygem"
+  option "--gem", "PATH_TO_GEM",
+          "The path to the 'gem' tool (defaults to 'gem' and searches " \
+          "your $PATH)", :default => "gem"
 
   def input(gem)
     # 'arg'  is the name of the rubygem we should unpack.
@@ -89,15 +84,14 @@ class FPM::Package::Gem < FPM::Package
   def load_package_info(gem_path)
     file = File.new(gem_path, 'r')
 
-    # Set defaults
-    if !attributes.include?(:package_name_prefix)
-      attributes[:package_name_prefix] = "rubygem"
-    end
-
     ::Gem::Package.open(file, 'r') do |gem|
       spec = gem.metadata
 
-      self.name = [attributes[:package_name_prefix], spec.name].join("-")
+      if !attributes[:gem_package_prefix].nil?
+        attributes[:gem_package_name_prefix] = attributes[:gem_package_prefix]
+      end
+
+      self.name = [attributes[:gem_package_name_prefix], spec.name].join("-")
       self.license = (spec.license or "no license listed in #{File.basename(file)}")
       self.version = spec.version.to_s
       self.vendor = spec.author
@@ -132,7 +126,7 @@ class FPM::Package::Gem < FPM::Package
 
         # Some reqs can be ">= a, < b" versions, let's handle that.
         reqs.to_s.split(/, */).each do |req|
-          self.dependencies << "#{attributes[:package_name_prefix]}-#{dep.name} #{req}"
+          self.dependencies << "#{attributes[:gem_package_name_prefix]}-#{dep.name} #{req}"
         end
       end # runtime_dependencies
     end # ::Gem::Package
@@ -147,13 +141,12 @@ class FPM::Package::Gem < FPM::Package
 
     ::FileUtils.mkdir_p(installdir)
     # TODO(sissel): Allow setting gem tool path
-    args = ["gem", "install", "--quiet", "--no-ri", "--no-rdoc",
+    args = [attributes[:gem_gem], "install", "--quiet", "--no-ri", "--no-rdoc",
        "--install-dir", installdir, "--ignore-dependencies", "-E"]
-    #if self[:settings][:bin_path]
-      #tmp_bin_path = File.join(tmpdir, self[:settings][:bin_path])
-      #args += ["--bindir", tmp_bin_path]
-      #FileUtils.mkdir_p(tmp_bin_path) # Fixes #27
-    #end
+    if attributes[:gem_bin_path]
+      bin_path = File.join(staging_path, attributes[:gem_bin_path])
+      args += ["--bindir", bin_path]
+    end
 
     args << gem_path
     safesystem(*args)
