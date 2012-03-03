@@ -47,9 +47,9 @@ class FPM::Command < Clamp::Command
     "The epoch value for this package. RPM and Debian calls this 'epoch'. " \
     "FreeBSD calls this 'PORTEPOCH'", :default => "1"
   option "--license", "LICENSE",
-    "(optional) license name for this package", :default => "not given"
+    "(optional) license name for this package"
   option "--vendor", "VENDOR",
-    "(optional) vendor name for this package", :default => "not given"
+    "(optional) vendor name for this package"
   option "--category", "CATEGORY",
     "(optional) category this package belongs to", :default => "none"
   option ["-d", "--depends"], "DEPENDENCY",
