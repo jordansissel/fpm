@@ -18,6 +18,7 @@ end
 
 # The main fpm command entry point.
 class FPM::Command < Clamp::Command
+  include FPM::Util
 
   option "-t", "OUTPUT_TYPE",
     "the type of package you want to create (deb, rpm, solaris, etc)",
@@ -182,9 +183,6 @@ class FPM::Command < Clamp::Command
     @logger.level = :debug if debug? # --debug
 
     input = input_class.new
-    args.each do |arg| 
-      input.input(arg) 
-    end
 
     # Merge in package settings. 
     # The 'settings' stuff comes in from #apply_options, which goes through
@@ -192,7 +190,20 @@ class FPM::Command < Clamp::Command
     # Flags in packages defined as "--foo-bar" become named "--<packagetype>-foo-bar"
     # They are stored in 'settings' as :gem_foo_bar.
     input.attributes ||= {}
-    input.attributes.merge(settings)
+
+    # Iterate over all the options
+    self.class.declared_options.each do |option|
+      with(option.attribute_name) do |attr|
+        # clamp makes option attributes available as accessor methods
+        # do --foo-bar is available as 'foo_bar'
+        # make these available as package attributes.
+        input.attributes[attr.to_sym] = send(attr) if respond_to?(attr)
+      end
+    end
+    
+    args.each do |arg| 
+      input.input(arg) 
+    end
 
     input.architecture = architecture unless architecture.nil?
     input.category = category unless category.nil?
