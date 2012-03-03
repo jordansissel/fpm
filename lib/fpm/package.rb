@@ -10,6 +10,7 @@ require "tmpdir"
 # There are 
 class FPM::Package
   include FPM::Util
+  include Cabin::Inspectable
 
   # This class is raised if there's something wrong with a setting in the package.
   class InvalidArgument < StandardError; end
@@ -113,11 +114,27 @@ class FPM::Package
     end # def options
 
     # Apply the options for this package on the clamp command
+    #
+    # Package flags become attributes '{type}-flag'
+    #
+    # So if you have:
+    #
+    #     class Foo < FPM::Package
+    #       option "--bar-baz" ...
+    #     end
+    #
+    # The attribute value for --foo-bar-baz will be :foo_bar_baz"
     def apply_options(clampcommand)
       @options ||= []
       @options.each do |args|
         flag, param, help, options, block = args
-        clampcommand.option(flag, param, help, options, &block)
+        clampcommand.option(flag, param, help, options) do |value|
+          # This is run in the scope of FPM::Command
+          value = block.call(value) unless block.nil?
+          # flag is an array, use the first flag as the attribute name
+          attr = flag.first[2..-1].gsub(/-+/, "_").to_sym
+          settings[attr] = value
+        end
       end
     end # def apply_options
 
