@@ -49,8 +49,29 @@ class FPM::Package::RPM < FPM::Package
       tags[tag.tag] = tag.value
     end
 
-    # For all meaningful tags, set package metadata
-    # TODO(sissel): find meaningful tags
+    self.architecture = tags[:arch]
+    self.category = tags[:group]
+    self.config_files = config_files
+    self.description = tags[:description]
+    self.epoch = tags[:epoch]
+    self.iteration = tags[:release]
+    self.license = tags[:license]
+    self.maintainer = maintainer
+    self.name = tags[:name]
+    self.url = tags[:url]
+    self.vendor = tags[:vendor]
+    self.version = tags[:version]
+
+    # TODO(sissel): Collect {pre,post}{install,uninstall} scripts
+    # TODO(sissel): put 'trigger scripts' stuff into attributes
+    # TODO(sissel): support provides
+    # TODO(sissel): support conflicts
+    # TODO(sissel): support replaces
+
+    self.dependencies += rpm.requires.collect do |name, operator, version|
+      [name, operator, version].join(" ")
+    end
+    #input.replaces += replaces
 
     # Extract to the staging directory
     rpm.extract(staging_path)
