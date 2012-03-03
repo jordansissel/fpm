@@ -8,6 +8,12 @@ require "fpm/util"
 # A rubygems package.
 #
 # This does not currently support 'output'
+#
+# The following attributes are supported:
+#
+# * :gem_bin_path
+# * :package_name_prefix
+# * :gem_gem
 class FPM::Package::Gem < FPM::Package
   option "--bin-path", "DIRECTORY", "The directory to install gem executables",
     :default => ::Gem::bindir
