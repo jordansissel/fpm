@@ -181,7 +181,6 @@ class FPM::Package
   # Convert this package to a new package type
   def convert(klass)
     @logger.info("Converting #{self.type} to #{klass.type}")
-    @logger.warn("name", :name => @name)
     pkg = klass.new
     pkg.instance_variable_set(:@staging_path, staging_path)
 
