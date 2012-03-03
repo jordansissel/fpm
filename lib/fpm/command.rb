@@ -180,38 +180,36 @@ class FPM::Command < Clamp::Command
       input.input(arg) 
     end
 
-    input.architecture = architecture
+    input.architecture = architecture unless architecture.nil?
     #input.attributes = {}
-    input.category = category
-    input.config_files = config_files
-    input.description = description
-    input.epoch = epoch
-    input.iteration = iteration unless useful?(maintainer)
-    input.license = license unless useful?(maintainer)
-    input.maintainer = maintainer unless useful?(maintainer)
-    input.name = name unless useful?(name)
-    input.scripts[:post_install] = 
-    input.url = url
-    input.vendor = vendor
-    input.version = version
+    input.category = category unless category.nil?
+    input.config_files += config_files
+    input.description = description unless description.nil?
+    input.epoch = epoch unless epoch.nil?
+    input.iteration = iteration unless iteration.nil?
+    input.license = license unless license.nil?
+    input.maintainer = maintainer unless maintainer.nil?
+    input.name = name unless name.nil?
+    #input.scripts[:post_install] = 
+    input.url = url unless url.nil?
+    input.vendor = vendor unless vendor.nil?
+    input.version = version unless version.nil?
 
     input.conflicts += conflicts
     input.dependencies += dependencies
     input.provides += provides
     input.replaces += replaces
 
+    # Convert to the output type
     output = input.convert(output_class)
+
+    # Write the output somewhere
     output.output(output.to_s(package))
     return 0
   ensure
     input.cleanup unless input.nil?
     output.cleanup unless output.nil?
   end # def execute
-
-  # Is this value useful? (neither nil nor empty)
-  def useful?(value)
-    return !value.nil? && (value.respond_to?(:empty?) && !value.empty?)
-  end # def useful?
 
   # A simple flag validator
   #
