@@ -5,7 +5,22 @@ require "find"
 require "rpm" # gem 'rpm'
 require "rpm/file"
 
+# RPM Package type.
+#
+# Build RPMs without having to waste hours reading Maximum-RPM.
+# Well, in case you want to read it, here: http://www.rpm.org/max-rpm/
+#
+# The following attributes are supported:
+#
+# * :rpm_rpmbuild_define - an array of definitions to give to rpmbuild.
+#   These are used, verbatim, each as: --define ITEM
 class FPM::Package::RPM < FPM::Package
+  option "--rpmbuild-define", "DEFINITION",
+    "Pass a --define argument to rpmbuild.", :default => [] do |define|
+    @rpmbuild_define ||= []
+    @rpmbuild_define << define
+  end
+
   private
 
   def architecture
@@ -84,6 +99,10 @@ class FPM::Package::RPM < FPM::Package
       "--define", "_topdir #{build_path}",
       "--define", "_sourcedir #{build_path}",
       "--define", "_rpmdir #{build_path}/RPMS"]
+
+    attributes[:rpm_rpmbuild_define].each do |define|
+      args += ["--define", define]
+    end
 
     rpmspec = template("rpm.erb").result(binding)
     specfile = File.join(build_path, "SPECS", "#{name}.spec")
