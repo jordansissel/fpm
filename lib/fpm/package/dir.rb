@@ -50,8 +50,6 @@ class FPM::Package::Dir < FPM::Package
       target = File.join(destination, file)
       copy(file, target)
     end
-    #require "pry"
-    #binding.pry
   end # def clone
 
   def copy(source, destination)
