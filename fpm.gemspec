@@ -12,7 +12,9 @@ Gem::Specification.new do |spec|
   spec.name = "fpm"
   spec.version = "0.4.0"
   spec.summary = "fpm - package building and mangling"
-  spec.description = "Convert directories, rpms, python eggs, rubygems, and more to rpms, debs, solaris packages and more. Win at package management without wasting pointless hours debugging bad rpm specs!"
+  spec.description = "Convert directories, rpms, python eggs, rubygems, and " \
+    "more to rpms, debs, solaris packages and more. Win at package " \
+    "management without wasting pointless hours debugging bad rpm specs!"
   spec.add_dependency("json")
   spec.add_dependency("cabin", "~> 0.4.2")
   spec.add_dependency("backports", "2.3.0")
