@@ -45,3 +45,7 @@ publish: test-package
 .PHONY: install
 install: $(GEM)
 	gem install $(GEM)
+
+.PHONY:
+clean:
+	rm -rf package-*/
