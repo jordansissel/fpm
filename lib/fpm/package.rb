@@ -199,14 +199,14 @@ class FPM::Package
   def convert(klass)
     @logger.info("Converting #{self.type} to #{klass.type}")
     pkg = klass.new
-    pkg.instance_variable_set(:@staging_path, staging_path)
+    pkg.cleanup # purge any directories that may have been created by klass.new
 
     # copy other bits
     ivars = [
       :@architecture, :@attributes, :@category, :@config_files, :@conflicts,
       :@dependencies, :@description, :@epoch, :@iteration, :@license, :@maintainer,
       :@name, :@provides, :@replaces, :@scripts, :@url, :@vendor, :@version,
-      :@config_files
+      :@config_files, :@staging_path
     ]
     ivars.each do |ivar|
       #@logger.debug("Copying ivar", :ivar => ivar, :value => instance_variable_get(ivar),
