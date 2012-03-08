@@ -2,8 +2,7 @@ require "fpm/package"
 require "backports"
 require "fileutils"
 require "find"
-require "rpm" # gem 'rpm'
-require "rpm/file"
+require "arr-pm/file" # gem 'arr-pm'
 
 # RPM Package type.
 #
@@ -68,7 +67,7 @@ class FPM::Package::RPM < FPM::Package
     self.category = tags[:group]
     self.config_files = config_files
     self.description = tags[:description]
-    self.epoch = tags[:epoch]
+    self.epoch = tags[:epoch].first # for some reason epoch is an array
     self.iteration = tags[:release]
     self.license = tags[:license]
     self.maintainer = maintainer
