@@ -99,23 +99,25 @@ class FPM::Command < Clamp::Command
     @exclude_pattern << val
   end # -x / --exclude
   option "--post-install", "FILE",
-    "a script to be run after package installation" do |val|
+    "a script to be run after package installation",
+    :attribute_name => :after_install do |val|
     File.expand_path(val) # Get the full path to the script
   end # --post-install
   option "--pre-install", "FILE",
-    "a script to be run before package installation" do |val|
+    "a script to be run before package installation",
+    :attribute_name => :before_install do |val|
     File.expand_path(val) # Get the full path to the script
   end # --pre-install
   # TODO(sissel): Name the flag --post-remove for clarity
   option "--post-uninstall", "FILE",
     "a script to be run after package removal",
-    :attribute_name => :post_remove do |val|
+    :attribute_name => :after_remove do |val|
     File.expand_path(val) # Get the full path to the script
   end # --post-uninstall
   # TODO(sissel): Name the flag --pre-remove for clarity
   option "--pre-uninstall", "FILE",
     "a script to be run before package removal",
-    :attribute_name => :pre_remove do |val|
+    :attribute_name => :before_remove do |val|
     File.expand_path(val) # Get the full path to the script
   end # --pre-uninstall
   option "--description", "DESCRIPTION", "Add a description for this package.",
@@ -139,7 +141,6 @@ class FPM::Command < Clamp::Command
   FPM::Package.types.each do |name, klass|
     klass.apply_options(self)
   end
-
 
   # TODO(sissel): expose 'option' and 'parameter' junk to FPM::Package and subclasses.
   # Apply those things to this command.
@@ -214,7 +215,6 @@ class FPM::Command < Clamp::Command
     input.license = license unless license.nil?
     input.maintainer = maintainer unless maintainer.nil?
     input.name = name unless name.nil?
-    #input.scripts[:post_install] = 
     input.url = url unless url.nil?
     input.vendor = vendor unless vendor.nil?
     input.version = version unless version.nil?
@@ -224,6 +224,11 @@ class FPM::Command < Clamp::Command
     input.provides += provides
     input.replaces += replaces
 
+    input.scripts[:before_install] = before_install # --pre-install
+    input.scripts[:after_install] = after_install # --post-install
+    input.scripts[:before_remove] = before_remove # --pre-uninstall
+    input.scripts[:after_remove] = after_remove # --post-uninstall
+    
     # Convert to the output type
     output = input.convert(output_class)
 
