@@ -16,9 +16,9 @@ require "rpm/file"
 #   These are used, verbatim, each as: --define ITEM
 class FPM::Package::RPM < FPM::Package
   option "--rpmbuild-define", "DEFINITION",
-    "Pass a --define argument to rpmbuild.", :default => [] do |define|
-    @rpmbuild_define ||= []
-    @rpmbuild_define << define
+    "Pass a --define argument to rpmbuild." do |define|
+    attributes[:rpm_rpmbuild_define] ||= []
+    attributes[:rpm_rpmbuild_define] << define
   end
 
   private
@@ -100,7 +100,7 @@ class FPM::Package::RPM < FPM::Package
       "--define", "_sourcedir #{build_path}",
       "--define", "_rpmdir #{build_path}/RPMS"]
 
-    attributes[:rpm_rpmbuild_define].each do |define|
+    (attributes[:rpm_rpmbuild_define] or []).each do |define|
       args += ["--define", define]
     end
 

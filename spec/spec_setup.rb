@@ -2,6 +2,7 @@ require "rubygems" # for ruby 1.8
 require "insist" # gem 'insist'
 require "rush" # gem 'rush'
 require "tmpdir" # stdlib
+require "tempfile" # stdlib
 require "fileutils" # stdlib
 
 # put 'lib' in RUBYLIB
