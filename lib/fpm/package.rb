@@ -143,7 +143,7 @@ class FPM::Package
   def convert(klass)
     @logger.info("Converting #{self.type} to #{klass.type}")
     pkg = klass.new
-    pkg.cleanup # purge any directories that may have been created by klass.new
+    pkg.cleanup_staging # purge any directories that may have been created by klass.new
 
     # copy other bits
     ivars = [
@@ -216,16 +216,23 @@ class FPM::Package
 
   # Clean up any temporary storage used by this class.
   def cleanup
+    cleanup_staging
+    cleanup_build
+  end # def cleanup
+
+  def cleanup_staging
     if File.directory?(staging_path)
       @logger.debug("Cleaning up", :path => staging_path)
       FileUtils.rm_r(staging_path) 
     end
+  end # def cleanup_staging
 
+  def cleanup_build
     if File.directory?(build_path)
       @logger.debug("Cleaning up", :path => build_path)
       FileUtils.rm_r(build_path) 
     end
-  end # def cleanup
+  end # def cleanup_build
 
   # List all files in the staging_path
   #
@@ -261,8 +268,6 @@ class FPM::Package
       .gsub("EPOCH", epoch.to_s)
       .gsub("TYPE", type.to_s)
   end # def to_s
-
-  public(:type, :initialize, :convert, :output, :input, :cleanup, :staging_path, :files, :to_s, :converted_from)
 
   class << self
     # This method is invoked when subclass occurs.
@@ -323,4 +328,9 @@ class FPM::Package
     end # def self.type
   end # class << self
 
+  # General public API
+  public(:type, :initialize, :convert, :input, :output, :to_s, :cleanup, :files)
+
+  # Package internal public api
+  public(:cleanup_staging, :cleanup_build, :staging_path, :converted_from)
 end # class FPM::Package
