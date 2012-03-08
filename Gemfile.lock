@@ -2,6 +2,7 @@ PATH
   remote: .
   specs:
     fpm (0.4.0)
+      arr-pm
       backports (= 2.3.0)
       cabin (~> 0.4.2)
       json
@@ -9,31 +10,34 @@ PATH
 GEM
   remote: http://rubygems.org/
   specs:
+    arr-pm (0.0.2)
+      cabin (> 0)
     backports (2.3.0)
     cabin (0.4.2)
       json
+    diff-lcs (1.1.3)
     fattr (2.2.1)
-    ffi (1.0.11)
-    guard (1.0.0)
-      ffi (>= 0.5.0)
-      thor (~> 0.14.6)
-    guard-minitest (0.3.0)
-      guard (>= 0.2.2)
-    guard-shell (0.3.0)
-      guard (>= 0.2.0)
+    insist (0.0.1)
+      cabin (> 0)
     json (1.6.5)
+    rspec (2.8.0)
+      rspec-core (~> 2.8.0)
+      rspec-expectations (~> 2.8.0)
+      rspec-mocks (~> 2.8.0)
+    rspec-core (2.8.0)
+    rspec-expectations (2.8.0)
+      diff-lcs (~> 1.1.2)
+    rspec-mocks (2.8.0)
     rush (0.6.7)
       session
     session (3.1.0)
       fattr
-    thor (0.14.6)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
   fpm!
-  guard
-  guard-minitest
-  guard-shell
+  insist
+  rspec
   rush

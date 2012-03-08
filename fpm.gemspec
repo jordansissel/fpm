@@ -35,6 +35,9 @@ Gem::Specification.new do |spec|
   # http://rush.heroku.com/rdoc/
   spec.add_development_dependency("rush") # license: MIT
 
+  spec.add_development_dependency("rspec") # license: ???
+  spec.add_development_dependency("insist") # license: ???
+
   spec.files = files
   spec.require_paths << "lib"
   spec.bindir = "bin"
