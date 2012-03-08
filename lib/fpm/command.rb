@@ -206,18 +206,32 @@ class FPM::Command < Clamp::Command
       input.input(arg) 
     end
 
-    input.architecture = architecture unless architecture.nil?
-    input.category = category unless category.nil?
-    input.config_files += config_files
-    input.description = description unless description.nil?
-    input.epoch = epoch unless epoch.nil?
-    input.iteration = iteration unless iteration.nil?
-    input.license = license unless license.nil?
-    input.maintainer = maintainer unless maintainer.nil?
-    input.name = name unless name.nil?
-    input.url = url unless url.nil?
-    input.vendor = vendor unless vendor.nil?
-    input.version = version unless version.nil?
+    # Override package settings if they are not the default flag values
+    # the below proc essentially does:
+    #
+    # if someflag != default_someflag
+    #   input.someflag = someflag
+    # end
+    set = proc do |object, attribute|
+      # if the package's attribute is currently nil *or* the flag setting for this
+      # attribute is non-default, use the value.
+      if object.send(attribute).nil? || send(attribute) != send("default_#{attribute}")
+        @logger.info("Setting from flags: #{attribute}=#{send(attribute)}")
+        object.send("#{attribute}=", send(attribute))
+      end
+    end
+    set.call(input, :architecture)
+    set.call(input, :category)
+    set.call(input, :description)
+    set.call(input, :epoch)
+    set.call(input, :iteration)
+    set.call(input, :license)
+    set.call(input, :maintainer)
+    set.call(input, :name)
+    set.call(input, :url)
+    set.call(input, :vendor)
+    set.call(input, :version)
+    set.call(input, :architecture)
 
     input.conflicts += conflicts
     input.dependencies += dependencies
