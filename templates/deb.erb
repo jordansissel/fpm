@@ -3,26 +3,25 @@ Version: <%= "#{epoch}:" if epoch %><%= version %><%= "-" + iteration.to_s if it
 License: <%= license %>
 Vendor: <%= vendor %>
 Architecture: <%= architecture %>
-Maintainer: <%= maintainer or "<unknown>" %>
+Maintainer: <%= maintainer  %>
+Installed-Size: <%= attributes[:deb_installed_size] %>
 <% if !dependencies.empty? -%>
-<%   properdeps = dependencies.collect { |d| fix_dependency(d) }.flatten -%>
-Depends: <%= properdeps.flatten.join(", ") %>
+Depends: <%= dependencies.join(", ") %>
+<% end -%>
+<% if !conflicts.empty? -%>
+Conflicts: <%= conflicts.join(", ") %>
 <% end -%>
 <%# if !pre_dependencies.empty? -%>
 <%#   properpredeps = pre_dependencies.collect { |d| fix_dependency(d) }.flatten -%>
 #Pre-Depends: <%#= properpredeps.flatten.join(", ") %>
 <%# end -%>
-<% if !conflicts.empty? -%>
-Conflicts: <%= conflicts.join(", ") %>
-<% end -%>
 <% if !provides.empty? -%>
 Provides: <%= provides.join(", ") %>
 <% end -%>
 <% if !replaces.empty? -%>
-<%   properrepl = replaces.collect { |d| fix_dependency(d) }.flatten -%>
-Replaces: <%= properrepl.flatten.join(", ") %>
+Replaces: <%= replaces.join(", ") %>
 <% end -%>
-Section: <%= category or "unknown" %>
+Section: <%= category %>
 Priority: extra
 Homepage: <%= url or "http://nourlgiven.example.com/" %>
 <% lines = (description or "no description given").split("\n") -%>
