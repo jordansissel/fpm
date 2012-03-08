@@ -19,20 +19,18 @@ describe FPM::Package::RPM do
   describe "#output" do
     context "basics" do
       before :each do
-
       end
 
       it "should output a package with the correct name" do
         subject.output(@target.path)
         rpm = RPM::File.new(@target.path)
         # TODO(sissel): verify rpm name vs subject.name
-
       end
 
       it "should output a package with the correct version"
       it "should output a package with the correct iteration"
       it "should output a package with the correct epoch"
       it "should output a package with the correct dependencies"
+    end
   end
-
-end # describe FPM::Package::Dir
+end # describe FPM::Package::RPM
