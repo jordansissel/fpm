@@ -15,10 +15,26 @@ Gem::Specification.new do |spec|
   spec.description = "Convert directories, rpms, python eggs, rubygems, and " \
     "more to rpms, debs, solaris packages and more. Win at package " \
     "management without wasting pointless hours debugging bad rpm specs!"
-  spec.add_dependency("json")
-  spec.add_dependency("cabin", "~> 0.4.2")
-  spec.add_dependency("backports", "2.3.0")
-  spec.add_development_dependency("rush")
+
+  # For parsing JSON (required for some Python support, etc)
+  # http://flori.github.com/json/doc/index.html
+  spec.add_dependency("json") # license: Ruby License
+  
+  # For logging
+  # https://github.com/jordansissel/ruby-cabin
+  spec.add_dependency("cabin", "~> 0.4.2") # license: Apache 2 
+
+  # For backports to older rubies
+  # https://github.com/marcandre/backports
+  spec.add_dependency("backports", "2.3.0") # license: MIT
+
+  # For reading and writing rpms
+  spec.add_dependency("arr-pm") # license: Apache 2
+
+  # For simple shell/file hackery in the tests.
+  # http://rush.heroku.com/rdoc/
+  spec.add_development_dependency("rush") # license: MIT
+
   spec.files = files
   spec.require_paths << "lib"
   spec.bindir = "bin"
