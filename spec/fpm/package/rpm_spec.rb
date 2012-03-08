@@ -8,7 +8,7 @@ describe FPM::Package::RPM do
   subject { FPM::Package::RPM.new }
 
   before :each do
-    @target = Tempfile.new
+    @target = Tempfile.new("fpm-test-rpm")
   end # before
 
   after :each do
@@ -19,6 +19,7 @@ describe FPM::Package::RPM do
   describe "#output" do
     context "basics" do
       before :each do
+        subject.name = "name"
       end
 
       it "should output a package with the correct name" do
