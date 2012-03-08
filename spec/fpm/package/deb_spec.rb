@@ -9,20 +9,23 @@ describe FPM::Package::Deb do
   describe "#output" do
     context "package attributes" do
       before :all do
-        @target = Tempfile.new("fpm-test-deb")
+        tmpfile = Tempfile.new("fpm-test-deb")
+        @target = tmpfile.path
+        # The target file must not exist.
+        tmpfile.unlink
+
+        File.write("/tmp/x", { :subject => subject }.inspect)
         subject.name = "name"
         subject.version = "123"
         subject.iteration = "100"
         subject.epoch = "5"
         subject.dependencies << "something > 10"
         subject.dependencies << "hello >= 20"
-        subject.output(@target.path)
+        subject.output(@target)
       end
 
       after :all do
         subject.cleanup
-        @target.close
-        @target.delete
       end # after
 
       it "should have the correct name"
