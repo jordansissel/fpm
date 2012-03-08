@@ -87,65 +87,6 @@ class FPM::Package
   # This is where you'd put rpm, deb, or other specific attributes.
   attr_accessor :attributes
 
-  class << self
-    # This method is invoked when subclass occurs.
-    # 
-    # Lets us track all known FPM::Package subclasses
-    def inherited(klass)
-      @subclasses ||= {}
-      @subclasses[klass.name.gsub(/.*:/, "").downcase] = klass
-    end # def self.inherited
-
-    # Get a list of all known package subclasses
-    def types
-      return @subclasses
-    end # def self.types
-
-    # This allows packages to define flags for the fpm command line
-    def option(flag, param, help, options={}, &block)
-      @options ||= []
-      if !flag.is_a?(Array)
-        flag = [flag]
-      end
-
-      flag = flag.collect { |f| "--#{type}-#{f.gsub(/^--/, "")}" }
-      help = "(#{type} only) #{help}"
-      @options << [flag, param, help, options, block]
-    end # def options
-
-    # Apply the options for this package on the clamp command
-    #
-    # Package flags become attributes '{type}-flag'
-    #
-    # So if you have:
-    #
-    #     class Foo < FPM::Package
-    #       option "--bar-baz" ...
-    #     end
-    #
-    # The attribute value for --foo-bar-baz will be :foo_bar_baz"
-    def apply_options(clampcommand)
-      @options ||= []
-      @options.each do |args|
-        flag, param, help, options, block = args
-        clampcommand.option(flag, param, help, options) do |value|
-          # This is run in the scope of FPM::Command
-          value = block.call(value) unless block.nil?
-          # flag is an array, use the first flag as the attribute name
-          attr = flag.first[2..-1].gsub(/-+/, "_").to_sym
-          settings[attr] = value
-        end
-      end
-    end # def apply_options
-
-    # Get the type of this package class.
-    #
-    # For "Foo::Bar::BAZ" this will return "baz"
-    def type
-      self.name.split(':').last.downcase
-    end # def self.type
-  end # class << self
-
   private
 
   def initialize
@@ -169,9 +110,10 @@ class FPM::Package
       @maintainer = "<#{ENV["USER"]}@#{Socket.gethostname}>"
     end
 
+    @name = nil
     @architecture = "all"
     @description = "no description given"
-    @version = 1.0
+    @version = "1.0"
     @epoch = 1
     @iteration = nil
     @url = nil
@@ -190,7 +132,9 @@ class FPM::Package
     build_path
   end # def initialize
 
-  # TODO [Jay]: make this better...?
+  # Get the 'type' for this instance.
+  #
+  # For FPM::Package::ABC, this returns 'abc'
   def type
     self.class.type
   end # def type
@@ -319,4 +263,64 @@ class FPM::Package
   end # def to_s
 
   public(:type, :initialize, :convert, :output, :input, :cleanup, :staging_path, :files, :to_s, :converted_from)
+
+  class << self
+    # This method is invoked when subclass occurs.
+    # 
+    # Lets us track all known FPM::Package subclasses
+    def inherited(klass)
+      @subclasses ||= {}
+      @subclasses[klass.name.gsub(/.*:/, "").downcase] = klass
+    end # def self.inherited
+
+    # Get a list of all known package subclasses
+    def types
+      return @subclasses
+    end # def self.types
+
+    # This allows packages to define flags for the fpm command line
+    def option(flag, param, help, options={}, &block)
+      @options ||= []
+      if !flag.is_a?(Array)
+        flag = [flag]
+      end
+
+      flag = flag.collect { |f| "--#{type}-#{f.gsub(/^--/, "")}" }
+      help = "(#{type} only) #{help}"
+      @options << [flag, param, help, options, block]
+    end # def options
+
+    # Apply the options for this package on the clamp command
+    #
+    # Package flags become attributes '{type}-flag'
+    #
+    # So if you have:
+    #
+    #     class Foo < FPM::Package
+    #       option "--bar-baz" ...
+    #     end
+    #
+    # The attribute value for --foo-bar-baz will be :foo_bar_baz"
+    def apply_options(clampcommand)
+      @options ||= []
+      @options.each do |args|
+        flag, param, help, options, block = args
+        clampcommand.option(flag, param, help, options) do |value|
+          # This is run in the scope of FPM::Command
+          value = block.call(value) unless block.nil?
+          # flag is an array, use the first flag as the attribute name
+          attr = flag.first[2..-1].gsub(/-+/, "_").to_sym
+          settings[attr] = value
+        end
+      end
+    end # def apply_options
+
+    # Get the type of this package class.
+    #
+    # For "Foo::Bar::BAZ" this will return "baz"
+    def type
+      self.name.split(':').last.downcase
+    end # def self.type
+  end # class << self
+
 end # class FPM::Package
