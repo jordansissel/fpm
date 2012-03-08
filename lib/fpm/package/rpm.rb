@@ -26,6 +26,8 @@ class FPM::Package::RPM < FPM::Package
     case @architecture
       when nil
         return %x{uname -m}.chomp   # default to current arch
+      when "amd64" # debian and redhat disagree on architecture names
+        return "x86_64"
       when "native"
         return %x{uname -m}.chomp   # 'native' is current arch
       when "all"
