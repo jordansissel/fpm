@@ -132,15 +132,49 @@ class FPM::Package::Deb < FPM::Package
       self.url = parse.call("Homepage")
       self.vendor = parse.call("Vendor") || self.vendor
 
-      #self.config_files = config_files
       # The description field is a special flower, parse it that way.
       # The description is the first line as a normal Description field, but also continues
       # on future lines indented by one space, until the end of the file. Blank
       # lines are marked as ' .'
       description = control[/^Description: .*/m].split(": ", 2).last
       self.description = description.gsub(/^ /, "").gsub(/^\.$/, "")
+
+      #self.config_files = config_files
+
+      self.dependencies += parse_depends(parse.call("Depends"))
     end
   end # def extract_info
+
+  # Parse a 'depends' line from a debian control file.
+  #
+  # The expected input 'data' should be everything after the 'Depends: ' string
+  #
+  # Example:
+  #
+  #     parse_depends("foo (>= 3), bar (= 5), baz")
+  def parse_depends(data)
+    # parse dependencies. Debian dependencies come in one of two forms:
+    # * name
+    # * name (op version)
+    # They are all on one line, separated by ", "
+
+    dep_re = /^([^ ]+)(?: \(([>=<]+) ([^)]+)\))?$/
+    return data.split(/, */).collect do |dep|
+      m = dep_re.match(dep)
+      if m
+        name, op, version = m.captures
+        # deb uses ">>" and "<<" for greater and less than respectively. 
+        # fpm wants just ">" and "<"
+        op = "<" if op == "<<"
+        op = ">" if op == ">>"
+        # this is the proper form of dependency
+        "#{name} #{op} #{version}"
+      else
+        # Assume normal form dependency, "name op version".
+        dep
+      end
+    end
+  end # def parse_depends
 
   def extract_files(package)
     # unpack the data.tar.gz from the deb package into staging_path
