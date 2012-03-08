@@ -4,11 +4,9 @@ require "fpm/package"
 require "fpm/errors"
 require "fpm/util"
 require "fileutils"
+require "insist"
 
 class FPM::Package::Deb < FPM::Package
-  # Installed size
-  attr_accessor :installed_size
-
   # Map of what scripts are named.
   SCRIPT_MAP = {
     :before_install     => "preinst",
@@ -46,9 +44,10 @@ class FPM::Package::Deb < FPM::Package
     File.expand_path(templates)
   end
 
-  option "--installed-size", "BYTES",
-    "The installed size, in bytes" do |installed_size_s|
-    installed_size_s.to_i
+  option "--installed-size", "KILOBYTES",
+    "The installed size, in kilobytes. If omitted, this will be calculated " \
+    "automatically" do |value|
+    value.to_i
   end
 
   # Return the architecture. This will default to native if not yet set.
@@ -95,13 +94,68 @@ class FPM::Package::Deb < FPM::Package
     return @name
   end # def name
 
+  def input(input_path)
+    extract_info(input_path)
+    extract_files(input_path)
+  end # def input
+
+  def extract_info(package)
+    with(build_path("control")) do |path|
+      FileUtils.mkdir(path) if !File.directory?(path)
+      # Unpack the control tarball
+      safesystem("ar p #{package} control.tar.gz | tar -zxf - -C #{path}")
+
+      control = File.read(File.join(path, "control"))
+
+      parse = lambda do |field| 
+        value = control[/^#{field.capitalize}: .*/]
+        if value.nil?
+          return nil
+        else
+          value.split(": ",2).last
+        end
+      end
+      
+      # Parse 'epoch:version-iteration' in the version string
+      version_re = /^(?:([0-9]+):)?(.+?)(?:-(.*))?$/
+      m = version_re.match(parse.call("Version"))
+      if !m
+        raise "Unsupported version string '#{parse.call("Version")}'"
+      end
+      self.epoch, self.version, self.iteration = m.captures
+
+      self.architecture = parse.call("Architecture")
+      self.category = parse.call("Section")
+      self.license = parse.call("License") || self.license
+      self.maintainer = parse.call("Maintainer")
+      self.name = parse.call("Package")
+      self.url = parse.call("Homepage")
+      self.vendor = parse.call("Vendor") || self.vendor
+
+      #self.config_files = config_files
+      # The description field is a special flower, parse it that way.
+      # The description is the first line as a normal Description field, but also continues
+      # on future lines indented by one space, until the end of the file. Blank
+      # lines are marked as ' .'
+      description = control[/^Description: .*/m].split(": ", 2).last
+      self.description = description.gsub(/^ /, "").gsub(/^\.$/, "")
+    end
+  end # def extract_info
+
+  def extract_files(package)
+    # unpack the data.tar.gz from the deb package into staging_path
+    safesystem("ar p #{package} data.tar.gz | tar -zxf - -C #{staging_path}")
+  end # def extract_files
+
   def output(output_path)
+    insist { File.directory?(build_path) } == true
+
     # create 'debian-binary' file, required to make a valid debian package
     File.write(build_path("debian-binary"), "2.0")
 
     write_control_tarball
 
-    # Tar up the staging_dir and call it 'data.tar.gz'
+    # Tar up the staging_path and call it 'data.tar.gz'
     datatar = build_path("data.tar.gz")
     safesystem(tar_cmd, "-C", staging_path, "-zcf", datatar, ".")
 
@@ -181,7 +235,7 @@ class FPM::Package::Deb < FPM::Package
 
   def control_path(path=nil)
     @control_path ||= build_path("control")
-    File.mkdir(@control_path) if !File.directory?(@control_path)
+    FileUtils.mkdir(@control_path) if !File.directory?(@control_path)
 
     if path.nil?
       return @control_path
@@ -192,8 +246,6 @@ class FPM::Package::Deb < FPM::Package
 
   def write_control_tarball
     # Use custom Debian control file when given ...
-    FileUtils.mkdir(control_path)
-
     write_control # write the control file
     write_scripts # write the maintainer scripts
     write_conffiles # write the conffiles
@@ -212,6 +264,21 @@ class FPM::Package::Deb < FPM::Package
   end # def write_control_tarball
 
   def write_control
+    # calculate installed-size if necessary:
+    if attributes[:deb_installed_size].nil?
+      @logger.info("No deb_installed_size set, calculating now.")
+      total = 0
+      Find.find(staging_path) do |path|
+        stat = File.stat(path)
+        next if stat.directory?
+        total += stat.size
+      end
+      # Per http://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-Installed-Size
+      #   "The disk space is given as the integer value of the estimated
+      #    installed size in bytes, divided by 1024 and rounded up."
+      attributes[:deb_installed_size] = total / 1024
+    end
+
     # Write the control file
     with(control_path("control")) do |control|
       if attributes["deb-custom-control"] 
@@ -227,8 +294,14 @@ class FPM::Package::Deb < FPM::Package
     end
   end # def write_control
 
+  # Write out the maintainer scripts
+  #
+  # SCRIPT_MAP is a map from the package ':after_install' to debian
+  # 'post_install' names
   def write_scripts
     SCRIPT_MAP.each do |script, filename|
+      next if scripts[script].nil?
+
       with(control_path(filename)) do |path|
         FileUtils.cp(scripts[script], filename)
         # deb maintainer scripts are required to be executable
@@ -238,7 +311,7 @@ class FPM::Package::Deb < FPM::Package
   end # def write_scripts
 
   def write_conffiles
-    File.new(control_path("conffiles")) do |out|
+    File.open(control_path("conffiles"), "w") do |out|
       # 'config_files' comes from FPM::Package and is usually set with
       # FPM::Command's --config-files flag
       config_files.each { |cf| out.puts(cf) }
