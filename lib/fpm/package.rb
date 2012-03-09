@@ -1,13 +1,12 @@
-require "fpm/namespace"
-require "fpm/util"
-require "socket" # for Socket.gethostname
-require "cabin"
-require "tmpdir"
+require "fpm/namespace" # local
+require "fpm/util" # local
+require "tmpdir" # stdlib
+require "socket" # stdlib, for Socket.gethostname
+require "shellwords" # stdlib, for Shellwords.escape
+require "cabin" # gem "cabin"
 
 # This class is the parent of all packages.
 # If you want to implement an FPM package type, you'll inherit from this.
-#
-# There are 
 class FPM::Package
   include FPM::Util
   include Cabin::Inspectable
@@ -269,6 +268,17 @@ class FPM::Package
       .gsub("TYPE", type.to_s)
   end # def to_s
 
+  def edit_file(path)
+    editor = ENV['FPM_EDITOR'] || ENV['EDITOR'] || 'vi'
+    @logger.info("Launching editor", :file => path)
+    safesystem("#{editor} #{Shellwords.escape(path)}")
+
+    if File.size(path) == 0
+      raise "Empty file after editing: #{path.inspect}"
+    end
+  end # def edit_file
+
+
   class << self
     # This method is invoked when subclass occurs.
     # 
@@ -332,5 +342,6 @@ class FPM::Package
   public(:type, :initialize, :convert, :input, :output, :to_s, :cleanup, :files)
 
   # Package internal public api
-  public(:cleanup_staging, :cleanup_build, :staging_path, :converted_from)
+  public(:cleanup_staging, :cleanup_build, :staging_path, :converted_from,
+         :edit_file)
 end # class FPM::Package
