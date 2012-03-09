@@ -92,7 +92,7 @@ class FPM::Command < Clamp::Command
   option ["-S", "--package-name-suffix"], "PACKAGE_NAME_SUFFIX",
     "a name suffix to append to package and dependencies."
   option ["-e", "--edit"], :flag,
-    "Edit the package spec before building."
+    "Edit the package spec before building.", :default => false
   option ["-x", "--exclude"], "EXCLUDE_PATTERN",
     "Exclude paths matching pattern (shell wildcard globs valid here)" do |val|
     @exclude_pattern ||= []
@@ -167,6 +167,7 @@ class FPM::Command < Clamp::Command
     @logger = Cabin::Channel.get
     @logger.subscribe(STDOUT)
     @logger.level = :warn
+
     validator = Validator.new(self)
     if !validator.ok?
       validator.messages.each do |message|
@@ -176,7 +177,6 @@ class FPM::Command < Clamp::Command
       @logger.fatal("Fix the above problems, and you'll be rolling packages in no time!")
       return 1
     end
-
     input_class = FPM::Package.types[input_type]
     output_class = FPM::Package.types[output_type]
 
@@ -198,10 +198,11 @@ class FPM::Command < Clamp::Command
         # clamp makes option attributes available as accessor methods
         # do --foo-bar is available as 'foo_bar'
         # make these available as package attributes.
+        attr = "#{attr}?" if !respond_to?(attr)
         input.attributes[attr.to_sym] = send(attr) if respond_to?(attr)
       end
     end
-    
+
     args.each do |arg| 
       input.input(arg) 
     end
