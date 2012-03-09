@@ -81,18 +81,33 @@ Targets:
 * rpm
 * solaris
 
-## Something broken?
+## Need Help or Want to Contribute?
 
-FPM lacks much automated testing. It does have:
-* BASH-based acceptance tests for finished packages
-* MiniTest-based unit tests (in their infancy)
+All contributions are welcome: ideas, patches, documentation, bug reports,
+complaints, and even something you drew up on a napkin.
 
-To compensate for lack of automated testing, should you find any bugs that
-would prevent you from using fpm yourself, please let me know (file a ticket,
-find me on IRC, email me, etc) and I'll fix it as quickly as I can (usually
-blocker bugs get fixed within a few minutes of me finding out about such a bug)
+It is more important to me that you are able to contribute and get help if you
+need it..
 
-If you have feature requests, feel free to send them my way.
+That said, some basic guidelines, which you are free to ignore :)
+
+* Have a problem you want fpm to solve for you? You can email the
+  [mailing list](http://groups.google.com/group/fpm-users), or
+  join the IRC channel #fpm on irc.freenode.org, or email me personally
+  (jls@semicomplete.com)
+* Have an idea or a feature request? File a ticket on
+  [github](https://github.com/jordansissel/fpm/issues), or email the
+  [mailing list](http://groups.google.com/group/fpm-users), or email
+  me personally (jls@semicomplete.com) if that is more comfortable.
+* If you think you found a bug, it probably is a bug. File it on
+  [jira](https://github.com/jordansissel/fpm/issues) or send details to
+  the [mailing list](http://groups.google.com/group/fpm-users).
+* If you want to send patches, best way is to fork this repo and send me a pull
+  request. If you don't know git, I also accept diff(1) formatted patches -
+  whatever is most comfortable for you.
+* Want to lurk about and see what others are doing? IRC (#fpm on
+  irc.freenode.org) is a good place for this as is the 
+  [mailing list](http://groups.google.com/group/fpm-users)
 
 ## Other Documentation
 
