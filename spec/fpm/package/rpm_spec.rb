@@ -6,13 +6,29 @@ require "arr-pm/file" # gem 'arr-pm'
 
 if !program_in_path?("rpmbuild")
   Cabin::Channel.get("rspec") \
-    .warn("Skipping RPM tests because I can't find 'rpmbuild' in your PATH")
+    .warn("Skipping RPM#output tests because 'rpmbuild' isn't in your PATH")
 end
 
-describe FPM::Package::RPM, :if => program_in_path?("rpmbuild") do
-  subject { FPM::Package::RPM.new }
+describe FPM::Package::RPM do
+  describe "#architecture" do
+    it "should convert amd64 to x86_64" do
+      subject.architecture = "amd64"
+      insist { subject.architecture } == "x86_64"
+    end
 
-  describe "#output" do
+    it "should convert 'all' to 'noarch'" do
+      subject.architecture = "all"
+      insist { subject.architecture } == "noarch"
+    end
+
+    it "should default to native" do
+      expected = %x{uname -m}.chomp
+      insist { subject.instance_eval { @architecture } } == "native"
+      insist { subject.architecture } == expected
+    end
+  end
+
+  describe "#output", :if => program_in_path?("rpmbuild")do
     context "package attributes" do
       before :all do
         @target = Tempfile.new("fpm-test-rpm")
