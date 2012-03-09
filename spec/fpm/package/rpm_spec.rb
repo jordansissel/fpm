@@ -10,6 +10,10 @@ if !program_in_path?("rpmbuild")
 end
 
 describe FPM::Package::RPM do
+  after :each do
+    subject.cleanup
+  end
+
   describe "#architecture" do
     it "should convert amd64 to x86_64" do
       subject.architecture = "amd64"
