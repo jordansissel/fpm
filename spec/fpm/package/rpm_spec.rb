@@ -57,6 +57,29 @@ describe FPM::Package::RPM do
           insist { requires }.include?(dep)
         end
       end
+    end # package attributes
+
+    describe "regressions should not occur"
+      before :each do
+        @target = Tempfile.new("fpm-test-rpm")
+        subject.name = "name"
+        subject.version = "123"
+        subject.iteration = "100"
+        subject.epoch = "5"
+      end
+
+      after :each do
+        subject.cleanup
+        @target.close
+        @target.delete
+      end # after
+
+    it "should permit spaces in filenames (issue #164)" do
+      File.write(subject.staging_path("file with space"), "Hello")
+
+      # This will raise an exception if rpmbuild fails.
+      subject.output(@target.path)
     end
-  end
+
+  end # #output
 end # describe FPM::Package::RPM
