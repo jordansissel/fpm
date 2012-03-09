@@ -23,8 +23,8 @@ describe FPM::Package do
   end
 
   describe "#version" do
-    it "should default to '1.0'" do
-      insist { subject.version } == "1.0"
+    it "should default to nil" do
+      insist { subject.version }.nil?
     end
 
     it "should allow setting the package name" do
