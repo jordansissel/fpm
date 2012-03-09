@@ -88,6 +88,13 @@ fi
 <%# Output config files and then regular files. -%>
 <%= config_files.collect { |c| '%config ' + c }.join("\n") -%>
 <%# list only files, not directories? %>
-<%= files.reject { |f| File.directory?(File.join(staging_path, f)) }.collect { |f| "/#{f}" }.join("\n") %>
+<%= 
+  # Reject directories, then prefix files with "/", then make sure
+  # paths with spaces are quoted. I hate rpm so much.
+  files.reject { |f| File.directory?(File.join(staging_path, f)) } \
+    .collect { |f| "/#{f}" } \
+    .collect { |f| f[/\s/] and "\"#{f}\"" or f } \
+    .join("\n") 
+%>
 
 %changelog
