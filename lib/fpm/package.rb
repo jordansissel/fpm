@@ -113,8 +113,8 @@ class FPM::Package
     @name = nil
     @architecture = "all"
     @description = "no description given"
-    @version = "1.0"
-    @epoch = 1
+    @version = nil
+    @epoch = nil
     @iteration = nil
     @url = nil
     @category = "default"
