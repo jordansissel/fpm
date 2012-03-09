@@ -69,7 +69,7 @@ class FPM::Package::RPM < FPM::Package
     self.category = tags[:group]
     self.config_files = config_files
     self.description = tags[:description]
-    self.epoch = tags[:epoch].first # for some reason epoch is an array
+    self.epoch = (tags[:epoch] || [nil]).first # for some reason epoch is an array
     self.iteration = tags[:release]
     self.license = tags[:license]
     self.maintainer = maintainer
@@ -94,7 +94,7 @@ class FPM::Package::RPM < FPM::Package
   end # def input
 
   def output(output_path)
-    %w(BUILD RPMS SRPMS SOURCES SPECS).each { |d| FileUtils.mkdir_p(File.join(build_path, d)) }
+    %w(BUILD RPMS SRPMS SOURCES SPECS).each { |d| FileUtils.mkdir_p(build_path(d)) }
     args = ["rpmbuild", "-bb",
       "--define", "buildroot #{build_path}/BUILD",
       "--define", "_topdir #{build_path}",
@@ -106,7 +106,7 @@ class FPM::Package::RPM < FPM::Package
     end
 
     rpmspec = template("rpm.erb").result(binding)
-    specfile = File.join(build_path, "SPECS", "#{name}.spec")
+    specfile = File.join(build_path("SPECS"), "#{name}.spec")
     File.write(specfile, rpmspec)
     File.write("/tmp/rpm.spec", rpmspec)
 
