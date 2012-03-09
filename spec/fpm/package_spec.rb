@@ -34,7 +34,12 @@ describe FPM::Package do
     end
   end
 
-  describe "#architecture"
+  describe "#architecture" do
+    it "should default to native" do
+      insist { subject.architecture } == "native"
+    end
+  end
+
   describe "#attributes"
   describe "#category"
   describe "#config_files"
