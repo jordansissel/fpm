@@ -4,6 +4,19 @@ require "fpm/package/deb" # local
 require "fpm/package/dir" # local
 
 describe FPM::Package::Deb do
+  describe "#architecture" do
+    it "should convert x86_64 to amd64" do
+      subject.architecture = "x86_64"
+      insist { subject.architecture } == "amd64"
+    end
+
+    it "should default to native" do
+      expected = %x{uname -m}.chomp
+      expected = "amd64" if expected == "x86_64"
+      insist { subject.architecture } == expected
+    end
+  end
+
   describe "#output" do
     before :all do
       # output a package, use it as the input, set the subject to that input
