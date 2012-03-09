@@ -50,6 +50,8 @@ class FPM::Package::Deb < FPM::Package
     value.to_i
   end
 
+  private
+
   # Return the architecture. This will default to native if not yet set.
   # It will also try to use dpkg and 'uname -m' to figure out what the
   # native 'architecture' value should be.
@@ -63,7 +65,8 @@ class FPM::Package::Deb < FPM::Package
       else
         @architecture = %x{uname -m}.chomp
       end
-    elsif @architecture == "x86_64"
+    end
+    if @architecture == "x86_64"
       # Debian calls x86_64 "amd64"
       @architecture = "amd64"
     end
@@ -363,5 +366,6 @@ class FPM::Package::Deb < FPM::Package
       File.chmod(0755, control_path("templates"))
     end
   end # def write_debconf
-  public(:input, :output)
+
+  public(:input, :output, :architecture, :name)
 end # class FPM::Target::Deb
