@@ -110,7 +110,7 @@ class FPM::Package
     end
 
     @name = nil
-    @architecture = "all"
+    @architecture = "native"
     @description = "no description given"
     @version = nil
     @epoch = nil
