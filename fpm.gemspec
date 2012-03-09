@@ -22,7 +22,7 @@ Gem::Specification.new do |spec|
   
   # For logging
   # https://github.com/jordansissel/ruby-cabin
-  spec.add_dependency("cabin", "~> 0.4.2") # license: Apache 2 
+  spec.add_dependency("cabin", "~> 0.4.3") # license: Apache 2 
 
   # For backports to older rubies
   # https://github.com/marcandre/backports
