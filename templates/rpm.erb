@@ -5,6 +5,8 @@
 %define __spec_<%= step %>_post true
 %define __spec_<%= step %>_pre true
 <% end -%>
+# Disable checking for unpackaged files ?
+#%undefine __check_files
 
 Name: <%= name %>
 Version: <%= version %>
