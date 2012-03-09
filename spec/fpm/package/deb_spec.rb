@@ -4,6 +4,10 @@ require "fpm/package/deb" # local
 require "fpm/package/dir" # local
 
 describe FPM::Package::Deb do
+  after :each do
+    subject.cleanup
+  end
+
   describe "#architecture" do
     it "should convert x86_64 to amd64" do
       subject.architecture = "x86_64"
