@@ -222,14 +222,14 @@ class FPM::Package
 
   def cleanup_staging
     if File.directory?(staging_path)
-      @logger.debug("Cleaning up", :path => staging_path)
+      @logger.debug("Cleaning up staging path", :path => staging_path)
       FileUtils.rm_r(staging_path) 
     end
   end # def cleanup_staging
 
   def cleanup_build
     if File.directory?(build_path)
-      @logger.debug("Cleaning up", :path => build_path)
+      @logger.debug("Cleaning up build path", :path => build_path)
       FileUtils.rm_r(build_path) 
     end
   end # def cleanup_build
