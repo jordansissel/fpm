@@ -40,11 +40,36 @@ describe FPM::Package do
     end
   end
 
-  describe "#attributes"
-  describe "#category"
-  describe "#config_files"
-  describe "#conflicts"
-  describe "#dependencies"
+  describe "#attributes" do
+    it "should be empty by default" do
+      insist { subject.attributes }.empty?
+    end
+  end
+
+  describe "#category" do
+    it "should be 'default' by default" do
+      insist { subject.category } == "default"
+    end
+  end
+
+  describe "#config_files" do
+    it "should be empty by default" do
+      insist { subject.config_files }.empty?
+    end
+  end
+
+  describe "#conflicts" do
+    it "should be empty by default" do
+      insist { subject.conflicts }.empty?
+    end
+  end
+
+  describe "#dependencies" do
+    it "should be empty by default" do
+      insist { subject.dependencies }.empty?
+    end
+  end
+
   describe "#description"
   describe "#epoch"
   describe "#iteration"
