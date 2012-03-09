@@ -4,7 +4,12 @@ require "fpm/package/rpm" # local
 require "fpm/package/dir" # local
 require "arr-pm/file" # gem 'arr-pm'
 
-describe FPM::Package::RPM do
+if !program_in_path?("rpmbuild")
+  Cabin::Channel.get("rspec") \
+    .warn("Skipping RPM tests because I can't find 'rpmbuild' in your PATH")
+end
+
+describe FPM::Package::RPM, :if => program_in_path?("rpmbuild") do
   subject { FPM::Package::RPM.new }
 
   describe "#output" do
