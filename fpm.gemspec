@@ -40,7 +40,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency("rush") # license: MIT
 
   spec.add_development_dependency("rspec") # license: ???
-  spec.add_dependency("insist") # license: ???
+  spec.add_dependency("insist", "~> 0.0.3") # license: ???
 
   spec.files = files
   spec.require_paths << "lib"
