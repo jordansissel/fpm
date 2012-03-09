@@ -2,49 +2,64 @@ require "backports" # gem backports
 require "fpm/package"
 require "fpm/util"
 require "fileutils"
+require "fpm/package/dir"
 
 class FPM::Package::Tar < FPM::Package
-  def get_metadata
-    self[:name] = @paths.first.split(".").first
-  end # def get_metadata
+  def input(input_path)
+    # use part of the filename as the package name
+    self.name = File.basename(input_path).split(".").first
 
-  def make_tarball!(tar_path, builddir)
-    input_tarball = @paths.first
+    # Unpack the tarball to the build path before ultimately moving it to
+    # staging.
+    extension = input_path.split(".").last
+    args = ["-xf", input_path, "-C", build_path]
 
-    if input_tarball =~ /\.tar\.bz2$/
-      compression = :bipz2
-    elsif input_tarball =~ /\.tar\.gz$/
-      compression = :gzip
-    elsif input_tarball =~ /\.tar\.xz$/
-      compression = :lzma
+    # Add the tar compression flag if necessary
+    with(tar_compression_flag(input_path)) do |flag|
+      args << flag unless flag.nil?
+    end
+
+    safesystem("tar", *args)
+
+    # use dir to set stuff up properly, mainly so I don't have to reimplement
+    # the chdir/prefix stuff special for tar.
+    dir = convert(FPM::Package::Dir)
+    if attributes[:chdir]
+      dir.attributes[:chdir] = File.join(build_path, attributes[:chdir])
     else
-      compression = :none
+      dir.attributes[:chdir] = build_path
     end
 
-    # Unpack the tar file
-    installdir = "#{builddir}/tarbuild/#{self[:prefix]}"
-    FileUtils.mkdir_p(installdir)
-    flags = "-xf #{input_tarball} -C #{installdir}"
-    case compression
-      when :bzip2; flags += " -j"
-      when :gzip; flags += " -z"
-      when :lzma; flags += " --lzma"
-    end
-    #puts("tar #{flags}")
-    #sleep 5
-    safesystem("tar #{flags}")
+    cleanup_staging
+    # Tell 'dir' to input "." and chdir/prefix will help it figure out the
+    # rest.
+    dir.input(".")
+    @staging_path = dir.staging_path
+    dir.cleanup_build
+  end # def input
 
-    if self[:prefix]
-      @paths = [self[:prefix]]
-    else
-      @paths = ["."]
+  def output(output_path)
+    # Unpack the tarball to the staging path
+    extension = input_path.split(".").last
+
+    args = ["-cf", output_path, "-C", staging_path, "."]
+    with(tar_compression_flag(input_path)) do |flag|
+      args << flag unless flag.nil?
     end
 
-    ::Dir.chdir("#{builddir}/tarbuild") do
-      tar(tar_path, ".")
-    end
+    safesystem("tar", *args)
+  end # def output
 
-    # TODO(sissel): Make a helper method.
-    safesystem(*["gzip", "-f", tar_path])
-  end # def make_tarball!
+  def tar_compression_flag(path)
+    case path
+      when /\.tar\.bz2$/
+        return "-j"
+      when /\.tar\.gz$|\.tgz$/
+        return "-z"
+      when /\.tar\.xz$/
+        return "-J"
+      else
+        return nil
+    end
+  end # def tar_compression_flag
 end # class FPM::Package::Tar
