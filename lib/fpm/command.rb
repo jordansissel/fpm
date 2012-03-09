@@ -27,7 +27,8 @@ class FPM::Command < Clamp::Command
     "the package type to use as input (gem, rpm, python, etc)",
     :attribute_name => :input_type
   option "-C", "CHDIR",
-    "Change directory to here before searching for files", :attribute_name => :chdir
+    "Change directory to here before searching for files",
+    :attribute_name => :chdir
   option "--prefix", "PREFIX",
     "A path to prefix files with when building the target package. This may " \
     "be necessary for all input packages. For example, the 'gem' type will" \
@@ -37,8 +38,7 @@ class FPM::Command < Clamp::Command
   option ["-n", "--name"], "NAME", "The name to give to the package"
   option "--verbose", :flag, "Enable verbose output"
   option "--debug", :flag, "Enable debug output"
-  option ["-v", "--version"], "VERSION",
-    "The version to give to the package", :default => "1.0"
+  option ["-v", "--version"], "VERSION", "The version to give to the package"
   option "--iteration", "ITERATION",
     "The iteration to give to the package. RPM calls this the 'release'. " \
     "FreeBSD calls it 'PORTREVISION'. Debian calls this 'debian_revision'",
