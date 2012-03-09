@@ -4,15 +4,14 @@
     * Please let me know if something broke!
   - Now has an API (see examples/api directory)
   - Also has a proper test suite
-
-0.3.12 (Feb 22, 2012)
-  - PHP pear source support (fpm -s pear ...) (via Andrew Gaffney)
   - Add --license and --vendor settings (via Pieter Loubser)
   - python support: try to name python packages sanely. Some pypi packages
     are literally called 'python-foo' so make sure we generate packages named
     'python-foo' and not 'python-python-foo' (via Thomas Meson)
   - rpm support: Add --rpm-rpmbuild-define for passing a --define flag to rpmbuild
     (via Naresh V)
+  TODO(sissel): PEAR
+  - PHP pear source support (fpm -s pear ...) (via Andrew Gaffney)
 
 0.3.10 (Oct 10, 2011)
   - Allow taking a list of files/inputs on stdin with '-' or with the --inputs
