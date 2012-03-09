@@ -11,7 +11,6 @@ class FPM::Package::Tar < FPM::Package
 
     # Unpack the tarball to the build path before ultimately moving it to
     # staging.
-    extension = input_path.split(".").last
     args = ["-xf", input_path, "-C", build_path]
 
     # Add the tar compression flag if necessary
@@ -40,10 +39,8 @@ class FPM::Package::Tar < FPM::Package
 
   def output(output_path)
     # Unpack the tarball to the staging path
-    extension = input_path.split(".").last
-
     args = ["-cf", output_path, "-C", staging_path, "."]
-    with(tar_compression_flag(input_path)) do |flag|
+    with(tar_compression_flag(output_path)) do |flag|
       args << flag unless flag.nil?
     end
 
