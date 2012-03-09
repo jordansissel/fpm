@@ -31,6 +31,10 @@ Gem::Specification.new do |spec|
   # For reading and writing rpms
   spec.add_dependency("arr-pm") # license: Apache 2
 
+  # For command-line flag support
+  # https://github.com/mdub/clamp/blob/master/README.markdown
+  spec.add_dependency("clamp") # license: MIT
+
   # For simple shell/file hackery in the tests.
   # http://rush.heroku.com/rdoc/
   spec.add_development_dependency("rush") # license: MIT
