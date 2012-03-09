@@ -129,5 +129,5 @@ class FPM::Package::RPM < FPM::Package
     @logger.log("Created rpm", :path => output_path)
   end # def output
 
-  public(:input, :output, :converted_from)
+  public(:input, :output, :converted_from, :architecture)
 end # class FPM::Package::RPM
