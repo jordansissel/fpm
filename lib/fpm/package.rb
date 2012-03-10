@@ -271,7 +271,8 @@ class FPM::Package
       .gsub("NAME", name.to_s) \
       .gsub("FULLVERSION", fullversion) \
       .gsub("VERSION", version.to_s) \
-      .gsub("EPOCH", epoch.to_s)
+      .gsub("ITERATION", iteration.to_s) \
+      .gsub("EPOCH", epoch.to_s) \
       .gsub("TYPE", type.to_s)
   end # def to_s
 
