@@ -4,6 +4,14 @@ require "fpm/package/deb" # local
 require "fpm/package/dir" # local
 
 describe FPM::Package::Deb do
+  # dpkg-deb lets us query deb package files. 
+  # Comes with debian and ubuntu systems.
+  have_dpkg_deb = program_in_path?("dpkg-deb")
+  if !have_dpkg_deb
+    Cabin::Channel.get("rspec") \
+      .warn("Skipping Deb#output tests because 'dpkg-deb' isn't in your PATH")
+  end
+
   after :each do
     subject.cleanup
   end
@@ -26,13 +34,30 @@ describe FPM::Package::Deb do
     end
   end
 
-  describe "#output" do
+  context "supporting debian policy hacks" do
+    subject do
+      package = FPM::Package::Deb.new
+      package.name = "Capitalized_Name_With_Underscores"
+      package
+    end
+
+    it "should lowercase the package name" do
+      insist { subject.name } !~ /[A-Z]/
+    end
+
+    it "should replace underscores with dashes in the package name" do
+      # Insist the package.name does not include "_"
+      insist { insist { subject.name }.include?("_") }.fails
+    end
+  end
+
+  describe "#output" do 
     before :all do
       # output a package, use it as the input, set the subject to that input
       # package. This helps ensure that we can write and read packages
       # properly.
       tmpfile = Tempfile.new("fpm-test-deb")
-      target = tmpfile.path
+      @target = tmpfile.path
       # The target file must not exist.
       tmpfile.unlink
 
@@ -43,10 +68,10 @@ describe FPM::Package::Deb do
       @original.epoch = "5"
       @original.dependencies << "something > 10"
       @original.dependencies << "hello >= 20"
-      @original.output(target)
+      @original.output(@target)
 
       @input = FPM::Package::Deb.new
-      @input.input(target)
+      @input.input(@target)
     end
 
     after :all do
@@ -76,6 +101,21 @@ describe FPM::Package::Deb do
           insist { @input.dependencies }.include?(dep)
         end
       end
+    end # package attributes
+
+    # This section mainly just verifies that 'dpkg-deb' can parse the package.
+    context "when read with dpkg", :if => have_dpkg_deb do
+      def dpkg_field(field)
+        return %x{dpkg-deb -f #{@target} #{field}}.chomp
+      end # def dpkg_field
+
+      it "should have the correct name" do
+        insist { dpkg_field("Package") } == @original.name
+      end
+
+      it "should have the correct 'epoch:version-iteration'" do
+        insist { dpkg_field("Version") } == @original.to_s("EPOCH:VERSION-ITERATION")
+      end
     end
-  end
+  end # #output
 end # describe FPM::Package::Deb
