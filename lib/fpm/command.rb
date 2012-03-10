@@ -33,8 +33,7 @@ class FPM::Command < Clamp::Command
     "A path to prefix files with when building the target package. This may " \
     "be necessary for all input packages. For example, the 'gem' type will" \
     "prefix with your gem directory automatically."
-  option ["-p", "--package"], "OUTPUT",
-    "The package file path to output.", :default => "NAME-FULLVERSION.ARCH.TYPE"
+  option ["-p", "--package"], "OUTPUT", "The package file path to output."
   option ["-n", "--name"], "NAME", "The name to give to the package"
   option "--verbose", :flag, "Enable verbose output"
   option "--debug", :flag, "Enable debug output"
@@ -247,7 +246,8 @@ class FPM::Command < Clamp::Command
     # Convert to the output type
     output = input.convert(output_class)
 
-    # Write the output somewhere
+    # Write the output somewhere, package can be nil if no --package is specified, 
+    # and that's OK.
     output.output(output.to_s(package))
     return 0
   ensure
