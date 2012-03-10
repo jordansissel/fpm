@@ -375,5 +375,12 @@ class FPM::Package::Deb < FPM::Package
     end
   end # def write_debconf
 
-  public(:input, :output, :architecture, :name, :converted_from)
+  def to_s(format=nil)
+    # Default format if nil
+    # git_1.7.9.3-1_amd64.deb
+    return super("NAME_FULLVERSION_ARCH.TYPE") if format.nil?
+    return super(format)
+  end # def to_s
+
+  public(:input, :output, :architecture, :name, :converted_from, :to_s)
 end # class FPM::Target::Deb

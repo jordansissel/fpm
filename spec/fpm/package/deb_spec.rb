@@ -12,10 +12,6 @@ describe FPM::Package::Deb do
       .warn("Skipping Deb#output tests because 'dpkg-deb' isn't in your PATH")
   end
 
-  after :each do
-    subject.cleanup
-  end
-
   describe "#architecture" do
     it "should convert x86_64 to amd64" do
       subject.architecture = "x86_64"
@@ -31,6 +27,19 @@ describe FPM::Package::Deb do
       expected = %x{uname -m}.chomp
       expected = "amd64" if expected == "x86_64"
       insist { subject.architecture } == expected
+    end
+  end
+
+  describe "#to_s" do
+    it "should have a default output usable as a filename" do
+      subject.name = "name"
+      subject.version = "123"
+      subject.architecture = "all"
+      subject.iteration = "100"
+      subject.epoch = "5"
+
+      # This is the default filename I see commonly produced by debuild
+      insist { subject.to_s } == "name_123-100_all.deb"
     end
   end
 
@@ -66,6 +75,7 @@ describe FPM::Package::Deb do
       @original.version = "123"
       @original.iteration = "100"
       @original.epoch = "5"
+      @original.architecture = "all"
       @original.dependencies << "something > 10"
       @original.dependencies << "hello >= 20"
       @original.output(@target)
