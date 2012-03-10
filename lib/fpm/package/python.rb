@@ -51,14 +51,17 @@ class FPM::Package::Python < FPM::Package
       want_pkg = "#{package}==#{version}"
     end
 
+    target = build_path(package)
+    FileUtils.mkdir(target) unless File.directory?(target)
+
     # TODO(sissel): support a settable path to 'easy_install'
     # TODO(sissel): support a tunable for uthe url to pypi
     safesystem("easy_install", "-i", "http://pypi.python.org/simple",
-               "--editable", "-U", "--build-directory", build_path, want_pkg)
+               "--editable", "-U", "--build-directory", target, want_pkg)
 
     # easy_install will put stuff in @tmpdir/packagename/, so find that:
     #  @tmpdir/somepackage/setup.py
-    dirs = ::Dir.glob(File.join(build_path, "*"))
+    dirs = ::Dir.glob(File.join(target, "*"))
     if dirs.length != 1
       raise "Unexpected directory layout after easy_install. Maybe file a bug? The directory is #{build_path}"
     end
