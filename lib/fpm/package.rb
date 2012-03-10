@@ -13,6 +13,13 @@ class FPM::Package
 
   # This class is raised if there's something wrong with a setting in the package.
   class InvalidArgument < StandardError; end
+ 
+  # This class is raised when a file already exists when trying to write.
+  class FileAlreadyExists < StandardError
+    def to_s
+      return "File already exists, refusing to continue: #{super}"
+    end # def to_s
+  end # class FileAlreadyExists
 
   # The name of this package
   attr_accessor :name
