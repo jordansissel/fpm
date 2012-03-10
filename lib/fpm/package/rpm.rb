@@ -129,5 +129,10 @@ class FPM::Package::RPM < FPM::Package
     @logger.log("Created rpm", :path => output_path)
   end # def output
 
-  public(:input, :output, :converted_from, :architecture)
+  def to_s(format=nil)
+    return super("NAME-VERSION-ITERATION.ARCH.TYPE") if format.nil?
+    return super(format)
+  end # def to_s
+
+  public(:input, :output, :converted_from, :architecture, :to_s)
 end # class FPM::Package::RPM
