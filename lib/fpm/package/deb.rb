@@ -191,8 +191,11 @@ class FPM::Package::Deb < FPM::Package
   def output(output_path)
     insist { File.directory?(build_path) } == true
 
+    # Abort if the target path already exists.
+    raise FileAlreadyExists.new(output_path) if File.exists?(output_path)
+
     # create 'debian-binary' file, required to make a valid debian package
-    File.write(build_path("debian-binary"), "2.0")
+    File.write(build_path("debian-binary"), "2.0\n")
 
     write_control_tarball
 
@@ -332,6 +335,7 @@ class FPM::Package::Deb < FPM::Package
 
       @logger.debug("Writing control file", :path => control)
       File.write(control, control_data)
+      edit_file(control) if attributes[:edit?]
     end
   end # def write_control
 
@@ -371,5 +375,5 @@ class FPM::Package::Deb < FPM::Package
     end
   end # def write_debconf
 
-  public(:input, :output, :architecture, :name)
+  public(:input, :output, :architecture, :name, :converted_from)
 end # class FPM::Target::Deb
