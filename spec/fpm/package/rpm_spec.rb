@@ -31,6 +31,19 @@ describe FPM::Package::RPM do
       insist { subject.architecture } == expected
     end
   end
+  
+  describe "#to_s" do
+    it "should have a default output usable as a filename" do
+      subject.name = "name"
+      subject.version = "123"
+      subject.architecture = "all"
+      subject.iteration = "100"
+      subject.epoch = "5"
+
+      # This is the default filename I see commonly output by rpmbuild
+      insist { subject.to_s } == "name-123-100.noarch.rpm"
+    end
+  end
 
   describe "#output", :if => program_in_path?("rpmbuild")do
     context "package attributes" do
@@ -38,6 +51,7 @@ describe FPM::Package::RPM do
         @target = Tempfile.new("fpm-test-rpm")
         subject.name = "name"
         subject.version = "123"
+        subject.architecture = "all"
         subject.iteration = "100"
         subject.epoch = "5"
         subject.dependencies << "something > 10"
