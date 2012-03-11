@@ -4,7 +4,6 @@ require "fpm/package"
 require "fpm/errors"
 require "fpm/util"
 require "fileutils"
-require "insist"
 
 class FPM::Package::Deb < FPM::Package
   # Map of what scripts are named.
@@ -189,8 +188,6 @@ class FPM::Package::Deb < FPM::Package
   end # def extract_files
 
   def output(output_path)
-    insist { File.directory?(build_path) } == true
-
     # Abort if the target path already exists.
     raise FileAlreadyExists.new(output_path) if File.exists?(output_path)
 
