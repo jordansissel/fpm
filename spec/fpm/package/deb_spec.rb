@@ -12,6 +12,10 @@ describe FPM::Package::Deb do
       .warn("Skipping Deb#output tests because 'dpkg-deb' isn't in your PATH")
   end
 
+  after :each do
+    subject.cleanup
+  end
+
   describe "#architecture" do
     it "should convert x86_64 to amd64" do
       subject.architecture = "x86_64"
