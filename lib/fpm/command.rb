@@ -77,7 +77,8 @@ class FPM::Command < Clamp::Command
   end # --replaces
   option "--config-files", "CONFIG_FILES",
     "Mark a file in the package as being a config file. This uses 'conffiles'" \
-    " in debs and %config in rpm." do |val|
+    " in debs and %config in rpm. You can specify a directory to have it " \
+    "scanned marking all files found as config files" do |val|
     @config_files ||= []
     @config_files << val
   end # --config-files
@@ -97,28 +98,6 @@ class FPM::Command < Clamp::Command
     @exclude_pattern ||= []
     @exclude_pattern << val
   end # -x / --exclude
-  option "--post-install", "FILE",
-    "a script to be run after package installation",
-    :attribute_name => :after_install do |val|
-    File.expand_path(val) # Get the full path to the script
-  end # --post-install
-  option "--pre-install", "FILE",
-    "a script to be run before package installation",
-    :attribute_name => :before_install do |val|
-    File.expand_path(val) # Get the full path to the script
-  end # --pre-install
-  # TODO(sissel): Name the flag --post-remove for clarity
-  option "--post-uninstall", "FILE",
-    "a script to be run after package removal",
-    :attribute_name => :after_remove do |val|
-    File.expand_path(val) # Get the full path to the script
-  end # --post-uninstall
-  # TODO(sissel): Name the flag --pre-remove for clarity
-  option "--pre-uninstall", "FILE",
-    "a script to be run before package removal",
-    :attribute_name => :before_remove do |val|
-    File.expand_path(val) # Get the full path to the script
-  end # --pre-uninstall
   option "--description", "DESCRIPTION", "Add a description for this package.",
     :default => "no description"
   option "--url", "URI", "Add a url for this package.",
@@ -126,13 +105,50 @@ class FPM::Command < Clamp::Command
   option "--inputs", "INPUTS_PATH",
     "The path to a file containing a newline-separated list of " \
     "files and dirs to use as input."
+
+  option "--post-install", "FILE",
+    "(DEPRECATED, use --after-install) a script to be run after " \
+    "package installation" do |val|
+    @after_install = File.expand_path(val) # Get the full path to the script
+  end # --post-install (DEPRECATED)
+  option "--pre-install", "FILE",
+    "(DEPRECATED, use --before-install) a script to be run before " \
+    "package installation" do |val|
+    @before_install = File.expand_path(val) # Get the full path to the script
+  end # --pre-install (DEPRECATED)
+  option "--post-uninstall", "FILE",
+      "(DEPRECATED, use --after-remove) a script to be run after " \
+      "package removal" do |val|
+    @after_remove = File.expand_path(val) # Get the full path to the script
+  end # --post-uninstall (DEPRECATED)
+  option "--pre-uninstall", "FILE",
+    "(DEPRECATED, use --before-remove) a script to be run before " \
+    "package removal"  do |val|
+    @before_remove = File.expand_path(val) # Get the full path to the script
+  end # --pre-uninstall (DEPRECATED)
+
+  option "--after-install", "FILE",
+    "a script to be run after package installation" do |val|
+    File.expand_path(val) # Get the full path to the script
+  end # --after-install
+  option "--before-install", "FILE",
+    "a script to be run before package installation" do |val|
+    File.expand_path(val) # Get the full path to the script
+  end # --pre-install
+  option "--after-remove", "FILE",
+    "a script to be run after package removal" do |val|
+    File.expand_path(val) # Get the full path to the script
+  end # --after-remove
+  option "--before-remove", "FILE",
+    "a script to be run before package removal" do |val|
+    File.expand_path(val) # Get the full path to the script
+  end # --before-remove
+
   parameter "[ARGS] ...",
     "Inputs to the source package type. For the 'dir' type, this is the files" \
     " and directories you want to include in the package. For others, like " \
     "'gem', it specifies the packages to download and use as the gem input",
     :attribute_name => :args
-
-  # package-level settings
   def settings
     @settings ||= {}
   end
