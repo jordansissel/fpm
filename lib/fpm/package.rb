@@ -116,6 +116,13 @@ class FPM::Package
       @maintainer = "<#{ENV["USER"]}@#{Socket.gethostname}>"
     end
 
+    # Set attribute defaults based on flags
+    # This allows you to define command line options with default values
+    # that also are obeyed if fpm is used programmatically.
+    self.class.default_attributes do |attribute, value|
+      attributes[attribute] = value
+    end
+
     @name = nil
     @architecture = "native"
     @description = "no description given"
@@ -126,6 +133,19 @@ class FPM::Package
     @category = "default"
     @license = "unknown"
     @vendor = "none"
+   
+    # Iterate over all the options and set defaults
+    if self.class.respond_to?(:declared_options)
+      self.class.declared_options.each do |option|
+        with(option.attribute_name) do |attr|
+          # clamp makes option attributes available as accessor methods
+          # do --foo-bar is available as 'foo_bar'
+          # make these available as package attributes.
+          attr = "#{attr}?" if !respond_to?(attr)
+          input.attributes[attr.to_sym] = send(attr) if respond_to?(attr)
+        end
+      end
+    end
 
     @provides = []
     @conflicts = []
@@ -337,6 +357,15 @@ class FPM::Package
         end
       end
     end # def apply_options
+
+    def default_attributes(&block)
+      return if @options.nil?
+      @options.each do |flag, param, help, options, block|
+        attr = flag.first.gsub(/^-+/, "").gsub(/-/, "_")
+        attr += "?" if param == :flag
+        yield attr.to_sym, options[:default]
+      end
+    end # def default_attributes
 
     # Get the type of this package class.
     #
