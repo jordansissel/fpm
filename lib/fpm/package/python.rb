@@ -8,6 +8,7 @@ require "tmpdir"
 require "json"
 
 class FPM::Package::Python < FPM::Package
+  # Flags '--foo' will be accessable  as attributes[:python_foo]
   option "--bin", "PYTHON_EXECUTABLE",
     "The path to the python executable you wish to run.", :default => "python"
   option "--easyinstall", "EASYINSTALL_EXECUTABLE",
@@ -15,8 +16,20 @@ class FPM::Package::Python < FPM::Package
   option "--pypi", "PYPI_URL",
     "PyPi Server uri for retrieving packages.",
     :default => "http://pypi.python.org/simple"
-  option "--package-prefix", "PREFIX",
-    "Name prefix for python package", :default => "python"
+  option "--package-prefix", "NAMEPREFIX",
+    "(DEPRECATED, use --package-name-prefix) Name to prefix the package " \
+    "name with." do |value|
+    @logger.warn("Using deprecated flag: --package-prefix. Please use " \
+                 "--package-name-prefix")
+    value
+  end
+  option "--package-name-prefix", "PREFIX", "Name to prefix the package " \
+    "name with.", :default => "python"
+  option "--fix-name", :flag, "Should the target package name be prefixed?",
+    :default => true
+  option "--fix-dependencies", :flag, "Should the package dependencies be " \
+    "prefixed?", :default => true
+
 
   def input(package)
     path_to_package = download_if_necessary(package, version)
@@ -54,9 +67,7 @@ class FPM::Package::Python < FPM::Package
     target = build_path(package)
     FileUtils.mkdir(target) unless File.directory?(target)
 
-    # TODO(sissel): support a settable path to 'easy_install'
-    # TODO(sissel): support a tunable for uthe url to pypi
-    safesystem("easy_install", "-i", "http://pypi.python.org/simple",
+    safesystem(attributes[:python_easyinstall], "-i", attributes[:python_pypi],
                "--editable", "-U", "--build-directory", target, want_pkg)
 
     # easy_install will put stuff in @tmpdir/packagename/, so find that:
@@ -69,15 +80,15 @@ class FPM::Package::Python < FPM::Package
   end # def download
 
   def load_package_info(setup_py)
-    if !attributes.include?(:package_name_prefix)
-      attributes[:package_name_prefix] = "python"
+    if !attributes[:python_package_prefix].nil?
+      attributes[:python_package_name_prefix] = attributes[:python_package_prefix]
     end
 
     # Add ./pyfpm/ to the python library path
     pylib = File.expand_path(File.dirname(__FILE__))
-    setup_cmd = "env PYTHONPATH=#{pylib} #{self.attributes[:python_bin]} #{setup_py} --command-packages=pyfpm get_metadata"
+    setup_cmd = "env PYTHONPATH=#{pylib} #{attributes[:python_bin]} #{setup_py} --command-packages=pyfpm get_metadata"
     output = ::Dir.chdir(File.dirname(setup_py)) { `#{setup_cmd}` }
-    puts output
+    @logger.warn("json output from setup.py", :data => output)
     metadata = JSON.parse(output[/\{.*\}/msx])
 
     self.architecture = metadata["architecture"]
@@ -86,11 +97,20 @@ class FPM::Package::Python < FPM::Package
     self.version = metadata["version"]
     self.url = metadata["url"]
 
-    self.name = fix_name(metadata["name"])
+    # name prefixing is optional, if enabled, a name 'foo' will become
+    # 'python-foo' (depending on what the python_package_name_prefix is)
+    if attributes[:python_fix_name?]
+      self.name = fix_name(metadata["name"])
+    else
+      self.name = metadata["name"]
+    end
 
     self.dependencies += metadata["dependencies"].collect do |dep|
       name, cmp, version = dep.split
-      name = fix_name(name)
+      # dependency name prefixing is optional, if enabled, a name 'foo' will
+      # become 'python-foo' (depending on what the python_package_name_prefix
+      # is)
+      name = fix_name(name) if attributes[:python_fix_dependencies?]
       "#{name} #{cmp} #{version}"
     end
   end # def load_package_info
@@ -104,9 +124,9 @@ class FPM::Package::Python < FPM::Package
     if name.start_with?("python")
       # If the python package is called "python-foo" strip the "python-" part while
       # prepending the package name prefix.
-      return [attributes[:package_name_prefix], name.gsub(/^python-/, "")].join("-")
+      return [attributes[:python_package_name_prefix], name.gsub(/^python-/, "")].join("-")
     else
-      return [attributes[:package_name_prefix], name].join("-")
+      return [attributes[:python_package_name_prefix], name].join("-")
     end
   end # def fix_name
 
@@ -116,10 +136,14 @@ class FPM::Package::Python < FPM::Package
     # Some setup.py's assume $PWD == current directory of setup.py, so let's
     # chdir first.
     ::Dir.chdir(dir) do
+
+      # Install with a specific prefix if requested
       if attributes[:prefix]
         safesystem(attributes[:python_bin], "setup.py", "install", "--prefix",
                    File.join(staging_path, attributes[:prefix]))
       else
+        # Otherwise set the root in staging_path
+        # TODO(sissel): there needs to be a way to force 
         safesystem(attributes[:python_bin], "setup.py", "install", "--root",
                    staging_path)
       end
