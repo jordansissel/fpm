@@ -49,4 +49,4 @@ describe FPM::Package::Python, :if => have_python do
       insist { subject.name } == "example"
     end
   end
-end # describe FPM::Package::Deb
+end # describe FPM::Package::Python
