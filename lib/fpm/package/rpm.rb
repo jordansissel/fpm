@@ -67,7 +67,6 @@ class FPM::Package::RPM < FPM::Package
 
     self.architecture = tags[:arch]
     self.category = tags[:group]
-    self.config_files = config_files
     self.description = tags[:description]
     self.epoch = (tags[:epoch] || [nil]).first # for some reason epoch is an array
     self.iteration = tags[:release]
@@ -79,15 +78,25 @@ class FPM::Package::RPM < FPM::Package
     self.version = tags[:version]
 
     # TODO(sissel): Collect {pre,post}{install,uninstall} scripts
+    # The tags are: 
+    #  tags[:prein] => :before_install
+    #  tags[:postin] => :after_install
+    #  tags[:preun] => :before_remove
+    #  tags[:postun] => :after_remove
     # TODO(sissel): put 'trigger scripts' stuff into attributes
-    # TODO(sissel): support provides
-    # TODO(sissel): support conflicts
-    # TODO(sissel): support replaces
 
     self.dependencies += rpm.requires.collect do |name, operator, version|
       [name, operator, version].join(" ")
     end
+    self.conflicts += rpm.conflicts.collect do |name, operator, version|
+      [name, operator, version].join(" ")
+    end
+    self.provides += rpm.provides.collect do |name, operator, version|
+      [name, operator, version].join(" ")
+    end
     #input.replaces += replaces
+    
+    self.config_files += rpm.config_files
 
     # Extract to the staging directory
     rpm.extract(staging_path)
