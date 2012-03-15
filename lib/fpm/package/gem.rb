@@ -12,9 +12,10 @@ require "fpm/util"
 # The following attributes are supported:
 #
 # * :gem_bin_path
-# * :package_name_prefix
+# * :gem_package_name_prefix
 # * :gem_gem
 class FPM::Package::Gem < FPM::Package
+  # Flags '--foo' will be accessable  as attributes[:gem_foo]
   option "--bin-path", "DIRECTORY", "The directory to install gem executables",
     :default => ::Gem::bindir
   option "--package-prefix", "NAMEPREFIX",
