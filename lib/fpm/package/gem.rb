@@ -30,6 +30,10 @@ class FPM::Package::Gem < FPM::Package
   option "--gem", "PATH_TO_GEM",
           "The path to the 'gem' tool (defaults to 'gem' and searches " \
           "your $PATH)", :default => "gem"
+  option "--fix-name", :flag, "Should the target package name be prefixed?",
+    :default => true
+  option "--fix-dependencies", :flag, "Should the package dependencies be " \
+    "prefixed?", :default => true
 
   def input(gem)
     # 'arg'  is the name of the rubygem we should unpack.
@@ -98,7 +102,14 @@ class FPM::Package::Gem < FPM::Package
         attributes[:gem_package_name_prefix] = attributes[:gem_package_prefix]
       end
 
-      self.name = [attributes[:gem_package_name_prefix], spec.name].join("-")
+      # name prefixing is optional, if enabled, a name 'foo' will become
+      # 'rubygem-foo' (depending on what the gem_package_name_prefix is)
+      self.name = spec.name
+      if attributes[:gem_fix_name?]
+        self.name = fix_name(spec.name)
+      end
+
+      #self.name = [attributes[:gem_package_name_prefix], spec.name].join("-")
       self.license = (spec.license or "no license listed in #{File.basename(file)}")
       self.version = spec.version.to_s
       self.vendor = spec.author
@@ -133,7 +144,12 @@ class FPM::Package::Gem < FPM::Package
 
         # Some reqs can be ">= a, < b" versions, let's handle that.
         reqs.to_s.split(/, */).each do |req|
-          self.dependencies << "#{attributes[:gem_package_name_prefix]}-#{dep.name} #{req}"
+          if attributes[:gem_fix_dependencies?] 
+            name = fix_name(dep.name) 
+          else 
+            name = dep.name
+          end
+          self.dependencies << "#{name} #{req}"
         end
       end # runtime_dependencies
     end # ::Gem::Package
@@ -159,5 +175,12 @@ class FPM::Package::Gem < FPM::Package
     safesystem(*args)
   end # def install_to_staging
 
+  
+  # Sanitize package name.
+  # This prefixes the package name with 'rubygem' (but depends on the attribute
+  # :gem_package_name_prefix
+  def fix_name(name)
+    return [attributes[:gem_package_name_prefix], name].join("-")
+  end # def fix_name
   public(:input, :output)
 end # class FPM::Package::Gem
