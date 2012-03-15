@@ -174,7 +174,6 @@ class FPM::Package::Gem < FPM::Package
     args << gem_path
     safesystem(*args)
   end # def install_to_staging
-
   
   # Sanitize package name.
   # This prefixes the package name with 'rubygem' (but depends on the attribute
