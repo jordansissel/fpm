@@ -31,6 +31,9 @@ Requires: <%= req %>
 <% provides.each do |prov| -%>
 Provides: <%= prov %>
 <% end -%>
+<% conflicts.each do |conflict| -%>
+Conflicts: <%= conflict %>
+<% end -%>
 <% replaces.each do |repl| -%>
 <%# The closes equivalent in RPM to "replaces" is "Obsoletes" -%>
 Obsoletes: <%= repl %>
