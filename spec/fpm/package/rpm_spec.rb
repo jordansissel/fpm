@@ -56,6 +56,8 @@ describe FPM::Package::RPM do
         subject.epoch = "5"
         subject.dependencies << "something > 10"
         subject.dependencies << "hello >= 20"
+        subject.conflicts << "bad < 2"
+        subject.provides << "bacon = 1.0"
         subject.output(@target.path)
         @rpm = ::RPM::File.new(@target.path)
 
@@ -94,6 +96,26 @@ describe FPM::Package::RPM do
 
         subject.dependencies.each do |dep|
           insist { requires }.include?(dep)
+        end
+      end
+
+      it "should output a package with the correct conflicts" do
+        # @rpm.requires is an array of [name, op, requires] elements
+        # fpm uses strings here, so convert.
+        conflicts = @rpm.conflicts.collect { |a| a.join(" ") }
+
+        subject.conflicts.each do |dep|
+          insist { conflicts }.include?(dep)
+        end
+      end
+
+      it "should output a package with the correct provides" do
+        # @rpm.requires is an array of [name, op, requires] elements
+        # fpm uses strings here, so convert.
+        provides = @rpm.provides.collect { |a| a.join(" ") }
+
+        subject.provides.each do |dep|
+          insist { provides }.include?(dep)
         end
       end
     end # package attributes
