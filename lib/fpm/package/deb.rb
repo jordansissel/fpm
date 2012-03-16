@@ -69,11 +69,6 @@ class FPM::Package::Deb < FPM::Package
       # Debian calls x86_64 "amd64"
       @architecture = "amd64"
     end
-    if @architecture == "i386"
-      # Debian calls i386 "i686"
-      @architecture = "i686"
-    end
-
     return @architecture
   end # def architecture
 
