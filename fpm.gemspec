@@ -29,7 +29,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency("backports", "2.3.0") # license: MIT
 
   # For reading and writing rpms
-  spec.add_dependency("arr-pm", "~> 0.0.6") # license: Apache 2
+  spec.add_dependency("arr-pm", "~> 0.0.7") # license: Apache 2
 
   # For command-line flag support
   # https://github.com/mdub/clamp/blob/master/README.markdown
