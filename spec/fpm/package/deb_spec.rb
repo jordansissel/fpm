@@ -22,11 +22,6 @@ describe FPM::Package::Deb do
       insist { subject.architecture } == "amd64"
     end
 
-    it "should convert i386 to i686" do
-      subject.architecture = "i386"
-      insist { subject.architecture } == "i686"
-    end
-
     it "should default to native" do
       expected = %x{uname -m}.chomp
       expected = "amd64" if expected == "x86_64"
