@@ -5,6 +5,9 @@ require "fpm/errors"
 require "fpm/util"
 require "fileutils"
 
+# Support for debian packages (.deb files)
+#
+# This class supports both input and output of packages.
 class FPM::Package::Deb < FPM::Package
   # Map of what scripts are named.
   SCRIPT_MAP = {
