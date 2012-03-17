@@ -3,10 +3,20 @@ require "fpm/package"
 require "fileutils"
 require "fpm/util"
 
+# This provides PHP PEAR package support.
+#
+# This provides input support, but not output support.
 class FPM::Package::PEAR < FPM::Package
-  option "--package-prefix", "PREFIX",
-    "Name prefix for python package", :default => "php-pear"
+  option "--package-name-prefix", "PREFIX",
+    "Name prefix for pear package", :default => "php-pear"
 
+  # Input a PEAR package.
+  #
+  # The parameter is a PHP PEAR package name.
+  #
+  # Attributes that affect behavior here:
+  # * :prefix - changes the install root, default is /usr/share
+  # * :pear_package_name_prefix - changes the 
   def input(input_package)
     if !program_in_path?("pear")
       raise ExecutableNotFound.new("pear")
@@ -21,7 +31,7 @@ class FPM::Package::PEAR < FPM::Package
     @logger.info("Fetching package information", :package => input_package)
     pear_cmd = "pear -c #{config} remote-info #{input_package}"
     name = %x{#{pear_cmd} | sed -ne '/^Package\s*/s/^Package\s*//p'}.chomp
-    self.name = "#{attributes[:pear_package_prefix]}-#{name}"
+    self.name = "#{attributes[:pear_package_name_prefix]}-#{name}"
     self.version = %x{#{pear_cmd} | sed -ne '/^Latest\s*/s/^Latest\s*//p'}.chomp
     self.description  = %x{#{pear_cmd} | sed -ne '/^Summary\s*/s/^Summary\s*//p'}.chomp
 

@@ -4,9 +4,28 @@ require "fileutils"
 require "find"
 require "socket"
 
+# A directory package.
+#
+# This class supports both input and output. As a note, 'output' will
+# only emit the files, not any metadata. This is an effective way
+# to extract another package type.
 class FPM::Package::Dir < FPM::Package
   private
 
+  # Add a new path to this package.
+  #
+  # If the path is a directory, it is copied recursively. The behavior
+  # of the copying is modified by the :chdir and :prefix attributes.
+  #
+  # If :prefix is set, the destination path is prefixed with that value.
+  # If :chdir is set, the current directory is changed to that value
+  # during the copy.
+  #
+  # Example: Copy /etc/X11 into this package as /opt/xorg/X11:
+  #
+  #     package.attributes[:prefix] = "/opt/xorg"
+  #     package.attributes[:chdir] = "/etc"
+  #     package.input("X11")
   def input(path)
     @logger.debug("Copying", :input => path)
     @logger["method"] = "input"
@@ -25,9 +44,11 @@ class FPM::Package::Dir < FPM::Package
     self.license = "unknown"
     self.vendor = [ENV["USER"], Socket.gethostname].join("@")
   ensure
+    # Clean up any logger context we added.
     @logger.remove("method")
   end # def input
 
+  # Output this package to the given directory.
   def output(dir)
     dir = File.expand_path(dir)
     ::Dir.chdir(staging_path) do
@@ -60,6 +81,9 @@ class FPM::Package::Dir < FPM::Package
     end
   end # def clone
 
+  # Copy, recursively, from source to destination.
+  #
+  # Files will be hardlinked if possible, but copied otherwise.
   def copy(source, destination)
     directory = File.dirname(destination)
     if !File.directory?(directory)
