@@ -70,14 +70,65 @@ describe FPM::Package do
     end
   end
 
-  describe "#description"
-  describe "#epoch"
-  describe "#iteration"
-  describe "#license"
-  describe "#maintainer"
-  describe "#provides"
-  describe "#replaces"
-  describe "#scripts"
-  describe "#url"
-  describe "#vendor"
+  describe "#description" do
+    it "should be 'no description given' by default" do
+      insist { subject.description } == "no description given"
+    end
+  end
+
+  describe "#epoch" do
+    it "should be nil by default" do
+      insist { subject.epoch }.nil?
+    end
+  end
+
+  describe "#iteration" do
+    it "should be nil by default" do
+      insist { subject.iteration }.nil?
+    end
+  end
+
+  describe "#license" do
+    it "should be 'unknown' by default" do
+      insist { subject.license } == "unknown"
+    end
+  end
+
+  describe "#maintainer" do
+    it "should use user@host by default" do
+      require "socket"
+      insist { subject.maintainer } == "<#{ENV["USER"]}@#{Socket.gethostname}>"
+    end
+  end
+
+  describe "#provides" do
+    it "should be empty by default" do
+      insist { subject.provides }.empty?
+    end
+  end
+
+  describe "#replaces" do
+    it "should be empty by default" do
+      insist { subject.provides }.empty?
+    end
+  end
+
+  describe "#scripts" do
+    # This api for 'scripts' kind of sucks.
+    it "should default to an empty hash" do
+      insist { subject.scripts } == {}
+    end
+  end
+
+  describe "#url" do 
+    it "should be nil by default" do
+      insist { subject.url }.nil?
+    end
+  end
+
+  describe "#vendor" do
+    it "should be 'none' by default" do
+      insist { subject.vendor } == "none"
+    end
+  end
 end # describe FPM::Package
