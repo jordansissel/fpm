@@ -7,6 +7,16 @@ require "fileutils"
 require "tmpdir"
 require "json"
 
+# Support for python packages. 
+#
+# This supports input, but not output.
+#
+# Example:
+#
+#     # Download the django python package:
+#     pkg = FPM::Package::Python.new
+#     pkg.input("Django")
+#
 class FPM::Package::Python < FPM::Package
   # Flags '--foo' will be accessable  as attributes[:python_foo]
   option "--bin", "PYTHON_EXECUTABLE",
@@ -31,6 +41,15 @@ class FPM::Package::Python < FPM::Package
     "prefixed?", :default => true
 
 
+  private
+
+  # Input a package.
+  #
+  # The 'package' can be any of:
+  #
+  # * A name of a package on pypi (ie; easy_install some-package)
+  # * The path to a directory containing setup.py
+  # * The path to a setup.py
   def input(package)
     path_to_package = download_if_necessary(package, version)
 
@@ -49,7 +68,11 @@ class FPM::Package::Python < FPM::Package
     install_to_staging(setup_py)
   end # def input
 
+  # Download the given package if necessary. If version is given, that version
+  # will be downloaded, otherwise the latest is fetched.
   def download_if_necessary(package, version=nil)
+    # TODO(sissel): this should just be a 'download' method, the 'if_necessary'
+    # part should go elsewhere.
     path = package
     # If it's a path, assume local build.
     if File.directory?(path) or (File.exists?(path) and File.basename(path) == "setup.py")
@@ -79,6 +102,7 @@ class FPM::Package::Python < FPM::Package
     return dirs.first
   end # def download
 
+  # Load the package information like name, version, dependencies.
   def load_package_info(setup_py)
     if !attributes[:python_package_prefix].nil?
       attributes[:python_package_name_prefix] = attributes[:python_package_prefix]
@@ -130,6 +154,7 @@ class FPM::Package::Python < FPM::Package
     end
   end # def fix_name
 
+  # Install this package to the staging directory
   def install_to_staging(setup_py)
     dir = File.dirname(setup_py)
 
@@ -149,4 +174,6 @@ class FPM::Package::Python < FPM::Package
       end
     end
   end # def install_to_staging
+
+  public(:input)
 end # class FPM::Package::Python
