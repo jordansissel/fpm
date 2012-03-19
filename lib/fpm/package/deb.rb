@@ -339,13 +339,14 @@ class FPM::Package::Deb < FPM::Package
   # SCRIPT_MAP is a map from the package ':after_install' to debian
   # 'post_install' names
   def write_scripts
-    SCRIPT_MAP.each do |script, filename|
-      next if scripts[script].nil?
+    SCRIPT_MAP.each do |scriptname, filename|
+      next if scripts[scriptname].nil?
 
-      with(control_path(filename)) do |path|
-        FileUtils.cp(scripts[script], filename)
+      with(control_path(filename)) do |controlscript|
+        @logger.debug("Writing control script", :source => filename, :target => controlscript)
+        File.write(controlscript, scripts[scriptname])
         # deb maintainer scripts are required to be executable
-        File.chmod(0755, filename)
+        File.chmod(0755, controlscript)
       end
     end 
   end # def write_scripts
