@@ -128,7 +128,10 @@ class FPM::Package::Gem < FPM::Package
       self.description = description_options.find { |d| !(d.nil? or d.strip.empty?) }
 
       # Upstream rpms seem to do this, might as well share.
-      self.provides << "rubygem(#{self.name})"
+      # TODO(sissel): Figure out how to hint this only to rpm? 
+      # maybe something like attributes[:rpm_provides] for rpm specific stuff?
+      # Or just ignore it all together.
+      #self.provides << "rubygem(#{self.name})"
 
       # By default, we'll usually automatically provide this, but in the case that we are
       # composing multiple packages, it's best to explicitly include it in the provides list.
