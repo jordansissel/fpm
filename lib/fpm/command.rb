@@ -37,7 +37,8 @@ class FPM::Command < Clamp::Command
   option ["-n", "--name"], "NAME", "The name to give to the package"
   option "--verbose", :flag, "Enable verbose output"
   option "--debug", :flag, "Enable debug output"
-  option ["-v", "--version"], "VERSION", "The version to give to the package"
+  option ["-v", "--version"], "VERSION", "The version to give to the package",
+    :default => 1.0
   option "--iteration", "ITERATION",
     "The iteration to give to the package. RPM calls this the 'release'. " \
     "FreeBSD calls it 'PORTREVISION'. Debian calls this 'debian_revision'",
@@ -222,6 +223,17 @@ class FPM::Command < Clamp::Command
       input.input(arg) 
     end
 
+    # If --inputs was specified, read it as a file.
+    if !inputs.nil?
+      if !File.exists?(inputs)
+        @logger.fatal("File given for --inputs does not exist (#{inputs})")
+        return 1
+      end
+
+      # Read each line as a path
+      File.new(inputs, "r").each_line { |path| input.input(path) }
+    end
+
     # Override package settings if they are not the default flag values
     # the below proc essentially does:
     #
@@ -254,10 +266,23 @@ class FPM::Command < Clamp::Command
     input.provides += provides
     input.replaces += replaces
 
-    input.scripts[:before_install] = before_install # --pre-install
-    input.scripts[:after_install] = after_install # --post-install
-    input.scripts[:before_remove] = before_remove # --pre-uninstall
-    input.scripts[:after_remove] = after_remove # --post-uninstall
+    setscript = proc do |scriptname|
+      path = self.send(scriptname)
+      # Skip scripts not set
+      next if path.nil?
+
+      # 'self.send(scriptname) == self.before_install == --before-install
+      if !File.exists?(path)
+        $stderr.puts("No such file (for #{scriptname.to_s}): #{path.inspect}")
+        return 1
+      end
+      input.scripts[scriptname] = File.read(path)
+    end
+
+    setscript.call(:before_install)
+    setscript.call(:after_install)
+    setscript.call(:before_remove)
+    setscript.call(:after_remove)
     
     # Convert to the output type
     output = input.convert(output_class)
