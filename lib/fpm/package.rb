@@ -13,7 +13,7 @@ class FPM::Package
 
   # This class is raised if there's something wrong with a setting in the package.
   class InvalidArgument < StandardError; end
- 
+
   # This class is raised when a file already exists when trying to write.
   class FileAlreadyExists < StandardError
     def to_s
@@ -98,7 +98,7 @@ class FPM::Package
   def initialize
     @logger = Cabin::Channel.get
 
-    # Attributes for this specific package 
+    # Attributes for this specific package
     @attributes = {}
 
     # Reference
@@ -133,7 +133,7 @@ class FPM::Package
     @category = "default"
     @license = "unknown"
     @vendor = "none"
-   
+
     # Iterate over all the options and set defaults
     if self.class.respond_to?(:declared_options)
       self.class.declared_options.each do |option|
@@ -199,7 +199,7 @@ class FPM::Package
   # Add a new source to this package.
   # The exact behavior depends on the kind of package being managed.
   #
-  # For instance: 
+  # For instance:
   #
   # * for FPM::Package::Dir, << expects a path to a directory or files.
   # * for FPM::Package::RPM, << expects a path to an rpm.
@@ -221,7 +221,7 @@ class FPM::Package
   end # def output
 
   def staging_path(path=nil)
-    @staging_path ||= ::Dir.mktmpdir(File.join(::Dir.pwd, "package-#{type}-staging"))
+    @staging_path ||= ::Dir.mktmpdir("package-#{type}-staging", ::Dir.pwd)
 
     if path.nil?
       return @staging_path
@@ -231,7 +231,7 @@ class FPM::Package
   end # def staging_path
 
   def build_path(path=nil)
-    @build_path ||= ::Dir.mktmpdir(File.join(::Dir.pwd, "package-#{type}-build"))
+    @build_path ||= ::Dir.mktmpdir("package-#{type}-build", ::Dir.pwd)
 
     if path.nil?
       return @build_path
@@ -249,14 +249,14 @@ class FPM::Package
   def cleanup_staging
     if File.directory?(staging_path)
       @logger.debug("Cleaning up staging path", :path => staging_path)
-      FileUtils.rm_r(staging_path) 
+      FileUtils.rm_r(staging_path)
     end
   end # def cleanup_staging
 
   def cleanup_build
     if File.directory?(build_path)
       @logger.debug("Cleaning up build path", :path => build_path)
-      FileUtils.rm_r(build_path) 
+      FileUtils.rm_r(build_path)
     end
   end # def cleanup_build
 
@@ -268,11 +268,16 @@ class FPM::Package
     # Find will print the path you're searching first, so skip it and return
     # the rest. Also trim the leading path such that '#{staging_path}/' is removed
     # from the path before returning.
-    return Find.find(staging_path) \
-      .select { |path| path != staging_path } \
-      .collect { |path| path[staging_path.length + 1.. -1] }
+    files = []
+
+    Find.find(staging_path) do |x|
+      files << x
+    end
+
+    files.select { |path| path != staging_path } \
+    .collect { |path| path[staging_path.length + 1.. -1] }
   end # def files
- 
+
   def template(path)
     require "erb"
     template_dir = File.join(File.dirname(__FILE__), "..", "..", "templates")
@@ -309,7 +314,7 @@ class FPM::Package
 
   class << self
     # This method is invoked when subclass occurs.
-    # 
+    #
     # Lets us track all known FPM::Package subclasses
     def inherited(klass)
       @subclasses ||= {}

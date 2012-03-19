@@ -97,7 +97,7 @@ class FPM::Package::RPM < FPM::Package
       [name, operator, version].join(" ")
     end
     #input.replaces += replaces
-    
+
     self.config_files += rpm.config_files
 
     # Extract to the staging directory
@@ -118,7 +118,7 @@ class FPM::Package::RPM < FPM::Package
 
     rpmspec = template("rpm.erb").result(binding)
     specfile = File.join(build_path("SPECS"), "#{name}.spec")
-    File.write(specfile, rpmspec)
+    File.open(specfile, "w"){|f| f.puts rpmspec}
 
     edit_file(specfile) if attributes[:edit?]
 
