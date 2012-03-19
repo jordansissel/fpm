@@ -11,7 +11,6 @@
   - rpm support: Add --rpm-rpmbuild-define for passing a --define flag to rpmbuild
     (via Naresh V)
   - PHP pear source support (fpm -s pear ...) (via Andrew Gaffney)
-  TODO(sissel): pull/163, make sure --post-process is supported
 
 0.3.10 (Oct 10, 2011)
   - Allow taking a list of files/inputs on stdin with '-' or with the --inputs
