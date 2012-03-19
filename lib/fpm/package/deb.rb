@@ -17,7 +17,7 @@ class FPM::Package::Deb < FPM::Package
     :after_remove       => "postrm",
   }
 
-  option "--ignore-iteration-in-dependencies", :flag, 
+  option "--ignore-iteration-in-dependencies", :flag,
             "For '=' (equal) dependencies, allow iterations on the specified " \
             "version. Default is to be specific. This option allows the same " \
             "version of a package but any iteration is permitted"
@@ -33,13 +33,13 @@ class FPM::Package::Deb < FPM::Package
     "Custom version of the Debian control file." do |control|
     File.expand_path(control)
   end
-    
+
   # Add custom debconf config file
   option "--config", "SCRIPTPATH",
     "Add SCRIPTPATH as debconf config file." do |config|
      File.expand_path(config)
   end
-    
+
   # Add custom debconf templates file
   option "--templates", "FILEPATH",
     "Add FILEPATH as debconf templates file." do |templates|
@@ -111,7 +111,7 @@ class FPM::Package::Deb < FPM::Package
 
       control = File.read(File.join(path, "control"))
 
-      parse = lambda do |field| 
+      parse = lambda do |field|
         value = control[/^#{field.capitalize}: .*/]
         if value.nil?
           return nil
@@ -119,7 +119,7 @@ class FPM::Package::Deb < FPM::Package
           value.split(": ",2).last
         end
       end
-      
+
       # Parse 'epoch:version-iteration' in the version string
       version_re = /^(?:([0-9]+):)?(.+?)(?:-(.*))?$/
       m = version_re.match(parse.call("Version"))
@@ -167,7 +167,7 @@ class FPM::Package::Deb < FPM::Package
       m = dep_re.match(dep)
       if m
         name, op, version = m.captures
-        # deb uses ">>" and "<<" for greater and less than respectively. 
+        # deb uses ">>" and "<<" for greater and less than respectively.
         # fpm wants just ">" and "<"
         op = "<" if op == "<<"
         op = ">" if op == ">>"
@@ -190,7 +190,7 @@ class FPM::Package::Deb < FPM::Package
     raise FileAlreadyExists.new(output_path) if File.exists?(output_path)
 
     # create 'debian-binary' file, required to make a valid debian package
-    File.write(build_path("debian-binary"), "2.0\n")
+    File.open(build_path("debian-binary"), "w") {|f| f.puts "2.0\n"}
 
     write_control_tarball
 
@@ -320,7 +320,7 @@ class FPM::Package::Deb < FPM::Package
 
     # Write the control file
     with(control_path("control")) do |control|
-      if attributes["deb-custom-control"] 
+      if attributes["deb-custom-control"]
         @logger.debug("Using '#{attributes["deb-custom-control"]}' template for the control file")
         control_data = File.read(attributes["deb-custom-control"])
       else
@@ -329,7 +329,7 @@ class FPM::Package::Deb < FPM::Package
       end
 
       @logger.debug("Writing control file", :path => control)
-      File.write(control, control_data)
+      File.open(control, "w") {|f| f.puts control_data}
       edit_file(control) if attributes[:edit?]
     end
   end # def write_control
@@ -344,11 +344,11 @@ class FPM::Package::Deb < FPM::Package
 
       with(control_path(filename)) do |controlscript|
         @logger.debug("Writing control script", :source => filename, :target => controlscript)
-        File.write(controlscript, scripts[scriptname])
+        File.open(controlscript, "w"){|f| f.puts scripts[scriptname]}
         # deb maintainer scripts are required to be executable
         File.chmod(0755, controlscript)
       end
-    end 
+    end
   end # def write_scripts
 
   def write_conffiles

@@ -31,7 +31,7 @@ describe FPM::Package::RPM do
       insist { subject.architecture } == expected
     end
   end
-  
+
   describe "#to_s" do
     it "should have a default output usable as a filename" do
       subject.name = "name"
@@ -166,7 +166,7 @@ describe FPM::Package::RPM do
       end # after
 
       it "should permit spaces in filenames (issue #164)" do
-        File.write(subject.staging_path("file with space"), "Hello")
+        File.open(subject.stagin_path("file with space"), "w"){|f| f.puts "Hello"}
 
         # This will raise an exception if rpmbuild fails.
         subject.output(@target.path)
