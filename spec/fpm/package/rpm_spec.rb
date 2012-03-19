@@ -58,13 +58,17 @@ describe FPM::Package::RPM do
         subject.dependencies << "hello >= 20"
         subject.conflicts << "bad < 2"
         subject.provides << "bacon = 1.0"
-        subject.output(@target.path)
 
         # TODO(sissel): This api sucks, yo.
         subject.scripts[:before_install] = "example before_install"
         subject.scripts[:after_install] = "example after_install"
         subject.scripts[:before_remove] = "example before_remove"
         subject.scripts[:after_remove] = "example after_remove"
+
+        # Write the rpm out
+        subject.output(@target.path)
+
+        # Read the rpm
         @rpm = ::RPM::File.new(@target.path)
 
         @rpmtags = {}
