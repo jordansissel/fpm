@@ -59,6 +59,12 @@ describe FPM::Package::RPM do
         subject.conflicts << "bad < 2"
         subject.provides << "bacon = 1.0"
         subject.output(@target.path)
+
+        # TODO(sissel): This api sucks, yo.
+        subject.scripts[:before_install] = "example before_install"
+        subject.scripts[:after_install] = "example after_install"
+        subject.scripts[:before_remove] = "example before_remove"
+        subject.scripts[:after_remove] = "example after_remove"
         @rpm = ::RPM::File.new(@target.path)
 
         @rpmtags = {}
@@ -118,9 +124,29 @@ describe FPM::Package::RPM do
           insist { provides }.include?(dep)
         end
       end
+
+      it "should have the correct 'preun' script" do
+        insist { @rpm.tags[:preun] } == "example before_remove"
+        insist { @rpm.tags[:preunprog] } == "/bin/sh"
+      end
+
+      it "should have the correct 'postun' script" do
+        insist { @rpm.tags[:postun] } == "example after_remove"
+        insist { @rpm.tags[:postunprog] } == "/bin/sh"
+      end
+
+      it "should have the correct 'prein' script" do
+        insist { @rpm.tags[:prein] } == "example before_install"
+        insist { @rpm.tags[:preinprog] } == "/bin/sh"
+      end
+
+      it "should have the correct 'postin' script" do
+        insist { @rpm.tags[:postin] } == "example after_install"
+        insist { @rpm.tags[:postinprog] } == "/bin/sh"
+      end
     end # package attributes
 
-    describe "regressions should not occur"
+    describe "regressions should not occur" do
       before :each do
         @target = Tempfile.new("fpm-test-rpm")
         subject.name = "name"
@@ -135,12 +161,12 @@ describe FPM::Package::RPM do
         @target.delete
       end # after
 
-    it "should permit spaces in filenames (issue #164)" do
-      File.write(subject.staging_path("file with space"), "Hello")
+      it "should permit spaces in filenames (issue #164)" do
+        File.write(subject.staging_path("file with space"), "Hello")
 
-      # This will raise an exception if rpmbuild fails.
-      subject.output(@target.path)
-    end
-
+        # This will raise an exception if rpmbuild fails.
+        subject.output(@target.path)
+      end
+    end # regression stuff
   end # #output
 end # describe FPM::Package::RPM
