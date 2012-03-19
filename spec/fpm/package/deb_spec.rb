@@ -50,7 +50,7 @@ describe FPM::Package::Deb do
     end
 
     it "should lowercase the package name" do
-      insist { subject.name } !~ /[A-Z]/
+      insist { subject.name } == subject.name.downcase
     end
 
     it "should replace underscores with dashes in the package name" do
