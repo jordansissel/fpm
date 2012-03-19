@@ -4,6 +4,9 @@
     * Please let me know if something broke!
   - Now has an API (see examples/api directory)
   - Also has a proper test suite
+  - Updated the rpm spec generator to disable all the ways I've found rpmbuild
+    to molest packages. This means that fpm-generated rpms will no longer
+    strip libraries, move files around, randomly mutate jar files, etc.
   - Add --license and --vendor settings (via Pieter Loubser)
   - python support: try to name python packages sanely. Some pypi packages
     are literally called 'python-foo' so make sure we generate packages named
