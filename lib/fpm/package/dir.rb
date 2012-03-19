@@ -74,7 +74,7 @@ class FPM::Package::Dir < FPM::Package
   def clone(source, destination)
     # Copy all files from 'path' into staging_path
 
-    Find.find(source).each do |file|
+    Find.find(source) do |file|
       next if source == file && File.directory?(file) # ignore the directory itself
       target = File.join(destination, file)
       copy(file, target)
