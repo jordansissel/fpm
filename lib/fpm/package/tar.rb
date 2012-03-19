@@ -4,7 +4,12 @@ require "fpm/util"
 require "fileutils"
 require "fpm/package/dir"
 
+# Use a tarball as a package.
+#
+# This provides no metadata. Both input and output are supported.
 class FPM::Package::Tar < FPM::Package
+
+  # Input a tarball. Compressed tarballs should be OK.
   def input(input_path)
     # use part of the filename as the package name
     self.name = File.basename(input_path).split(".").first
@@ -37,6 +42,10 @@ class FPM::Package::Tar < FPM::Package
     dir.cleanup_build
   end # def input
 
+  # Output a tarball.
+  #
+  # If the output path ends predictably (like in .tar.gz) it will try to obey
+  # the compression type.
   def output(output_path)
     # Unpack the tarball to the staging path
     args = ["-cf", output_path, "-C", staging_path, "."]
@@ -47,6 +56,7 @@ class FPM::Package::Tar < FPM::Package
     safesystem("tar", *args)
   end # def output
 
+  # Generate the proper tar flags based on the path name.
   def tar_compression_flag(path)
     case path
       when /\.tar\.bz2$/
