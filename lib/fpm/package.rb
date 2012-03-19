@@ -1,6 +1,7 @@
 require "fpm/namespace" # local
 require "fpm/util" # local
 require "tmpdir" # stdlib
+require "backports" # gem 'backports'
 require "socket" # stdlib, for Socket.gethostname
 require "shellwords" # stdlib, for Shellwords.escape
 require "cabin" # gem "cabin"
@@ -222,7 +223,7 @@ class FPM::Package
   end # def output
 
   def staging_path(path=nil)
-    @staging_path ||= ::Dir.mktmpdir(File.join(::Dir.pwd, "package-#{type}-staging"))
+    @staging_path ||= ::Dir.mktmpdir("package-#{type}-staging", ::Dir.pwd)
 
     if path.nil?
       return @staging_path
@@ -232,7 +233,7 @@ class FPM::Package
   end # def staging_path
 
   def build_path(path=nil)
-    @build_path ||= ::Dir.mktmpdir(File.join(::Dir.pwd, "package-#{type}-build"))
+    @build_path ||= ::Dir.mktmpdir("package-#{type}-build", ::Dir.pwd)
 
     if path.nil?
       return @build_path
@@ -269,7 +270,10 @@ class FPM::Package
     # Find will print the path you're searching first, so skip it and return
     # the rest. Also trim the leading path such that '#{staging_path}/' is removed
     # from the path before returning.
-    return Find.find(staging_path) \
+    #
+    # Wrapping Find.find in an Enumerator is required for sane operation in ruby 1.8.7,
+    # but requires the 'backports' gem (which is used in other places in fpm)
+    return Enumerator.new { |y| Find.find(staging_path) { |path| y << path } } \
       .select { |path| path != staging_path } \
       .collect { |path| path[staging_path.length + 1.. -1] }
   end # def files
