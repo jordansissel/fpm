@@ -35,12 +35,12 @@ Gem::Specification.new do |spec|
   # https://github.com/mdub/clamp/blob/master/README.markdown
   spec.add_dependency("clamp") # license: MIT
 
-  # For simple shell/file hackery in the tests.
+  # For simple shell/file hackery in the tests. 
   # http://rush.heroku.com/rdoc/
   spec.add_development_dependency("rush") # license: MIT
 
-  spec.add_development_dependency("rspec") # license: ???
-  spec.add_development_dependency("insist", "~> 0.0.3") # license: ???
+  spec.add_development_dependency("rspec") # license: MIT (according to wikipedia)
+  spec.add_development_dependency("insist", "~> 0.0.5") # license: ???
 
   spec.files = files
   spec.require_paths << "lib"
