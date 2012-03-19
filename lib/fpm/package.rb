@@ -16,6 +16,7 @@ class FPM::Package
  
   # This class is raised when a file already exists when trying to write.
   class FileAlreadyExists < StandardError
+    # Get a human-readable error message
     def to_s
       return "File already exists, refusing to continue: #{super}"
     end # def to_s
