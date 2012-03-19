@@ -77,12 +77,14 @@ class FPM::Package::RPM < FPM::Package
     self.vendor = tags[:vendor]
     self.version = tags[:version]
 
-    # TODO(sissel): Collect {pre,post}{install,uninstall} scripts
-    # The tags are: 
-    #  tags[:prein] => :before_install
-    #  tags[:postin] => :after_install
-    #  tags[:preun] => :before_remove
-    #  tags[:postun] => :after_remove
+    self.scripts[:before_install] = tags[:prein]
+    self.scripts[:after_install] = tags[:postin]
+    self.scripts[:before_remove] = tags[:preun]
+    self.scripts[:after_remove] = tags[:postun]
+    # TODO(sissel): prefix these scripts above with a shebang line if there isn't one?
+    # Also taking into account the value of tags[preinprog] etc, something like:
+    #    #!#{tags[:preinprog]}
+    #    #{tags[prein]}
     # TODO(sissel): put 'trigger scripts' stuff into attributes
 
     self.dependencies += rpm.requires.collect do |name, operator, version|
