@@ -66,24 +66,24 @@ fi
 %clean
 # noop
 
-<% if scripts["pre-install"] -%>
+<% if scripts[:before_install] -%>
 %pre
-<%= File.read(scripts["pre-install"]) %>
+<%= scripts[:before_install] %>
 
 <% end -%>
-<% if scripts["post-install"] -%>
+<% if scripts[:after_install] -%>
 %post
-<%= File.read(scripts["post-install"]) %>
+<%= scripts[:after_install] %>
 
 <% end -%>
-<% if scripts["pre-uninstall"] -%>
+<% if scripts[:before_remove] -%>
 %preun
-<%= File.read(scripts["pre-uninstall"]) %>
+<%= scripts[:before_remove] %>
 
 <% end -%>
-<% if scripts["post-uninstall"] -%>
+<% if scripts[:after_remove] -%>
 %postun
-<%= File.read(scripts["post-uninstall"]) %>
+<%= scripts[:after_remove] %>
 
 <% end -%>
 %files
