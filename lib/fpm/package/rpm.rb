@@ -121,11 +121,6 @@ class FPM::Package::RPM < FPM::Package
     edit_file(specfile) if attributes[:edit?]
 
     args << specfile
-    #if defines.empty?
-      #args = prefixargs + spec
-    #else
-      #args = prefixargs + defines.collect{ |define| ["--define", define] }.flatten + spec
-    #end
 
     @logger.info("Running rpmbuild", :args => args)
     safesystem(*args)
