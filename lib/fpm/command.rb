@@ -150,9 +150,6 @@ class FPM::Command < Clamp::Command
     " and directories you want to include in the package. For others, like " \
     "'gem', it specifies the packages to download and use as the gem input",
     :attribute_name => :args
-  def settings
-    @settings ||= {}
-  end
 
   FPM::Package.types.each do |name, klass|
     klass.apply_options(self)
