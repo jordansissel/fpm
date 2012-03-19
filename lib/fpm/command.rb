@@ -289,7 +289,13 @@ class FPM::Command < Clamp::Command
 
     # Write the output somewhere, package can be nil if no --package is specified, 
     # and that's OK.
-    output.output(output.to_s(package))
+    begin
+      output.output(output.to_s(package))
+    rescue FPM::Package::FileAlreadyExists => e
+      @logger.fatal(e.message)
+      return 1
+    end
+
     return 0
   ensure
     input.cleanup unless input.nil?
