@@ -223,7 +223,7 @@ class FPM::Package
   end # def output
 
   def staging_path(path=nil)
-    @staging_path ||= ::Dir.mktmpdir("package-#{type}-staging", ::Dir.pwd)
+    @staging_path ||= ::Dir.mktmpdir("package-#{type}-staging") #, ::Dir.pwd)
 
     if path.nil?
       return @staging_path
@@ -233,7 +233,7 @@ class FPM::Package
   end # def staging_path
 
   def build_path(path=nil)
-    @build_path ||= ::Dir.mktmpdir("package-#{type}-build", ::Dir.pwd)
+    @build_path ||= ::Dir.mktmpdir("package-#{type}-build") #, ::Dir.pwd)
 
     if path.nil?
       return @build_path
