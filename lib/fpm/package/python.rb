@@ -40,6 +40,13 @@ class FPM::Package::Python < FPM::Package
   option "--fix-dependencies", :flag, "Should the package dependencies be " \
     "prefixed?", :default => true
 
+  option "--install-bin", "BIN_PATH", "The path to where python scripts " \
+    "should be installed to.", :default => "/usr/bin"
+  option "--install-lib", "LIB_PATH", "The path to where python libs " \
+    "should be installed to (default depends on your python installation). " \
+    "Want to what your target platform is using? Run this: " \
+    "python -c 'from distutils.sysconfig import get_python_lib; " \
+    "print get_python_lib()'"
 
   private
 
@@ -156,22 +163,29 @@ class FPM::Package::Python < FPM::Package
 
   # Install this package to the staging directory
   def install_to_staging(setup_py)
-    dir = File.dirname(setup_py)
+    project_dir = File.dirname(setup_py)
 
+    prefix = "/"
+    prefix = attributes[:prefix] unless attributes[:prefix].nil?
+    
+    # Set the default install library location (like
+    # /usr/lib/python2.7/site-packages) if it is not given
+    if attributes[:python_install_lib].nil?
+      # Ask python where libraries are installed to.
+      # This line is unusually long because I don't have a shorter way to express it.
+      attributes[:python_install_lib] = %x{
+        #{attributes[:python_bin]} -c 'from distutils.sysconfig import get_python_lib; print get_python_lib()'
+      }.chomp
+      @logger.info("Setting default :python_install_lib attribute",
+                   :value => attributes[:python_install_lib])
+    end
     # Some setup.py's assume $PWD == current directory of setup.py, so let's
     # chdir first.
-    ::Dir.chdir(dir) do
-
-      # Install with a specific prefix if requested
-      if attributes[:prefix]
-        safesystem(attributes[:python_bin], "setup.py", "install", "--prefix",
-                   File.join(staging_path, attributes[:prefix]))
-      else
-        # Otherwise set the root in staging_path
-        # TODO(sissel): there needs to be a way to force 
-        safesystem(attributes[:python_bin], "setup.py", "install", "--root",
-                   staging_path)
-      end
+    ::Dir.chdir(project_dir) do
+      safesystem(attributes[:python_bin], "setup.py", "install",
+                 "--root", staging_path, 
+                 "--install-lib", File.join(prefix, attributes[:python_install_lib]),
+                 "--install-scripts", File.join(prefix, attributes[:python_install_bin]))
     end
   end # def install_to_staging
 
