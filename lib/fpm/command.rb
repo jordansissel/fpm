@@ -205,17 +205,29 @@ class FPM::Command < Clamp::Command
     # They are stored in 'settings' as :gem_foo_bar.
     input.attributes ||= {}
 
-    # Iterate over all the options
+    # Iterate over all the options and set their values in the package's
+    # attribute hash.
+    #
+    # Things like '--foo-bar' will be available as pkg.attributes[:foo_bar]
     self.class.declared_options.each do |option|
       with(option.attribute_name) do |attr|
+        next if attr == "help"
         # clamp makes option attributes available as accessor methods
-        # do --foo-bar is available as 'foo_bar'
-        # make these available as package attributes.
-        attr = "#{attr}?" if !respond_to?(attr)
+        # --foo-bar is available as 'foo_bar'. Put these in the package
+        # attributes hash. (See FPM::Package#attributes)
+        # 
+        # In the case of 'flag' options, the accessor is actually 'foo_bar?'
+        # instead of just 'foo_bar'
+        attr = "#{attr}?" if !respond_to?(attr) # handle boolean :flag cases
         input.attributes[attr.to_sym] = send(attr) if respond_to?(attr)
+        @logger.debug("Setting attribute", attr.to_sym => send(attr))
       end
     end
 
+    # Each remaining command line parameter is used as an 'input' argument.
+    # For directories, this means paths. For things like gem and python, this
+    # means package name or paths to the packages (rails, foo-1.0.gem, django,
+    # bar/setup.py, etc)
     args.each do |arg| 
       input.input(arg) 
     end
@@ -228,7 +240,10 @@ class FPM::Command < Clamp::Command
       end
 
       # Read each line as a path
-      File.new(inputs, "r").each_line { |path| input.input(path) }
+      File.new(inputs, "r").each_line do |line| 
+        # Handle each line as if it were an argument
+        input.input(line)
+      end
     end
 
     # Override package settings if they are not the default flag values
