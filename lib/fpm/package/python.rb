@@ -117,8 +117,17 @@ class FPM::Package::Python < FPM::Package
 
     # Add ./pyfpm/ to the python library path
     pylib = File.expand_path(File.dirname(__FILE__))
-    setup_cmd = "env PYTHONPATH=#{pylib} #{attributes[:python_bin]} #{setup_py} --command-packages=pyfpm get_metadata"
-    output = ::Dir.chdir(File.dirname(setup_py)) { `#{setup_cmd}` }
+
+    # chdir to the directory holding setup.py because some python setup.py's assume that you are
+    # in the same directory.
+    output = ::Dir.chdir(File.dirname(setup_py)) do
+      setup_cmd = "env PYTHONPATH=#{pylib} #{attributes[:python_bin]} " \
+        "setup.py --command-packages=pyfpm get_metadata"
+      # Capture the output, which will be JSON metadata describing this python
+      # package. See fpm/lib/fpm/package/pyfpm/get_metadata.py for more
+      # details.
+      `#{setup_cmd}`
+    end
     @logger.warn("json output from setup.py", :data => output)
     metadata = JSON.parse(output[/\{.*\}/msx])
 
