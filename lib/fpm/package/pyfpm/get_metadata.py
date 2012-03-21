@@ -77,14 +77,11 @@ class get_metadata(Command):
         groups = m.groups()
         name, cond, version = groups[0:3]
         if groups[3] is not None:
-          final_deps.append("%s %s %s" % (groups[0],
-                                          self._replace_deprecated(groups[3]),
-                                          groups[4]))
+          final_deps.append("%s %s %s" % (groups[0], groups[3], groups[4]))
+        # end if
       # end if
 
-      final_deps.append("%s %s %s" % (name,
-                                      self._replace_deprecated(cond),
-                                      version))
+      final_deps.append("%s %s %s" % (name, cond, version))
     # end for i in dependencies
 
     data["dependencies"] = final_deps
@@ -95,11 +92,5 @@ class get_metadata(Command):
     except AttributeError, e:
       # For Python 2.5 and Debian's python-json
       print json.write(data)
-
   # def run
-
-  def _replace_deprecated(self, sign):
-    """Replace deprecated operators"""
-    return {'<': '<<', '>': '>>'}.get(sign, sign)
-
 # class list_dependencies
