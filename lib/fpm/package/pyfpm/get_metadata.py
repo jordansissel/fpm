@@ -100,6 +100,6 @@ class get_metadata(Command):
 
   def _replace_deprecated(self, sign):
     """Replace deprecated operators"""
-    return {'<': '<<', '>': '>>'}.get(sign, sign)
+    return {'<<': '<', '>>': '>'}.get(sign, sign)
 
 # class list_dependencies
