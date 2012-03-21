@@ -65,6 +65,7 @@ class FPM::Package::Python < FPM::Package
     else
       setup_py = path_to_package
     end
+    setup_py = File.expand_path(setup_py)
 
     if !File.exists?(setup_py)
       @logger.error("Could not find 'setup.py'", :path => setup_py)
