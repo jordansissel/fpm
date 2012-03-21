@@ -1,3 +1,16 @@
+0.4.2 (March 21, 2012)
+  - Set default temporary directory to /tmp 
+    (https://github.com/jordansissel/fpm/issues/174)
+  - Improve symlink handling (patch by Aleix Conchillo Flaqué, pull/177))
+  - Python package support changes (thanks to input by Luke Macken):
+    * New flag: --python-install-bin. Sets the location for python package
+      scripts (default: /usr/bin)
+    * New flag: --python-install-lib. Sets the location for the python
+      package to install libs to, default varies by system. Usually something
+      like /usr/lib/python2.7/site-packages.
+    * Fix up --prefix support
+    * Improve staged package installation
+
 0.4.1 (March 19, 2012)
   - Fix fpm so it works in ruby 1.8 again.
     Tests run, and passing:
