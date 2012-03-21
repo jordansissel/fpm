@@ -91,16 +91,17 @@ class FPM::Package::Dir < FPM::Package
     end
 
     # Create a directory if this path is a directory
-    if File.directory?(source)
+    if File.directory?(source) and !File.symlink?(source)
       @logger.debug("Creating", :directory => destination)
       FileUtils.mkdir(destination)
     else
       # Otherwise try copying the file.
-      @logger.debug("Copying", :source => source, :destination => destination)
       begin
+        @logger.debug("Linking", :source => source, :destination => destination)
         File.link(source, destination)
       rescue Errno::EXDEV
         # Hardlink attempt failed, copy it instead
+        @logger.debug("Copying", :source => source, :destination => destination)
         FileUtils.copy(source, destination)
       end
     end
