@@ -333,7 +333,13 @@ class FPM::Package
         flag = [flag]
       end
 
-      flag = flag.collect { |f| "--#{type}-#{f.gsub(/^--/, "")}" }
+      if param == :flag
+        # Automatically make 'flag' (boolean) options tunable with '--[no-]...'
+        flag = flag.collect { |f| "--[no-]#{type}-#{f.gsub(/^--/, "")}" }
+      else
+        flag = flag.collect { |f| "--#{type}-#{f.gsub(/^--/, "")}" }
+      end
+
       help = "(#{type} only) #{help}"
       @options << [flag, param, help, options, block]
     end # def options
@@ -353,13 +359,7 @@ class FPM::Package
       @options ||= []
       @options.each do |args|
         flag, param, help, options, block = args
-        clampcommand.option(flag, param, help, options) do |value|
-          # This is run in the scope of FPM::Command
-          value = block.call(value) unless block.nil?
-          # flag is an array, use the first flag as the attribute name
-          attr = flag.first[2..-1].gsub(/-+/, "_").to_sym
-          settings[attr] = value
-        end
+        clampcommand.option(flag, param, help, options, &block)
       end
     end # def apply_options
 
