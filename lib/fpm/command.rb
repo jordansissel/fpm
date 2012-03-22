@@ -277,7 +277,8 @@ class FPM::Command < Clamp::Command
     input.dependencies += dependencies
     input.provides += provides
     input.replaces += replaces
-
+    input.config_files += config_files
+    
     setscript = proc do |scriptname|
       path = self.send(scriptname)
       # Skip scripts not set
