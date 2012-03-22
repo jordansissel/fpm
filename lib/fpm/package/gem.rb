@@ -172,6 +172,7 @@ class FPM::Package::Gem < FPM::Package
     if attributes[:gem_bin_path]
       bin_path = File.join(staging_path, attributes[:gem_bin_path])
       args += ["--bindir", bin_path]
+      ::FileUtils.mkdir_p(bin_path)
     end
 
     args << gem_path

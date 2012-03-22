@@ -310,7 +310,7 @@ class FPM::Package::Deb < FPM::Package
       @logger.info("No deb_installed_size set, calculating now.")
       total = 0
       Find.find(staging_path) do |path|
-        stat = File.stat(path)
+        stat = File.lstat(path)
         next if stat.directory?
         total += stat.size
       end
