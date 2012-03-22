@@ -102,7 +102,7 @@ class FPM::Package::Dir < FPM::Package
       rescue Errno::EXDEV
         # Hardlink attempt failed, copy it instead
         @logger.debug("Copying", :source => source, :destination => destination)
-        FileUtils.copy(source, destination)
+        FileUtils.copy_entry(source, destination)
       end
     end
   end # def copy
