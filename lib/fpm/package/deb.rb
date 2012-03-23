@@ -25,7 +25,7 @@ class FPM::Package::Deb < FPM::Package
             "version of a package but any iteration is permitted"
 
   option "--pre-depends", "DEPENDENCY",
-    "Add DEPENDENCY as a Pre-Depends" do |val|
+    "Add DEPENDENCY as a Pre-Depends" do |dep|
     @pre_depends ||= []
     @pre_depends << dep
   end
