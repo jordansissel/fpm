@@ -287,6 +287,7 @@ class FPM::Package
     # Wrapping Find.find in an Enumerator is required for sane operation in ruby 1.8.7,
     # but requires the 'backports' gem (which is used in other places in fpm)
     return Enumerator.new { |y| Find.find(staging_path) { |path| y << path } } \
+      .select { |path| path != staging_path } \
       .select { |path| is_leaf.call(path) } \
       .collect { |path| path[staging_path.length + 1.. -1] }
   end # def files
