@@ -94,10 +94,11 @@ fi
 <% end -%>
 <%# list only files, not directories? -%>
 <%= 
-  # Reject directories or config files already listed, then prefix files with
-  # "/", then make sure paths with spaces are quoted. I hate rpm so much.
-  files.reject { |f| x = File.join(staging_path, f); File.directory?(x) && !File.symlink?(x) } \
-    .collect { |f| "/#{f}" } \
+  # Reject config files already listed or parent directories, then prefix files
+  # with "/", then make sure paths with spaces are quoted. I hate rpm so much.
+
+  # 'files' here is the method FPM::Package#files.
+  files.collect { |f| "/#{f}" } \
     .reject { |f| config_files.include?(f) } \
     .collect { |f| f[/\s/] and "\"#{f}\"" or f } \
     .join("\n") 
