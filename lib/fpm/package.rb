@@ -266,15 +266,28 @@ class FPM::Package
   #
   # The paths will all be relative to staging_path and will not include that
   # path.
+  # 
+  # This method will emit 'leaf' paths. Files, symlinks, and other file-like
+  # things are emitted. Intermediate directories are ignored, but
+  # empty directories are emitted.
   def files
-    # Find will print the path you're searching first, so skip it and return
-    # the rest. Also trim the leading path such that '#{staging_path}/' is removed
-    # from the path before returning.
+    is_leaf = lambda do |path|
+      # True if this is a file/symlink/etc, but not a plain directory
+      return true if !(File.directory?(path) and !File.symlink?(path))
+      # Empty directories are leafs as well.
+      return true if ::Dir.entries(path).sort == [".", ".."]
+      # False otherwise (non-empty directory, etc)
+      return false
+    end # is_leaf
+
+    # Find all leaf-like paths (files, symlink, empty directories, etc)
+    # Also trim the leading path such that '#{staging_path}/' is removed from
+    # the path before returning.
     #
     # Wrapping Find.find in an Enumerator is required for sane operation in ruby 1.8.7,
     # but requires the 'backports' gem (which is used in other places in fpm)
     return Enumerator.new { |y| Find.find(staging_path) { |path| y << path } } \
-      .select { |path| path != staging_path } \
+      .select { |path| is_leaf.call(path) } \
       .collect { |path| path[staging_path.length + 1.. -1] }
   end # def files
  
