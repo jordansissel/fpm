@@ -295,6 +295,9 @@ class FPM::Command < Clamp::Command
     setscript.call(:after_install)
     setscript.call(:before_remove)
     setscript.call(:after_remove)
+
+    # Remove excluded paths
+    input.exclude(@exclude_pattern)
     
     # Convert to the output type
     output = input.convert(output_class)
