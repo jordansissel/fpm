@@ -311,6 +311,24 @@ class FPM::Package
     end
   end # def edit_file
 
+  def exclude(paths)
+    # This method removes excluded files from the staging_path. Subclasses can
+    # remove the files during the input phase rather than deleting them here
+    if @attributes.include?(:prefix)
+      installdir = staging_path(@attributes[:prefix])
+    else
+      installdir = staging_path
+    end
+
+    paths.each do |path|
+      path = File.join(installdir, path)
+      ::Dir.glob(path) do |rmpath|
+        @logger.debug("Removing", :path => rmpath)
+        FileUtils.remove_entry_secure(rmpath)
+      end
+    end
+  end # def exclude
+
 
   class << self
     # This method is invoked when subclass occurs.
@@ -381,7 +399,7 @@ class FPM::Package
   end # class << self
 
   # General public API
-  public(:type, :initialize, :convert, :input, :output, :to_s, :cleanup, :files)
+  public(:type, :initialize, :convert, :input, :output, :to_s, :cleanup, :files, :exclude)
 
   # Package internal public api
   public(:cleanup_staging, :cleanup_build, :staging_path, :converted_from,
