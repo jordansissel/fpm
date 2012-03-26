@@ -93,7 +93,9 @@ class FPM::Package::Dir < FPM::Package
     # Create a directory if this path is a directory
     if File.directory?(source) and !File.symlink?(source)
       @logger.debug("Creating", :directory => destination)
-      FileUtils.mkdir(destination)
+      if !File.directory?(destination)
+        FileUtils.mkdir(destination)
+      end
     else
       # Otherwise try copying the file.
       begin
