@@ -74,16 +74,16 @@ class FPM::Package::Dir < FPM::Package
   def clone(source, destination)
     # Copy all files from 'path' into staging_path
 
-    Find.find(source) do |file|
-      next if source == file && File.directory?(file) # ignore the directory itself
-      target = File.join(destination, file)
-      copy(file, target)
+    Find.find(source) do |path|
+      target = File.join(destination, path)
+      copy(path, target)
     end
   end # def clone
 
-  # Copy, recursively, from source to destination.
+  # Copy a path.
   #
   # Files will be hardlinked if possible, but copied otherwise.
+  # Symlinks should be copied as symlinks.
   def copy(source, destination)
     directory = File.dirname(destination)
     if !File.directory?(directory)
