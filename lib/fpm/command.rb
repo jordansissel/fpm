@@ -95,9 +95,11 @@ class FPM::Command < Clamp::Command
   option ["-e", "--edit"], :flag,
     "Edit the package spec before building.", :default => false
   option ["-x", "--exclude"], "EXCLUDE_PATTERN",
-    "Exclude paths matching pattern (shell wildcard globs valid here)" do |val|
-    @exclude_pattern ||= []
-    @exclude_pattern << val
+    "Exclude paths matching pattern (shell wildcard globs valid here). " \
+    "Patterns are evaluated relative to the root of the working directory, " \
+    "or the directory specified by -C" do |val|
+    @excludes ||= []
+    @excludes << val
   end # -x / --exclude
   option "--description", "DESCRIPTION", "Add a description for this package.",
     :default => "no description"
@@ -173,6 +175,7 @@ class FPM::Command < Clamp::Command
     @provides = []
     @dependencies = []
     @config_files = []
+    @excludes = []
   end # def initialize
 
   # Execute this command. See Clamp::Command#execute and Clamp's documentation
@@ -273,10 +276,11 @@ class FPM::Command < Clamp::Command
     set.call(input, :version)
     set.call(input, :architecture)
 
-    input.conflicts += conflicts
-    input.dependencies += dependencies
-    input.provides += provides
-    input.replaces += replaces
+    input.conflicts += @conflicts
+    input.dependencies += @dependencies
+    input.provides += @provides
+    input.replaces += @replaces
+    input.excludes += @excludes
 
     setscript = proc do |scriptname|
       path = self.send(scriptname)
@@ -296,9 +300,6 @@ class FPM::Command < Clamp::Command
     setscript.call(:before_remove)
     setscript.call(:after_remove)
 
-    # Remove excluded paths
-    input.exclude(@exclude_pattern)
-    
     # Convert to the output type
     output = input.convert(output_class)
 
