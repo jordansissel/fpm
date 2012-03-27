@@ -82,6 +82,9 @@ class FPM::Package
   # (Not all packages support this)
   attr_accessor :replaces
 
+  # Array of glob patterns to exclude from this package
+  attr_accessor :excludes
+
   # a summary or description of the package
   attr_accessor :description
 
@@ -155,6 +158,7 @@ class FPM::Package
     @dependencies = []
     @scripts = {}
     @config_files = []
+    @excludes = []
 
     staging_path
     build_path
@@ -170,6 +174,9 @@ class FPM::Package
   # Convert this package to a new package type
   def convert(klass)
     @logger.info("Converting #{self.type} to #{klass.type}")
+
+    exclude
+
     pkg = klass.new
     pkg.cleanup_staging # purge any directories that may have been created by klass.new
 
@@ -311,7 +318,7 @@ class FPM::Package
     end
   end # def edit_file
 
-  def exclude(paths)
+  def exclude()
     # This method removes excluded files from the staging_path. Subclasses can
     # remove the files during the input phase rather than deleting them here
     if @attributes.include?(:prefix)
@@ -320,7 +327,7 @@ class FPM::Package
       installdir = staging_path
     end
 
-    paths.each do |path|
+    @excludes.each do |path|
       path = File.join(installdir, path)
       ::Dir.glob(path) do |rmpath|
         @logger.debug("Removing", :path => rmpath)
@@ -399,7 +406,7 @@ class FPM::Package
   end # class << self
 
   # General public API
-  public(:type, :initialize, :convert, :input, :output, :to_s, :cleanup, :files, :exclude)
+  public(:type, :initialize, :convert, :input, :output, :to_s, :cleanup, :files)
 
   # Package internal public api
   public(:cleanup_staging, :cleanup_build, :staging_path, :converted_from,
