@@ -322,9 +322,9 @@ class FPM::Package::Deb < FPM::Package
 
     # Write the control file
     with(control_path("control")) do |control|
-      if attributes["deb-custom-control"] 
-        @logger.debug("Using '#{attributes["deb-custom-control"]}' template for the control file")
-        control_data = File.read(attributes["deb-custom-control"])
+      if attributes[:deb_custom_control]
+        @logger.debug("Using '#{attributes[:deb_custom_control]}' template for the control file")
+        control_data = File.read(attributes[:deb_custom_control])
       else
         @logger.debug("Using 'deb.erb' template for the control file")
         control_data = template("deb.erb").result(binding)
