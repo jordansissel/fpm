@@ -131,4 +131,14 @@ describe FPM::Package do
       insist { subject.vendor } == "none"
     end
   end
+
+  describe "#exclude (internal method)" do
+    it "should obey attributes[:excludes]" do
+      File.write(subject.staging_path("hello"), "hello")
+      File.write(subject.staging_path("world"), "world")
+      subject.attributes[:excludes] = ["*world*"]
+      subject.instance_eval { exclude }
+      insist { subject.files } == ["hello"]
+    end
+  end
 end # describe FPM::Package
