@@ -158,7 +158,6 @@ class FPM::Package
     @dependencies = []
     @scripts = {}
     @config_files = []
-    @excludes = []
 
     staging_path
     build_path
@@ -341,11 +340,13 @@ class FPM::Package
       installdir = staging_path
     end
 
-    @excludes.each do |path|
-      path = File.join(installdir, path)
-      ::Dir.glob(path) do |rmpath|
-        @logger.debug("Removing", :path => rmpath)
-        FileUtils.remove_entry_secure(rmpath)
+    attributes[:excludes].each do |wildcard|
+      @logger.debug("Checking for things to exclude", :wildcard => wildcard)
+      files.each do |file|
+        if File.fnmatch(wildcard, file)
+          @logger.info("Removing excluded file", :path => file, :matches => wildcard)
+          FileUtils.remove_entry_secure(staging_path(file))
+        end
       end
     end
   end # def exclude
