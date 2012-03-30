@@ -1,5 +1,5 @@
 Package: <%= name %>
-Version: <%= "#{epoch}:" if epoch %><%= version %><%= "-" + iteration.to_s if iteration %>
+Version: <%= "#{epoch}" if epoch and not epoch.empty? %><%= version %><%= "-" + iteration.to_s if iteration and not iteration.empty? %>
 License: <%= license %>
 Vendor: <%= vendor %>
 Architecture: <%= architecture %>
