@@ -95,8 +95,8 @@ class FPM::Command < Clamp::Command
     "Edit the package spec before building.", :default => false
   option ["-x", "--exclude"], "EXCLUDE_PATTERN",
     "Exclude paths matching pattern (shell wildcard globs valid here). " \
-    "Patterns are evaluated relative to the root of the working directory, " \
-    "or the directory specified by -C" do |val|
+    "If you have multiple file patterns to exclude, specify this flag " \
+    "multiple times.", :attribute_name => :excludes do |val|
     @excludes ||= []
     @excludes << val
   end # -x / --exclude
