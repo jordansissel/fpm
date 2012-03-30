@@ -183,6 +183,15 @@ class FPM::Command < Clamp::Command
     @logger.subscribe(STDOUT)
     @logger.level = :warn
 
+    # Some older behavior, if you specify:
+    #   'fpm -s dir -t ... -C somepath'
+    # fpm would assume you meant to add '.' to the end of the commandline.
+    # Let's hack that. https://github.com/jordansissel/fpm/issues/187
+    if input_type == "dir" and args.empty? and !chdir.nil?
+      @logger.info("No args, but -s dir and -C are given, assuming '.' as input") 
+      args << "."
+    end
+
     validator = Validator.new(self)
     if !validator.ok?
       validator.messages.each do |message|
@@ -288,7 +297,7 @@ class FPM::Command < Clamp::Command
 
       # 'self.send(scriptname) == self.before_install == --before-install
       if !File.exists?(path)
-        $stderr.puts("No such file (for #{scriptname.to_s}): #{path.inspect}")
+        @logger.error("No such file (for #{scriptname.to_s}): #{path.inspect}")
         return 1
       end
       input.scripts[scriptname] = File.read(path)
@@ -298,6 +307,13 @@ class FPM::Command < Clamp::Command
     setscript.call(:after_install)
     setscript.call(:before_remove)
     setscript.call(:after_remove)
+
+    # Validate the package
+    if input.name.nil? or input.name.empty?
+      @logger.fatal("No name given for this package (set name with, " \
+                    "for example, '-n packagename')")
+      return 1
+    end
 
     # Convert to the output type
     output = input.convert(output_class)
