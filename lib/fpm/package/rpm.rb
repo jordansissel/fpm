@@ -15,10 +15,45 @@ require "arr-pm/file" # gem 'arr-pm'
 # * :rpm_rpmbuild_define - an array of definitions to give to rpmbuild.
 #   These are used, verbatim, each as: --define ITEM
 class FPM::Package::RPM < FPM::Package
+  DIGEST_ALGORITHM_MAP = {
+    "md5" => 1,
+    "sha1" => 2,
+    "sha256" => 8,
+    "sha384" => 9,
+    "sha512" => 10
+  }
+
+  COMPRESSION_MAP = {
+    "xz" => "w2.xzdio",
+    "gzip" => "w9.gzdio",
+    "bzip2" => "w9.bzdio"
+  }
+
+
   option "--rpmbuild-define", "DEFINITION",
     "Pass a --define argument to rpmbuild." do |define|
     attributes[:rpm_rpmbuild_define] ||= []
     attributes[:rpm_rpmbuild_define] << define
+  end
+
+  option "--digest", DIGEST_ALGORITHM_MAP.keys.join("|"),
+    "Select a digest algorithm. md5 works on the most platforms.",
+    :default => "md5" do |value|
+    if !DIGEST_ALGORITHM_MAP.include?(value.downcase)
+      raise "Unknown digest algorithm '#{value}'. Valid options " \
+        "include: #{DIGEST_ALGORITHM_MAP.keys.join(", ")}"
+    end
+    value.downcase
+  end
+
+  option "--compression", COMPRESSION_MAP.keys.join("|"),
+    "Select a compression method. gzip works on the most platforms.",
+    :default => "gzip" do |value|
+    if !COMPRESSION_MAP.include?(value.downcase)
+      raise "Unknown compression type '#{value}'. Valid options " \
+        "include: #{COMPRESSION_MAP.keys.join(", ")}"
+    end
+    value.downcase
   end
 
   private
@@ -141,5 +176,14 @@ class FPM::Package::RPM < FPM::Package
     return super(format)
   end # def to_s
 
-  public(:input, :output, :converted_from, :architecture, :to_s)
+  def payload_compression
+    return COMPRESSION_MAP[attributes[:rpm_compression]]
+  end # def payload_compression
+
+  def digest_algorithm
+    return DIGEST_ALGORITHM_MAP[attributes[:rpm_digest]]
+  end # def digest_algorithm
+
+  public(:input, :output, :converted_from, :architecture, :to_s, 
+         :payload_compression, :digest_algorithm)
 end # class FPM::Package::RPM

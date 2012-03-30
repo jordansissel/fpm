@@ -8,13 +8,11 @@
 # Disable checking for unpackaged files ?
 #%undefine __check_files
 
-# Use MD5 file digests to support older RPM libraries (CentOS 5, etc)
-# TODO(sissel): Make this tunable
-%define _binary_filedigest 1
+# Use <%= attributes[:rpm_digest] %> file digest method
+%define _binary_filedigest_algorithm <%= digest_algorithm %>
 
-# Use gzip compression (Default on newer redhats is 'xz' which is unsupported
-# by CentOS 5 and older)
-%define _binary_payload w9.gzdio
+# Use <%= attributes[:rpm_compression] %> payload compression
+%define _binary_payload <%= payload_compression %> 
 
 Name: <%= name %>
 Version: <%= version %>
