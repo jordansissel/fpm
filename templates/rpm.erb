@@ -24,6 +24,9 @@ Release: <%= iteration or 1 %>
 Summary: <%= description.split("\n").first.empty? ? "_" :  description.split("\n").first %>
 BuildArch: <%= architecture %>
 AutoReqProv: no
+# Seems specifying BuildRoot is required on older rpmbuild (like on CentOS 5)
+# fpm passes '--define buildroot ...' on the commandline, so just reuse that.
+BuildRoot: %buildroot
 
 Group: <%= category %>
 License: <%= license %>
