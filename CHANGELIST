@@ -1,3 +1,23 @@
+0.4.4 (March 30, 2012)
+  - Fix a bug in gem bin_dir handling (Calen Pennington)
+  - The --config-files flag should work again (Brian Akins)
+  - Fix syntax error when using --deb-pre-depends (Andrew Bennett)
+  - Make --exclude work again (#185, #186) (Calen Pennington)
+  - Fix file listing so that rpm packages don't declare ownership on / and
+    /usr, etc.
+  - make --deb-custom-control to work again (Tor Arne Vestbø)
+  - Add --rpm-digest flag to allow selection of the rpm 'file name' digest
+    algorithm. Default is 'md5' since it works on the most rpm systems.
+  - Reimplement old behavior assuming "." as the input when using '-s dir' and
+    also setting -C (#187)
+  - Set BuildRoot on rpm to work around an rpmbuild bug(?) on CentOS 5 (#191)
+  - Add --rpm-compression flag to allow selection of the rpm payload
+    compression. Default is 'gzip' since it works on the most rpm systems
+  - Specs now pass on ubuntu/32bit systems (found by travis-ci.org's test runner)
+  - Improve default values of iteration and epoch (#190)
+  - Make FPM::Package#files list only 'leaf' nodes (files, empty directories,
+    symlinks, etc).
+
 0.4.3 (March 21, 2012)
   - Fix bug in python packaging when invoked with a relative path to a setup.py
     (Reported by Thomas Meson, https://github.com/jordansissel/fpm/pull/180)
