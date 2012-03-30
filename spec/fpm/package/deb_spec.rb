@@ -23,7 +23,13 @@ describe FPM::Package::Deb do
     end
 
     it "should default to native" do
-      expected = %x{uname -m}.chomp
+      if program_in_path?("dpkg")
+        expected = %x{dpkg --print-architecture}.chomp
+      else
+        expected = %x{uname -m}.chomp
+      end
+
+      # Convert kernel name to debian name
       expected = "amd64" if expected == "x86_64"
       insist { subject.architecture } == expected
     end
