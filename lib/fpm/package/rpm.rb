@@ -58,6 +58,9 @@ class FPM::Package::RPM < FPM::Package
 
   private
 
+  # Handle any architecture naming conversions.
+  # For example, debian calls amd64 what redhat calls x86_64, this
+  # method fixes those types of things.
   def architecture
     case @architecture
       when nil
@@ -73,6 +76,11 @@ class FPM::Package::RPM < FPM::Package
         return @architecture
     end
   end # def architecture
+
+  # This method ensures a default value for iteration if none is provided.
+  def iteration
+    return @iteration ? @iteration : 1
+  end # def iteration
 
   # See FPM::Package#converted_from
   def converted_from(origin)
@@ -184,6 +192,6 @@ class FPM::Package::RPM < FPM::Package
     return DIGEST_ALGORITHM_MAP[attributes[:rpm_digest]]
   end # def digest_algorithm
 
-  public(:input, :output, :converted_from, :architecture, :to_s, 
+  public(:input, :output, :converted_from, :architecture, :to_s, :iteration,
          :payload_compression, :digest_algorithm)
 end # class FPM::Package::RPM
