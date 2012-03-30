@@ -45,7 +45,7 @@ describe FPM::Package::RPM do
     end
   end
 
-  describe "#output", :if => program_in_path?("rpmbuild")do
+  describe "#output", :if => program_in_path?("rpmbuild") do
     context "package attributes" do
       before :all do
         @target = Tempfile.new("fpm-test-rpm")
@@ -148,6 +148,20 @@ describe FPM::Package::RPM do
         insist { @rpm.tags[:postin] } == "example after_install"
         insist { @rpm.tags[:postinprog] } == "/bin/sh"
       end
+
+      it "should use md5/gzip by default" do
+        insist { @rpmtags[:payloadcompressor] } == "gzip"
+
+        # For whatever reason, the 'filedigestalgo' tag is an array of numbers.
+        # I only ever see one element in this array, so just do value.first
+        # 
+        # Even though you can specify a file digest algorithm of md5, not
+        # specifying one at all is also valid in the RPM file itself,
+        # and not having one at all means md5. So accept 'nil' or the digest
+        # identifier for md5 (1).
+        insist { [nil, FPM::Package::RPM::DIGEST_ALGORITHM_MAP["md5"]] } \
+          .include?((@rpmtags[:filedigestalgo].first rescue nil))
+      end
     end # package attributes
 
     describe "regressions should not occur" do
@@ -173,4 +187,45 @@ describe FPM::Package::RPM do
       end
     end # regression stuff
   end # #output
+
+  describe "#output with digest and compression settings", :if => program_in_path?("rpmbuild") do
+    context "bzip2/sha1" do
+      before :all do
+        @target = Tempfile.new("fpm-test-rpm")
+        subject.name = "name"
+        subject.version = "123"
+        subject.architecture = "all"
+        subject.iteration = "100"
+        subject.epoch = "5"
+        subject.attributes[:rpm_compression] = "bzip2"
+        subject.attributes[:rpm_digest] = "sha1"
+
+        # Write the rpm out
+        subject.output(@target.path)
+
+        # Read the rpm
+        @rpm = ::RPM::File.new(@target.path)
+
+        @rpmtags = {}
+        @rpm.header.tags.each do |tag|
+          @rpmtags[tag.tag] = tag.value
+        end
+      end
+
+      after :all do
+        subject.cleanup
+        @target.close
+        @target.delete
+      end # after
+
+      it "should have the compressor and digest algorithm listed" do
+        insist { @rpmtags[:payloadcompressor] } == "bzip2"
+
+        # For whatever reason, the 'filedigestalgo' tag is an array of numbers.
+        # I only ever see one element in this array, so just do value.first
+        insist { @rpmtags[:filedigestalgo].first } \
+          == FPM::Package::RPM::DIGEST_ALGORITHM_MAP["sha1"]
+      end
+    end # bzip2/sha1
+  end # #output with digest/compression settings
 end # describe FPM::Package::RPM
