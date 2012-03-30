@@ -31,6 +31,18 @@ describe FPM::Package::RPM do
       insist { subject.architecture } == expected
     end
   end
+
+  describe "#iteration" do
+    it "should default to 1" do
+      insist { subject.iteration } == 1
+    end
+  end
+
+  describe "#epoch" do
+    it "should default to nil" do
+      insist { subject.epoch }.nil?
+    end
+  end
   
   describe "#to_s" do
     it "should have a default output usable as a filename" do

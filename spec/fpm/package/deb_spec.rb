@@ -35,6 +35,18 @@ describe FPM::Package::Deb do
     end
   end
 
+  describe "#iteration" do
+    it "should default to nil" do
+      insist { subject.iteration }.nil?
+    end
+  end
+
+  describe "#epoch" do
+    it "should default to nil" do
+      insist { subject.epoch }.nil?
+    end
+  end
+
   describe "#to_s" do
     it "should have a default output usable as a filename" do
       subject.name = "name"
@@ -45,6 +57,17 @@ describe FPM::Package::Deb do
 
       # This is the default filename I see commonly produced by debuild
       insist { subject.to_s } == "name_123-100_all.deb"
+    end
+
+    it "should not include iteration if it is nil" do
+      subject.name = "name"
+      subject.version = "123"
+      subject.architecture = "all"
+      subject.iteration = nil
+      subject.epoch = "5"
+
+      # This is the default filename I see commonly produced by debuild
+      insist { subject.to_s } == "name_123_all.deb"
     end
   end
 

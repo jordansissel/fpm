@@ -41,11 +41,10 @@ class FPM::Command < Clamp::Command
     :default => 1.0
   option "--iteration", "ITERATION",
     "The iteration to give to the package. RPM calls this the 'release'. " \
-    "FreeBSD calls it 'PORTREVISION'. Debian calls this 'debian_revision'",
-    :default => "1"
+    "FreeBSD calls it 'PORTREVISION'. Debian calls this 'debian_revision'"
   option "--epoch", "EPOCH",
     "The epoch value for this package. RPM and Debian calls this 'epoch'. " \
-    "FreeBSD calls this 'PORTEPOCH'", :default => "1"
+    "FreeBSD calls this 'PORTEPOCH'"
   option "--license", "LICENSE",
     "(optional) license name for this package"
   option "--vendor", "VENDOR",
