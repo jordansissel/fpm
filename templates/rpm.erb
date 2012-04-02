@@ -99,7 +99,7 @@ fi
 %defattr(-,root,root,-)
 <%# Output config files and then regular files. -%>
 <% config_files.each do |path| -%>
-%config <%= path %>
+%config(noreplace) <%= path %>
 <% end -%>
 <%# list only files, not directories? -%>
 <%= 
