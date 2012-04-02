@@ -197,8 +197,7 @@ class FPM::Package::Deb < FPM::Package
     write_control_tarball
 
     # Tar up the staging_path and call it 'data.tar.gz'
-    datatar = build_path("data.tar.gz")
-    safesystem(tar_cmd, "-C", staging_path, "-zcf", datatar, ".")
+    datatar = build_data_tarball
 
     # pack up the .deb, which is just an 'ar' archive with 3 files
     # the 'debian-binary' file has to be first
@@ -209,6 +208,25 @@ class FPM::Package::Deb < FPM::Package
     end
     @logger.log("Created deb package", :path => output_path)
   end # def output
+
+  def build_data_tarball
+    # Get a path to store the tarball at.
+    datatar = build_path("data.tar")
+
+    # Create an empty tar archive
+    safesystem(tar_cmd, '-cf', datatar, '--files-from', '/dev/null')
+
+    @file_metadata.each do |file, metadata|
+      # get a mode we can use with tar
+      mode = "%o" % (metadata['mode'] & 0777)
+      safesystem(tar_cmd, "-C", staging_path, '--owner', metadata['owner'], '--group', metadata['group'], '--mode', mode, '-rf', datatar, file)
+    end
+
+    # This adds .gz to the end of the tar archive
+    safesystem('gzip', datatar)
+
+    return "#{datatar}.gz"
+  end # def build_data_tarball
 
   def default_output
     if iteration

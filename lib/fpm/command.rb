@@ -145,6 +145,11 @@ class FPM::Command < Clamp::Command
     File.expand_path(val) # Get the full path to the script
   end # --before-remove
 
+  option "--dir-user", "USER", "(dir source only) the user that will own the " \
+  "files in the created package (root by default) or - to preserve current ownership"
+  option "--dir-group", "GROUP", "(dir source only) the group that will own " \
+  "the files in the created package (root by default) or - to preserve current ownership"
+
   parameter "[ARGS] ...",
     "Inputs to the source package type. For the 'dir' type, this is the files" \
     " and directories you want to include in the package. For others, like " \

@@ -3,6 +3,7 @@ require "backports"
 require "fileutils"
 require "find"
 require "socket"
+require "etc"
 
 # A directory package.
 #
@@ -75,11 +76,27 @@ class FPM::Package::Dir < FPM::Package
     # Copy all files from 'path' into staging_path
 
     Find.find(source) do |file|
+      @logger.log("File", :file => file)
       next if source == file && File.directory?(file) # ignore the directory itself
       target = File.join(destination, file)
       copy(file, target)
+      record_metadata(file)
     end
+
+    @logger.log("Metadata", :metadata => @file_metadata)
   end # def clone
+
+  private
+  # Records the metadata of the file for use later in the packaging process.
+  def record_metadata(file)
+    stats = File.stat(file)
+
+    @file_metadata[file] = {
+      'owner' => Etc.getgrgid(stats.gid).name,
+      'group' => Etc.getpwuid(stats.uid).name,
+      'mode'  => stats.mode
+    }
+  end # def record_metadata
 
   # Copy, recursively, from source to destination.
   #
@@ -99,7 +116,7 @@ class FPM::Package::Dir < FPM::Package
       begin
         @logger.debug("Linking", :source => source, :destination => destination)
         File.link(source, destination)
-      rescue Errno::EXDEV
+      rescue Errno::EXDEV, Errno::EPERM
         # Hardlink attempt failed, copy it instead
         @logger.debug("Copying", :source => source, :destination => destination)
         FileUtils.copy_entry(source, destination)

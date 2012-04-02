@@ -155,6 +155,7 @@ class FPM::Package
     @dependencies = []
     @scripts = {}
     @config_files = []
+    @file_metadata = {}
 
     staging_path
     build_path
@@ -178,7 +179,7 @@ class FPM::Package
       :@architecture, :@attributes, :@category, :@config_files, :@conflicts,
       :@dependencies, :@description, :@epoch, :@iteration, :@license, :@maintainer,
       :@name, :@provides, :@replaces, :@scripts, :@url, :@vendor, :@version,
-      :@config_files, :@staging_path
+      :@config_files, :@staging_path, :@file_metadata
     ]
     ivars.each do |ivar|
       #@logger.debug("Copying ivar", :ivar => ivar, :value => instance_variable_get(ivar),
