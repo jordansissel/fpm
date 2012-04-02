@@ -60,15 +60,15 @@ Obsoletes: <%= repl %>
 
 %install
 <% files.each do |path| -%>
-<%   source = File.join(staging_path, path) -%>
+<%   source = Shellwords.shellescape(File.join(staging_path, path)) -%>
 <%   # Copy to the build_path/BUILD/ to make rpmbuild happy -%>
-<%   target = File.join(build_path, "BUILD", path) -%>
+<%   target = Shellwords.shellescape(File.join(build_path, "BUILD", path)) -%>
 <%   dir = File.dirname(target) %>
-mkdir -p "<%= dir %>"
-if [ -f "<%= source %>" ] || [ -h "<%= source %>" ] ; then
-  cp -d "<%= source %>" "<%= target %>"
-elif [ -d "<%= source %>" ] ; then
-  mkdir "<%= target %>"
+mkdir -p <%= dir %>
+if [ -f <%= source %> ] || [ -h <%= source %> ] ; then
+  cp -d <%= source %> <%= target %>
+elif [ -d <%= source %> ] ; then
+  mkdir <%= target %>
 fi
 <% end %>
 
