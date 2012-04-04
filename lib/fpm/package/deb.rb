@@ -17,7 +17,7 @@ class FPM::Package::Deb < FPM::Package
     :after_install      => "postinst",
     :before_remove      => "prerm",
     :after_remove       => "postrm",
-  }
+  } unless defined?(SCRIPT_MAP)
 
   option "--ignore-iteration-in-dependencies", :flag, 
             "For '=' (equal) dependencies, allow iterations on the specified " \
