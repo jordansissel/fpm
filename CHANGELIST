@@ -1,3 +1,9 @@
+0.4.5 (April 3, 2012)
+  - Fix gem->rpm conversion where the '~>' rubygem version operator (#193,
+    patch by antoncohen)
+  - Escape filenames RPM install process (permits files with spaces, dollar signs, etc) 
+    (#196, reported by pspiertz)
+
 0.4.4 (March 30, 2012)
   - Fix a bug in gem bin_dir handling (Calen Pennington)
   - The --config-files flag should work again (Brian Akins)
