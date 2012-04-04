@@ -21,13 +21,13 @@ class FPM::Package::RPM < FPM::Package
     "sha256" => 8,
     "sha384" => 9,
     "sha512" => 10
-  }
+  } unless defined?(DIGEST_ALGORITHM_MAP)
 
   COMPRESSION_MAP = {
     "xz" => "w2.xzdio",
     "gzip" => "w9.gzdio",
     "bzip2" => "w9.bzdio"
-  }
+  } unless defined?(COMPRESSION_MAP)
 
 
   option "--rpmbuild-define", "DEFINITION",
