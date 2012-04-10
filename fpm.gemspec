@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   files << "CHANGELIST"
 
   spec.name = "fpm"
-  spec.version = "0.4.5"
+  spec.version = "0.4.6"
   spec.summary = "fpm - package building and mangling"
   spec.description = "Convert directories, rpms, python eggs, rubygems, and " \
     "more to rpms, debs, solaris packages and more. Win at package " \
