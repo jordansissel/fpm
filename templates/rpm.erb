@@ -107,9 +107,14 @@ fi
   # with "/", then make sure paths with spaces are quoted. I hate rpm so much.
 
   # 'files' here is the method FPM::Package#files.
+  # The 'files' section of rpm can be 
+  # Replace [ with [\[] to make rpm not use globs
+  # Replace * with [*] to make rpm not use globs
   files.collect { |f| "/#{f}" } \
     .reject { |f| config_files.include?(f) } \
     .collect { |f| f[/\s/] and "\"#{f}\"" or f } \
+    .collect { |f| f.gsub("[", "[\\[]") } \
+    .collect { |f| f.gsub("*", "[*]") } \
     .join("\n") 
 %>
 
