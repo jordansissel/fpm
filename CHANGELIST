@@ -1,3 +1,6 @@
+0.4.6 (April 10, 2012)
+  - Work around more problems in RPM with respect to file listing (#202)
+
 0.4.5 (April 3, 2012)
   - Fix gem->rpm conversion where the '~>' rubygem version operator (#193,
     patch by antoncohen)
