@@ -197,6 +197,20 @@ describe FPM::Package::RPM do
         # This will raise an exception if rpmbuild fails.
         subject.output(@target.path)
       end
+
+      it "should permit brackets in filenames (issue #202)" do
+        File.write(subject.staging_path("file[with]bracket"), "Hello")
+
+        # This will raise an exception if rpmbuild fails.
+        subject.output(@target.path)
+      end
+
+      it "should permit asterisks in filenames (issue #202)" do
+        File.write(subject.staging_path("file*asterisk"), "Hello")
+
+        # This will raise an exception if rpmbuild fails.
+        subject.output(@target.path)
+      end
     end # regression stuff
   end # #output
 
