@@ -272,7 +272,7 @@ class FPM::Package::Deb < FPM::Package
       return ["#{name} (>= #{version})", "#{name} (<< #{nextversion})"]
     else
       # otherwise the dep is probably fine
-      return dep
+      return dep.rstrip
     end
   end # def fix_dependency
 

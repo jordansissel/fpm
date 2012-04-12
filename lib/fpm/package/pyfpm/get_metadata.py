@@ -50,14 +50,16 @@ class get_metadata(Command):
     final_deps = []
     for dep in pkg_resources.parse_requirements(self.distribution.install_requires):
         # add all defined specs to the dependecy list separately.
-        for operator, version in dep.specs:
-            final_deps.append("%s %s %s" % (
-                dep.project_name,
-                "=" if operator == "==" else operator,
-                version
-            ))
+        if dep.specs:
+            for operator, version in dep.specs:
+                final_deps.append("%s %s %s" % (
+                    dep.project_name,
+                    "=" if operator == "==" else operator,
+                    version
+                ))
         else:
-            final_deps.append(dep.project_name)
+            final_deps.append(dep.project_name)            
+            
 
     data["dependencies"] = final_deps
 
