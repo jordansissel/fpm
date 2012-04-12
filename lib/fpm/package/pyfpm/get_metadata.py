@@ -8,16 +8,6 @@ import pkg_resources
 # possible some of my techniques below are outdated or bad.
 # If you have fixes, let me know.
 
-def select_smallest(first, second):
-    first_operator, first_version = first
-    second_operator, second_version = second
-    if second_operator < first_operator:
-        return second
-    elif second_operator == first_operator and second_version < first_version:
-        return second
-    
-    return first
-
 
 class get_metadata(Command):
   description = "get package metadata"
@@ -58,15 +48,15 @@ class get_metadata(Command):
     # end if
 
     final_deps = []
-    for dep in pkg_resources.parse_requirements(self.distribution.install_requires):        
-        try:
-            operator, version = reduce(select_smallest, dep.specs)
+    for dep in pkg_resources.parse_requirements(self.distribution.install_requires):
+        # add all defined specs to the dependecy list separately.
+        for operator, version in dep.specs:
             final_deps.append("%s %s %s" % (
                 dep.project_name,
                 "=" if operator == "==" else operator,
                 version
             ))
-        except TypeError as e:
+        else:
             final_deps.append(dep.project_name)
 
     data["dependencies"] = final_deps
