@@ -254,7 +254,22 @@ class FPM::Package::Deb < FPM::Package
 
     # Convert gem ~> X.Y.Z to '>= X.Y.Z' and << X.Y+1.0
     if dep =~ /\(~>/
-      return "#{name} (= #{version})"
+      name, version = dep.gsub(/[()~>]/, "").split(/ +/)[0..1]
+      nextversion = version.split(".").collect { |v| v.to_i }
+      l = nextversion.length
+      nextversion[l-2] += 1
+      nextversion[l-1] = 0
+      nextversion = nextversion.join(".")
+      return ["#{name} (>= #{version})", "#{name} (<< #{nextversion})"]
+    elsif (m = dep.match(/(\S+)\s+\(= (.+)\)/)) and
+        self.attributes[:deb_ignore_iteration_in_dependencies?]
+      # Convert 'foo (= x)' to 'foo (>= x)' and 'foo (<< x+1)'
+      # but only when flag --ignore-iteration-in-dependencies is passed.
+      name, version = m[1..2]
+      nextversion = version.split('.').collect { |v| v.to_i }
+      nextversion[-1] += 1
+      nextversion = nextversion.join(".")
+      return ["#{name} (>= #{version})", "#{name} (<< #{nextversion})"]
     else
       # otherwise the dep is probably fine
       return dep
