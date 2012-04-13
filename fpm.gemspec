@@ -18,7 +18,7 @@ Gem::Specification.new do |spec|
 
   # For parsing JSON (required for some Python support, etc)
   # http://flori.github.com/json/doc/index.html
-  spec.add_dependency("json") # license: Ruby License
+  spec.add_dependency("json", "1.6.6") # license: Ruby License
   
   # For logging
   # https://github.com/jordansissel/ruby-cabin
@@ -33,7 +33,7 @@ Gem::Specification.new do |spec|
 
   # For command-line flag support
   # https://github.com/mdub/clamp/blob/master/README.markdown
-  spec.add_dependency("clamp") # license: MIT
+  spec.add_dependency("clamp", "0.3.1") # license: MIT
 
   # For simple shell/file hackery in the tests. 
   # http://rush.heroku.com/rdoc/
