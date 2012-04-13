@@ -48,7 +48,7 @@ class get_metadata(Command):
     # end if
 
     final_deps = []
-    if self.distribution.install_requires:
+    if getattr(self.distribution, 'install_requires', None):
         for dep in pkg_resources.parse_requirements(self.distribution.install_requires):
             # add all defined specs to the dependecy list separately.
             if dep.specs:
