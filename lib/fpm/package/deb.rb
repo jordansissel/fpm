@@ -261,8 +261,10 @@ class FPM::Package::Deb < FPM::Package
       nextversion[l-1] = 0
       nextversion = nextversion.join(".")
       return ["#{name} (>= #{version})", "#{name} (<< #{nextversion})"]
-    elsif (m = dep.match(/(\S+)\s+\(= (.+)\)/))
+    elsif (m = dep.match(/(\S+)\s+\(= (.+)\)/)) and
+        self.attributes[:deb_ignore_iteration_in_dependencies?]
       # Convert 'foo (= x)' to 'foo (>= x)' and 'foo (<< x+1)'
+      # but only when flag --ignore-iteration-in-dependencies is passed.
       name, version = m[1..2]
       nextversion = version.split('.').collect { |v| v.to_i }
       nextversion[-1] += 1
@@ -270,7 +272,7 @@ class FPM::Package::Deb < FPM::Package
       return ["#{name} (>= #{version})", "#{name} (<< #{nextversion})"]
     else
       # otherwise the dep is probably fine
-      return dep
+      return dep.rstrip
     end
   end # def fix_dependency
 

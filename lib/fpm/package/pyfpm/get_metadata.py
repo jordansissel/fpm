@@ -2,10 +2,12 @@ from distutils.core import Command
 import json
 import re
 import time
+import pkg_resources
 
 # Note, the last time I coded python daily was at Google, so it's entirely
 # possible some of my techniques below are outdated or bad.
 # If you have fixes, let me know.
+
 
 class get_metadata(Command):
   description = "get package metadata"
@@ -45,44 +47,19 @@ class get_metadata(Command):
       data["architecture"] = "all"
     # end if
 
-    dependencies = None
-    try:
-      dependencies = self.distribution.install_requires
-    except:
-      pass
-
-    # In some cases (Mysql-Python) 'dependencies' is none, not empty.
-    if dependencies is None:
-      dependencies = []
-
-    # Some cases (like paramiko) dependencies is actually just a string, not a
-    # list
-    if isinstance(dependencies, str):
-      dependencies = [dependencies]
-
     final_deps = []
-    dep_re = re.compile("([^<>= ]+)(?:\s*([<>=]{1,2})\s*([^,]*))?(?:,\s*([<>=]{1,2})\s*(.*))?$")
-    for dep in dependencies:
-      # python deps are strings that look like:
-      # "packagename"
-      # "packagename >= version"
-      # Replace 'packagename' with 'python#{suffix}-packagename'
-      m = dep_re.match(dep)
-      if m is None:
-        print "Bad dep: %s" % dep
-        time.sleep(3)
-      elif m.groups()[1] is None:
-        name, cond, version = m.groups()[0], ">=", 0
-      else:
-        groups = m.groups()
-        name, cond, version = groups[0:3]
-        if groups[3] is not None:
-          final_deps.append("%s %s %s" % (groups[0], groups[3], groups[4]))
-        # end if
-      # end if
-
-      final_deps.append("%s %s %s" % (name, cond, version))
-    # end for i in dependencies
+    if getattr(self.distribution, 'install_requires', None):
+        for dep in pkg_resources.parse_requirements(self.distribution.install_requires):
+            # add all defined specs to the dependecy list separately.
+            if dep.specs:
+                for operator, version in dep.specs:
+                    final_deps.append("%s %s %s" % (
+                        dep.project_name,
+                        "=" if operator == "==" else operator,
+                        version
+                    ))
+            else:
+                final_deps.append(dep.project_name)            
 
     data["dependencies"] = final_deps
 
