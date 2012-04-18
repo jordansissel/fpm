@@ -29,6 +29,17 @@ class FPM::Package::RPM < FPM::Package
     "bzip2" => "w9.bzdio"
   }
 
+  option "--user", "USER",
+    "Set the user to USER in the %files section.", 
+    :default => 'root' do |value|
+      value
+  end
+
+  option "--group", "GROUP",
+    "Set the group to GROUP in the %files section.",
+    :default => 'root' do |value|
+      value
+  end
 
   option "--rpmbuild-define", "DEFINITION",
     "Pass a --define argument to rpmbuild." do |define|
