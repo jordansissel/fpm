@@ -96,7 +96,7 @@ fi
 
 <% end -%>
 %files
-%defattr(-,root,root,-)
+%defattr(-,<%= attributes[:rpm_user] %>,<%= attributes[:rpm_group] %>,-)
 <%# Output config files and then regular files. -%>
 <% config_files.each do |path| -%>
 %config(noreplace) <%= path %>
