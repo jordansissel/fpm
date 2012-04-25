@@ -1,10 +1,12 @@
-0.4.7 (April 25, 2012)
+0.4.8 (April 25, 2012)
   - RPM: use 'noreplace' option for config files (#194, patch by Steve Lum)
   - Python: Fix bug around exact dependency versions (#206, patch by Lars van
     de Kerkhof)
   - Gem->RPM: Make 'provides' "rubygem(thegemname)" instead of "rubygem-thegemname"
   - Fix oddity where Ruby would complain about constant redefinition (#198,
     patch by Marcus Vinicius Ferreira)
+
+0.4.7 skipped.
 
 0.4.6 (April 10, 2012)
   - Work around more problems in RPM with respect to file listing (#202)
