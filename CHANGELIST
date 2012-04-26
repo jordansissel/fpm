@@ -1,3 +1,6 @@
+0.4.9 (April 25, 2012)
+  - Fix --prefix support when building gems (#213, patch by Jan Vansteenkiste)
+
 0.4.8 (April 25, 2012)
   - RPM: use 'noreplace' option for config files (#194, patch by Steve Lum)
   - Python: Fix bug around exact dependency versions (#206, patch by Lars van
