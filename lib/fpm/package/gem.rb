@@ -159,8 +159,8 @@ class FPM::Package::Gem < FPM::Package
   end # def load_package_info
 
   def install_to_staging(gem_path)
-    if attributes.include?(:path_prefix)
-      installdir = "#{staging_path}/#{attributes[:path_prefix]}"
+    if attributes.include?(:prefix) && ! attributes[:prefix].nil?
+      installdir = "#{staging_path}/#{attributes[:prefix]}"
     else
       installdir = File.join(staging_path, ::Gem::dir)
     end
