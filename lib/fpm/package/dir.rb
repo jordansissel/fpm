@@ -107,7 +107,22 @@ class FPM::Package::Dir < FPM::Package
         FileUtils.copy_entry(source, destination)
       end
     end
+
+    copy_metadata(source, destination)
   end # def copy
+
+  def copy_metadata(source, destination)
+    st = File::lstat(source)
+    File.utime(st.atime, st.mtime, destination)
+    begin
+      File.chown(st.uid, st.gid, destination)
+    rescue Errno::EPERM
+      # clear setuid/setgid
+      File.chmod(st.mode & 01777, destination)
+    else
+      File.chmod(st.mode, destination)
+    end
+  end # def copy_metadata
 
   public(:input, :output)
 end # class FPM::Package::Dir
