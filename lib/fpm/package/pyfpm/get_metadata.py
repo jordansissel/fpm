@@ -65,9 +65,9 @@ class get_metadata(Command):
 
     #print json.dumps(data, indent=2)
     try:
-      print json.dumps(data, indent=2)
-    except AttributeError, e:
+      print(json.dumps(data, indent=2))
+    except AttributeError as e:
       # For Python 2.5 and Debian's python-json
-      print json.write(data)
+      print(json.write(data))
   # def run
 # class list_dependencies
