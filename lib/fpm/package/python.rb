@@ -183,7 +183,7 @@ class FPM::Package::Python < FPM::Package
       # Ask python where libraries are installed to.
       # This line is unusually long because I don't have a shorter way to express it.
       attributes[:python_install_lib] = %x{
-        #{attributes[:python_bin]} -c 'from distutils.sysconfig import get_python_lib; print get_python_lib()'
+        #{attributes[:python_bin]} -c 'from distutils.sysconfig import get_python_lib; print(get_python_lib())'
       }.chomp
       @logger.info("Setting default :python_install_lib attribute",
                    :value => attributes[:python_install_lib])
