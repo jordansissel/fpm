@@ -2,13 +2,16 @@ require "spec_setup"
 require "fpm" # local
 require "fpm/package/python" # local
 
-have_python = program_in_path?("python")
-if !have_python
-  Cabin::Channel.get("rspec") \
-    .warn("Skipping Python#input tests because 'python' isn't in your PATH")
+def python_usable?
+  return program_in_path?("python") && program_in_path?("easy_install")
 end
 
-describe FPM::Package::Python, :if => have_python do
+if !python_usable?
+  Cabin::Channel.get("rspec").warn("Skipping Python#input tests because " \
+    "'python' and/or 'easy_install' isn't in your PATH")
+end
+
+describe FPM::Package::Python, :if => python_usable? do
   let (:example_dir) do
     File.expand_path("../../fixtures/python/", File.dirname(__FILE__))
   end
