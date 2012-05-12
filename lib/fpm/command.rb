@@ -328,6 +328,9 @@ class FPM::Command < Clamp::Command
     end
 
     return 0
+  rescue FPM::Util::ExecutableNotFound => e
+    @logger.error("Need executable '#{e}' to convert #{input_type} to #{output_type}")
+    return 1
   ensure
     input.cleanup unless input.nil?
     output.cleanup unless output.nil?
