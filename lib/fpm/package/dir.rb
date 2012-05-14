@@ -76,14 +76,14 @@ class FPM::Package::Dir < FPM::Package
     # Copy all files from 'path' into staging_path
 
     Find.find(source) do |file|
-      @logger.log("File", :file => file)
+      @logger.debug("File", :file => file)
       next if source == file && File.directory?(file) # ignore the directory itself
       target = File.join(destination, file)
       copy(file, target)
       record_metadata(file)
     end
 
-    @logger.log("Metadata", :metadata => @file_metadata)
+    @logger.debug("Metadata", :metadata => @file_metadata)
   end # def clone
 
   private
