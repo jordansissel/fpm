@@ -112,15 +112,20 @@ class FPM::Package::Dir < FPM::Package
   end # def copy
 
   def copy_metadata(source, destination)
-    st = File::lstat(source)
-    File.utime(st.atime, st.mtime, destination)
+    source_stat = File::lstat(source)
+    dest_stat = File::lstat(destination)
+
+    # If this is a hard-link, there's no metadata to copy.
+    return if source_stat.ino == dest_stat.ino
+
+    File.utime(source_stat.atime, source_stat.mtime, destination)
     begin
-      File.chown(st.uid, st.gid, destination)
+      File.chown(source_stat.uid, source_stat.gid, destination)
     rescue Errno::EPERM
       # clear setuid/setgid
-      File.chmod(st.mode & 01777, destination)
+      File.chmod(source_stat.mode & 01777, destination)
     else
-      File.chmod(st.mode, destination)
+      File.chmod(source_stat.mode, destination)
     end
   end # def copy_metadata
 
