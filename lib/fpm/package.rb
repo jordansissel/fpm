@@ -420,8 +420,25 @@ class FPM::Package
     end # def self.type
   end # class << self
 
+  # Get the version of this package
+  def version
+    if instance_variable_defined?(:@version) && !@version.nil?
+      return @version
+    elsif attributes[:version_given?]
+      # 'version_given?' will be true in cases where the
+      # fpm command-line tool has been given '-v' or '--version' settings
+      # We do this check because the default version is "1.0"
+      # on the fpm command line.
+      return attributes.fetch(:version)
+    end
+
+    # No version yet, nil.
+    return nil
+  end # def version
+
   # General public API
-  public(:type, :initialize, :convert, :input, :output, :to_s, :cleanup, :files)
+  public(:type, :initialize, :convert, :input, :output, :to_s, :cleanup, :files,
+         :version)
 
   # Package internal public api
   public(:cleanup_staging, :cleanup_build, :staging_path, :converted_from,

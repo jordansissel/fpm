@@ -229,6 +229,11 @@ class FPM::Command < Clamp::Command
         # 
         # In the case of 'flag' options, the accessor is actually 'foo_bar?'
         # instead of just 'foo_bar'
+       
+        # If the instance variable @{attr} is defined, then
+        # it means the flag was given on the command line.
+        flag_given = instance_variable_defined?("@#{attr}")
+        input.attributes["#{attr}_given?".to_sym] = flag_given
         attr = "#{attr}?" if !respond_to?(attr) # handle boolean :flag cases
         input.attributes[attr.to_sym] = send(attr) if respond_to?(attr)
         @logger.debug("Setting attribute", attr.to_sym => send(attr))
