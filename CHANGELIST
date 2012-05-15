@@ -1,3 +1,10 @@
+0.4.10 (????)
+  - Fix python package support for python3 (#212, patch by Slezhuk Evgeniy)
+  - Preserve file metadata (time, owner, etc) when copying with the dir
+    package. (#217, patch by Marshall T. Vandegrift)
+  - Missing executables will now error more readably in fpm.
+  - Fix gem and python 'version' selection (#215, #204)
+
 0.4.9 (April 25, 2012)
   - Fix --prefix support when building gems (#213, patch by Jan Vansteenkiste)
 
