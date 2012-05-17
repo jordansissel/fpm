@@ -194,6 +194,7 @@ class FPM::Package::Python < FPM::Package
       safesystem(attributes[:python_bin], "setup.py", "install",
                  "--root", staging_path, 
                  "--install-lib", File.join(prefix, attributes[:python_install_lib]),
+                 "--install-data", File.join(prefix, attributes[:python_install_lib]),
                  "--install-scripts", File.join(prefix, attributes[:python_install_bin]))
     end
   end # def install_to_staging
