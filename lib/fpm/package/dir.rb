@@ -76,7 +76,7 @@ class FPM::Package::Dir < FPM::Package
     # Copy all files from 'path' into staging_path
 
     Find.find(source) do |file|
-      @logger.debug("File", :file => file)
+      @logger.debug("File", :filename => file)
       next if source == file && File.directory?(file) # ignore the directory itself
       target = File.join(destination, file)
       copy(file, target)
@@ -84,6 +84,8 @@ class FPM::Package::Dir < FPM::Package
     end
 
     @logger.debug("Metadata", :metadata => @file_metadata)
+
+    setup_fakeroot(destination)
   end # def clone
 
   private
@@ -92,11 +94,73 @@ class FPM::Package::Dir < FPM::Package
     stats = File.stat(file)
 
     @file_metadata[file] = {
-      'owner' => Etc.getgrgid(stats.gid).name,
-      'group' => Etc.getpwuid(stats.uid).name,
+      'group' => Etc.getgrgid(stats.gid).name,
+      'owner' => Etc.getpwuid(stats.uid).name,
       'mode'  => stats.mode
     }
   end # def record_metadata
+
+  private
+  # We use fakeroot to allow us to preserve file ownership regardless of
+  # whether or not we are actually running as root
+  def setup_fakeroot(target)
+    dir_user = @attributes[:dir_user]
+    dir_group = @attributes[:dir_group]
+
+    if dir_user.nil? and dir_group.nil?
+      @logger.debug("default, do nothing as fakeroot defaults to root:root")
+      return
+    end
+
+    fakeroot_command = "fakeroot -i #{fakeroot_environment_path} -s #{fakeroot_environment_path} "
+
+    if dir_user == '-' or dir_group == '-'
+      @file_metadata.each do |file, metadata|
+        safesystem(fakeroot_command + "chown #{metadata['owner']}.#{metadata['group']} #{target}/#{file}")
+      end
+    end
+
+    if dir_user == '-' and dir_group == '-'
+      @logger.debug("We've already set both the owner and group on all files. Returning.")
+      return
+    end
+
+    find_command = "find #{target} "
+
+    if not dir_user.nil? and dir_user != '-'
+      @logger.debug("Checking if user exists...")
+      begin
+        Etc.getpwnam(dir_user)
+      rescue
+        raise "Unable to find user '#{dir_user}' on system."
+      end
+
+      @logger.debug("--dir-user parameter found, setting group on all files to #{dir_user}")
+
+      find_command += "-exec chown #{dir_user} {} \\; "
+    elsif dir_user.nil?
+      @logger.debug("--dir-user parameter not passed, defaulting to root")
+      find_command += "-exec chown root {} \\; "
+    end
+
+    if not dir_group.nil? and dir_group != '-'
+      @logger.debug("Checking if group exists...")
+      begin
+        Etc.getgrnam(dir_group)
+      rescue
+        raise "Unable to find group '#{dir_group}'"
+      end
+
+      @logger.debug("--dir-group parameter found, setting group on all files to #{dir_group}")
+
+      find_command += "-exec chgrp #{dir_group} {} \\; "
+    elsif dir_group.nil?
+      @logger.debug("--dir-group parameter not passed, defaulting to root")
+      find_command += "-exec chgrp root {} \\; "
+    end
+
+    safesystem(fakeroot_command + find_command)
+  end
 
   # Copy, recursively, from source to destination.
   #

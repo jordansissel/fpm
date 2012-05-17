@@ -1,6 +1,7 @@
 require "fpm/namespace" # local
 require "fpm/util" # local
 require "tmpdir" # stdlib
+require "tempfile" # stdlib
 require "backports" # gem 'backports'
 require "socket" # stdlib, for Socket.gethostname
 require "shellwords" # stdlib, for Shellwords.escape
@@ -179,7 +180,7 @@ class FPM::Package
       :@architecture, :@attributes, :@category, :@config_files, :@conflicts,
       :@dependencies, :@description, :@epoch, :@iteration, :@license, :@maintainer,
       :@name, :@provides, :@replaces, :@scripts, :@url, :@vendor, :@version,
-      :@config_files, :@staging_path, :@file_metadata
+      :@config_files, :@staging_path, :@file_metadata, :@fakeroot_environment_path
     ]
     ivars.each do |ivar|
       #@logger.debug("Copying ivar", :ivar => ivar, :value => instance_variable_get(ivar),
@@ -243,10 +244,17 @@ class FPM::Package
     end
   end # def build_path
 
+  def fakeroot_environment_path
+    @fakeroot_environment_path ||= Tempfile.new('fakeroot_environment').path
+
+    return @fakeroot_environment_path
+  end
+
   # Clean up any temporary storage used by this class.
   def cleanup
     cleanup_staging
     cleanup_build
+    cleanup_fakeroot_environment
   end # def cleanup
 
   def cleanup_staging
@@ -262,6 +270,13 @@ class FPM::Package
       FileUtils.rm_r(build_path) 
     end
   end # def cleanup_build
+
+  def cleanup_fakeroot_environment
+    if File.exists?(fakeroot_environment_path)
+      @logger.debug("Cleaning up fakeroot environment file", :path => fakeroot_environment_path)
+      FileUtils.rm_r(fakeroot_environment_path)
+    end
+  end
 
   # List all files in the staging_path
   #
