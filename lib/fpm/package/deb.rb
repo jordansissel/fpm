@@ -261,6 +261,10 @@ class FPM::Package::Deb < FPM::Package
       nextversion[l-1] = 0
       nextversion = nextversion.join(".")
       return ["#{name} (>= #{version})", "#{name} (<< #{nextversion})"]
+    elsif (m = dep.match(/(\S+)\s+\(!= (.+)\)/))
+      # Append this to conflicts
+      self.conflicts += [dep.gsub(/!=/,"=")]
+      return []
     elsif (m = dep.match(/(\S+)\s+\(= (.+)\)/)) and
         self.attributes[:deb_ignore_iteration_in_dependencies?]
       # Convert 'foo (= x)' to 'foo (>= x)' and 'foo (<< x+1)'
