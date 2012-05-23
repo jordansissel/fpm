@@ -57,6 +57,48 @@ describe FPM::Package::RPM do
     end
   end
 
+  describe "#templating" do
+    context "default user and group" do
+      before :all do
+
+        # set the list of files for this RPM
+        def subject.files; [__FILE__]; end
+        def subject.rpmspec; @rpmspec; end
+        def subject.render_template; @rpmspec = template("rpm.erb").result(binding); end
+        subject.render_template
+      end
+
+      after :all do
+        subject.cleanup
+      end
+
+      it "should set the user and group of each file in the RPM" do
+        subject.rpmspec.should include('%defattr(-,root,root,-')
+      end
+    end # context
+
+    context "non-default user and group" do
+      before :all do
+        subject.attributes[:rpm_user] = "some_user"
+        subject.attributes[:rpm_group] = "some_group"
+
+        # set the list of files for this RPM
+        def subject.files; [__FILE__]; end
+        def subject.rpmspec; @rpmspec; end
+        def subject.render_template; @rpmspec = template("rpm.erb").result(binding); end
+        subject.render_template
+      end
+
+      after :all do
+        subject.cleanup
+      end
+
+      it "should set the user and group of each file in the RPM" do
+        subject.rpmspec.should include('%defattr(-,some_user,some_group,-')
+      end
+    end # context
+  end
+
   describe "#output", :if => program_in_path?("rpmbuild") do
     context "package attributes" do
       before :all do
