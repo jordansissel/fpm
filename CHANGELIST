@@ -1,9 +1,16 @@
-0.4.10 (????)
+0.4.10 (May 25, 2012
   - Fix python package support for python3 (#212, patch by Slezhuk Evgeniy)
   - Preserve file metadata (time, owner, etc) when copying with the dir
     package. (#217, patch by Marshall T. Vandegrift)
   - Missing executables will now error more readably in fpm.
   - Fix gem and python 'version' selection (#215, #204)
+  - Dependencies using '!=' will now map to 'Conflicts' in deb packages. (#221,
+    patch by Sven Fischer)
+  - Allow setting default user/group for files in rpm packages (#208, patch by
+    Jason Rogers). Note: This adds --user and --group flags to effect this.
+    These flags may go away in the future, but if they do, they will be
+  - In python packages set 'install-data' correctly. (#223, patch by Jamie
+    Scheinblum)
 
 0.4.9 (April 25, 2012)
   - Fix --prefix support when building gems (#213, patch by Jan Vansteenkiste)
