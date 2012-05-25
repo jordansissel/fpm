@@ -37,7 +37,7 @@ class FPM::Package::Gem < FPM::Package
 
   def input(gem)
     # 'arg'  is the name of the rubygem we should unpack.
-    path_to_gem = download_if_necessary(gem, version)
+    path_to_gem = download_if_necessary(gem, attributes[:version])
 
     # Got a good gem now (downloaded or otherwise)
     #
