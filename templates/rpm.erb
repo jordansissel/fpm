@@ -27,6 +27,9 @@ AutoReqProv: no
 # Seems specifying BuildRoot is required on older rpmbuild (like on CentOS 5)
 # fpm passes '--define buildroot ...' on the commandline, so just reuse that.
 BuildRoot: %buildroot
+<% if !prefix.empty? %>
+Prefix: <%= prefix %>
+<% end -%>
 
 Group: <%= category %>
 License: <%= license %>
@@ -62,7 +65,7 @@ Obsoletes: <%= repl %>
 <% files.each do |path| -%>
 <%   source = Shellwords.shellescape(File.join(staging_path, path)) -%>
 <%   # Copy to the build_path/BUILD/ to make rpmbuild happy -%>
-<%   target = Shellwords.shellescape(File.join(build_path, "BUILD", path)) -%>
+<%   target = Shellwords.shellescape(File.join(build_path, build_sub_dir, path)) -%>
 <%   dir = File.dirname(target) %>
 mkdir -p <%= dir %>
 if [ -f <%= source %> ] || [ -h <%= source %> ] ; then
@@ -99,7 +102,7 @@ fi
 %defattr(-,<%= attributes[:rpm_user] %>,<%= attributes[:rpm_group] %>,-)
 <%# Output config files and then regular files. -%>
 <% config_files.each do |path| -%>
-%config(noreplace) <%= path %>
+%config(noreplace) <%= path.gsub(/^/,prefix) %>
 <% end -%>
 <%# list only files, not directories? -%>
 <%= 
@@ -115,7 +118,8 @@ fi
     .collect { |f| f[/\s/] and "\"#{f}\"" or f } \
     .collect { |f| f.gsub("[", "[\\[]") } \
     .collect { |f| f.gsub("*", "[*]") } \
-    .join("\n") 
+    .collect { |f| f.gsub(/^/, prefix ) } \
+    .join("\n")
 %>
 
 %changelog
