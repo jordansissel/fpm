@@ -121,7 +121,7 @@ class FPM::Package::Dir < FPM::Package
     File.utime(source_stat.atime, source_stat.mtime, destination)
     mode = source_stat.mode
     begin
-      File.chown(source_stat.uid, source_stat.gid, destination)
+      File.lchown(source_stat.uid, source_stat.gid, destination)
     rescue Errno::EPERM
       # clear setuid/setgid
       mode &= 01777
