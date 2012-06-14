@@ -128,7 +128,7 @@ class FPM::Package::Dir < FPM::Package
     end
 
     unless source_stat.symlink?
-      File.chmod(source_stat.mode, destination)
+      File.chmod(mode, destination)
     end
   end # def copy_metadata
 
