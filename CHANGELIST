@@ -1,3 +1,9 @@
+0.4.11 (???)
+  - Support different compression types on deb packages (default gzip,
+    alternates xz and bzip2)
+  - Fix some symlink handling to prevent links from being followed during
+    cleanup (#228, patch by sbuss)
+
 0.4.10 (May 25, 2012)
   - Fix python package support for python3 (#212, patch by Slezhuk Evgeniy)
   - Preserve file metadata (time, owner, etc) when copying with the dir
