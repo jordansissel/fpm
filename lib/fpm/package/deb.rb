@@ -19,6 +19,8 @@ class FPM::Package::Deb < FPM::Package
     :after_remove       => "postrm",
   } unless defined?(SCRIPT_MAP)
 
+  COMPRESSION_TYPES = [ "gz", "bzip2", "xz" ]
+
   option "--ignore-iteration-in-dependencies", :flag, 
             "For '=' (equal) dependencies, allow iterations on the specified " \
             "version. Default is to be specific. This option allows the same " \
@@ -28,6 +30,15 @@ class FPM::Package::Deb < FPM::Package
     "Add DEPENDENCY as a Pre-Depends" do |dep|
     @pre_depends ||= []
     @pre_depends << dep
+  end
+
+  option "--compression", "COMPRESSION", "The compression type to use, must " \
+    "be one of #{COMPRESSION_TYPES.join(", ")}.", :default => "gzip" do |value|
+    if !COMPRESSION_TYPES.include?(value)
+      raise ArgumentError, "deb compression value of '#{value}' is invalid. " \
+        "Must be one of #{COMPRESSION_TYPES.join(", ")}"
+    end
+    value
   end
 
   # Take care about the case when we want custom control file but still use fpm ...
@@ -159,6 +170,7 @@ class FPM::Package::Deb < FPM::Package
   #
   #     parse_depends("foo (>= 3), bar (= 5), baz")
   def parse_depends(data)
+    return [] if data.nil? or data.empty?
     # parse dependencies. Debian dependencies come in one of two forms:
     # * name
     # * name (op version)
@@ -183,8 +195,28 @@ class FPM::Package::Deb < FPM::Package
   end # def parse_depends
 
   def extract_files(package)
-    # unpack the data.tar.gz from the deb package into staging_path
-    safesystem("ar p #{package} data.tar.gz | tar -zxf - -C #{staging_path}")
+    # Find out the compression type
+    p `ar t #{package}`
+    compression = `ar t #{package}`.split("\n").grep(/data.tar/).first.split(".").last
+    case compression
+      when "gz"
+        datatar = "data.tar.gz"
+        compression = "-z"
+      when "bzip2" 
+        datatar = "data.tar.bz2"
+        compression = "-j"
+      when "xz" 
+        datatar = "data.tar.xz"
+        compression = "-J"
+      else
+        raise InvalidPackageConfiguration, 
+          "Unknown compression type '#{self.attributes[:deb_compression]}' "
+          "in deb source package #{package}"
+    end
+
+    # unpack the data.tar.{gz,bz2,xz} from the deb package into staging_path
+    safesystem("ar p #{package} #{datatar} " \
+               "| tar #{compression} -xf - -C #{staging_path}")
   end # def extract_files
 
   def output(output_path)
@@ -196,9 +228,22 @@ class FPM::Package::Deb < FPM::Package
 
     write_control_tarball
 
-    # Tar up the staging_path and call it 'data.tar.gz'
-    datatar = build_path("data.tar.gz")
-    safesystem(tar_cmd, "-C", staging_path, "-zcf", datatar, ".")
+    # Tar up the staging_path into data.tar.{compression type}
+    case self.attributes[:deb_compression]
+      when "gzip"
+        datatar = build_path("data.tar.gz")
+        compression = "-z"
+      when "bzip2" 
+        datatar = build_path("data.tar.bz2")
+        compression = "-j"
+      when "xz"
+        datatar = build_path("data.tar.xz")
+        compression = "-J"
+      else
+        raise InvalidPackageConfiguration, 
+          "Unknown compression type '#{self.attributes[:deb_compression]}'"
+    end
+    safesystem(tar_cmd, "-C", staging_path, compression, "-cf", datatar, ".")
 
     # pack up the .deb, which is just an 'ar' archive with 3 files
     # the 'debian-binary' file has to be first
