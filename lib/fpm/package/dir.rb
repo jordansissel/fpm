@@ -90,11 +90,20 @@ class FPM::Package::Dir < FPM::Package
       FileUtils.mkdir_p(directory)
     end
 
-    # Create a directory if this path is a directory
-    if File.directory?(source) and !File.symlink?(source)
-      @logger.debug("Creating", :directory => destination)
-      if !File.directory?(destination)
-        FileUtils.mkdir(destination)
+    if File.directory?(source)
+      if !File.symlink?(source)
+        # Create a directory if this path is a directory
+        @logger.debug("Creating", :directory => destination)
+        if !File.directory?(destination)
+          FileUtils.mkdir(destination)
+        end
+      else
+        # Linking symlinked directories causes a hardlink to be created, which
+        # results in the source directory being wiped out during cleanup,
+        # so copy the symlink.
+        @logger.debug("Copying symlinked directory", :source => source,
+                      :destination => destination)
+        FileUtils.copy_entry(source, destination)
       end
     else
       # Otherwise try copying the file.
