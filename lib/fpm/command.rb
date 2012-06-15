@@ -336,6 +336,9 @@ class FPM::Command < Clamp::Command
   rescue FPM::Util::ExecutableNotFound => e
     @logger.error("Need executable '#{e}' to convert #{input_type} to #{output_type}")
     return 1
+  rescue FPM::InvalidPackageConfiguration => e
+    @logger.error("Invalid package configuration: #{e}")
+    return 1
   ensure
     input.cleanup unless input.nil?
     output.cleanup unless output.nil?
