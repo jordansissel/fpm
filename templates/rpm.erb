@@ -30,7 +30,9 @@ BuildRoot: %buildroot
 
 Group: <%= category %>
 License: <%= license %>
+<% if !vendor.nil? and !vendor.empty? -%>
 Vendor: <%= vendor %>
+<% end -%>
 URL: <%= url or "http://nourlgiven.example.com/" %>
 Packager: <%= maintainer %>
 
