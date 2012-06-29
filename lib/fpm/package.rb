@@ -351,6 +351,8 @@ class FPM::Package
             if (::Dir.entries(d) - %w[ . .. ]).empty?
               ::Dir.rmdir(d)
               @logger.info("Deleting empty directory left by removing exluded file", :path => d)
+            else
+              break
             end
           end
         end
