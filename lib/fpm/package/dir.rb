@@ -125,7 +125,8 @@ class FPM::Package::Dir < FPM::Package
     dest_stat = File::lstat(destination)
 
     # If this is a hard-link, there's no metadata to copy.
-    return if source_stat.ino == dest_stat.ino
+    # If this is a symlink, what it points to hasn't been copied yet.
+    return if source_stat.ino == dest_stat.ino || File.symlink?(destination)
 
     File.utime(source_stat.atime, source_stat.mtime, destination)
     begin
