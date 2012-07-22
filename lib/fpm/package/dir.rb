@@ -129,13 +129,16 @@ class FPM::Package::Dir < FPM::Package
     return if source_stat.ino == dest_stat.ino || dest_stat.symlink?
 
     File.utime(source_stat.atime, source_stat.mtime, destination)
+    mode = source_stat.mode
     begin
-      File.chown(source_stat.uid, source_stat.gid, destination)
+      File.lchown(source_stat.uid, source_stat.gid, destination)
     rescue Errno::EPERM
       # clear setuid/setgid
-      File.chmod(source_stat.mode & 01777, destination)
-    else
-      File.chmod(source_stat.mode, destination)
+      mode &= 01777
+    end
+
+    unless source_stat.symlink?
+      File.chmod(mode, destination)
     end
   end # def copy_metadata
 
