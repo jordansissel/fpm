@@ -183,6 +183,11 @@ class FPM::Command < Clamp::Command
     @logger.subscribe(STDOUT)
     @logger.level = :warn
 
+    if (stray_flags = args.grep(/^-/); stray_flags.any?)
+      @logger.warn("All flags should be before the first argument " \
+                   "(stray flags found: #{stray_flags}")
+    end
+
     # Some older behavior, if you specify:
     #   'fpm -s dir -t ... -C somepath'
     # fpm would assume you meant to add '.' to the end of the commandline.
