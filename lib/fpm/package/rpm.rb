@@ -204,6 +204,15 @@ class FPM::Package::RPM < FPM::Package
     @logger.log("Created rpm", :path => output_path)
   end # def output
 
+  def prefix
+    return attributes[:prefix]
+  end # def prefix
+
+  def build_sub_dir
+    return "BUILD" + prefix
+  end # def prefix
+
+
   def to_s(format=nil)
     return super("NAME-VERSION-ITERATION.ARCH.TYPE") if format.nil?
     return super(format)
@@ -218,5 +227,5 @@ class FPM::Package::RPM < FPM::Package
   end # def digest_algorithm
 
   public(:input, :output, :converted_from, :architecture, :to_s, :iteration,
-         :payload_compression, :digest_algorithm)
+         :payload_compression, :digest_algorithm, :prefix, :build_sub_dir)
 end # class FPM::Package::RPM
