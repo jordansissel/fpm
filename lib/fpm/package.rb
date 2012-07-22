@@ -1,5 +1,6 @@
 require "fpm/namespace" # local
 require "fpm/util" # local
+require "pathname" # stdlib
 require "tmpdir" # stdlib
 require "backports" # gem 'backports'
 require "socket" # stdlib, for Socket.gethostname
@@ -346,6 +347,14 @@ class FPM::Package
         if File.fnmatch(wildcard, file)
           @logger.info("Removing excluded file", :path => file, :matches => wildcard)
           FileUtils.remove_entry_secure(staging_path(file))
+          Pathname.new(staging_path(file)).parent.ascend do |d|
+            if (::Dir.entries(d) - %w[ . .. ]).empty?
+              ::Dir.rmdir(d)
+              @logger.info("Deleting empty directory left by removing exluded file", :path => d)
+            else
+              break
+            end
+          end
         end
       end
     end
