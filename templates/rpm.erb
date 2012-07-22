@@ -27,7 +27,7 @@ AutoReqProv: no
 # Seems specifying BuildRoot is required on older rpmbuild (like on CentOS 5)
 # fpm passes '--define buildroot ...' on the commandline, so just reuse that.
 BuildRoot: %buildroot
-<% if !prefix.empty? %>
+<% if !prefix.nil? and !prefix.empty? %>
 Prefix: <%= prefix %>
 <% end -%>
 
@@ -104,7 +104,7 @@ fi
 %defattr(-,<%= attributes[:rpm_user] %>,<%= attributes[:rpm_group] %>,-)
 <%# Output config files and then regular files. -%>
 <% config_files.each do |path| -%>
-%config(noreplace) <%= path.gsub(/^/,prefix) %>
+%config(noreplace) <%= File.join(prefix, path) %>
 <% end -%>
 <%# list only files, not directories? -%>
 <%= 
@@ -117,10 +117,10 @@ fi
   # Replace * with [*] to make rpm not use globs
   files.collect { |f| "/#{f}" } \
     .reject { |f| config_files.include?(f) } \
+    .collect { |f| File.join(prefix, f) } \
     .collect { |f| f[/\s/] and "\"#{f}\"" or f } \
     .collect { |f| f.gsub("[", "[\\[]") } \
     .collect { |f| f.gsub("*", "[*]") } \
-    .collect { |f| f.gsub(/^/, prefix ) } \
     .join("\n")
 %>
 

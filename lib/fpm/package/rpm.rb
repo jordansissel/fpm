@@ -205,11 +205,11 @@ class FPM::Package::RPM < FPM::Package
   end # def output
 
   def prefix
-    return attributes[:prefix]
+    return (attributes[:prefix] or "/")
   end # def prefix
 
   def build_sub_dir
-    return "BUILD" + prefix
+    return File.join("BUILD", prefix)
   end # def prefix
 
 
