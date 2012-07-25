@@ -117,11 +117,11 @@ fi
   # Replace * with [*] to make rpm not use globs
   files.collect { |f| "/#{f}" } \
     .reject { |f| config_files.include?(f) } \
-    .collect { |f| File.join(prefix, f) } \
     .collect { |f| f[/\s/] and "\"#{f}\"" or f } \
     .collect { |f| f.gsub("[", "[\\[]") } \
     .collect { |f| f.gsub("*", "[*]") } \
     .join("\n")
+    #.collect { |f| File.join(prefix, f) } \
 %>
 
 %changelog
