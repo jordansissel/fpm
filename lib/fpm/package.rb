@@ -335,6 +335,8 @@ class FPM::Package
   # This method removes excluded files from the staging_path. Subclasses can
   # remove the files during the input phase rather than deleting them here
   def exclude
+    return if attributes[:excludes].nil?
+
     if @attributes.include?(:prefix)
       installdir = staging_path(@attributes[:prefix])
     else
