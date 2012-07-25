@@ -5,6 +5,8 @@
     cleanup (#228, patch by sbuss)
   - rpm: 'vendor' in rpm spec is now omitted if empty or nil. This fixes a bug
     where rpmbuild fails due to empty 'Vendor' tag if you convert rpm to rpm.
+  - rpm: relocatable rpms now supported when you specify a '--prefix' flag to fpm.
+    Example: fpm -s dir -t rpm --prefix /usr/local -n example /etc/motd
 
 0.4.10 (May 25, 2012)
   - Fix python package support for python3 (#212, patch by Slezhuk Evgeniy)

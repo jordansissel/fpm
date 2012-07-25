@@ -209,7 +209,8 @@ class FPM::Package::RPM < FPM::Package
   end # def prefix
 
   def build_sub_dir
-    return File.join("BUILD", prefix)
+    return "BUILD"
+    #return File.join("BUILD", prefix)
   end # def prefix
 
 
