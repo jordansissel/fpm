@@ -209,7 +209,7 @@ class FPM::Package::Deb < FPM::Package
         datatar = "data.tar.xz"
         compression = "-J"
       else
-        raise InvalidPackageConfiguration, 
+        raise FPM::InvalidPackageConfiguration,
           "Unknown compression type '#{self.attributes[:deb_compression]}' "
           "in deb source package #{package}"
     end
@@ -230,7 +230,7 @@ class FPM::Package::Deb < FPM::Package
 
     # Tar up the staging_path into data.tar.{compression type}
     case self.attributes[:deb_compression]
-      when "gzip"
+      when "gzip", nil
         datatar = build_path("data.tar.gz")
         compression = "-z"
       when "bzip2" 
@@ -240,7 +240,7 @@ class FPM::Package::Deb < FPM::Package
         datatar = build_path("data.tar.xz")
         compression = "-J"
       else
-        raise InvalidPackageConfiguration, 
+        raise FPM::InvalidPackageConfiguration,
           "Unknown compression type '#{self.attributes[:deb_compression]}'"
     end
     safesystem(tar_cmd, "-C", staging_path, compression, "-cf", datatar, ".")
