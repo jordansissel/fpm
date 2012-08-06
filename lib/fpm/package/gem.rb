@@ -21,7 +21,8 @@ class FPM::Package::Gem < FPM::Package
   option "--package-prefix", "NAMEPREFIX",
     "(DEPRECATED, use --package-name-prefix) Name to prefix the package " \
     "name with." do |value|
-    @logger.warn("Using deprecated flag: --package-prefix. Please use " \
+    logger = Cabin::Channel.get
+    logger.warn("Using deprecated flag: --package-prefix. Please use " \
                  "--package-name-prefix")
     value
   end
