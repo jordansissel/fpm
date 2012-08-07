@@ -48,4 +48,4 @@ install: $(GEM)
 
 .PHONY:
 clean:
-	rm -rf package-*/ *.rpm *.deb *.gz *.tar *.gem
+	rm -rf package-*/ *.rpm *.deb *.gz *.tar *.gem .yardoc/
