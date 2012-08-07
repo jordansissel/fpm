@@ -80,9 +80,9 @@ fi
 %clean
 # noop
 
-<% if scripts[:before_install] -%>
+<% if script?(:before_install) -%>
 %pre
-<%= scripts[:before_install] %>
+<%= script(:before_install) %>
 
 <% end -%>
 <% if scripts[:after_install] -%>

@@ -394,11 +394,11 @@ class FPM::Package::Deb < FPM::Package
   # 'post_install' names
   def write_scripts
     SCRIPT_MAP.each do |scriptname, filename|
-      next if scripts[scriptname].nil?
+      next if script?(scriptname).nil?
 
       with(control_path(filename)) do |controlscript|
         @logger.debug("Writing control script", :source => filename, :target => controlscript)
-        File.write(controlscript, scripts[scriptname])
+        File.write(controlscript, script(scriptname))
         # deb maintainer scripts are required to be executable
         File.chmod(0755, controlscript)
       end

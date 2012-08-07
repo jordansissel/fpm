@@ -141,4 +141,24 @@ describe FPM::Package do
       insist { subject.files } == ["hello"]
     end
   end
+
+  context "#script (internal method)" do
+    it "should template when :template_scripts? is true" do
+      subject.scripts[:after_install] = "<%= name %>"
+      subject.attributes[:template_scripts?] = true
+      subject.name = "Example"
+      insist { subject.script(:after_install) } == subject.name
+    end
+
+    it "should not template when :template_scripts? is false" do
+      subject.scripts[:after_install] = "<%= name %>"
+      subject.attributes[:template_scripts?] = false
+      insist { subject.script(:after_install) } == subject.scripts[:after_install]
+    end
+
+    it "should not template by default" do
+      subject.scripts[:after_install] = "<%= name %>"
+      insist { subject.script(:after_install) } == subject.scripts[:after_install]
+    end
+  end
 end # describe FPM::Package
