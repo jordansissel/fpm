@@ -1,6 +1,4 @@
 0.4.11 (August 7, 2012)
-  - Support different compression types on deb packages (default gzip,
-    alternates xz and bzip2)
   - Fix some symlink handling to prevent links from being followed during
     cleanup (#228, patch by sbuss)
   - rpm: 'vendor' in rpm spec is now omitted if empty or nil. This fixes a bug
