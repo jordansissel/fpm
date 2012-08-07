@@ -4,13 +4,13 @@ require "fpm/package"
 require "fpm/errors"
 require "fpm/util"
 require "backports"
-require "fpm/monkeypatches" # until backports > 2.3.0
 require "fileutils"
 
 # Support for debian packages (.deb files)
 #
 # This class supports both input and output of packages.
 class FPM::Package::Deb < FPM::Package
+
   # Map of what scripts are named.
   SCRIPT_MAP = {
     :before_install     => "preinst",
@@ -19,6 +19,7 @@ class FPM::Package::Deb < FPM::Package
     :after_remove       => "postrm",
   } unless defined?(SCRIPT_MAP)
 
+  # The list of supported compression types. Default is gz (gzip)
   COMPRESSION_TYPES = [ "gz", "bzip2", "xz" ]
 
   option "--ignore-iteration-in-dependencies", :flag, 
