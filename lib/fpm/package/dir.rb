@@ -121,6 +121,10 @@ class FPM::Package::Dir < FPM::Package
   end # def copy
 
   def copy_metadata(source, destination)
+    # chmod/chown on symlinks will alter the linked file's permissions, which
+    # isn't desirable.
+    return if File.symlink?(source)
+
     source_stat = File::lstat(source)
     dest_stat = File::lstat(destination)
 
