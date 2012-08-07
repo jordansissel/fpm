@@ -3,7 +3,7 @@ PATH
   specs:
     fpm (0.4.11)
       arr-pm (~> 0.0.7)
-      backports (= 2.3.0)
+      backports (= 2.6.2)
       cabin (~> 0.4.3)
       clamp (= 0.3.1)
       json (= 1.6.6)
@@ -13,7 +13,7 @@ GEM
   specs:
     arr-pm (0.0.7)
       cabin (> 0)
-    backports (2.3.0)
+    backports (2.6.2)
     cabin (0.4.4)
       json
     clamp (0.3.1)

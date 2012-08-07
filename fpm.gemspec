@@ -26,7 +26,7 @@ Gem::Specification.new do |spec|
 
   # For backports to older rubies
   # https://github.com/marcandre/backports
-  spec.add_dependency("backports", "2.3.0") # license: MIT
+  spec.add_dependency("backports", "2.6.2") # license: MIT
 
   # For reading and writing rpms
   spec.add_dependency("arr-pm", "~> 0.0.7") # license: Apache 2
