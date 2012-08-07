@@ -145,15 +145,27 @@ describe FPM::Package do
   context "#script (internal method)" do
     it "should template when :template_scripts? is true" do
       subject.scripts[:after_install] = "<%= name %>"
+      subject.scripts[:before_install] = "<%= name %>"
+      subject.scripts[:after_remove] = "<%= name %>"
+      subject.scripts[:before_remove] = "<%= name %>"
       subject.attributes[:template_scripts?] = true
       subject.name = "Example"
       insist { subject.script(:after_install) } == subject.name
+      insist { subject.script(:before_install) } == subject.name
+      insist { subject.script(:after_remove) } == subject.name
+      insist { subject.script(:before_remove) } == subject.name
     end
 
     it "should not template when :template_scripts? is false" do
       subject.scripts[:after_install] = "<%= name %>"
+      subject.scripts[:before_install] = "<%= name %>"
+      subject.scripts[:after_remove] = "<%= name %>"
+      subject.scripts[:after_install] = "<%= name %>"
       subject.attributes[:template_scripts?] = false
       insist { subject.script(:after_install) } == subject.scripts[:after_install]
+      insist { subject.script(:before_install) } == subject.scripts[:before_install]
+      insist { subject.script(:after_remove) } == subject.scripts[:after_remove]
+      insist { subject.script(:before_remove) } == subject.scripts[:before_remove]
     end
 
     it "should not template by default" do
