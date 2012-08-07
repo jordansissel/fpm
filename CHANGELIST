@@ -1,12 +1,23 @@
-0.4.11 (June 19, 2012)
+0.4.11 (August 7, 2012)
   - Support different compression types on deb packages (default gzip,
     alternates xz and bzip2)
   - Fix some symlink handling to prevent links from being followed during
     cleanup (#228, patch by sbuss)
   - rpm: 'vendor' in rpm spec is now omitted if empty or nil. This fixes a bug
     where rpmbuild fails due to empty 'Vendor' tag if you convert rpm to rpm.
-  - rpm: relocatable rpms now supported when you specify a '--prefix' flag to fpm.
-    Example: fpm -s dir -t rpm --prefix /usr/local -n example /etc/motd
+  - internal: remove empty directories marked by --exclude (#205, patch by
+    jimbrowne)
+  - dir: don't try to set utime on symlinks (#234, #240, patch by ctgswallow)
+  - rpm: relocatable rpms now supported when using the '--prefix' flag.
+    Example: fpm -s dir -t rpm --prefix /usr/local -n example /etc/motd 
+    (patch by jkoppe)
+  - deb: --deb-compression flag: Support different compression methods. 
+    Default continues to be gzip.
+  - new flag: --template-scripts. This lets you write script templates for
+    --after-install, etc. Templates are ERB, so you can do things like 
+    '<%= name %>' to get the package name in the script, etc.
+  - warn on command invocations that appear to have stray flags to try and
+    help users who have complex command lines that are failling.
 
 0.4.10 (May 25, 2012)
   - Fix python package support for python3 (#212, patch by Slezhuk Evgeniy)
