@@ -5,6 +5,7 @@ require "tmpdir" # stdlib
 require "backports" # gem 'backports'
 require "socket" # stdlib, for Socket.gethostname
 require "shellwords" # stdlib, for Shellwords.escape
+require "erb" # stdlib, for template processing
 require "cabin" # gem "cabin"
 
 # This class is the parent of all packages.
@@ -300,7 +301,6 @@ class FPM::Package
   end # def files
  
   def template(path)
-    require "erb"
     template_dir = File.join(File.dirname(__FILE__), "..", "..", "templates")
     template_path = File.join(template_dir, path)
     template_code = File.read(template_path)
