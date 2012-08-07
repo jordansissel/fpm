@@ -2,7 +2,6 @@ require "fpm/package"
 require "backports"
 require "fileutils"
 require "find"
-require "fpm/monkeypatches" # until backports > 2.3.0
 require "arr-pm/file" # gem 'arr-pm'
 
 # RPM Package type.
