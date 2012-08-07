@@ -80,26 +80,23 @@ fi
 %clean
 # noop
 
-<% if script?(:before_install) -%>
-%pre
-<%= script(:before_install) %>
+<%# This next section puts any %pre, %post, %preun, or %postun scripts %>
+<% 
+  scriptmap = {
+    :before_install => "pre",
+    :after_install => "post",
+    :before_remove => "preun",
+    :after_remove => "postun",
+  }
+  scriptmap.each do |name, rpmname| 
+-%>
+<%   if script?(name) -%>
+%<%= rpmname %>
+<%= script(name) %>
 
+<%   end -%>
 <% end -%>
-<% if scripts[:after_install] -%>
-%post
-<%= scripts[:after_install] %>
 
-<% end -%>
-<% if scripts[:before_remove] -%>
-%preun
-<%= scripts[:before_remove] %>
-
-<% end -%>
-<% if scripts[:after_remove] -%>
-%postun
-<%= scripts[:after_remove] %>
-
-<% end -%>
 %files
 %defattr(-,<%= attributes[:rpm_user] %>,<%= attributes[:rpm_group] %>,-)
 <%# Output config files and then regular files. -%>
