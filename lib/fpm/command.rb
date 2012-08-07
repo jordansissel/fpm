@@ -145,6 +145,12 @@ class FPM::Command < Clamp::Command
     "a script to be run before package removal" do |val|
     File.expand_path(val) # Get the full path to the script
   end # --before-remove
+  option "--template-scripts", :flag,
+    "Allow scripts to be templated. This lets you use ERB to template your " \
+    "packaging scripts (for --after-install, etc). For example, you can do " \
+    "things like <%= name %> to get the package name. For more information, " \
+    "see the fpm wiki: " \
+    "https://github.com/jordansissel/fpm/wiki/Script-Templates"
 
   parameter "[ARGS] ...",
     "Inputs to the source package type. For the 'dir' type, this is the files" \
@@ -301,15 +307,18 @@ class FPM::Command < Clamp::Command
     input.config_files += config_files
     
     setscript = proc do |scriptname|
+      # 'self.send(scriptname) == self.before_install == --before-install
+      # Gets the path to the script
       path = self.send(scriptname)
       # Skip scripts not set
       next if path.nil?
 
-      # 'self.send(scriptname) == self.before_install == --before-install
       if !File.exists?(path)
         @logger.error("No such file (for #{scriptname.to_s}): #{path.inspect}")
         return 1
       end
+
+      # Load the script into memory.
       input.scripts[scriptname] = File.read(path)
     end
 

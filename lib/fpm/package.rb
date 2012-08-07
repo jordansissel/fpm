@@ -447,9 +447,29 @@ class FPM::Package
     return nil
   end # def version
 
+  # Does this package have the given script?
+  def script?(name)
+    return scripts.include?(name)
+  end # def script?
+
+  # Get the contents of the script by a given name.
+  #
+  # If template_scripts? is set in attributes (often by the --template-scripts
+  # flag), then apply it as an ERB template.
+  def script(script_name)
+    if attributes[:template_scripts?]
+      erb = ERB.new(scripts[script_name], nil, "-")
+      # TODO(sissel): find the original file name for the file.
+      erb.filename = "script(#{script_name})"
+      return erb.result(binding)
+    else
+      return scripts[script_name]
+    end
+  end # def script
+
   # General public API
   public(:type, :initialize, :convert, :input, :output, :to_s, :cleanup, :files,
-         :version)
+         :version, :script)
 
   # Package internal public api
   public(:cleanup_staging, :cleanup_build, :staging_path, :converted_from,
