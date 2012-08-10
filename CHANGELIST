@@ -1,3 +1,8 @@
+0.4.12 (August 10, 2012)
+  - Fix a major bug introduced in 0.4.11 that caused all deb packages to
+    contain empty maintainer scripts if not otherwise specified, which made
+    apt/dpkg quite unhappy
+
 0.4.11 (August 7, 2012)
   - Fix some symlink handling to prevent links from being followed during
     cleanup (#228, patch by sbuss)
