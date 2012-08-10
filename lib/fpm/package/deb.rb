@@ -394,7 +394,7 @@ class FPM::Package::Deb < FPM::Package
   # 'post_install' names
   def write_scripts
     SCRIPT_MAP.each do |scriptname, filename|
-      next if script?(scriptname).nil?
+      next unless script?(scriptname)
 
       with(control_path(filename)) do |controlscript|
         @logger.debug("Writing control script", :source => filename, :target => controlscript)
