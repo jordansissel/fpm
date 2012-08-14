@@ -140,6 +140,16 @@ describe FPM::Package do
       subject.instance_eval { exclude }
       insist { subject.files } == ["hello"]
     end
+
+    it "should obey attributes[:excludes] for child directories" do
+      Dir.mkdir(subject.staging_path("example"))
+      Dir.mkdir(subject.staging_path("example/foo"))
+      File.write(subject.staging_path("example/foo/delete_me"), "Hello!")
+      File.write(subject.staging_path("keeper"), "Hello!")
+      subject.attributes[:excludes] = [ "example/foo" ]
+      subject.instance_eval { exclude }
+      insist { subject.files } == [ "keeper" ] 
+    end
   end
 
   context "#script (internal method)" do
