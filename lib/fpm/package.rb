@@ -343,23 +343,43 @@ class FPM::Package
       installdir = staging_path
     end
 
+    exclude_path = proc do |file|
+      FileUtils.remove_entry_secure(staging_path(file))
+      Pathname.new(staging_path(file)).parent.ascend do |d|
+        if (::Dir.entries(d) - %w[ . .. ]).empty?
+          ::Dir.rmdir(d)
+          @logger.info("Deleting empty directory left by removing exluded file", :path => d)
+        else
+          break
+        end
+      end
+    end # exclude_path
+
     attributes[:excludes].each do |wildcard|
       @logger.debug("Checking for things to exclude", :wildcard => wildcard)
       files.each do |file|
+        @logger.debug("Checking path against wildcard", :path => file, :wildcard => wildcard)
         if File.fnmatch(wildcard, file)
           @logger.info("Removing excluded file", :path => file, :matches => wildcard)
-          FileUtils.remove_entry_secure(staging_path(file))
-          Pathname.new(staging_path(file)).parent.ascend do |d|
-            if (::Dir.entries(d) - %w[ . .. ]).empty?
-              ::Dir.rmdir(d)
-              @logger.info("Deleting empty directory left by removing exluded file", :path => d)
-            else
-              break
-            end
+          exclude_path.call(file)
+          next
+        end
+
+        @logger.debug("Checking if path is a child of an excluded directory",
+                      :path => file, :wildcard => wildcard,
+                      :directory? => File.directory?(staging_path(wildcard)))
+        if File.directory?(staging_path(wildcard))
+          # issue #248, if the excludes entry is a directory, ignore that
+          # directory and anything inside it.
+          exclude_re = Regexp.new("^#{Regexp.escape(wildcard)}($|/)")
+          if exclude_re.match(file)
+            @logger.info("Removing excluded file which has a parent excluded directory",
+                         :path => file, :excluded => wildcard)
+            exclude_path.call(file)
           end
         end
-      end
-    end
+      end 
+    end # files.each
   end # def exclude
 
 
