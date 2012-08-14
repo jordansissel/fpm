@@ -1,3 +1,8 @@
+0.4.13 (August 14, 2012)
+  - Make --exclude accept path prefixes as well. If you have a files in
+    'usr/share/man' in your package, you can now exclude all of a subdir
+    by doing '--exclude usr/share/man'
+
 0.4.12 (August 10, 2012)
   - Fix a major bug introduced in 0.4.11 that caused all deb packages to
     contain empty maintainer scripts if not otherwise specified, which made
