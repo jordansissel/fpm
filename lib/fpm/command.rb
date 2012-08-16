@@ -61,24 +61,29 @@ class FPM::Command < Clamp::Command
     @dependencies << val
   end # -d / --depends
   option "--provides", "PROVIDES",
-    "What this package provides (usually a name)" do |val|
+    "What this package provides (usually a name). This flag can be "\
+    "specified multiple times." do |val|
     @provides ||= []
     @provides << val
   end # --provides
   option "--conflicts", "CONFLICTS",
-    "Other packages/versions this package conflicts with" do |val|
+    "Other packages/versions this package conflicts with. This flag can " \
+    "specified multiple times." do |val|
     @conflicts ||= []
     @conflicts << val
   end # --conflicts
   option "--replaces", "REPLACES",
-    "Other packages/versions this package replaces" do |val|
+    "Other packages/versions this package replaces. This flag can be "\
+    "specified multiple times." do |val|
     @replaces ||= []
     @replaces << val
   end # --replaces
   option "--config-files", "CONFIG_FILES",
     "Mark a file in the package as being a config file. This uses 'conffiles'" \
     " in debs and %config in rpm. You can specify a directory to have it " \
-    "scanned marking all files found as config files" do |val|
+    "scanned marking all files found as config files. If you have multiple " \
+    "files to mark as configuration files, specify this flag multiple times." \
+    do |val|
     @config_files ||= []
     @config_files << val
   end # --config-files
