@@ -23,9 +23,13 @@ describe FPM::Package::Deb do
     end
 
     it "should default to native" do
+      expected = ""
       if program_in_path?("dpkg")
         expected = %x{dpkg --print-architecture}.chomp
-      else
+      end
+
+      if expected.empty?
+        # dpkg was missing, failed, or emitted nothing.
         expected = %x{uname -m}.chomp
       end
 
