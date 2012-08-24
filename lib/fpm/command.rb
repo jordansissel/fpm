@@ -105,8 +105,12 @@ class FPM::Command < Clamp::Command
     @excludes ||= []
     @excludes << val
   end # -x / --exclude
-  option "--description", "DESCRIPTION", "Add a description for this package.",
-    :default => "no description"
+  option "--description", "DESCRIPTION", "Add a description for this package." \
+    " You can include '\n' sequences to indicate newline breaks.",
+    :default => "no description" do |val|
+    # Replace literal "\n" sequences with a newline character.
+    val.gsub("\\n", "\n")
+  end
   option "--url", "URI", "Add a url for this package.",
     :default => "http://example.com/no-uri-given"
   option "--inputs", "INPUTS_PATH",
