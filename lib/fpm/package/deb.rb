@@ -77,7 +77,10 @@ class FPM::Package::Deb < FPM::Package
       # system about.
       if program_in_path?("dpkg")
         @architecture = %x{dpkg --print-architecture 2> /dev/null}.chomp
-        @architecture = %{uname -m}.chomp if $?.exitstatus != 0
+        if $?.exitstatus != 0 or @architecture.empty?
+          # if dpkg fails or emits nothing, revert back to uname -m
+          @architecture = %x{uname -m}.chomp 
+        end
       else
         @architecture = %x{uname -m}.chomp
       end
@@ -130,7 +133,8 @@ class FPM::Package::Deb < FPM::Package
         if value.nil?
           return nil
         else
-          value.split(": ",2).last
+          @logger.info("deb field", field => value.split(": ", 2).last)
+          return value.split(": ",2).last
         end
       end
       
