@@ -6,7 +6,7 @@ Architecture: <%= architecture %>
 Maintainer: <%= maintainer  %>
 Installed-Size: <%= attributes[:deb_installed_size] %>
 <% if !dependencies.empty? -%>
-Depends: <%= dependencies.join(", ") %>
+Depends: <%= dependencies.collect { |d| fix_dependency(d) }.flatten.join(", ") %>
 <% end -%>
 <% if !conflicts.empty? -%>
 Conflicts: <%= conflicts.join(", ") %>
