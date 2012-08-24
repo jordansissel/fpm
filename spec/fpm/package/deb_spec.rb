@@ -154,6 +154,10 @@ describe FPM::Package::Deb do
       it "should have the correct 'epoch:version-iteration'" do
         insist { dpkg_field("Version") } == @original.to_s("EPOCH:VERSION-ITERATION")
       end
+
+      it "should have the correct dependency list" do
+        insist { dpkg_field("Depends") } == @original.dependencies
+      end
     end
   end # #output
 end # describe FPM::Package::Deb
