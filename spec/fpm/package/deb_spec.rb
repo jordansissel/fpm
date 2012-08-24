@@ -156,7 +156,8 @@ describe FPM::Package::Deb do
       end
 
       it "should have the correct dependency list" do
-        insist { dpkg_field("Depends") } == @original.dependencies
+        # 'something > 10' should convert to 'something (>> 10)', etc.
+        insist { dpkg_field("Depends") } == "something (>> 10), hello (>= 20)"
       end
     end
   end # #output
