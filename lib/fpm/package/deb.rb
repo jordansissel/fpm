@@ -197,7 +197,6 @@ class FPM::Package::Deb < FPM::Package
 
   def extract_files(package)
     # Find out the compression type
-    p `ar t #{package}`
     compression = `ar t #{package}`.split("\n").grep(/data.tar/).first.split(".").last
     case compression
       when "gz"
