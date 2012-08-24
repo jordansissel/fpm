@@ -270,6 +270,12 @@ class FPM::Package::Deb < FPM::Package
     end.flatten
   end # def converted_from
 
+  def debianize_op(op)
+    # Operators in debian packaging are <<, <=, =, >= and >>
+    # So any operator like < or > must be replaced
+    {:< => "<<", :> => ">>"}[op.to_sym] or op
+  end
+
   def fix_dependency(dep)
     # Deb dependencies are: NAME (OP VERSION), like "zsh (> 3.0)"
     # Convert anything that looks like 'NAME OP VERSION' to this format.
@@ -280,7 +286,7 @@ class FPM::Package::Deb < FPM::Package
       name, op, version = dep.split(/ +/)
       if !version.nil?
         # Convert strings 'foo >= bar' to 'foo (>= bar)'
-        dep = "#{name} (#{op} #{version})"
+        dep = "#{name} (#{debianize_op(op)} #{version})"
       end
     end
 
