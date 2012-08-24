@@ -111,6 +111,9 @@ describe FPM::Package::RPM do
         subject.dependencies << "something > 10"
         subject.dependencies << "hello >= 20"
         subject.conflicts << "bad < 2"
+
+        # Make sure multi-line licenses are hacked to work in rpm (#252)
+        subject.license = "this\nis\nan\example"
         subject.provides << "bacon = 1.0"
 
         # TODO(sissel): This api sucks, yo.
@@ -181,6 +184,10 @@ describe FPM::Package::RPM do
         subject.provides.each do |dep|
           insist { provides }.include?(dep)
         end
+      end
+
+      it "should replace newlines with spaces in the license field (issue#252)" do
+        insist { @rpm.tags[:license] } == subject.license.split("\n").join(" ")
       end
 
       it "should have the correct 'preun' script" do

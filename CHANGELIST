@@ -1,3 +1,6 @@
+0.4.14 (August 24, 2012)
+  - rpm: Replace newlines with space in any license setting. (#252)
+
 0.4.13 (August 14, 2012)
   - Make --exclude accept path prefixes as well. If you have a files in
     'usr/share/man' in your package, you can now exclude all of a subdir
