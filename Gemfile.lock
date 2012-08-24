@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    fpm (0.4.11)
+    fpm (0.4.14)
       arr-pm (~> 0.0.7)
       backports (= 2.6.2)
       cabin (~> 0.4.3)
