@@ -32,7 +32,11 @@ Prefix: <%= prefix %>
 <% end -%>
 
 Group: <%= category %>
-License: <%= license %>
+<%# Sometimes the 'license' field has multiple lines... Hack around it. 
+  # While technically yes this means we are 'modifying' the license,
+  # since the job of FPM is to get shit done and that this is  only
+  # modifying whitespace, it should be reasonably OK. -%>
+License: <%= license.gsub("\n", " ") %>
 <% if !vendor.nil? and !vendor.empty? -%>
 Vendor: <%= vendor %>
 <% end -%>
