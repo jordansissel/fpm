@@ -10,6 +10,9 @@ class FPM::Package::PEAR < FPM::Package
   option "--package-name-prefix", "PREFIX",
     "Name prefix for pear package", :default => "php-pear"
 
+  option "--channel", "CHANNEL_URL",
+    "The pear channel to use instead of the default."
+
   # Input a PEAR package.
   #
   # The parameter is a PHP PEAR package name.
@@ -27,6 +30,12 @@ class FPM::Package::PEAR < FPM::Package
     config = File.expand_path(build_path("pear.config"))
     installroot = attributes[:prefix] || "/usr/share"
     safesystem("pear", "config-create", staging_path(installroot), config)
+
+    # try channel-discover
+    if attributes.include?[:pear_channel]
+      @logger.info("Custom channel specified", :channel => attributes[:pear_channel])
+      safesystem("pear", "channel-discover", attributes[:pear_channel])
+    end
 
     @logger.info("Fetching package information", :package => input_package)
     pear_cmd = "pear -c #{config} remote-info #{input_package}"
