@@ -3,6 +3,8 @@
     Example: fpm -s pear -t deb --pear-channel pear.drush.org drush
   - permit literal '\n' in --description, fpm will replace with a newline
     character. (#251)
+  - improve error messaging when trying to output a package to a directory that
+    doesn't exist (#244)
 
 0.4.14 (August 24, 2012)
   - rpm: Replace newlines with space in any license setting. (#252)
