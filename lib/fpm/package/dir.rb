@@ -50,6 +50,7 @@ class FPM::Package::Dir < FPM::Package
 
   # Output this package to the given directory.
   def output(dir)
+    output_check(output_path)
     dir = File.expand_path(dir)
     ::Dir.chdir(staging_path) do
       @logger["method"] = "output"
