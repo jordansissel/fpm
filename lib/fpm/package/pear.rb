@@ -11,7 +11,7 @@ class FPM::Package::PEAR < FPM::Package
     "Name prefix for pear package", :default => "php-pear"
 
   option "--channel", "CHANNEL_URL",
-    "The pear channel to use instead of the default."
+    "The pear channel url to use instead of the default."
 
   # Input a PEAR package.
   #
@@ -32,17 +32,21 @@ class FPM::Package::PEAR < FPM::Package
     safesystem("pear", "config-create", staging_path(installroot), config)
 
     # try channel-discover
-    if attributes.include?[:pear_channel]
+    if attributes.include?(:pear_channel)
       @logger.info("Custom channel specified", :channel => attributes[:pear_channel])
-      safesystem("pear", "channel-discover", attributes[:pear_channel])
+      safesystem("pear", "-c", config, "channel-discover", attributes[:pear_channel])
+      input_package = "#{attributes[:pear_channel]}/#{input_package}"
+      @logger.info("Prefixing package name with channel", :package => input_package)
     end
 
-    @logger.info("Fetching package information", :package => input_package)
     pear_cmd = "pear -c #{config} remote-info #{input_package}"
+    @logger.info("Fetching package information", :package => input_package, :command => pear_cmd)
     name = %x{#{pear_cmd} | sed -ne '/^Package\s*/s/^Package\s*//p'}.chomp
     self.name = "#{attributes[:pear_package_name_prefix]}-#{name}"
     self.version = %x{#{pear_cmd} | sed -ne '/^Latest\s*/s/^Latest\s*//p'}.chomp
     self.description  = %x{#{pear_cmd} | sed -ne '/^Summary\s*/s/^Summary\s*//p'}.chomp
+    @logger.debug("Package info", :name => self.name, :version => self.version,
+                  :description => self.description)
 
     @logger.info("Installing pear package", :package => input_package,
                   :directory => staging_path)
