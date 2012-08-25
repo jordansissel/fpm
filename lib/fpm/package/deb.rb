@@ -66,6 +66,9 @@ class FPM::Package::Deb < FPM::Package
     value.to_i
   end
 
+  option "--priority", "PRIORITY", 
+    "The debian package 'priority' value.", :default => "extra"
+
   private
 
   # Return the architecture. This will default to native if not yet set.
