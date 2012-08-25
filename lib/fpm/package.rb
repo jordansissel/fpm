@@ -319,6 +319,7 @@ class FPM::Package
   end # def template
 
   def to_s(fmt="NAME.TYPE")
+    fmt = "NAME.TYPE" if fmt.nil?
     fullversion = version.to_s
     fullversion += "-#{iteration}" if iteration
     return fmt.gsub("ARCH", architecture.to_s) \
