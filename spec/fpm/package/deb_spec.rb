@@ -51,6 +51,12 @@ describe FPM::Package::Deb do
     end
   end
 
+  describe "priority" do
+    it "should default to 'extra'" do
+      insist { subject.attributes[:deb_priority] } == "extra"
+    end
+  end
+
   describe "#to_s" do
     it "should have a default output usable as a filename" do
       subject.name = "name"
@@ -111,6 +117,7 @@ describe FPM::Package::Deb do
       @original.dependencies << "something > 10"
       @original.dependencies << "hello >= 20"
       @original.output(@target)
+      @original.attributes[:deb_priority] = "fizzle"
 
       @input = FPM::Package::Deb.new
       @input.input(@target)
@@ -157,6 +164,10 @@ describe FPM::Package::Deb do
 
       it "should have the correct 'epoch:version-iteration'" do
         insist { dpkg_field("Version") } == @original.to_s("EPOCH:VERSION-ITERATION")
+      end
+
+      it "should have the correct priority" do
+        insist { dpkg_field("Priority") } == @original.attributes[:deb_priority]
       end
 
       it "should have the correct dependency list" do
