@@ -49,12 +49,13 @@ class FPM::Package::Dir < FPM::Package
   end # def input
 
   # Output this package to the given directory.
-  def output(dir)
+  def output(output_path)
     output_check(output_path)
-    dir = File.expand_path(dir)
+
+    output_path = File.expand_path(output_path)
     ::Dir.chdir(staging_path) do
       @logger["method"] = "output"
-      clone(".", dir)
+      clone(".", output_path)
     end
   ensure
     @logger.remove("method")

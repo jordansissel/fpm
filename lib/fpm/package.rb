@@ -496,8 +496,6 @@ class FPM::Package
   end # def script
 
   def output_check(output_path)
-    # Abort if the target path already exists.
-    raise FileAlreadyExists.new(output_path) if File.exists?(output_path)
     if !File.directory?(File.dirname(output_path))
       raise ParentDirectoryMissing.new(output_path)
     end

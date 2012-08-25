@@ -174,6 +174,7 @@ class FPM::Package::RPM < FPM::Package
 
   def output(output_path)
     output_check(output_path)
+    raise FileAlreadyExists.new(output_path) if File.exists?(output_path)
     %w(BUILD RPMS SRPMS SOURCES SPECS).each { |d| FileUtils.mkdir_p(build_path(d)) }
     args = ["rpmbuild", "-bb",
       "--define", "buildroot #{build_path}/BUILD",
