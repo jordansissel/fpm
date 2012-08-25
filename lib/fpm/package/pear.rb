@@ -13,6 +13,9 @@ class FPM::Package::PEAR < FPM::Package
   option "--channel", "CHANNEL_URL",
     "The pear channel url to use instead of the default."
 
+  option "--channel-update", :flag, 
+    "call 'pear channel-update' prior to installation"
+
   # Input a PEAR package.
   #
   # The parameter is a PHP PEAR package name.
@@ -32,11 +35,19 @@ class FPM::Package::PEAR < FPM::Package
     safesystem("pear", "config-create", staging_path(installroot), config)
 
     # try channel-discover
-    if attributes.include?(:pear_channel)
+    if !attributes[:pear_channel].nil?
       @logger.info("Custom channel specified", :channel => attributes[:pear_channel])
+      p ["pear", "-c", config, "channel-discover", attributes[:pear_channel]]
       safesystem("pear", "-c", config, "channel-discover", attributes[:pear_channel])
       input_package = "#{attributes[:pear_channel]}/#{input_package}"
       @logger.info("Prefixing package name with channel", :package => input_package)
+    end
+
+    # do channel-update if requested
+    if attributes[:pear_channel_update?]
+      channel = attributes[:pear_channel] || "pear"
+      @logger.info("Updating the channel", :channel => channel)
+      safesystem("pear", "-c", config, "channel-update", channel)
     end
 
     pear_cmd = "pear -c #{config} remote-info #{input_package}"
@@ -51,8 +62,7 @@ class FPM::Package::PEAR < FPM::Package
     @logger.info("Installing pear package", :package => input_package,
                   :directory => staging_path)
     ::Dir.chdir(staging_path) do
-      safesystem("pear", "-c", config, "install", "-n", "-f", "-P", ".",
-                 input_package)
+      safesystem("pear", "-c", config, "install", "-n", "-f", input_package)
     end
  
     # Remove the stuff we don't want
