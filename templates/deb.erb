@@ -22,7 +22,7 @@ Provides: <%= provides.join(", ") %>
 Replaces: <%= replaces.join(", ") %>
 <% end -%>
 Section: <%= category %>
-Priority: extra
+Priority: <%= attributes[:deb_priority] %>
 Homepage: <%= url or "http://nourlgiven.example.com/" %>
 <% lines = (description or "no description given").split("\n") -%>
 <% firstline, *remainder = lines -%>
