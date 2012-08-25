@@ -101,14 +101,15 @@ class FPM::Package::Deb < FPM::Package
       @logger.warn("Debian tools (dpkg/apt) don't do well with packages " \
         "that use capital letters in the name. In some cases it will " \
         "automatically downcase them, in others it will not. It is confusing." \
-        "Best to not use any capital letters at all.",
+        " Best to not use any capital letters at all. I have downcased the " \
+        "package name for you just to be safe.",
         :oldname => @name, :fixedname => @name.downcase)
       @name = @name.downcase
     end
 
     if @name.include?("_")
-      @logger.info("Package name includes underscores, converting to dashes",
-                   :name => @name)
+      @logger.info("Debian package names cannot include underscores; " \
+                   "automatically converting to dashes", :name => @name)
       @name = @name.gsub(/[_]/, "-")
     end
 
