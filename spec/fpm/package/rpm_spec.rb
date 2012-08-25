@@ -102,7 +102,8 @@ describe FPM::Package::RPM do
   describe "#output", :if => program_in_path?("rpmbuild") do
     context "package attributes" do
       before :all do
-        @target = Tempfile.new("fpm-test-rpm")
+        @target = Tempfile.new("fpm-test-rpm").path
+        File.delete(@target)
         subject.name = "name"
         subject.version = "123"
         subject.architecture = "all"
@@ -122,23 +123,23 @@ describe FPM::Package::RPM do
         subject.scripts[:before_remove] = "example before_remove"
         subject.scripts[:after_remove] = "example after_remove"
 
+        p :before_target => @target
         # Write the rpm out
-        subject.output(@target.path)
+        subject.output(@target)
 
         # Read the rpm
-        @rpm = ::RPM::File.new(@target.path)
+        @rpm = ::RPM::File.new(@target)
 
         @rpmtags = {}
         @rpm.header.tags.each do |tag|
           @rpmtags[tag.tag] = tag.value
         end
-      end
+      end # before :all
 
       after :all do
         subject.cleanup
-        @target.close
-        @target.delete
-      end # after
+        File.delete(@target)
+      end # after :all
 
       it "should have the correct name" do
         insist { @rpmtags[:name] } == subject.name
@@ -224,49 +225,50 @@ describe FPM::Package::RPM do
           .include?((@rpmtags[:filedigestalgo].first rescue nil))
       end
     end # package attributes
-
-    describe "regressions should not occur" do
-      before :each do
-        @target = Tempfile.new("fpm-test-rpm")
-        subject.name = "name"
-        subject.version = "123"
-        subject.iteration = "100"
-        subject.epoch = "5"
-      end
-
-      after :each do
-        subject.cleanup
-        @target.close
-        @target.delete
-      end # after
-
-      it "should permit spaces in filenames (issue #164)" do
-        File.write(subject.staging_path("file with space"), "Hello")
-
-        # This will raise an exception if rpmbuild fails.
-        subject.output(@target.path)
-      end
-
-      it "should permit brackets in filenames (issue #202)" do
-        File.write(subject.staging_path("file[with]bracket"), "Hello")
-
-        # This will raise an exception if rpmbuild fails.
-        subject.output(@target.path)
-      end
-
-      it "should permit asterisks in filenames (issue #202)" do
-        File.write(subject.staging_path("file*asterisk"), "Hello")
-
-        # This will raise an exception if rpmbuild fails.
-        subject.output(@target.path)
-      end
-    end # regression stuff
   end # #output
+
+  describe "regressions should not occur" do
+    before :each do
+      @target = Tempfile.new("fpm-test-rpm").path
+      File.delete(@target)
+      subject.name = "name"
+      subject.version = "123"
+      subject.iteration = "100"
+      subject.epoch = "5"
+    end
+
+    after :each do
+      subject.cleanup
+      File.delete(@target)
+    end # after
+
+    it "should permit spaces in filenames (issue #164)" do
+      File.write(subject.staging_path("file with space"), "Hello")
+
+      # This will raise an exception if rpmbuild fails.
+      subject.output(@target)
+    end
+
+    it "should permit brackets in filenames (issue #202)" do
+      File.write(subject.staging_path("file[with]bracket"), "Hello")
+
+      # This will raise an exception if rpmbuild fails.
+      subject.output(@target)
+    end
+
+    it "should permit asterisks in filenames (issue #202)" do
+      File.write(subject.staging_path("file*asterisk"), "Hello")
+
+      # This will raise an exception if rpmbuild fails.
+      subject.output(@target)
+    end
+  end # regression stuff
 
   describe "#output with digest and compression settings", :if => program_in_path?("rpmbuild") do
     context "bzip2/sha1" do
       before :all do
-        @target = Tempfile.new("fpm-test-rpm")
+        @target = Tempfile.new("fpm-test-rpm").path
+        File.delete(@target)
         subject.name = "name"
         subject.version = "123"
         subject.architecture = "all"
@@ -276,10 +278,10 @@ describe FPM::Package::RPM do
         subject.attributes[:rpm_digest] = "sha1"
 
         # Write the rpm out
-        subject.output(@target.path)
+        subject.output(@target)
 
         # Read the rpm
-        @rpm = ::RPM::File.new(@target.path)
+        @rpm = ::RPM::File.new(@target)
 
         @rpmtags = {}
         @rpm.header.tags.each do |tag|
@@ -289,8 +291,7 @@ describe FPM::Package::RPM do
 
       after :all do
         subject.cleanup
-        @target.close
-        @target.delete
+        File.delete(@target)
       end # after
 
       it "should have the compressor and digest algorithm listed" do
