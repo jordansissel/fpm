@@ -25,6 +25,14 @@ class FPM::Package
     end # def to_s
   end # class FileAlreadyExists
 
+  # This class is raised when you try to output a package to a path
+  # whose containing directory does not exist.
+  class ParentDirectoryMissing < StandardError
+    def to_s
+      return "Parent directory does not exist: #{File.dirname(super)} - cannot write to #{super}"
+    end # def to_s
+  end # class ParentDirectoryMissing
+
   # The name of this package
   attr_accessor :name
 
@@ -486,6 +494,14 @@ class FPM::Package
       return scripts[script_name]
     end
   end # def script
+
+  def output_check(output_path)
+    # Abort if the target path already exists.
+    raise FileAlreadyExists.new(output_path) if File.exists?(output_path)
+    if !File.directory?(File.dirname(output_path))
+      raise ParentDirectoryMissing.new(output_path)
+    end
+  end # def output_path
 
   # General public API
   public(:type, :initialize, :convert, :input, :output, :to_s, :cleanup, :files,

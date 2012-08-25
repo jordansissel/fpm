@@ -225,8 +225,7 @@ class FPM::Package::Deb < FPM::Package
   end # def extract_files
 
   def output(output_path)
-    # Abort if the target path already exists.
-    raise FileAlreadyExists.new(output_path) if File.exists?(output_path)
+    output_check(output_path)
 
     # create 'debian-binary' file, required to make a valid debian package
     File.write(build_path("debian-binary"), "2.0\n")

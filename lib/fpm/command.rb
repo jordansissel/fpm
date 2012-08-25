@@ -353,6 +353,9 @@ class FPM::Command < Clamp::Command
     rescue FPM::Package::FileAlreadyExists => e
       @logger.fatal(e.message)
       return 1
+    rescue FPM::Package::ParentDirectoryMissing => e
+      @logger.fatal(e.message)
+      return 1
     end
 
     return 0
