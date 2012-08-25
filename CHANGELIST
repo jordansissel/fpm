@@ -5,6 +5,8 @@
     character. (#251)
   - improve error messaging when trying to output a package to a directory that
     doesn't exist (#244)
+  - deb: add --deb-priority flag (#232) for setting the debian 'priority'
+    value for your package.
 
 0.4.14 (August 24, 2012)
   - rpm: Replace newlines with space in any license setting. (#252)
