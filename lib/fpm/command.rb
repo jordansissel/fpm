@@ -80,10 +80,10 @@ class FPM::Command < Clamp::Command
   end # --replaces
   option "--config-files", "CONFIG_FILES",
     "Mark a file in the package as being a config file. This uses 'conffiles'" \
-    " in debs and %config in rpm. You can specify a directory to have it " \
-    "scanned marking all files found as config files. If you have multiple " \
-    "files to mark as configuration files, specify this flag multiple times." \
-    do |val|
+    " in debs and %config in rpm. If you have multiple files to mark as " \
+    "configuration files, specify this flag multiple times." do |val|
+    #You can specify a directory to have it scanned marking all files found as
+    #config files. If you have multiple "
     @config_files ||= []
     @config_files << val
   end # --config-files
