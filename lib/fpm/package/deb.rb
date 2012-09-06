@@ -69,6 +69,10 @@ class FPM::Package::Deb < FPM::Package
   option "--priority", "PRIORITY", 
     "The debian package 'priority' value.", :default => "extra"
 
+  option "--user", "USER", "The owner of files in this package"
+
+  option "--group", "GROUP", "The group owner of files in this package"
+
   def initialize(*args)
     super(*args)
     attributes[:deb_priority] = "extra"
@@ -257,7 +261,14 @@ class FPM::Package::Deb < FPM::Package
         raise FPM::InvalidPackageConfiguration,
           "Unknown compression type '#{self.attributes[:deb_compression]}'"
     end
-    safesystem(tar_cmd, "-C", staging_path, compression, "-cf", datatar, ".")
+    tar_flags = []
+    if !attributes[:deb_user].nil?
+      tar_flags += [ "--owner", attributes[:deb_user] ]
+    end
+    if !attributes[:deb_group].nil?
+      tar_flags += [ "--group", attributes[:deb_group] ]
+    end
+    safesystem(tar_cmd, "-C", staging_path, compression, *tar_flags, "-cf", datatar, ".")
 
     # pack up the .deb, which is just an 'ar' archive with 3 files
     # the 'debian-binary' file has to be first
