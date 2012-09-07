@@ -161,6 +161,14 @@ class FPM::Command < Clamp::Command
     "see the fpm wiki: " \
     "https://github.com/jordansissel/fpm/wiki/Script-Templates"
 
+  option "--template-value", "KEY=VALUE",
+    "Make 'key' available in script templates, so <%= key %> given will be " \
+    "the provided value. Implies --template-scripts" do |kv|
+    @template_scripts = true
+    @template_values ||= []
+    @template_values << kv.split("=", 2)
+  end
+
   parameter "[ARGS] ...",
     "Inputs to the source package type. For the 'dir' type, this is the files" \
     " and directories you want to include in the package. For others, like " \
@@ -345,6 +353,13 @@ class FPM::Command < Clamp::Command
 
     # Convert to the output type
     output = input.convert(output_class)
+
+    # Provide any template values as methods on the package.
+    if !@template_values.nil?
+      @template_values.each do |key, value|
+        (class << output; self; end).send(:define_method, key) { value }
+      end
+    end
 
     # Write the output somewhere, package can be nil if no --package is specified, 
     # and that's OK.
