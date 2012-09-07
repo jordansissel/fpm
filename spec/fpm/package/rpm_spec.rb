@@ -227,7 +227,7 @@ describe FPM::Package::RPM do
     end # package attributes
   end # #output
 
-  describe "regressions should not occur" do
+  describe "regressions should not occur", :if => program_in_path?("rpmbuild") do
     before :each do
       @target = Tempfile.new("fpm-test-rpm").path
       File.delete(@target)
