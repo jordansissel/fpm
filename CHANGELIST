@@ -12,7 +12,8 @@
     <%= hello %> to get 'world' to show up in your maintainer scripts.
   - python: add --python-install-data flag to set the --install-data option to
     setup.py (#255, patch by Thomas Meson)
-  - TODO(sissel): abort if '-d' has a comma
+  - Reject bad dependency flags (ones containing commas) and offer alternative.
+    (#257)
   - Try to copy a file if hardlinking fails with permission problems (#253, 
     patch by Jacek Lach)
 
