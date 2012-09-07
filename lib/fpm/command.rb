@@ -60,6 +60,7 @@ class FPM::Command < Clamp::Command
     @dependencies ||= []
     @dependencies << val
   end # -d / --depends
+
   option "--provides", "PROVIDES",
     "What this package provides (usually a name). This flag can be "\
     "specified multiple times." do |val|
@@ -426,6 +427,18 @@ class FPM::Command < Clamp::Command
         mandatory(FPM::Package.types.include?(val),
                   "Invalid output package (-t flag) type #{val.inspect}. " \
                   "Expected one of: #{types.join(", ")}")
+      end
+
+      with (@command.dependencies) do |dependencies|
+        # Verify dependencies don't include commas (#257)
+        dependencies.each do |dep|
+          next unless dep.include?(",")
+          splitdeps = dep.split(/\s*,\s*/)
+          @messages << "Dependencies should not " \
+            "include commas. If you want to specify multiple dependencies, use " \
+            "the '-d' flag multiple times. Example: " + \
+            splitdeps.map { |d| "-d '#{d}'" }.join(" ")
+        end
       end
 
       mandatory(@command.args.any?,
