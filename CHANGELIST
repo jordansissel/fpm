@@ -18,6 +18,8 @@
     (#257)
   - Try to copy a file if hardlinking fails with permission problems (#253, 
     patch by Jacek Lach)
+  - Make --exclude, if a directory, include itself and any children, recursive.
+    (#248)
 
 0.4.14 (August 24, 2012)
   - rpm: Replace newlines with space in any license setting. (#252)
