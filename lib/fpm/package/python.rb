@@ -49,7 +49,7 @@ class FPM::Package::Python < FPM::Package
     "print get_python_lib()'"
   option "--install-data", "DATA_PATH", "The path to where data should be." \
     "installed to. This is equivalent to 'python setup.py --install-data " \
-    "DATA_PATH""
+    "DATA_PATH"
 
   private
 
