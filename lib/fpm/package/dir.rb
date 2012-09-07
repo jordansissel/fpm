@@ -112,7 +112,7 @@ class FPM::Package::Dir < FPM::Package
       begin
         @logger.debug("Linking", :source => source, :destination => destination)
         File.link(source, destination)
-      rescue Errno::EXDEV
+      rescue Errno::EXDEV, Errno::EPERM
         # Hardlink attempt failed, copy it instead
         @logger.debug("Copying", :source => source, :destination => destination)
         FileUtils.copy_entry(source, destination)
