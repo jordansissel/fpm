@@ -7,6 +7,9 @@
     doesn't exist (#244)
   - deb: add --deb-priority flag (#232) for setting the debian 'priority'
     value for your package.
+  - add --template-value. Used to expose arbitrary values to script templates.
+    If you do --template-value hello=world, in your template you can do
+    <%= hello %> to get 'world' to show up in your maintainer scripts.
 
 0.4.14 (August 24, 2012)
   - rpm: Replace newlines with space in any license setting. (#252)
