@@ -47,8 +47,9 @@ class FPM::Package::Python < FPM::Package
     "Want to what your target platform is using? Run this: " \
     "python -c 'from distutils.sysconfig import get_python_lib; " \
     "print get_python_lib()'"
-  option "--install-data", "DATA_PATH", "The path to where data should be " \
-    "installed to."
+  option "--install-data", "DATA_PATH", "The path to where data should be." \
+    "installed to. This is equivalent to 'python setup.py --install-data " \
+    "DATA_PATH""
 
   private
 
