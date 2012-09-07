@@ -1,3 +1,6 @@
+0.4.16 (September 6, 2012)
+  - Fix compatibility with Ruby 1.8.7 (broken in 0.4.15)
+
 0.4.15 (September 6, 2012)
   - pear: support custom channels with --pear-channel <channel> (#207)
     Example: fpm -s pear -t deb --pear-channel pear.drush.org drush
