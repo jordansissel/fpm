@@ -268,7 +268,9 @@ class FPM::Package::Deb < FPM::Package
     if !attributes[:deb_group].nil?
       tar_flags += [ "--group", attributes[:deb_group] ]
     end
-    safesystem(tar_cmd, "-C", staging_path, compression, *tar_flags, "-cf", datatar, ".")
+
+    args = [ tar_cmd, "-C", staging_path, compression ] + tar_flags + [ "-cf", datatar, "." ]
+    safesystem(*args)
 
     # pack up the .deb, which is just an 'ar' archive with 3 files
     # the 'debian-binary' file has to be first
