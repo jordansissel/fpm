@@ -1,10 +1,12 @@
-0.4.15 (???)
+0.4.15 (September 6, 2012)
   - pear: support custom channels with --pear-channel <channel> (#207)
     Example: fpm -s pear -t deb --pear-channel pear.drush.org drush
   - permit literal '\n' in --description, fpm will replace with a newline
     character. Example: fpm --description "line one\nline two" (#251)
   - improve error messaging when trying to output a package to a directory that
     doesn't exist (#244)
+  - deb: convert '>' and '<' dependency operators to the correct '>>' and '<<'
+    debian version operators (#250, patch by Thomas Meson).
   - deb: add --deb-priority flag (#232) for setting the debian 'priority'
     value for your package.
   - add --template-value. Used to expose arbitrary values to script templates.
