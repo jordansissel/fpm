@@ -116,8 +116,8 @@ describe FPM::Package::Deb do
       @original.architecture = "all"
       @original.dependencies << "something > 10"
       @original.dependencies << "hello >= 20"
-      @original.output(@target)
       @original.attributes[:deb_priority] = "fizzle"
+      @original.output(@target)
 
       @input = FPM::Package::Deb.new
       @input.input(@target)
