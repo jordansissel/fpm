@@ -88,6 +88,12 @@ class FPM::Command < Clamp::Command
     @config_files ||= []
     @config_files << val
   end # --config-files
+  option "--directories", "DIRECTORIES",
+    "Mark a directory as being owned by the package" \
+    do |val|
+    @directories ||= []
+    @directories << val
+  end # directories
   option ["-a", "--architecture"], "ARCHITECTURE",
     "The architecture name. Usually matches 'uname -m'. For automatic values," \
     " you can use '-a all' or '-a native'. These two strings will be " \
@@ -198,6 +204,7 @@ class FPM::Command < Clamp::Command
     @provides = []
     @dependencies = []
     @config_files = []
+    @directories = []
     @excludes = []
   end # def initialize
 
@@ -323,6 +330,7 @@ class FPM::Command < Clamp::Command
     input.provides += provides
     input.replaces += replaces
     input.config_files += config_files
+    input.directories += directories
     
     setscript = proc do |scriptname|
       # 'self.send(scriptname) == self.before_install == --before-install
