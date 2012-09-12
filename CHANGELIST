@@ -1,3 +1,6 @@
+0.4.17 (September 12, 2012)
+  - Remove accidental JSON warning when using '-s python'
+
 0.4.16 (September 6, 2012)
   - Fix compatibility with Ruby 1.8.7 (broken in 0.4.15)
 
