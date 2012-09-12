@@ -131,8 +131,9 @@ class FPM::Package::Python < FPM::Package
       # details.
       `#{setup_cmd}`
     end
-    @logger.warn("json output from setup.py", :data => output)
+    @logger.debug("full text from `setup.py get_metadata`", :data => output)
     metadata = JSON.parse(output[/\{.*\}/msx])
+    @logger.info("object output of get_metadata", :json => metadata)
 
     self.architecture = metadata["architecture"]
     self.description = metadata["description"]
