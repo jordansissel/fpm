@@ -4,6 +4,7 @@ require "fpm/util"
 require "clamp"
 require "ostruct"
 require "fpm"
+require "tmpdir" # for Dir.tmpdir
 
 if $DEBUG
   Cabin::Channel.get(Kernel).subscribe($stdout)
@@ -170,6 +171,11 @@ class FPM::Command < Clamp::Command
     @template_values << kv.split("=", 2)
   end
 
+  option "--workdir", "WORKDIR",
+    "The directory you want fpm to do its work in, where 'work' is any file" \
+    "copying, downloading, etc. Roughly any scratch space fpm needs to build" \
+    "your package.", :default => Dir.tmpdir
+
   parameter "[ARGS] ...",
     "Inputs to the source package type. For the 'dir' type, this is the files" \
     " and directories you want to include in the package. For others, like " \
@@ -220,6 +226,9 @@ class FPM::Command < Clamp::Command
       @logger.info("No args, but -s dir and -C are given, assuming '.' as input") 
       args << "."
     end
+
+    @logger.info("Setting workdir", :workdir => workdir)
+    ENV["TMP"] = workdir
 
     validator = Validator.new(self)
     if !validator.ok?
