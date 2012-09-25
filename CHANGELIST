@@ -1,3 +1,9 @@
+0.4.18 (September 25, 2012)
+  - Fix regression in rpm building where the epoch in was missing in the rpm,
+    but prior fpm versions defaulted it to 1. This caused rpms built with newer
+    fpms to appear "older" than older rpms. Tests added to ensure this regression
+    is caught prior to future releases! (Reported by eliklein)
+
 0.4.17 (September 12, 2012)
   - Remove accidental JSON warning when using '-s python'
 
