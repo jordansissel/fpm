@@ -214,6 +214,11 @@ class FPM::Package::RPM < FPM::Package
     #return File.join("BUILD", prefix)
   end # def prefix
 
+  # The default epoch value must be 1 (backward compatibility for rpms built
+  # with fpm 0.4.3 and older)
+  def epoch
+    return @epoch || "1"
+  end # def epoch
 
   def to_s(format=nil)
     return super("NAME-VERSION-ITERATION.ARCH.TYPE") if format.nil?
