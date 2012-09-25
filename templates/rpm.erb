@@ -69,9 +69,9 @@ Obsoletes: <%= repl %>
 
 %install
 <% files.each do |path| -%>
-<%   source = Shellwords.shellescape(File.join(staging_path, path)) -%>
+<%   source = Shellwords.shellescape(File.join(staging_path, path)).gsub("%", "%%") -%>
 <%   # Copy to the build_path/BUILD/ to make rpmbuild happy -%>
-<%   target = Shellwords.shellescape(File.join(build_path, build_sub_dir, path)) -%>
+<%   target = Shellwords.shellescape(File.join(build_path, build_sub_dir, path)).gsub("%", "%%") -%>
 <%   dir = File.dirname(target) %>
 mkdir -p <%= dir %>
 if [ -f <%= source %> ] || [ -h <%= source %> ] ; then
