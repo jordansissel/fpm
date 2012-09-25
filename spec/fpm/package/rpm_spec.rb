@@ -232,9 +232,7 @@ describe FPM::Package::RPM do
       @target = Tempfile.new("fpm-test-rpm").path
       File.delete(@target)
       subject.name = "name"
-      subject.version = "123"
-      subject.iteration = "100"
-      subject.epoch = "5"
+      subject.version = "1.23"
     end
 
     after :each do
@@ -261,6 +259,24 @@ describe FPM::Package::RPM do
 
       # This will raise an exception if rpmbuild fails.
       subject.output(@target)
+    end
+
+    it "should have some reasonable defaults that never change" do
+      subject.output(@target)
+      # Read the rpm
+      rpm = ::RPM::File.new(@target)
+
+      rpmtags = {}
+      rpm.header.tags.each do |tag|
+        rpmtags[tag.tag] = tag.value
+      end
+
+      # Default epoch must be '1'
+      # For some reason, epoch is an array of numbers in rpm?
+      insist { rpmtags[:epoch] } == [1]
+
+      # Default release must be '1'
+      insist { rpmtags[:release] } == "1"
     end
   end # regression stuff
 
