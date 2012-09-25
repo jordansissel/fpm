@@ -39,8 +39,8 @@ describe FPM::Package::RPM do
   end
 
   describe "#epoch" do
-    it "should default to nil" do
-      insist { subject.epoch }.nil?
+    it "should default to 1" do
+      insist { subject.epoch } == "1"
     end
   end
   
