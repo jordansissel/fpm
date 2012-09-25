@@ -234,5 +234,6 @@ class FPM::Package::RPM < FPM::Package
   end # def digest_algorithm
 
   public(:input, :output, :converted_from, :architecture, :to_s, :iteration,
-         :payload_compression, :digest_algorithm, :prefix, :build_sub_dir)
+         :payload_compression, :digest_algorithm, :prefix, :build_sub_dir,
+         :epoch)
 end # class FPM::Package::RPM
