@@ -1,3 +1,6 @@
+0.4.19 (September 26, 2012)
+  - Escape '%' characters in file names (#266, #222. Patch by John Wittkoski)
+
 0.4.18 (September 25, 2012)
   - Fix regression in rpm building where the epoch in was missing in the rpm,
     but prior fpm versions defaulted it to 1. This caused rpms built with newer
