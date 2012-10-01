@@ -112,7 +112,13 @@ class FPM::Package::Gem < FPM::Package
 
       #self.name = [attributes[:gem_package_name_prefix], spec.name].join("-")
       self.license = (spec.license or "no license listed in #{File.basename(file)}")
-      self.version = spec.version.to_s
+
+      # expand spec's version to match RationalVersioningPolicy to prevent cases
+      # where missing 'build' number prevents correct dependency resolution by target
+      # package manager. Ie. for dpkg 1.1 != 1.1.0
+      m = spec.version.to_s.match /^(\d)?.?(\d+)?.?(\d+)?/
+      self.version = m.captures.map {|m| m ? m : 0}.join('.')
+
       self.vendor = spec.author
       self.url = spec.homepage
       self.category = "Languages/Development/Ruby"
