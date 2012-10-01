@@ -127,6 +127,10 @@ class FPM::Package::Deb < FPM::Package
 
     return @name
   end # def name
+  
+  def prefix
+    return (attributes[:prefix] or "/")
+  end # def prefix
 
   def input(input_path)
     extract_info(input_path)
@@ -464,5 +468,5 @@ class FPM::Package::Deb < FPM::Package
     return super(format)
   end # def to_s
 
-  public(:input, :output, :architecture, :name, :converted_from, :to_s)
+  public(:input, :output, :architecture, :name, :prefix, :converted_from, :to_s)
 end # class FPM::Target::Deb
