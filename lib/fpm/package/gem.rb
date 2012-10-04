@@ -136,7 +136,7 @@ class FPM::Package::Gem < FPM::Package
 
       # By default, we'll usually automatically provide this, but in the case that we are
       # composing multiple packages, it's best to explicitly include it in the provides list.
-      self.provides << "#{self.name}"
+      self.provides << "#{self.name} = #{self.version}"
 
       spec.runtime_dependencies.map do |dep|
         # rubygems 1.3.5 doesn't have 'Gem::Dependency#requirement'
