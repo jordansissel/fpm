@@ -181,28 +181,20 @@ class FPM::Package::Python < FPM::Package
     prefix = "/"
     prefix = attributes[:prefix] unless attributes[:prefix].nil?
     
-    # Set the default install library location (like
-    # /usr/lib/python2.7/site-packages) if it is not given
-    if attributes[:python_install_lib].nil?
-      # Ask python where libraries are installed to.
-      # This line is unusually long because I don't have a shorter way to express it.
-      attributes[:python_install_lib] = %x{
-        #{attributes[:python_bin]} -c 'from distutils.sysconfig import get_python_lib; print(get_python_lib())'
-      }.chomp
-      @logger.info("Setting default :python_install_lib attribute",
-                   :value => attributes[:python_install_lib])
-    end
-    if attributes[:python_install_data].nil?
-      attributes[:python_install_data] = attributes[:python_install_lib]
-    end
     # Some setup.py's assume $PWD == current directory of setup.py, so let's
     # chdir first.
     ::Dir.chdir(project_dir) do
-      safesystem(attributes[:python_bin], "setup.py", "install",
-                 "--root", staging_path, 
-                 "--install-lib", File.join(prefix, attributes[:python_install_lib]),
-                 "--install-data", File.join(prefix, attributes[:python_install_data]),
-                 "--install-scripts", File.join(prefix, attributes[:python_install_bin]))
+      flags = [ "--root", staging_path ]
+      if !attributes[:python_install_lib].nil?
+        flags += [ "--install-lib", File.join(prefix, attributes[:python_install_lib]) ]
+      end
+      if !attributes[:python_install_data].nil?
+        flags += [ "--install-data", File.join(prefix, attributes[:python_install_data]) ]
+      end
+      if !attributes[:python_install_bin].nil?
+        flags += [ "--install-scripts", File.join(prefix, attributes[:python_install_bin]) ]
+      end
+      safesystem(attributes[:python_bin], "setup.py", "install", *flags)
     end
   end # def install_to_staging
 
