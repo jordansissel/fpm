@@ -1,3 +1,7 @@
+0.4.20 (October 5, 2012)
+  - python: only specify --install-{scripts,lib,data} flags to setup.py if
+    they were given on the command line to fpm. Fixes #273.
+
 0.4.19 (September 26, 2012)
   - Escape '%' characters in file names (#266, #222. Patch by John Wittkoski)
 
