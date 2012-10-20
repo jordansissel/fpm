@@ -1,8 +1,11 @@
 from distutils.core import Command
-import json
 import re
 import time
 import pkg_resources
+try:
+    import json
+except ImportError:
+    import simplejson as json
 
 # Note, the last time I coded python daily was at Google, so it's entirely
 # possible some of my techniques below are outdated or bad.
@@ -64,10 +67,10 @@ class get_metadata(Command):
     data["dependencies"] = final_deps
 
     #print json.dumps(data, indent=2)
-    try:
-      print(json.dumps(data, indent=2))
-    except AttributeError as e:
-      # For Python 2.5 and Debian's python-json
-      print(json.write(data))
+    if hasattr(json, 'dumps'):
+        print(json.dumps(data, indent=2))
+    else:
+        # For Python 2.5 and Debian's python-json
+        print(json.write(data))
   # def run
 # class list_dependencies
