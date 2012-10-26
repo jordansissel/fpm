@@ -16,7 +16,9 @@ Conflicts: <%= conflicts.join(", ") %>
 #Pre-Depends: <%#= properpredeps.flatten.join(", ") %>
 <%# end -%>
 <% if !provides.empty? -%>
-Provides: <%= provides.join(", ") %>
+<%# Turn each provides from 'foo = 123' to simply 'foo' because Debian :\ -%>
+<%#  http://www.debian.org/doc/debian-policy/ch-relationships.html %>
+Provides: <%= provides.collect { |d| d.split(" ").first }.join(", ") %>
 <% end -%>
 <% if !replaces.empty? -%>
 Replaces: <%= replaces.join(", ") %>
