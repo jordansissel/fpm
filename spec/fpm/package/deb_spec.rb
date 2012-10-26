@@ -116,6 +116,8 @@ describe FPM::Package::Deb do
       @original.architecture = "all"
       @original.dependencies << "something > 10"
       @original.dependencies << "hello >= 20"
+      @original.provides = "#{@original.name} = #{@original.version}"
+
       @original.attributes[:deb_priority] = "fizzle"
       @original.output(@target)
 
@@ -149,6 +151,11 @@ describe FPM::Package::Deb do
         @original.dependencies.each do |dep|
           insist { @input.dependencies }.include?(dep)
         end
+      end
+
+      it "should ignore versions and conditions in 'provides' (#280)" do
+        # Provides is an array because rpm supports multiple 'provides'
+        insist { @input.provides } == [ @original.name ]
       end
     end # package attributes
 
