@@ -170,6 +170,7 @@ class FPM::Package::Deb < FPM::Package
       self.name = parse.call("Package")
       self.url = parse.call("Homepage")
       self.vendor = parse.call("Vendor") || self.vendor
+      self.provides = parse.call("Provides") || self.provides
 
       # The description field is a special flower, parse it that way.
       # The description is the first line as a normal Description field, but also continues

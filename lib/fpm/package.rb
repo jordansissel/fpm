@@ -502,9 +502,17 @@ class FPM::Package
     end
   end # def output_path
 
+  def provides=(value)
+    if !value.is_a?(Array)
+      @provides = [value]
+    else 
+      @provides = value
+    end
+  end
+
   # General public API
   public(:type, :initialize, :convert, :input, :output, :to_s, :cleanup, :files,
-         :version, :script)
+         :version, :script, :provides=)
 
   # Package internal public api
   public(:cleanup_staging, :cleanup_build, :staging_path, :converted_from,
