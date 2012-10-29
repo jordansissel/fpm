@@ -66,7 +66,11 @@ class FPM::Package::Deb < FPM::Package
     value.to_i
   end
 
-  option "--priority", "PRIORITY", 
+  # allow overriding of patch version
+  option "--patch-version", "PATCH_VERSION",
+    "Add PATCH_VERSION as the deb's patch version."
+
+  option "--priority", "PRIORITY",
     "The debian package 'priority' value.", :default => "extra"
 
   option "--user", "USER", "The owner of files in this package"
@@ -465,6 +469,14 @@ class FPM::Package::Deb < FPM::Package
   def to_s(format=nil)
     # Default format if nil
     # git_1.7.9.3-1_amd64.deb
+    if attributes[:deb_patch_version]
+      # verify that the package's version doesn't already have a patch element...
+      if self.version =~ /\-/
+        raise ArgumentError, "Source version already includes a patch level! " \
+            "Not sure what to do... you can't use the --deb-patch-version option!"
+      end
+      return super("NAME_FULLVERSION-#{attributes[:deb_patch_version]}_ARCH.TYPE") if format.nil?
+    end
     return super("NAME_FULLVERSION_ARCH.TYPE") if format.nil?
     return super(format)
   end # def to_s
