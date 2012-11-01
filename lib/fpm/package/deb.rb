@@ -287,14 +287,6 @@ class FPM::Package::Deb < FPM::Package
     @logger.log("Created deb package", :path => output_path)
   end # def output
 
-  def default_output
-    if iteration
-      "#{name}_#{version}-#{iteration}_#{architecture}.#{type}"
-    else
-      "#{name}_#{version}_#{architecture}.#{type}"
-    end
-  end # def default_output
-
   def converted_from(origin)
     self.dependencies = self.dependencies.collect do |dep|
       fix_dependency(dep)
