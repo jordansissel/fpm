@@ -121,6 +121,15 @@ class FPM::Package::RPM < FPM::Package
           provides
         end
       end
+      self.dependencies = self.dependencies.collect do |dependency|
+        first, remainder = dependency.split("-", 2)
+        if first == "rubygem"
+          name, remainder = remainder.split(" ", 2)
+          "rubygem(#{name})#{remainder ? " #{remainder}" : ""}"
+        else
+          dependency
+        end
+      end
       #self.provides << "rubygem(#{self.name})"
     end
   end # def converted
