@@ -107,6 +107,9 @@ fi
 <% config_files.each do |path| -%>
 %config(noreplace) <%= File.join(prefix, path) %>
 <% end -%>
+<% directories.each do |path| -%>
+%dir <%= File.join(prefix, path) %>
+<% end -%>
 <%# list only files, not directories? -%>
 <%= 
   # Reject config files already listed or parent directories, then prefix files
