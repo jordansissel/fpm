@@ -51,12 +51,7 @@ class FPM::Package::Gem < FPM::Package
   def download_if_necessary(gem, gem_version)
     path = gem
     if !File.exists?(path)
-      looks_like_name_re = /^[A-Za-z0-9_-]+$/
-      if path =~ looks_like_name_re
-        path = download(gem, gem_version)
-      else
-        raise FPM::Package::InvalidArgument.new("Gem '#{gem}' doesn't appear to be a valid rubygem file or name?")
-      end
+      path = download(gem, gem_version)
     end
 
     @logger.info("Using gem file", :path => path)

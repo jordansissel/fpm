@@ -398,6 +398,9 @@ class FPM::Command < Clamp::Command
   rescue FPM::InvalidPackageConfiguration => e
     @logger.error("Invalid package configuration: #{e}")
     return 1
+  rescue FPM::Package::InvalidArgument => e
+    @logger.error("Invalid package argument: #{e}")
+    return 1
   ensure
     input.cleanup unless input.nil?
     output.cleanup unless output.nil?
