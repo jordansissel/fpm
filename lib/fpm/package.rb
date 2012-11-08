@@ -104,6 +104,8 @@ class FPM::Package
   # Array of configuration files
   attr_accessor :config_files
 
+  attr_accessor :directories
+
   # Any other attributes specific to this package.
   # This is where you'd put rpm, deb, or other specific attributes.
   attr_accessor :attributes
@@ -168,6 +170,7 @@ class FPM::Package
     @dependencies = []
     @scripts = {}
     @config_files = []
+    @directories = []
 
     staging_path
     build_path
@@ -194,7 +197,7 @@ class FPM::Package
       :@architecture, :@attributes, :@category, :@config_files, :@conflicts,
       :@dependencies, :@description, :@epoch, :@iteration, :@license, :@maintainer,
       :@name, :@provides, :@replaces, :@scripts, :@url, :@vendor, :@version,
-      :@config_files, :@staging_path
+      :@directories, :@staging_path
     ]
     ivars.each do |ivar|
       #@logger.debug("Copying ivar", :ivar => ivar, :value => instance_variable_get(ivar),
