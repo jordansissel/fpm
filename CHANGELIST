@@ -1,3 +1,11 @@
+0.4.21 (November 8, 2012)
+  - gem: remove restriction on expected gem names (#287)
+  - add --directory flag; lets you mark a directory as being owned by a
+    package. (#260, #245, patch by ajf8)
+  - deb: don't include a version in the Provides field (#280)
+  - gem: if the version is '1.1' make it imply '1.1.0' (#269, patch by 
+    Radim Marek)
+
 0.4.20 (October 5, 2012)
   - python: only specify --install-{scripts,lib,data} flags to setup.py if
     they were given on the command line to fpm. Fixes #273.
