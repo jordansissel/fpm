@@ -43,8 +43,10 @@ Vendor: <%= vendor %>
 URL: <%= url or "http://nourlgiven.example.com/" %>
 Packager: <%= maintainer %>
 
+<% if !attributes[:no_depends?] -%>
 <% dependencies.each do |req| -%>
 Requires: <%= req %>
+<% end -%>
 <% end -%>
 <% provides.each do |prov| -%>
 Provides: <%= prov %>
