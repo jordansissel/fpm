@@ -9,7 +9,7 @@ describe FPM::Package::Deb do
   have_dpkg_deb = program_in_path?("dpkg-deb")
   if !have_dpkg_deb
     Cabin::Channel.get("rspec") \
-      .warn("Skipping Deb#output tests because 'dpkg-deb' isn't in your PATH")
+      .warn("Skipping some deb tests because 'dpkg-deb' isn't in your PATH")
   end
 
   after :each do
@@ -183,4 +183,39 @@ describe FPM::Package::Deb do
       end
     end
   end # #output
+
+  describe "#output with no depends" do 
+    before :all do
+      # output a package, use it as the input, set the subject to that input
+      # package. This helps ensure that we can write and read packages
+      # properly.
+      tmpfile = Tempfile.new("fpm-test-deb")
+      @target = tmpfile.path
+      # The target file must not exist.
+      tmpfile.unlink
+
+      @original = FPM::Package::Deb.new
+      @original.name = "name"
+      @original.version = "123"
+      @original.iteration = "100"
+      @original.epoch = "5"
+      @original.architecture = "all"
+      @original.dependencies << "something > 10"
+      @original.dependencies << "hello >= 20"
+      @original.attributes[:no_depends?] = true
+      @original.output(@target)
+
+      @input = FPM::Package::Deb.new
+      @input.input(@target)
+    end
+
+    after :all do
+      @original.cleanup
+      @input.cleanup
+    end # after
+
+    it "should have no dependencies" do
+      insist { @input.dependencies }.empty?
+    end
+  end # #output with no dependencies
 end # describe FPM::Package::Deb
