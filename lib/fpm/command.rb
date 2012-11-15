@@ -62,6 +62,9 @@ class FPM::Command < Clamp::Command
     @dependencies << val
   end # -d / --depends
 
+  option "--no-depends", :flag, "Do not list any dependencies in this package",
+    :default => false
+
   option "--provides", "PROVIDES",
     "What this package provides (usually a name). This flag can be "\
     "specified multiple times." do |val|
