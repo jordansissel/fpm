@@ -1,3 +1,9 @@
+0.4.22 (November 15, 2012)
+  - Add --no-depends flag for creating packages with no dependencies listed
+    (#289, patch by Brett Gailey)
+  - Fix a bug where blank lines were present in a debian control file.
+    (#288, patch by Andrew Bunday)
+
 0.4.21 (November 8, 2012)
   - gem: remove restriction on expected gem names (#287)
   - add --directory flag; lets you mark a directory as being owned by a
