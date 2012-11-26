@@ -111,8 +111,8 @@ class FPM::Package::Gem < FPM::Package
       # expand spec's version to match RationalVersioningPolicy to prevent cases
       # where missing 'build' number prevents correct dependency resolution by target
       # package manager. Ie. for dpkg 1.1 != 1.1.0
-      m = spec.version.to_s.match /^(\d)?.?(\d+)?.?(\d+)?/
-      self.version = m.captures.map {|m| m ? m : 0}.join('.')
+      m = spec.version.to_s.scan(/(\d)\.?/)
+      self.version = m.flatten.fill('0', m.length..2).join('.') 
 
       self.vendor = spec.author
       self.url = spec.homepage
