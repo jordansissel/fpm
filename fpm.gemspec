@@ -1,3 +1,4 @@
+require File.join(File.dirname(__FILE__), "lib/fpm/version")
 Gem::Specification.new do |spec|
   files = []
   dirs = %w{lib bin templates}
@@ -10,7 +11,7 @@ Gem::Specification.new do |spec|
   files << "CHANGELIST"
 
   spec.name = "fpm"
-  spec.version = "0.4.22"
+  spec.version = FPM::VERSION
   spec.summary = "fpm - package building and mangling"
   spec.description = "Convert directories, rpms, python eggs, rubygems, and " \
     "more to rpms, debs, solaris packages and more. Win at package " \
