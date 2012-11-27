@@ -113,7 +113,7 @@ fi
 <% directories.each do |path| -%>
 %dir <%= File.join(prefix, path) %>
 <%#  We need to include hidden directories, but exclude . and .. -%>
-<%   ::Dir.glob("#{path}/**/*/", FNM_DOTMATCH) do |subdir| -%>
+<%   ::Dir.glob("#{path}/**/*/", File::FNM_DOTMATCH) do |subdir| -%>
 <%     next if File.basename(subdir) =~ /^\.+$/ -%>
 %dir <%= File.join(prefix, subdir) %>
 <% subdirs << subdir -%>
