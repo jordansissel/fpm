@@ -40,7 +40,11 @@ License: <%= license.gsub("\n", " ") %>
 <% if !vendor.nil? and !vendor.empty? -%>
 Vendor: <%= vendor %>
 <% end -%>
-URL: <%= url or "http://nourlgiven.example.com/" %>
+<% if !url.nil? and !url.empty? -%>
+URL: <%= url %>
+<%else -%>
+URL: http://nourlgiven.example.com/
+<% end -%>
 Packager: <%= maintainer %>
 
 <% if !attributes[:no_depends?] -%>
