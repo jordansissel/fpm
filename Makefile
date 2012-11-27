@@ -1,5 +1,5 @@
 GEMSPEC=$(shell ls *.gemspec)
-VERSION=$(shell awk -F\" '/spec.version/ { print $$2 }' $(GEMSPEC))
+VERSION=$(shell awk -F\" '/VERSION =/ { print $$2 }' lib/fpm/version.rb)
 NAME=$(shell awk -F\" '/spec.name/ { print $$2 }' $(GEMSPEC))
 GEM=$(NAME)-$(VERSION).gem
 
