@@ -1,5 +1,6 @@
 require "rubygems"
 require "fpm/namespace"
+require "fpm/version"
 require "fpm/util"
 require "clamp"
 require "ostruct"
@@ -20,6 +21,24 @@ end
 # The main fpm command entry point.
 class FPM::Command < Clamp::Command
   include FPM::Util
+
+  def help(*args)
+    return [
+      "Intro:",
+      "",
+      "  This is fpm version #{FPM::VERSION}",
+      "",
+      "  If you think something is wrong, it's probably a bug! :)",
+      "  Please file these here: https://github.com/jordansissel/fpm/issues",
+      "",
+      "  You can find support on irc (#fpm on freenode irc) or via email with",
+      "  fpm-users@googlegroups.com",
+      "",
+
+      # Lastly, include the default help output via Clamp.
+      super
+    ].join("\n")
+  end # def help
 
   option "-t", "OUTPUT_TYPE",
     "the type of package you want to create (deb, rpm, solaris, etc)",
