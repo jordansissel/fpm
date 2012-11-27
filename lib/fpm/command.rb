@@ -325,7 +325,7 @@ class FPM::Command < Clamp::Command
       # Read each line as a path
       File.new(inputs, "r").each_line do |line| 
         # Handle each line as if it were an argument
-        input.input(line)
+        input.input(line.strip)
       end
     end
 
@@ -483,6 +483,10 @@ class FPM::Command < Clamp::Command
         end
       end
 
+      if @command.inputs
+        mandatory(@command.input_type == "dir", "--inputs is only valid with -s dir")
+      end
+
       mandatory(@command.args.any?,
                 "No parameters given. You need to pass additional command " \
                 "arguments so that I know what you want to build packages " \
@@ -490,7 +494,7 @@ class FPM::Command < Clamp::Command
                 "files and directories. For '-s gem' you would pass a one" \
                 " or more gems to package from. As a full example, this " \
                 "will make an rpm of the 'json' rubygem: " \
-                "`fpm -s gem -t rpm json`")
+                "`fpm -s gem -t rpm json`") unless @command.input_type == "dir" and @command.inputs
     end # def validate
 
     def mandatory(value, message)
