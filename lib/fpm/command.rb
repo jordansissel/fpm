@@ -487,14 +487,14 @@ class FPM::Command < Clamp::Command
         mandatory(@command.input_type == "dir", "--inputs is only valid with -s dir")
       end
 
-      mandatory(@command.args.any?,
+      mandatory(@command.args.any? or @command.inputs,
                 "No parameters given. You need to pass additional command " \
                 "arguments so that I know what you want to build packages " \
                 "from. For example, for '-s dir' you would pass a list of " \
                 "files and directories. For '-s gem' you would pass a one" \
                 " or more gems to package from. As a full example, this " \
                 "will make an rpm of the 'json' rubygem: " \
-                "`fpm -s gem -t rpm json`") unless @command.input_type == "dir" and @command.inputs
+                "`fpm -s gem -t rpm json`")
     end # def validate
 
     def mandatory(value, message)
