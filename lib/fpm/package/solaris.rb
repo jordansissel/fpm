@@ -22,14 +22,14 @@ class FPM::Package::Solaris < FPM::Package
     "#{builddir}/pkginfo"
   end
 
-  def build!(params)
+  def output(output_path)
     self.scripts.each do |name, path|
       case name
         when "pre-install"
-          safesystem("cp #{path} ./preinstall")
+          safesystem("cp", path, "./preinstall")
           File.chmod(0755, "./preinstall")
         when "post-install"
-          safesystem("cp #{path} ./postinstall")
+          safesystem("cp", path, "./postinstall")
           File.chmod(0755, "./postinstall")
         when "pre-uninstall"
           raise FPM::InvalidPackageConfiguration.new(
@@ -42,25 +42,21 @@ class FPM::Package::Solaris < FPM::Package
       end # case name
     end # self.scripts.each
 
-    # Unpack data.tar.gz so we can build a package from it.
-    Dir.mkdir("data")
-    safesystem("gzip -d data.tar.gz");
-    Dir.chdir("data") do
-      safesystem("tar -xf ../data.tar");
+    template = template("solaris.erb")
+    File.open("#{build_path}/pkginfo", "w") do |pkginfo|
+      pkginfo.puts template.result(binding)
     end
-
-    #system("(echo 'i pkginfo'; pkgproto data=/) > Prototype")
 
     # Generate the package 'Prototype' file
     # TODO(sissel): allow setting default file owner.
-    File.open("Prototype", "w") do |prototype|
+    File.open("#{build_path}/Prototype", "w") do |prototype|
       prototype.puts("i pkginfo")
       prototype.puts("i preinstall") if self.scripts["pre-install"]
       prototype.puts("i postinstall") if self.scripts["post-install"]
 
       # TODO(sissel): preinstall/postinstall
       # strip @prefix, since BASEDIR will set prefix via the pkginfo file
-      IO.popen("pkgproto data/#{@prefix}=").each_line do |line|
+      IO.popen("pkgproto #{staging_path}/#{@prefix}=").each_line do |line|
         type, klass, path, mode, user, group = line.split
         # Override stuff in pkgproto
         # TODO(sissel): Make this tunable?
@@ -70,12 +66,16 @@ class FPM::Package::Solaris < FPM::Package
       end # popen "pkgproto ..."
     end # File prototype
 
-    # Should create a package directory named by the package name.
-    safesystem("pkgmk -o -d .")
+    ::Dir.chdir staging_path do
+      # Should create a package directory named by the package name.
+      safesystem("pkgmk", "-o", "-f", "#{build_path}/Prototype", "-d", build_path)
+    end
+    
 
     # Convert the 'package directory' built above to a real solaris package.
-    safesystem("pkgtrans -s . #{params[:output]} #{name}")
-  end # def build
+    safesystem("pkgtrans", "-s", build_path, output_path, name)
+    safesystem("cp", "#{build_path}/#{output_path}", output_path)
+  end # def output
 
   def default_output
     v = version
