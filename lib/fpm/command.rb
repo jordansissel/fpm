@@ -487,7 +487,7 @@ class FPM::Command < Clamp::Command
         mandatory(@command.input_type == "dir", "--inputs is only valid with -s dir")
       end
 
-      mandatory(@command.args.any? or @command.inputs,
+      mandatory(@command.args.any? || @command.inputs,
                 "No parameters given. You need to pass additional command " \
                 "arguments so that I know what you want to build packages " \
                 "from. For example, for '-s dir' you would pass a list of " \
