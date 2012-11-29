@@ -66,6 +66,10 @@ class FPM::Package::RPM < FPM::Package
     value.downcase
   end
 
+  option "--changelog", "FILEPATH", "Add changelog from FILEPATH contents" do |file|
+    File.read(File.expand_path(file))
+  end
+
   private
 
   # Handle any architecture naming conversions.
