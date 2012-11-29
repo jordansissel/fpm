@@ -1,5 +1,3 @@
-require "fpm/namespace" # local
-require "fpm/util" # local
 require "pathname" # stdlib
 require "tmpdir" # stdlib
 require "backports" # gem 'backports'
@@ -521,3 +519,10 @@ class FPM::Package
   public(:cleanup_staging, :cleanup_build, :staging_path, :converted_from,
          :edit_file)
 end # class FPM::Package
+
+require "fpm/package/dir"
+require "fpm/package/gem"
+require "fpm/package/deb"
+require "fpm/package/rpm"
+require "fpm/package/python"
+

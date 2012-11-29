@@ -1,7 +1,4 @@
-require "fpm/namespace"
-require "fpm/package"
 require "fileutils"
-require "fpm/util"
 
 # This provides PHP PEAR package support.
 #

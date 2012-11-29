@@ -1,8 +1,6 @@
 require "fpm/namespace"
-
+require "fpm/util"
+require "fpm/errors"
+require "fpm/version"
 require "fpm/package"
-require "fpm/package/dir"
-require "fpm/package/gem"
-require "fpm/package/deb"
-require "fpm/package/rpm"
-require "fpm/package/python"
+require "fpm/command"

@@ -1,5 +1,3 @@
-require "fpm/namespace"
-
 # Some utility functions
 module FPM::Util
   # Raised if safesystem cannot find the program to run.

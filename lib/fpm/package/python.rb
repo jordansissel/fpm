@@ -1,8 +1,3 @@
-require "fpm/namespace"
-require "fpm/package"
-require "fpm/util"
-require "rubygems/package"
-require "rubygems"
 require "fileutils"
 require "tmpdir"
 require "json"

@@ -1,8 +1,5 @@
 require "backports" # gem backports
-require "fpm/package"
-require "fpm/util"
 require "fileutils"
-require "fpm/package/dir"
 
 # Use a tarball as a package.
 #

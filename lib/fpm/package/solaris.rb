@@ -1,8 +1,4 @@
 require "erb"
-require "fpm/namespace"
-require "fpm/package"
-require "fpm/errors"
-require "fpm/util"
 
 # TODO(sissel): Add dependency checking support.
 # IIRC this has to be done as a 'checkinstall' step.

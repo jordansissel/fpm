@@ -1,22 +1,11 @@
-require "rubygems"
-require "fpm/namespace"
-require "fpm/version"
-require "fpm/util"
 require "clamp"
 require "ostruct"
-require "fpm"
 require "tmpdir" # for Dir.tmpdir
 
 if $DEBUG
   Cabin::Channel.get(Kernel).subscribe($stdout)
   Cabin::Channel.get(Kernel).level = :debug
 end
-
-Dir[File.join(File.dirname(__FILE__), "package", "*.rb")].each do |plugin|
-  Cabin::Channel.get(Kernel).info("Loading plugin", :path => plugin)
-  require plugin
-end
-
 
 # The main fpm command entry point.
 class FPM::Command < Clamp::Command
