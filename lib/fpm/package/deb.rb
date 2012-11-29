@@ -73,6 +73,10 @@ class FPM::Package::Deb < FPM::Package
 
   option "--group", "GROUP", "The group owner of files in this package"
 
+  option "--changelog", "FILEPATH", "Add FILEPATH as debian changelog" do |file|
+    File.expand_path(file)
+  end
+
   def initialize(*args)
     super(*args)
     attributes[:deb_priority] = "extra"
@@ -272,6 +276,14 @@ class FPM::Package::Deb < FPM::Package
     end
     if !attributes[:deb_group].nil?
       tar_flags += [ "--group", attributes[:deb_group] ]
+    end
+
+    if attributes[:deb_changelog]
+      dest_changelog = File.join(staging_path, "usr/share/doc/#{attributes[:name]}/changelog.Debian")
+      FileUtils.mkdir_p(File.dirname(dest_changelog))
+      FileUtils.cp attributes[:deb_changelog], dest_changelog
+      safesystem("gzip", dest_changelog)
+      File.chmod(0644, dest_changelog)
     end
 
     args = [ tar_cmd, "-C", staging_path, compression ] + tar_flags + [ "-cf", datatar, "." ]
