@@ -2,6 +2,11 @@
   - Don't include an empty url in rpm spec (#296, #276; patch by Pranay Kanwar)
   - Don't require extra parameters if you use --inputs (#278, #297; Patch by
     Pranay Kanwar)
+  - python: supports requirements.txt now for dependency information.
+  - python: supports pip now. Use '--python-pip path/to/pip' to have fpm use
+    it instead of easy_install.
+  - solaris: package building works again (#216, #299, patch by Pierre-Yves
+    Ritschard)
 
 0.4.23 (November 26, 2012)
   - The --directories flag is now recursive when the output package is rpm.
