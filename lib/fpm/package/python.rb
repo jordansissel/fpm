@@ -173,8 +173,8 @@ class FPM::Package::Python < FPM::Package
     if File.exists?(requirements_txt)
       @logger.info("Found requirements.txt, using it instead of setup.py " \
                     "for dependency information", :path => requirements_txt)
-      @logger.debug("Clearing dependecy list in prep for reading" \
-                    "requirements.txt")
+      @logger.debug("Clearing dependency list (from setup.py) in prep for " \
+                    "reading requirements.txt")
       # Best I can tell, requirements.txt are a superset of what
       # is already supported as 'dependencies' in setup.py
       # So we'll parse them the same way below.
