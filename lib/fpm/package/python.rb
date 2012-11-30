@@ -23,6 +23,9 @@ class FPM::Package::Python < FPM::Package
     "The path to the python executable you wish to run.", :default => "python"
   option "--easyinstall", "EASYINSTALL_EXECUTABLE",
     "The path to the easy_install executable tool", :default => "easy_install"
+  option "--pip", "PIP_EXECUTABLE",
+    "The path to the pip executable tool. If not specified, easy_install " \
+    "is used instead", :default => nil
   option "--pypi", "PYPI_URL",
     "PyPi Server uri for retrieving packages.",
     :default => "http://pypi.python.org/simple"
@@ -100,8 +103,17 @@ class FPM::Package::Python < FPM::Package
     target = build_path(package)
     FileUtils.mkdir(target) unless File.directory?(target)
 
-    safesystem(attributes[:python_easyinstall], "-i", attributes[:python_pypi],
-               "--editable", "-U", "--build-directory", target, want_pkg)
+    if attributes[:python_pip].nil?
+      # no pip, use easy_install
+      puts "EASY_INSTALL"
+      safesystem(attributes[:python_easyinstall], "-i",
+                 attributes[:python_pypi], "--editable", "-U",
+                 "--build-directory", target, want_pkg)
+    else
+      puts "PIP PIP CHEERIOS"
+      safesystem(attributes[:python_pip], "install", "--no-install",
+                 "-U", "--build", target, want_pkg)
+    end
 
     # easy_install will put stuff in @tmpdir/packagename/, so find that:
     #  @tmpdir/somepackage/setup.py
