@@ -135,13 +135,21 @@ class FPM::Package::Python < FPM::Package
 
     # chdir to the directory holding setup.py because some python setup.py's assume that you are
     # in the same directory.
-    output = ::Dir.chdir(File.dirname(setup_py)) do
+    setup_dir = File.dirname(setup_py)
+
+    output = ::Dir.chdir(setup_dir) do
       setup_cmd = "env PYTHONPATH=#{pylib} #{attributes[:python_bin]} " \
         "setup.py --command-packages=pyfpm get_metadata"
       # Capture the output, which will be JSON metadata describing this python
       # package. See fpm/lib/fpm/package/pyfpm/get_metadata.py for more
       # details.
-      `#{setup_cmd}`
+      output = `#{setup_cmd}`
+      if !$?.success?
+        @logger.error("setup.py get_metadata failed", :command => setup_cmd,
+                      :exitcode => $?.exitcode)
+        raise "An unexpected error occurred while processing the setup.py file"
+      end
+      output
     end
     @logger.debug("full text from `setup.py get_metadata`", :data => output)
     metadata = JSON.parse(output[/\{.*\}/msx])
@@ -161,8 +169,26 @@ class FPM::Package::Python < FPM::Package
       self.name = metadata["name"]
     end
 
+    requirements_txt = File.join(setup_dir, "requirements.txt")
+    if File.exists?(requirements_txt)
+      @logger.info("Found requirements.txt, using it instead of setup.py " \
+                    "for dependency information", :path => requirements_txt)
+      @logger.debug("Clearing dependecy list in prep for reading" \
+                    "requirements.txt")
+      # Best I can tell, requirements.txt are a superset of what
+      # is already supported as 'dependencies' in setup.py
+      # So we'll parse them the same way below.
+      metadata["dependencies"] = File.read(requirements_txt).split("\n")
+    end
+
     self.dependencies += metadata["dependencies"].collect do |dep|
-      name, cmp, version = dep.split
+      dep_re = /^([^<>= ]+)\s*(?:([<>=]{1,2})\s*(.*))?$/
+      match = dep_re.match(dep)
+      if match.nil?
+        @logger.error("Unable to parse dependency", :dependency => dep)
+        raise FPM::InvalidPackageConfiguration, "Invalid dependency '#{dep}'"
+      end
+      name, cmp, version = match.captures
       # dependency name prefixing is optional, if enabled, a name 'foo' will
       # become 'python-foo' (depending on what the python_package_name_prefix
       # is)
