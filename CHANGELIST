@@ -1,4 +1,4 @@
-0.4.xx (???)
+0.4.24 (November 30, 2012)
   - Don't include an empty url in rpm spec (#296, #276; patch by Pranay Kanwar)
   - Don't require extra parameters if you use --inputs (#278, #297; Patch by
     Pranay Kanwar)
