@@ -1,6 +1,5 @@
 require "spec_setup"
 require "fpm" # local
-require "fpm/package/gem" # local
 
 have_gem = program_in_path?("gem")
 if !have_gem

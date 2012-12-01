@@ -1,7 +1,4 @@
 require "spec_setup"
-require "fpm" # local
-require "fpm/package/deb" # local
-require "fpm/package/dir" # local
 
 describe FPM::Package::Deb do
   # dpkg-deb lets us query deb package files. 

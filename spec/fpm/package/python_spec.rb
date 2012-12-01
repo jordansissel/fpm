@@ -1,6 +1,5 @@
 require "spec_setup"
 require "fpm" # local
-require "fpm/package/python" # local
 
 def python_usable?
   return program_in_path?("python") && program_in_path?("easy_install")

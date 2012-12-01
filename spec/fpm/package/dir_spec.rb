@@ -1,6 +1,5 @@
 require "spec_setup"
 require "fpm" # local
-require "fpm/package/dir" # local
 
 describe FPM::Package::Dir do
   before :each do
