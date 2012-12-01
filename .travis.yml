@@ -4,3 +4,6 @@ rvm:
   - 1.9.2
   - 1.9.3
 script: rspec
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq rpm
