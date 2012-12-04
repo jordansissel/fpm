@@ -178,7 +178,7 @@ class FPM::Package::Python < FPM::Package
       # Best I can tell, requirements.txt are a superset of what
       # is already supported as 'dependencies' in setup.py
       # So we'll parse them the same way below.
-      metadata["dependencies"] = File.read(requirements_txt).split("\n")
+      metadata["dependencies"] = File.read(requirements_txt).split("\n").map(&:strip).reject {|l| l =~ /^\s*#/}
     end
 
     self.dependencies += metadata["dependencies"].collect do |dep|
