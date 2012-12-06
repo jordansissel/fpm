@@ -1,7 +1,4 @@
 require "spec_setup"
-require "fpm" # local
-require "fpm/package/rpm" # local
-require "fpm/package/dir" # local
 require "arr-pm/file" # gem 'arr-pm'
 
 if !program_in_path?("rpmbuild")

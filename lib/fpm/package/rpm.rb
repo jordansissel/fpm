@@ -1,4 +1,3 @@
-require "fpm/package"
 require "backports"
 require "fileutils"
 require "find"

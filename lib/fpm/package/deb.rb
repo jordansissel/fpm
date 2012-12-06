@@ -1,8 +1,4 @@
 require "erb"
-require "fpm/namespace"
-require "fpm/package"
-require "fpm/errors"
-require "fpm/util"
 require "backports"
 require "fileutils"
 

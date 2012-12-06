@@ -10,7 +10,7 @@ require "fileutils" # stdlib
 $: << File.join(File.dirname(File.dirname(__FILE__)), "lib")
 
 # for method "program_in_path?" etc
-require "fpm/util"
+require "fpm"
 include FPM::Util
 
 # Enable debug logs if requested.

@@ -1,6 +1,3 @@
-require "fpm/namespace"
-require "fpm/package"
-require "fpm/util"
 require "fileutils"
 
 class FPM::Package::NPM < FPM::Package

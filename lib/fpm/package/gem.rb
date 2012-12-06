@@ -1,9 +1,6 @@
-require "fpm/namespace"
-require "fpm/package"
-require "rubygems/package"
 require "rubygems"
+require "rubygems/package"
 require "fileutils"
-require "fpm/util"
 
 # A rubygems package.
 #

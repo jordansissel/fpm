@@ -1,4 +1,7 @@
-require File.join(File.dirname(__FILE__), "lib/fpm/version")
+$: << File.join(File.dirname(__FILE__), "lib")
+
+require 'fpm/version'
+
 Gem::Specification.new do |spec|
   files = []
   dirs = %w{lib bin templates}
