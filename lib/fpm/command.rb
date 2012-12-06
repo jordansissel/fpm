@@ -14,7 +14,8 @@ end
 
 Dir[File.join(File.dirname(__FILE__), "package", "*.rb")].each do |plugin|
   Cabin::Channel.get(Kernel).info("Loading plugin", :path => plugin)
-  require plugin
+
+  require "fpm/package/#{File.basename(plugin)}"
 end
 
 
