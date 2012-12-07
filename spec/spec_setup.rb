@@ -32,9 +32,10 @@ module Kernel
     null = File.new("/dev/null", "w")
     $stdout.reopen(null)
     $stderr.reopen(null)
-    orig_system(*args)
+    value = orig_system(*args)
     $stdout.reopen(old_stdout)
     $stderr.reopen(old_stderr)
     null.close
+    return value
   end
 end
