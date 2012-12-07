@@ -23,3 +23,18 @@ spec_logger = Cabin::Channel.get("rspec")
 spec_logger.subscribe(STDOUT)
 spec_logger.level = :warn
 
+# Quiet the output of all system() calls
+module Kernel
+  alias_method :orig_system, :system
+  def system(*args)
+    old_stdout = $stdout.clone
+    old_stderr = $stderr.clone
+    null = File.new("/dev/null", "w")
+    $stdout.reopen(null)
+    $stderr.reopen(null)
+    orig_system(*args)
+    $stdout.reopen(old_stdout)
+    $stderr.reopen(old_stderr)
+    null.close
+  end
+end
