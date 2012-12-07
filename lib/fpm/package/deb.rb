@@ -77,6 +77,16 @@ class FPM::Package::Deb < FPM::Package
     File.expand_path(file)
   end
 
+  option "--recommends", "PACKAGE", "Add PACKAGE to Recommends" do |pkg|
+    @recommends ||= []
+    @recommends << pkg
+  end
+
+  option "--suggests", "PACKAGE", "Add PACKAGE to Suggests" do |pkg|
+    @suggests ||= []
+    @suggests << pkg
+  end
+
   def initialize(*args)
     super(*args)
     attributes[:deb_priority] = "extra"
