@@ -7,7 +7,7 @@ require "fileutils"
 require "tmpdir"
 require "json"
 
-# Support for python packages. 
+# Support for python packages.
 #
 # This supports input, but not output.
 #
@@ -53,6 +53,8 @@ class FPM::Package::Python < FPM::Package
   option "--install-data", "DATA_PATH", "The path to where data should be." \
     "installed to. This is equivalent to 'python setup.py --install-data " \
     "DATA_PATH"
+  option "--requirements", :flag, "Include requirements defined in setup.py"\
+    " as dependencies", :default => true
 
   private
 
@@ -138,8 +140,14 @@ class FPM::Package::Python < FPM::Package
     setup_dir = File.dirname(setup_py)
 
     output = ::Dir.chdir(setup_dir) do
+      metadata_options = []
+
+      if not attributes[:python_requirements]
+        metadata_options.push('--ignore-requirements')
+      end
+
       setup_cmd = "env PYTHONPATH=#{pylib} #{attributes[:python_bin]} " \
-        "setup.py --command-packages=pyfpm get_metadata"
+        "setup.py --command-packages=pyfpm get_metadata #{metadata_options.join(' ')}"
       # Capture the output, which will be JSON metadata describing this python
       # package. See fpm/lib/fpm/package/pyfpm/get_metadata.py for more
       # details.
@@ -170,7 +178,7 @@ class FPM::Package::Python < FPM::Package
     end
 
     requirements_txt = File.join(setup_dir, "requirements.txt")
-    if File.exists?(requirements_txt)
+    if File.exists?(requirements_txt) and attributes[:python_requirements?]
       @logger.info("Found requirements.txt, using it instead of setup.py " \
                     "for dependency information", :path => requirements_txt)
       @logger.debug("Clearing dependency list (from setup.py) in prep for " \
@@ -178,7 +186,7 @@ class FPM::Package::Python < FPM::Package
       # Best I can tell, requirements.txt are a superset of what
       # is already supported as 'dependencies' in setup.py
       # So we'll parse them the same way below.
-      
+
       # requirements.txt can have dependencies, flags, and comments.
       # We only want the comments, so remove comment and flag lines.
       metadata["dependencies"] = File.read(requirements_txt).split("\n") \
@@ -224,7 +232,7 @@ class FPM::Package::Python < FPM::Package
 
     prefix = "/"
     prefix = attributes[:prefix] unless attributes[:prefix].nil?
-    
+
     # Some setup.py's assume $PWD == current directory of setup.py, so let's
     # chdir first.
     ::Dir.chdir(project_dir) do

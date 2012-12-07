@@ -1,4 +1,5 @@
 from distutils.core import Command
+import sys
 import re
 import time
 import pkg_resources
@@ -14,10 +15,14 @@ except ImportError:
 
 class get_metadata(Command):
   description = "get package metadata"
-  user_options = []
+  user_options = [
+        ('ignore-requirements', None, 'Ignore install_requires options')
+        ]
+
+  boolean_options = ['ignore-requirements']
 
   def initialize_options(self):
-    pass
+    self.ignore_requirements = False
   # def initialize_options
 
   def finalize_options(self):
@@ -51,7 +56,8 @@ class get_metadata(Command):
     # end if
 
     final_deps = []
-    if getattr(self.distribution, 'install_requires', None):
+    if getattr(self.distribution, 'install_requires', None) and \
+       not self.ignore_requirements:
         for dep in pkg_resources.parse_requirements(self.distribution.install_requires):
             # add all defined specs to the dependecy list separately.
             if dep.specs:
@@ -62,7 +68,7 @@ class get_metadata(Command):
                         version
                     ))
             else:
-                final_deps.append(dep.project_name)            
+                final_deps.append(dep.project_name)
 
     data["dependencies"] = final_deps
 
