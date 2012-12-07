@@ -141,6 +141,19 @@ class FPM::Package::RPM < FPM::Package
       end
       #self.provides << "rubygem(#{self.name})"
     end
+
+    # Convert != dependency as Conflict =, as rpm doesn't understand !=
+    if origin == FPM::Package::Python
+      self.dependencies = self.dependencies.select do |dep|
+        name, op, version = dep.split(/\s+/)
+        dep_ok = true
+        if op == '!='
+          self.conflicts << "#{name} = #{version}"
+          dep_ok = false
+        end
+        dep_ok
+      end
+    end
   end # def converted
 
   def input(path)
