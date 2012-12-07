@@ -75,6 +75,8 @@ class FPM::Package::RPM < FPM::Package
     File.read(File.expand_path(file))
   end
 
+  option "--sign", :flag, "Pass --sign to rpmbuild"
+
   private
 
   # Handle any architecture naming conversions.
@@ -205,6 +207,8 @@ class FPM::Package::RPM < FPM::Package
     # issue #309
     rpm_target = "#{architecture}-unknown-#{attributes[:rpm_os]}"
     args += ["--target", rpm_target]
+
+    args += ["--sign"] if attributes[:rpm_sign?]
 
     (attributes[:rpm_rpmbuild_define] or []).each do |define|
       args += ["--define", define]
