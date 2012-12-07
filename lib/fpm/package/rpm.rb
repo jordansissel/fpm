@@ -71,6 +71,10 @@ class FPM::Package::RPM < FPM::Package
   option "--os", "OS", "The operating system to target this rpm for. " \
     "You want to set this to 'linux' if you are using fpm on OS X, for example"
 
+  option "--changelog", "FILEPATH", "Add changelog from FILEPATH contents" do |file|
+    File.read(File.expand_path(file))
+  end
+
   private
 
   # Handle any architecture naming conversions.
