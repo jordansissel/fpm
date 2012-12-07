@@ -1,4 +1,4 @@
-0.4.25 (???)
+0.4.25 (December 7, 2012)
   - Added --deb-changelog and --rpm-changelog support flags. Both take a path to
     a changelog file. Both must be valid changelog formats for their respective
     package types. (#300, patch by Pranay Kanwar)
