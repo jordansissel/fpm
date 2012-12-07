@@ -66,6 +66,11 @@ class FPM::Package::RPM < FPM::Package
     value.downcase
   end
 
+  # TODO(sissel): Try to be smart about the default OS.
+  # issue #309
+  option "--os", "OS", "The operating system to target this rpm for. " \
+    "You want to set this to 'linux' if you are using fpm on OS X, for example"
+
   private
 
   # Handle any architecture naming conversions.
@@ -190,7 +195,12 @@ class FPM::Package::RPM < FPM::Package
       "--define", "buildroot #{build_path}/BUILD",
       "--define", "_topdir #{build_path}",
       "--define", "_sourcedir #{build_path}",
-      "--define", "_rpmdir #{build_path}/RPMS"]
+      "--define", "_rpmdir #{build_path}/RPMS",
+    ]
+
+    # issue #309
+    rpm_target = "#{architecture}-unknown-#{attributes[:rpm_os]}"
+    args += ["--target", rpm_target]
 
     (attributes[:rpm_rpmbuild_define] or []).each do |define|
       args += ["--define", define]
