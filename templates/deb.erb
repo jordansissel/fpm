@@ -23,6 +23,12 @@ Provides: <%= provides.map {|p| p.split(" ").first}.join ", " %>
 <% if !replaces.empty? -%>
 Replaces: <%= replaces.join(", ") %>
 <% end -%>
+<% if attributes[:deb_recommends] -%>
+Recommends: <%= attributes[:deb_recommends].join(", ") %>
+<% end -%>
+<% if attributes[:deb_suggests] -%>
+Suggests: <%= attributes[:deb_suggests].join(", ") %>
+<% end -%>
 Section: <%= category %>
 Priority: <%= attributes[:deb_priority] %>
 Homepage: <%= url or "http://nourlgiven.example.com/" %>
