@@ -1,10 +1,14 @@
 0.4.25 (???)
-  - Added --rpm-os flag to set the OS target for the rpm. This lets you build 
+  - Added --deb-changelog and --rpm-changelog support flags. Both take a path to
+    a changelog file. Both must be valid changelog formats for their respective
+    package types. (#300, patch by Pranay Kanwar)
+  - deb: Multiple "provides" are now supported. (#301, patch by Pranay Kanwar)
+  - rpm: Added --rpm-os flag to set the OS target for the rpm. This lets you build 
     rpms for linux on OS X and other platforms (with --rpm-os linux). (#309)
   - rpm: Avoid platform-dependent commands in the %install phase (#309, fixes
     'cp -d' on OSX)
-  - Fixed warning 'already initialized constant' (#274)
   - python: ignore comments in requirements.txt (#304, patch by Pranay Kanwar)
+  - Fixed warning 'already initialized constant' (#274)
 
 0.4.24 (November 30, 2012)
   - Don't include an empty url in rpm spec (#296, #276; patch by Pranay Kanwar)
