@@ -60,6 +60,8 @@ describe FPM::Package::RPM do
   describe "#templating" do
     context "default user and group" do
       before :all do
+        FileUtils.mkdir_p(subject.staging_path(File.dirname(__FILE__)))
+        FileUtils.cp(__FILE__, subject.staging_path(__FILE__))
 
         # set the list of files for this RPM
         def subject.files; [__FILE__]; end
@@ -81,6 +83,9 @@ describe FPM::Package::RPM do
       before :all do
         subject.attributes[:rpm_user] = "some_user"
         subject.attributes[:rpm_group] = "some_group"
+
+        FileUtils.mkdir_p(subject.staging_path(File.dirname(__FILE__)))
+        FileUtils.cp(__FILE__, subject.staging_path(__FILE__))
 
         # set the list of files for this RPM
         def subject.files; [__FILE__]; end
@@ -123,7 +128,6 @@ describe FPM::Package::RPM do
         subject.scripts[:before_remove] = "example before_remove"
         subject.scripts[:after_remove] = "example after_remove"
 
-        p :before_target => @target
         # Write the rpm out
         subject.output(@target)
 

@@ -75,16 +75,20 @@ Obsoletes: <%= repl %>
 
 %install
 <% files.each do |path| -%>
-<%   source = Shellwords.shellescape(File.join(staging_path, path)).gsub("%", "%%") -%>
+<%   source = File.join(staging_path, path) -%>
+<%   source_safe = Shellwords.shellescape(source).gsub("%", "%%") -%>
 <%   # Copy to the build_path/BUILD/ to make rpmbuild happy -%>
-<%   target = Shellwords.shellescape(File.join(build_path, build_sub_dir, path)).gsub("%", "%%") -%>
-<%   dir = File.dirname(target) %>
-mkdir -p <%= dir %>
-if [ -f <%= source %> ] || [ -h <%= source %> ] ; then
-  cp -d <%= source %> <%= target %>
-elif [ -d <%= source %> ] ; then
-  mkdir <%= target %>
-fi
+<%   target_safe = Shellwords.shellescape(File.join(build_path, build_sub_dir, path)).gsub("%", "%%") -%>
+<%   st = File.lstat(source) -%>
+<%   dir = File.dirname(target_safe) -%>
+[ ! -d <%= dir %> ] && mkdir -p <%= dir %>
+<%   if st.symlink? -%>
+ln -s <%= File.readlink(source) %> <%= target_safe %>
+<%   elsif st.directory? -%>
+mkdir <%= target_safe %>
+<%   else -%>
+cp <%= source_safe %> <%= target_safe %>
+<%   end -%>
 <% end %>
 
 %clean
