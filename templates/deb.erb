@@ -18,7 +18,7 @@ Conflicts: <%= conflicts.join(", ") %>
 <% if !provides.empty? -%>
 <%# Turn each provides from 'foo = 123' to simply 'foo' because Debian :\ -%>
 <%#  http://www.debian.org/doc/debian-policy/ch-relationships.html -%>
-Provides: <%= provides.first.split(" ").first %>
+Provides: <%= provides.map {|p| p.split(" ").first}.join ", " %>
 <% end -%>
 <% if !replaces.empty? -%>
 Replaces: <%= replaces.join(", ") %>
