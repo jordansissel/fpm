@@ -117,6 +117,7 @@ describe FPM::Package::RPM do
         subject.dependencies << "something > 10"
         subject.dependencies << "hello >= 20"
         subject.conflicts << "bad < 2"
+        subject.attributes[:rpm_os] = "fancypants"
 
         # Make sure multi-line licenses are hacked to work in rpm (#252)
         subject.license = "this\nis\nan\example"
@@ -147,6 +148,10 @@ describe FPM::Package::RPM do
 
       it "should have the correct name" do
         insist { @rpmtags[:name] } == subject.name
+      end
+
+      it "should obey the os attribute" do
+        insist { @rpmtags[:os] } == subject.attributes[:rpm_os]
       end
 
       it "should have the correct version" do
