@@ -53,7 +53,7 @@ class FPM::Package::Python < FPM::Package
   option "--install-data", "DATA_PATH", "The path to where data should be." \
     "installed to. This is equivalent to 'python setup.py --install-data " \
     "DATA_PATH"
-  option "--requirements", :flag, "Include requirements defined in setup.py"\
+  option "--dependencies", :flag, "Include requirements defined in setup.py"\
     " as dependencies", :default => true
 
   private
@@ -142,7 +142,7 @@ class FPM::Package::Python < FPM::Package
     output = ::Dir.chdir(setup_dir) do
       metadata_options = []
 
-      if not attributes[:python_requirements]
+      if not attributes[:python_dependencies]
         metadata_options.push('--ignore-requirements')
       end
 
@@ -178,7 +178,7 @@ class FPM::Package::Python < FPM::Package
     end
 
     requirements_txt = File.join(setup_dir, "requirements.txt")
-    if File.exists?(requirements_txt) and attributes[:python_requirements?]
+    if File.exists?(requirements_txt) and attributes[:python_dependencies?]
       @logger.info("Found requirements.txt, using it instead of setup.py " \
                     "for dependency information", :path => requirements_txt)
       @logger.debug("Clearing dependency list (from setup.py) in prep for " \
