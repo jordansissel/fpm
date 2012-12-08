@@ -7,7 +7,7 @@ require "fileutils"
 require "tmpdir"
 require "json"
 
-# Support for python packages. 
+# Support for python packages.
 #
 # This supports input, but not output.
 #
@@ -53,6 +53,8 @@ class FPM::Package::Python < FPM::Package
   option "--install-data", "DATA_PATH", "The path to where data should be." \
     "installed to. This is equivalent to 'python setup.py --install-data " \
     "DATA_PATH"
+  option "--dependencies", :flag, "Include requirements defined in setup.py"\
+    " as dependencies", :default => true
 
   private
 
@@ -178,7 +180,7 @@ class FPM::Package::Python < FPM::Package
       # Best I can tell, requirements.txt are a superset of what
       # is already supported as 'dependencies' in setup.py
       # So we'll parse them the same way below.
-      
+
       # requirements.txt can have dependencies, flags, and comments.
       # We only want the comments, so remove comment and flag lines.
       metadata["dependencies"] = File.read(requirements_txt).split("\n") \
@@ -186,20 +188,21 @@ class FPM::Package::Python < FPM::Package
         .reject { |l| l =~ /^-/ } \
         .map(&:strip)
     end
-
-    self.dependencies += metadata["dependencies"].collect do |dep|
-      dep_re = /^([^<>= ]+)\s*(?:([<>=]{1,2})\s*(.*))?$/
-      match = dep_re.match(dep)
-      if match.nil?
-        @logger.error("Unable to parse dependency", :dependency => dep)
-        raise FPM::InvalidPackageConfiguration, "Invalid dependency '#{dep}'"
+    if attributes[:python_dependencies?]
+      self.dependencies += metadata["dependencies"].collect do |dep|
+        dep_re = /^([^<>= ]+)\s*(?:([<>=]{1,2})\s*(.*))?$/
+        match = dep_re.match(dep)
+        if match.nil?
+          @logger.error("Unable to parse dependency", :dependency => dep)
+          raise FPM::InvalidPackageConfiguration, "Invalid dependency '#{dep}'"
+        end
+        name, cmp, version = match.captures
+        # dependency name prefixing is optional, if enabled, a name 'foo' will
+        # become 'python-foo' (depending on what the python_package_name_prefix
+        # is)
+        name = fix_name(name) if attributes[:python_fix_dependencies?]
+        "#{name} #{cmp} #{version}"
       end
-      name, cmp, version = match.captures
-      # dependency name prefixing is optional, if enabled, a name 'foo' will
-      # become 'python-foo' (depending on what the python_package_name_prefix
-      # is)
-      name = fix_name(name) if attributes[:python_fix_dependencies?]
-      "#{name} #{cmp} #{version}"
     end
   end # def load_package_info
 
@@ -224,7 +227,7 @@ class FPM::Package::Python < FPM::Package
 
     prefix = "/"
     prefix = attributes[:prefix] unless attributes[:prefix].nil?
-    
+
     # Some setup.py's assume $PWD == current directory of setup.py, so let's
     # chdir first.
     ::Dir.chdir(project_dir) do

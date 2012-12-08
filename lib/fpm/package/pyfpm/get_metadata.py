@@ -1,4 +1,5 @@
 from distutils.core import Command
+import sys
 import re
 import time
 import pkg_resources
@@ -62,7 +63,7 @@ class get_metadata(Command):
                         version
                     ))
             else:
-                final_deps.append(dep.project_name)            
+                final_deps.append(dep.project_name)
 
     data["dependencies"] = final_deps
 
