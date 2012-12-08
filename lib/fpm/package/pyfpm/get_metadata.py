@@ -15,14 +15,10 @@ except ImportError:
 
 class get_metadata(Command):
   description = "get package metadata"
-  user_options = [
-        ('ignore-requirements', None, 'Ignore install_requires options')
-        ]
-
-  boolean_options = ['ignore-requirements']
+  user_options = []
 
   def initialize_options(self):
-    self.ignore_requirements = False
+    pass
   # def initialize_options
 
   def finalize_options(self):
@@ -56,8 +52,7 @@ class get_metadata(Command):
     # end if
 
     final_deps = []
-    if getattr(self.distribution, 'install_requires', None) and \
-       not self.ignore_requirements:
+    if getattr(self.distribution, 'install_requires', None):
         for dep in pkg_resources.parse_requirements(self.distribution.install_requires):
             # add all defined specs to the dependecy list separately.
             if dep.specs:

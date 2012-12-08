@@ -140,14 +140,8 @@ class FPM::Package::Python < FPM::Package
     setup_dir = File.dirname(setup_py)
 
     output = ::Dir.chdir(setup_dir) do
-      metadata_options = []
-
-      if not attributes[:python_dependencies]
-        metadata_options.push('--ignore-requirements')
-      end
-
       setup_cmd = "env PYTHONPATH=#{pylib} #{attributes[:python_bin]} " \
-        "setup.py --command-packages=pyfpm get_metadata #{metadata_options.join(' ')}"
+        "setup.py --command-packages=pyfpm get_metadata"
       # Capture the output, which will be JSON metadata describing this python
       # package. See fpm/lib/fpm/package/pyfpm/get_metadata.py for more
       # details.
@@ -178,7 +172,7 @@ class FPM::Package::Python < FPM::Package
     end
 
     requirements_txt = File.join(setup_dir, "requirements.txt")
-    if File.exists?(requirements_txt) and attributes[:python_dependencies?]
+    if File.exists?(requirements_txt)
       @logger.info("Found requirements.txt, using it instead of setup.py " \
                     "for dependency information", :path => requirements_txt)
       @logger.debug("Clearing dependency list (from setup.py) in prep for " \
@@ -194,20 +188,21 @@ class FPM::Package::Python < FPM::Package
         .reject { |l| l =~ /^-/ } \
         .map(&:strip)
     end
-
-    self.dependencies += metadata["dependencies"].collect do |dep|
-      dep_re = /^([^<>= ]+)\s*(?:([<>=]{1,2})\s*(.*))?$/
-      match = dep_re.match(dep)
-      if match.nil?
-        @logger.error("Unable to parse dependency", :dependency => dep)
-        raise FPM::InvalidPackageConfiguration, "Invalid dependency '#{dep}'"
+    if attributes[:python_dependencies?]
+      self.dependencies += metadata["dependencies"].collect do |dep|
+        dep_re = /^([^<>= ]+)\s*(?:([<>=]{1,2})\s*(.*))?$/
+        match = dep_re.match(dep)
+        if match.nil?
+          @logger.error("Unable to parse dependency", :dependency => dep)
+          raise FPM::InvalidPackageConfiguration, "Invalid dependency '#{dep}'"
+        end
+        name, cmp, version = match.captures
+        # dependency name prefixing is optional, if enabled, a name 'foo' will
+        # become 'python-foo' (depending on what the python_package_name_prefix
+        # is)
+        name = fix_name(name) if attributes[:python_fix_dependencies?]
+        "#{name} #{cmp} #{version}"
       end
-      name, cmp, version = match.captures
-      # dependency name prefixing is optional, if enabled, a name 'foo' will
-      # become 'python-foo' (depending on what the python_package_name_prefix
-      # is)
-      name = fix_name(name) if attributes[:python_fix_dependencies?]
-      "#{name} #{cmp} #{version}"
     end
   end # def load_package_info
 
