@@ -197,16 +197,18 @@ class FPM::Package::RPM < FPM::Package
     output_check(output_path)
     raise FileAlreadyExists.new(output_path) if File.exists?(output_path)
     %w(BUILD RPMS SRPMS SOURCES SPECS).each { |d| FileUtils.mkdir_p(build_path(d)) }
-    args = ["rpmbuild", "-bb",
+    args = ["rpmbuild", "-bb"]
+
+    # issue #309
+    rpm_target = "#{architecture}-unknown-#{attributes[:rpm_os]}"
+    args += ["--target", rpm_target]
+
+    args += [
       "--define", "buildroot #{build_path}/BUILD",
       "--define", "_topdir #{build_path}",
       "--define", "_sourcedir #{build_path}",
       "--define", "_rpmdir #{build_path}/RPMS",
     ]
-
-    # issue #309
-    rpm_target = "#{architecture}-unknown-#{attributes[:rpm_os]}"
-    args += ["--target", rpm_target]
 
     args += ["--sign"] if attributes[:rpm_sign?]
 
