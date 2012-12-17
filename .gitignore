@@ -5,6 +5,7 @@
 build-*/*
 fpm.wiki
 *.gem
+*.pkg
 
 # python
 *.pyc
@@ -16,3 +17,6 @@ fpm.wiki
 coverage
 test/tmp
 Gemfile.lock
+
+# OS X
+.DS_Store
