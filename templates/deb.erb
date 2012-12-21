@@ -11,10 +11,9 @@ Depends: <%= dependencies.collect { |d| fix_dependency(d) }.flatten.join(", ") %
 <% if !conflicts.empty? -%>
 Conflicts: <%= conflicts.join(", ") %>
 <% end -%>
-<%# if !pre_dependencies.empty? -%>
-<%#   properpredeps = pre_dependencies.collect { |d| fix_dependency(d) }.flatten -%>
-#Pre-Depends: <%#= properpredeps.flatten.join(", ") %>
-<%# end -%>
+<% if attributes[:deb_pre_depends_given?] -%>
+Pre-Depends: <%= attributes[:deb_pre_depends].collect { |d| fix_dependency(d) }.flatten.join(", ") %>
+<% end -%>
 <% if !provides.empty? -%>
 <%# Turn each provides from 'foo = 123' to simply 'foo' because Debian :\ -%>
 <%#  http://www.debian.org/doc/debian-policy/ch-relationships.html -%>
