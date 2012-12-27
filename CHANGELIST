@@ -1,3 +1,11 @@
+0.4.26 (December 27, 2012)
+  - rpm: add --rpm-sign flag to sign packages using the 'rpmbuild --sign' flag.
+    (#311, Patch by Pranay Kanwar)
+  - rpm: fix flag ordering when calling rpmbuild (#309, #315, patch by Trotter
+    Cashion)
+  - deb: re-enable "Predepends" support (#319, #320, patch by Pranay Kanwar)
+  - rpm: fix default 'rpm os' value (#321, 314, 309)
+
 0.4.25 (December 7, 2012)
   - Added --deb-changelog and --rpm-changelog support flags. Both take a path to
     a changelog file. Both must be valid changelog formats for their respective
