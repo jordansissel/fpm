@@ -234,6 +234,77 @@ describe FPM::Package::RPM do
           .include?((@rpmtags[:filedigestalgo].first rescue nil))
       end
     end # package attributes
+
+    context "package default attributes" do
+      before :all do
+        @target = Tempfile.new("fpm-test-rpm").path
+        File.delete(@target)
+        subject.name = "name"
+        subject.version = "123"
+        # Write the rpm out
+        subject.output(@target)
+
+        # Read the rpm
+        @rpm = ::RPM::File.new(@target)
+
+        @rpmtags = {}
+        @rpm.header.tags.each do |tag|
+          @rpmtags[tag.tag] = tag.value
+        end
+      end # before :all
+
+      after :all do
+        subject.cleanup
+        File.delete(@target)
+      end # after :all
+
+      it "should have the correct name" do
+        insist { @rpmtags[:name] } == subject.name
+      end
+
+      # I don't know the 'os' values for any other OS.
+      it "should have a default OS value" do
+        os = `uname -s`.chomp.downcase
+
+        # the 
+        insist { @rpmtag[:os] } != "\x01"
+
+        insist { @rpmtags[:os] } == os
+        insist { `rpm -q --qf '%{OS}' -p #{@target}`.chomp } == os
+      end
+
+      it "should have the correct version" do
+        insist { @rpmtags[:version] } == subject.version
+      end
+
+      it "should have the correct iteration" do
+        insist { @rpmtags[:release] } == 1
+      end
+
+      #it "should have the correct epoch" do
+        #insist { @rpmtags[:epoch].first.to_s } == ""
+      #end
+
+      it "should output a package with the no conflicts" do
+        # @rpm.requires is an array of [name, op, requires] elements
+        # fpm uses strings here, so convert.
+        conflicts = @rpm.conflicts.collect { |a| a.join(" ") }
+
+        subject.conflicts.each do |dep|
+          insist { conflicts }.include?(dep)
+        end
+      end
+
+      it "should output a package with no provides" do
+        # @rpm.requires is an array of [name, op, requires] elements
+        # fpm uses strings here, so convert.
+        provides = @rpm.provides.collect { |a| a.join(" ") }
+
+        subject.provides.each do |dep|
+          insist { provides }.include?(dep)
+        end
+      end
+    end # package attributes
   end # #output
 
   describe "regressions should not occur", :if => program_in_path?("rpmbuild") do
