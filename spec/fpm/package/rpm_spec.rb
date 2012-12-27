@@ -268,7 +268,7 @@ describe FPM::Package::RPM do
 
         # The 'os' tag will be set to \x01 if the package 'target'
         # was set incorrectly.
-        insist { @rpmtag[:os] } != "\x01"
+        insist { @rpmtags[:os] } != "\x01"
 
         insist { @rpmtags[:os] } == os
         insist { `rpm -q --qf '%{OS}' -p #{@target}`.chomp } == os
@@ -278,8 +278,8 @@ describe FPM::Package::RPM do
         insist { @rpmtags[:version] } == subject.version
       end
 
-      it "should have the correct iteration" do
-        insist { @rpmtags[:release] } == 1
+      it "should have the default iteration" do
+        insist { @rpmtags[:release].to_s } == "1"
       end
 
       #it "should have the correct epoch" do
