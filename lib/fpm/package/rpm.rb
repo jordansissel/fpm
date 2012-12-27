@@ -200,8 +200,10 @@ class FPM::Package::RPM < FPM::Package
     args = ["rpmbuild", "-bb"]
 
     # issue #309
-    rpm_target = "#{architecture}-unknown-#{attributes[:rpm_os]}"
-    args += ["--target", rpm_target]
+    if !attributes[:rpm_os].nil?
+      rpm_target = "#{architecture}-unknown-#{attributes[:rpm_os]}"
+      args += ["--target", rpm_target]
+    end
 
     args += [
       "--define", "buildroot #{build_path}/BUILD",
