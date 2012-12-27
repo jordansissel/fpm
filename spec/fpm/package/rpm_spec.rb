@@ -266,7 +266,8 @@ describe FPM::Package::RPM do
       it "should have a default OS value" do
         os = `uname -s`.chomp.downcase
 
-        # the 
+        # The 'os' tag will be set to \x01 if the package 'target'
+        # was set incorrectly.
         insist { @rpmtag[:os] } != "\x01"
 
         insist { @rpmtags[:os] } == os
