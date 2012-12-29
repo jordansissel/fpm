@@ -356,11 +356,12 @@ class FPM::Package
     end
 
     exclude_path = proc do |pattern, file|
-      FileUtils.remove_entry_secure(staging_path(file))
-      Pathname.new(staging_path(file)).parent.ascend do |d|
+      file_staging_path = staging_path(file)
+      FileUtils.remove_entry_secure(file_staging_path)
+      Pathname.new(file_staging_path).parent.ascend do |d|
         if (::Dir.entries(d) - %w[ . .. ]).empty?
-          if File.fnmatch(pattern, d)
-            @logger.info("Deleting empty directory left by removing excluded file", :path => d)
+          if File.fnmatch(pattern, d) or File.dirname(file_staging_path) == "#{d}"
+            @logger.info("Deleting empty directory left by removing excluded file/dir", :path => d)
             ::Dir.rmdir(d)
           end
         else
