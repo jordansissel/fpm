@@ -268,7 +268,7 @@ describe FPM::Package::RPM do
 
         # The 'os' tag will be set to \x01 if the package 'target'
         # was set incorrectly.
-        insist { @rpmtags[:os] } != "\x01"
+        insist { insist { @rpmtags[:os] } == "\x01" }.fails
 
         insist { @rpmtags[:os] } == os
         insist { `rpm -q --qf '%{OS}' -p #{@target}`.chomp } == os
