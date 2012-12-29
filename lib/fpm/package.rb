@@ -355,12 +355,14 @@ class FPM::Package
       installdir = staging_path
     end
 
-    exclude_path = proc do |file|
+    exclude_path = proc do |pattern, file|
       FileUtils.remove_entry_secure(staging_path(file))
       Pathname.new(staging_path(file)).parent.ascend do |d|
         if (::Dir.entries(d) - %w[ . .. ]).empty?
-          ::Dir.rmdir(d)
-          @logger.info("Deleting empty directory left by removing exluded file", :path => d)
+          if File.fnmatch(pattern, d)
+            @logger.info("Deleting empty directory left by removing excluded file", :path => d)
+            ::Dir.rmdir(d)
+          end
         else
           break
         end
@@ -373,7 +375,7 @@ class FPM::Package
         @logger.debug("Checking path against wildcard", :path => file, :wildcard => wildcard)
         if File.fnmatch(wildcard, file)
           @logger.info("Removing excluded file", :path => file, :matches => wildcard)
-          exclude_path.call(file)
+          exclude_path.call(wildcard, file)
           next
         end
 
@@ -387,7 +389,7 @@ class FPM::Package
           if exclude_re.match(file)
             @logger.info("Removing excluded file which has a parent excluded directory",
                          :path => file, :excluded => wildcard)
-            exclude_path.call(file)
+            exclude_path.call(wildcard, file)
           end
         end
       end 
