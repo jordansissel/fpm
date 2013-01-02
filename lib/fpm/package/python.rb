@@ -190,13 +190,14 @@ class FPM::Package::Python < FPM::Package
       # requirements.txt can have dependencies, flags, and comments.
       # We only want the comments, so remove comment and flag lines.
       metadata["dependencies"] = File.read(requirements_txt).split("\n") \
+        .reject { |l| l =~ /^\s*$/ } \
         .reject { |l| l =~ /^\s*#/ } \
         .reject { |l| l =~ /^-/ } \
         .map(&:strip)
     end
 
     self.dependencies += metadata["dependencies"].collect do |dep|
-      dep_re = /^([^<>= ]+)\s*(?:([<>=]{1,2})\s*(.*))?$/
+      dep_re = /^([^<>!= ]+)\s*(?:([<>!=]{1,2})\s*(.*))?$/
       match = dep_re.match(dep)
       if match.nil?
         @logger.error("Unable to parse dependency", :dependency => dep)
