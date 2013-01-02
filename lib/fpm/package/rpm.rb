@@ -187,7 +187,11 @@ class FPM::Package::RPM < FPM::Package
     #input.replaces += replaces
     
     self.config_files += rpm.config_files
-    self.directories += rpm.directories
+    begin
+        self.directories += rpm.directories
+    rescue NoMethodError
+        # Do nothing
+    end
 
     # Extract to the staging directory
     rpm.extract(staging_path)
