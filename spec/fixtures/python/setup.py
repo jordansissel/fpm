@@ -1,6 +1,6 @@
 from distutils.core import setup
 
-setup(name="example",
+setup(name="Example",
       version="1.0",
       description="sample description",
       author="sample author",
@@ -8,6 +8,6 @@ setup(name="example",
       url="sample url",
       packages=[],
       package_dir={},
-      requires=["dependency1", "dependency2"],
+      requires=["Dependency1", "dependency2"],
       )
 

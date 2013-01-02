@@ -43,6 +43,11 @@ class FPM::Package::Python < FPM::Package
   option "--fix-dependencies", :flag, "Should the package dependencies be " \
     "prefixed?", :default => true
 
+  option "--downcase-name", :flag, "Should the target package name be in " \
+    "lowercase?", :default => true
+  option "--downcase-dependencies", :flag, "Should the package dependencies " \
+    "be in lowercase?", :default => true
+
   option "--install-bin", "BIN_PATH", "The path to where python scripts " \
     "should be installed to.", :default => "/usr/bin"
   option "--install-lib", "LIB_PATH", "The path to where python libs " \
@@ -169,6 +174,9 @@ class FPM::Package::Python < FPM::Package
       self.name = metadata["name"]
     end
 
+    # convert python-Foo to python-foo if flag is set
+    self.name = self.name.downcase if attributes[:python_downcase_name?]
+
     requirements_txt = File.join(setup_dir, "requirements.txt")
     if File.exists?(requirements_txt)
       @logger.info("Found requirements.txt, using it instead of setup.py " \
@@ -199,6 +207,9 @@ class FPM::Package::Python < FPM::Package
       # become 'python-foo' (depending on what the python_package_name_prefix
       # is)
       name = fix_name(name) if attributes[:python_fix_dependencies?]
+
+      # convert dependencies from python-Foo to python-foo
+      name = name.downcase if attributes[:python_downcase_dependencies?]
       "#{name} #{cmp} #{version}"
     end
   end # def load_package_info
