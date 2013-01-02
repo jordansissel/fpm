@@ -187,7 +187,15 @@ class FPM::Package::RPM < FPM::Package
     #input.replaces += replaces
     
     self.config_files += rpm.config_files
-    self.directories += rpm.directories
+
+    # rpms support '%dir' things for specifying empty directories to package,
+    # but the rpm header itself doesn't actually record this information.
+    # so there's no 'directories' to copy, so don't try to merge in the
+    # 'directories' feature. 
+    # TODO(sissel): If you want this feature, we'll have to find scan
+    # the extracted rpm for empty directories. I'll wait until someone asks for
+    # this feature
+    #self.directories += rpm.directories
 
     # Extract to the staging directory
     rpm.extract(staging_path)
