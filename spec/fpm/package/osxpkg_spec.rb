@@ -4,11 +4,11 @@ require "fpm/package/osxpkg" # local
 
 platform_is_darwin = (%x{uname -s}.chomp == "Darwin")
 if !platform_is_darwin
-  Cabin::Channel.get("rspec").warn("Skipping OS X pkg tests because " \
-      "this system is #{%x{uname -s}.chomp}, Darwin required")
+  Cabin::Channel.get("rspec").warn("Skipping OS X pkg tests requiring 'pkgbuild', " \
+      "which requires a Darwin platform.")
 end
 
-describe FPM::Package::OSXpkg, :if => platform_is_darwin do
+describe FPM::Package::OSXpkg do
   describe "#identifier" do
     it "should be of the form reverse.domain.pkgname" do
       subject.name = "name"
@@ -34,7 +34,7 @@ describe FPM::Package::OSXpkg, :if => platform_is_darwin do
     end
   end
 
-  describe "#output" do 
+  describe "#output", :if => platform_is_darwin do 
     before :all do
       # output a package, use it as the input, set the subject to that input
       # package. This helps ensure that we can write and read packages
