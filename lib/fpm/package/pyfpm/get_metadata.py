@@ -1,9 +1,9 @@
 from distutils.core import Command
 import pkg_resources
 try:
-    import simplejson as json
-except ImportError:
     import json
+except ImportError:
+    import simplejson as json
 
 
 # Note, the last time I coded python daily was at Google, so it's entirely
