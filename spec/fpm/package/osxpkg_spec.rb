@@ -2,13 +2,13 @@ require "spec_setup"
 require "fpm" # local
 require "fpm/package/osxpkg" # local
 
-describe FPM::Package::OSXpkg do
-
-  if %x{uname -s}.chomp != "Darwin"
-    Cabin::Channel.get("rspec").warn("Skipping OS X tests because " \
+platform_is_darwin = (%x{uname -s}.chomp == "Darwin")
+if !platform_is_darwin
+  Cabin::Channel.get("rspec").warn("Skipping OS X pkg tests because " \
       "this system is #{%x{uname -s}.chomp}, Darwin required")
-  end
+end
 
+describe FPM::Package::OSXpkg, :if => platform_is_darwin do
   describe "#identifier" do
     it "should be of the form reverse.domain.pkgname" do
       subject.name = "name"
@@ -69,5 +69,4 @@ describe FPM::Package::OSXpkg do
       end
     end # package attributes
   end # #output
-
 end # describe FPM::Package:OSXpkg
