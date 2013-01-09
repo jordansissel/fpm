@@ -1,3 +1,15 @@
+0.4.27 (???)
+  - New package type: osxpkg, for building packages installable on OS X. (#332,
+    patch by Timothy Sutton)
+  - Fix crash bug when converting rpms to something else (#316, #325; patch by
+    rtucker-mozilla)
+  - deb: Add --deb-recommends and --deb-suggests (#285, #310; patch by Pranay
+    Kanwar)
+  - python to rpm: convert "!=" dependency operators in python to "Conflicts"
+    in rpm. (#263, #312; patch by Pranay Kanwar)
+  - python: fix bug - ignore blank lines in requirements.txt (#312, patch by
+    Pranay Kanwar)
+
 0.4.26 (December 27, 2012)
   - rpm: add --rpm-sign flag to sign packages using the 'rpmbuild --sign' flag.
     (#311, Patch by Pranay Kanwar)
