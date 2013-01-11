@@ -1,4 +1,5 @@
 0.4.27 (???)
+  - Make all fpm output go through the logger (#329; patch by jaybuff)
   - New package type: osxpkg, for building packages installable on OS X. (#332,
     patch by Timothy Sutton)
   - Fix crash bug when converting rpms to something else (#316, #325; patch by

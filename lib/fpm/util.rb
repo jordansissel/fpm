@@ -1,4 +1,5 @@
 require "fpm/namespace"
+require "open4"
 
 # Some utility functions
 module FPM::Util
@@ -27,9 +28,18 @@ module FPM::Util
     end
 
     @logger.debug("Running command", :args => args)
-    success = system(*args)
+
+    status = Open4::popen4(*args) do |pid, stdin, stdout, stderr|
+      stdin.close
+
+      @logger.debug("pid is #{ pid }")
+      @logger.info(stdout.read.strip)
+      @logger.error(stderr.read.strip)
+    end
+    success = (status.exitstatus == 0)
+
     if !success
-      raise ProcessFailed.new("#{program} failed (exit code #{$?.exitstatus})" \
+      raise ProcessFailed.new("#{program} failed (exit code #{status.exitstatus})" \
                               ". Full command was:#{args.inspect}")
     end
     return success
