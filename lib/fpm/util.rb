@@ -28,13 +28,12 @@ module FPM::Util
     end
 
     @logger.debug("Running command", :args => args)
-
+    
     status = Open4::popen4(*args) do |pid, stdin, stdout, stderr|
       stdin.close
 
-      @logger.debug("pid is #{ pid }")
-      @logger.info(stdout.read.strip)
-      @logger.error(stderr.read.strip)
+      @logger.debug("Process is running", :pid => pid)
+      @logger.pipe(stdout => :info, stderr => :error)
     end
     success = (status.exitstatus == 0)
 
