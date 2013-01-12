@@ -270,7 +270,9 @@ class FPM::Package::RPM < FPM::Package
   # The default epoch value must be 1 (backward compatibility for rpms built
   # with fpm 0.4.3 and older)
   def epoch
-    return @epoch || "1"
+    return 1 if @epoch.nil?
+    return nil if @epoch.empty?
+    return @epoch
   end # def epoch
 
   def to_s(format=nil)
