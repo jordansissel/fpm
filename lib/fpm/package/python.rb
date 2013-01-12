@@ -110,12 +110,12 @@ class FPM::Package::Python < FPM::Package
 
     if attributes[:python_pip].nil?
       # no pip, use easy_install
-      puts "EASY_INSTALL"
+      @logger.debug("no pip, defaulting to easy_install", :easy_install => attributes[:python_easyinstall])
       safesystem(attributes[:python_easyinstall], "-i",
                  attributes[:python_pypi], "--editable", "-U",
                  "--build-directory", target, want_pkg)
     else
-      puts "PIP PIP CHEERIOS"
+      @logger.debug("using pip", :pip => attributes[:python_pip])
       safesystem(attributes[:python_pip], "install", "--no-install",
                  "-U", "--build", target, want_pkg)
     end
