@@ -40,7 +40,7 @@ describe FPM::Package::RPM do
 
   describe "#epoch" do
     it "should default to 1" do
-      insist { subject.epoch } == "1"
+      insist { subject.epoch.to_s } == "1"
     end
   end
   
