@@ -4,6 +4,7 @@
     patch by Timothy Sutton)
   - Fix crash bug when converting rpms to something else (#316, #325; patch by
     rtucker-mozilla)
+  - deb: Add --deb-field for setting a custom field in the control file.
   - deb: Add --deb-recommends and --deb-suggests (#285, #310; patch by Pranay
     Kanwar)
   - python to rpm: convert "!=" dependency operators in python to "Conflicts"
