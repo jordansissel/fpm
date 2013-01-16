@@ -1,4 +1,4 @@
-0.4.27 (???)
+0.4.27 (January 16, 2013)
   - Make all fpm output go through the logger (#329; patch by jaybuff)
   - New package type: osxpkg, for building packages installable on OS X. (#332,
     patch by Timothy Sutton)
