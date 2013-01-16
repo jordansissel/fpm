@@ -5,6 +5,9 @@
   - Fix crash bug when converting rpms to something else (#316, #325; patch by
     rtucker-mozilla)
   - deb: Add --deb-field for setting a custom field in the control file.
+    For more information on this setting, see section 5.7 "User-defined fields"
+    of the debian policy manual: 
+    http://www.debian.org/doc/debian-policy/ch-controlfields.html#s5.7
   - deb: Add --deb-recommends and --deb-suggests (#285, #310; patch by Pranay
     Kanwar)
   - python to rpm: convert "!=" dependency operators in python to "Conflicts"
