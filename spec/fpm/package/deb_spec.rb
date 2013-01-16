@@ -119,6 +119,8 @@ describe FPM::Package::Deb do
       @original.provides = "#{@original.name} = #{@original.version}"
 
       @original.attributes[:deb_priority] = "fizzle"
+      @original.attributes[:deb_field_given?] = true
+      @original.attributes[:deb_field] = { "foo" => "bar" }
       @original.output(@target)
 
       @input = FPM::Package::Deb.new
@@ -180,6 +182,10 @@ describe FPM::Package::Deb do
       it "should have the correct dependency list" do
         # 'something > 10' should convert to 'something (>> 10)', etc.
         insist { dpkg_field("Depends") } == "something (>> 10), hello (>= 20)"
+      end
+
+      it "should have a custom field 'foo: bar'" do
+        insist { dpkg_field("foo") } == "bar"
       end
     end
   end # #output

@@ -37,3 +37,8 @@ Description: <%= firstline %>
 <% if remainder.any? -%>
 <%= remainder.collect { |l| l =~ /^ *$/ ? " ." : " #{l}" }.join("\n") %>
 <% end -%>
+<% if attributes[:deb_field_given?] -%>
+<%   attributes[:deb_field].each do |field, value| -%>
+<%= field %>: <%= value %>
+<%   end -%>
+<% end -%>

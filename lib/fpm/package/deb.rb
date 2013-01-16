@@ -80,11 +80,20 @@ class FPM::Package::Deb < FPM::Package
   option "--recommends", "PACKAGE", "Add PACKAGE to Recommends" do |pkg|
     @recommends ||= []
     @recommends << pkg
+    next @recommends
   end
 
   option "--suggests", "PACKAGE", "Add PACKAGE to Suggests" do |pkg|
     @suggests ||= []
     @suggests << pkg
+    next @suggests
+  end
+
+  option "--field", "'FIELD: VALUE'", "Add custom field to the control file" do |fv|
+    @custom_fields ||= {}
+    field, value = fv.split(/: */, 2)
+    @custom_fields[field] = value
+    next @custom_fields
   end
 
   def initialize(*args)
