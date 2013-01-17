@@ -271,6 +271,7 @@ class FPM::Package::RPM < FPM::Package
   # with fpm 0.4.3 and older)
   def epoch
     return 1 if @epoch.nil?
+    return 0 if @epoch == 0
     return nil if @epoch.empty?
     return @epoch
   end # def epoch
