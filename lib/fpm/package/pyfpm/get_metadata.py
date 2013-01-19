@@ -1,7 +1,4 @@
 from distutils.core import Command
-import sys
-import re
-import time
 import pkg_resources
 try:
     import json
