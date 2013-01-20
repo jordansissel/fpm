@@ -158,7 +158,7 @@ describe FPM::Package do
       File.write(subject.staging_path("keeper"), "Hello!")
       subject.attributes[:excludes] = [ "example/foo" ]
       subject.instance_eval { exclude }
-      insist { subject.files } == [ "keeper", "example" ]
+      insist { subject.files.sort } == [ "example", "keeper" ]
     end
   end
 
