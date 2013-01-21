@@ -366,6 +366,7 @@ class FPM::Package
           @logger.info("Removing excluded path", :path => path, :matches => wildcard)
           FileUtils.remove_entry_secure(path)
           Find.prune
+          break
         end
       end
     end
