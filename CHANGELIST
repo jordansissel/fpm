@@ -1,3 +1,6 @@
+0.4.28 (January 21, 2013)
+  - Fix a dependency on the 'cabin' gem. (#344, reported by Jay Buffington)
+
 0.4.27 (January 16, 2013)
   - Make all fpm output go through the logger (#329; patch by jaybuff)
   - New package type: osxpkg, for building packages installable on OS X. (#332,
