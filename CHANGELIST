@@ -1,3 +1,6 @@
+0.4.29 (January 22, 2013)
+  - Copy links literally, not what they point at (#337, patch by Dane Knecht)
+
 0.4.28 (January 21, 2013)
   - Fix a dependency on the 'cabin' gem. (#344, reported by Jay Buffington)
 
