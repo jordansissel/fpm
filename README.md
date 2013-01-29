@@ -7,7 +7,11 @@ everyone. So, if you're a maintainer: Thanks for maintaining packages!
 
 ## What is fpm?
 
-It helps you build packages quickly (Packages like RPM and DEB formats).
+It helps you build packages quickly and easily (Packages like RPM and DEB
+formats).
+
+FUNDAMENTAL PRINCIPLE: IF FPM IS NOT HELPING YOU MAKE PACKAGES EASILY, THEN
+THERE IS A BUG IN FPM.
 
 Here is a presentation I gave on fpm at BayLISA: <http://goo.gl/sWs3Z> (I
 included speaker notes you can read, too)
@@ -22,7 +26,7 @@ install, fpm, deploy.
 
 In 60 seconds, starting from nothing, I had both an RPM and a .DEB of memcached
 ready to deploy, and I didn't need to know how to use rpmbuild, rpm specfiles,
-dh_make, debian control files, etc.
+dh\_make, debian control files, etc.
 
 ## Backstory
 
