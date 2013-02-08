@@ -85,11 +85,17 @@ class FPM::Package::PEAR < FPM::Package
     self.description  = %x{#{pear_cmd} | sed -ne '/^Summary\s*/s/^Summary\s*//p'}.chomp
     @logger.debug("Package info", :name => self.name, :version => self.version,
                   :description => self.description)
- 
+
     # Remove the stuff we don't want
     delete_these = [".depdb", ".depdblock", ".filemap", ".lock", ".channel", "cache", "temp", "download", ".channels", ".registry"]
     Find.find(staging_path) do |path|
+      if File.file?(path) && File.executable?(path)
+        @logger.info("replacing pear_dir in binary", :binary => path)
+        content = File.read(path).gsub(/#{staging_path}/, "")
+        File.open(path, "w") { |file| file.puts content }
+      end
       FileUtils.rm_r(path) if delete_these.include?(File.basename(path))
     end
+
   end # def input
 end # class FPM::Package::PEAR
