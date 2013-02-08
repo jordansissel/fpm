@@ -87,7 +87,7 @@ class FPM::Package::PEAR < FPM::Package
                   :description => self.description)
  
     # Remove the stuff we don't want
-    delete_these = [".depdb", ".depdblock", ".filemap", ".lock", ".channel"]
+    delete_these = [".depdb", ".depdblock", ".filemap", ".lock", ".channel", "cache", "temp", "download", ".channels", ".registry"]
     Find.find(staging_path) do |path|
       FileUtils.rm_r(path) if delete_these.include?(File.basename(path))
     end
