@@ -243,13 +243,29 @@ class FPM::Package::Python < FPM::Package
       flags = [ "--root", staging_path ]
       if !attributes[:python_install_lib].nil?
         flags += [ "--install-lib", File.join(prefix, attributes[:python_install_lib]) ]
+      elsif !attributes[:prefix].nil?
+        # setup.py install --prefix PREFIX still installs libs to
+        # PREFIX/lib64/python2.7/site-packages/
+        # but we really want something saner.
+        #
+        # since prefix is given, but not python_install_lib, assume PREFIX/lib
+        flags += [ "--install-lib", File.join(prefix, "lib") ]
       end
+
       if !attributes[:python_install_data].nil?
         flags += [ "--install-data", File.join(prefix, attributes[:python_install_data]) ]
+      elsif !attributes[:prefix].nil?
+        # prefix given, but not python_install_data, assume PREFIX/data
+        flags += [ "--install-data", File.join(prefix, "data") ]
       end
+
       if !attributes[:python_install_bin].nil?
         flags += [ "--install-scripts", File.join(prefix, attributes[:python_install_bin]) ]
+      elsif !attributes[:prefix].nil?
+        # prefix given, but not python_install_bin, assume PREFIX/bin
+        flags += [ "--install-scripts", File.join(prefix, "bin") ]
       end
+
       safesystem(attributes[:python_bin], "setup.py", "install", *flags)
     end
   end # def install_to_staging
