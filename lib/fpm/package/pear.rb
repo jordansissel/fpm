@@ -59,7 +59,6 @@ class FPM::Package::PEAR < FPM::Package
     # try channel-discover
     if !attributes[:pear_channel].nil?
       @logger.info("Custom channel specified", :channel => attributes[:pear_channel])
-      p ["pear", "-c", config, "channel-discover", attributes[:pear_channel]]
       safesystem("pear", "-c", config, "channel-discover", attributes[:pear_channel])
       input_package = "#{attributes[:pear_channel]}/#{input_package}"
       @logger.info("Prefixing package name with channel", :package => input_package)
