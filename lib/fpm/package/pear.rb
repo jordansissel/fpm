@@ -91,8 +91,9 @@ class FPM::Package::PEAR < FPM::Package
     Find.find(staging_path) do |path|
       if File.file?(path) && File.executable?(path)
         @logger.info("replacing pear_dir in binary", :binary => path)
-        content = File.read(path).gsub(/#{staging_path}/, "")
-        File.open(path, "w") { |file| file.puts content }
+        staging_path_re = Regexp.new("^" + Regexp.escape(staging_path))
+        content = File.read(path).gsub(staging_path_re, "")
+        File.write(path, content)
       end
       FileUtils.rm_r(path) if delete_these.include?(File.basename(path))
     end
