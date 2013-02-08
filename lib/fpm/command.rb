@@ -373,7 +373,7 @@ class FPM::Command < Clamp::Command
 
       if !File.exists?(path)
         @logger.error("No such file (for #{scriptname.to_s}): #{path.inspect}")
-        return 1
+        exit 1
       end
 
       # Load the script into memory.
