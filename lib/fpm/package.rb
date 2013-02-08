@@ -337,7 +337,13 @@ class FPM::Package
   def edit_file(path)
     editor = ENV['FPM_EDITOR'] || ENV['EDITOR'] || 'vi'
     @logger.info("Launching editor", :file => path)
+    command = "#{editor} #{Shellwords.escape(path)}"
     system("#{editor} #{Shellwords.escape(path)}")
+    if !$?.success?
+      raise ProcessFailed.new("'#{editor}' failed (exit code " \
+                              "#{$?.exitstatus}) Full command was: "\
+                              "#{command}");
+    end
 
     if File.size(path) == 0
       raise "Empty file after editing: #{path.inspect}"
