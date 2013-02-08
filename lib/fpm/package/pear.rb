@@ -50,20 +50,20 @@ class FPM::Package::PEAR < FPM::Package
       safesystem("pear", "-c", config, "channel-update", channel)
     end
 
-    pear_cmd = "pear -c #{config} remote-info #{input_package}"
-    @logger.info("Fetching package information", :package => input_package, :command => pear_cmd)
-    name = %x{#{pear_cmd} | sed -ne '/^Package\s*/s/^Package\s*//p'}.chomp
-    self.name = "#{attributes[:pear_package_name_prefix]}-#{name}"
-    self.version = %x{#{pear_cmd} | sed -ne '/^Latest\s*/s/^Latest\s*//p'}.chomp
-    self.description  = %x{#{pear_cmd} | sed -ne '/^Summary\s*/s/^Summary\s*//p'}.chomp
-    @logger.debug("Package info", :name => self.name, :version => self.version,
-                  :description => self.description)
-
     @logger.info("Installing pear package", :package => input_package,
                   :directory => staging_path)
     ::Dir.chdir(staging_path) do
       safesystem("pear", "-c", config, "install", "-n", "-f", input_package)
     end
+
+    pear_cmd = "pear -c #{config} remote-info #{input_package}"
+    @logger.info("Fetching package information", :package => input_package, :command => pear_cmd)
+    name = %x{#{pear_cmd} | sed -ne '/^Package\s*/s/^Package\s*//p'}.chomp
+    self.name = "#{attributes[:pear_package_name_prefix]}-#{name}"
+    self.version = %x{#{pear_cmd} | sed -ne '/^Installed\s*/s/^Installed\s*//p'}.chomp
+    self.description  = %x{#{pear_cmd} | sed -ne '/^Summary\s*/s/^Summary\s*//p'}.chomp
+    @logger.debug("Package info", :name => self.name, :version => self.version,
+                  :description => self.description)
  
     # Remove the stuff we don't want
     delete_these = [".depdb", ".depdblock", ".filemap", ".lock", ".channel"]
