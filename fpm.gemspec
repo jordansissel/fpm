@@ -51,7 +51,6 @@ Gem::Specification.new do |spec|
   spec.require_paths << "lib"
   spec.bindir = "bin"
   spec.executables << "fpm"
-  spec.executables << "fpm-npm"
 
   spec.author = "Jordan Sissel"
   spec.email = "jls@semicomplete.com"
