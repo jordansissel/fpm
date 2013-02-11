@@ -349,13 +349,13 @@ class FPM::Package::Deb < FPM::Package
     if name =~ /[A-Z]/
       @logger.warn("Downcasing dependency '#{name}' because deb packages " \
                    " don't work so good with uppercase names")
-      dep=dep.gsub(name_re) { |n| n.downcase }
+      dep = dep.gsub(name_re) { |n| n.downcase }
     end
 
     if dep.include?("_")
       @logger.warn("Replacing underscores with dashes in '#{dep}' because " \
                    "debs don't like underscores")
-      dep=dep.gsub("_", "-")
+      dep = dep.gsub("_", "-")
     end
 
     # Convert gem ~> X.Y.Z to '>= X.Y.Z' and << X.Y+1.0
