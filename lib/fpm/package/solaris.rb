@@ -7,6 +7,19 @@ require "fpm/util"
 # TODO(sissel): Add dependency checking support.
 # IIRC this has to be done as a 'checkinstall' step.
 class FPM::Package::Solaris < FPM::Package
+
+  option "--user", "USER",
+    "Set the user to USER in the prototype files.",
+    :default => 'root' do |value|
+      value
+  end
+
+  option "--group", "GROUP",
+    "Set the group to GROUP in the prototype file.",
+    :default => 'root' do |value|
+      value
+  end
+
   def architecture
     case @architecture
     when nil, "native"
@@ -48,7 +61,6 @@ class FPM::Package::Solaris < FPM::Package
     end
 
     # Generate the package 'Prototype' file
-    # TODO(sissel): allow setting default file owner.
     File.open("#{build_path}/Prototype", "w") do |prototype|
       prototype.puts("i pkginfo")
       prototype.puts("i preinstall") if self.scripts["pre-install"]
@@ -58,11 +70,8 @@ class FPM::Package::Solaris < FPM::Package
       # strip @prefix, since BASEDIR will set prefix via the pkginfo file
       IO.popen("pkgproto #{staging_path}/#{@prefix}=").each_line do |line|
         type, klass, path, mode, user, group = line.split
-        # Override stuff in pkgproto
-        # TODO(sissel): Make this tunable?
-        user = "root"
-        group = "root"
-        prototype.puts([type, klass, path, mode, user, group].join(" "))
+
+        prototype.puts([type, klass, path, mode, attributes[:solaris_user], attributes[:solaris_group]].join(" "))
       end # popen "pkgproto ..."
     end # File prototype
 
