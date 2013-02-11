@@ -10,15 +10,11 @@ class FPM::Package::Solaris < FPM::Package
 
   option "--user", "USER",
     "Set the user to USER in the prototype files.",
-    :default => 'root' do |value|
-      value
-  end
+    :default => 'root'
 
   option "--group", "GROUP",
     "Set the group to GROUP in the prototype file.",
-    :default => 'root' do |value|
-      value
-  end
+    :default => 'root'
 
   def architecture
     case @architecture
