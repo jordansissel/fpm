@@ -1,3 +1,7 @@
+0.4.30 (???)
+  - Solaris: --solaris-user and --solaris-group flags to specify
+    the owner of files in a package. (#342)
+  
 0.4.29 (January 22, 2013)
   - Copy links literally, not what they point at (#337, patch by Dane Knecht)
 
