@@ -58,6 +58,8 @@ class FPM::Package::Python < FPM::Package
   option "--install-data", "DATA_PATH", "The path to where data should be." \
     "installed to. This is equivalent to 'python setup.py --install-data " \
     "DATA_PATH"
+  option "--dependencies", :flag, "Include requirements defined in setup.py" \
+    " as dependencies.", :default => true
 
   private
 
@@ -196,23 +198,25 @@ class FPM::Package::Python < FPM::Package
         .map(&:strip)
     end
 
-    self.dependencies += metadata["dependencies"].collect do |dep|
-      dep_re = /^([^<>!= ]+)\s*(?:([<>!=]{1,2})\s*(.*))?$/
-      match = dep_re.match(dep)
-      if match.nil?
-        @logger.error("Unable to parse dependency", :dependency => dep)
-        raise FPM::InvalidPackageConfiguration, "Invalid dependency '#{dep}'"
-      end
-      name, cmp, version = match.captures
-      # dependency name prefixing is optional, if enabled, a name 'foo' will
-      # become 'python-foo' (depending on what the python_package_name_prefix
-      # is)
-      name = fix_name(name) if attributes[:python_fix_dependencies?]
+    if attributes[:python_dependencies?]
+      self.dependencies += metadata["dependencies"].collect do |dep|
+        dep_re = /^([^<>!= ]+)\s*(?:([<>!=]{1,2})\s*(.*))?$/
+        match = dep_re.match(dep)
+        if match.nil?
+          @logger.error("Unable to parse dependency", :dependency => dep)
+          raise FPM::InvalidPackageConfiguration, "Invalid dependency '#{dep}'"
+        end
+        name, cmp, version = match.captures
+        # dependency name prefixing is optional, if enabled, a name 'foo' will
+        # become 'python-foo' (depending on what the python_package_name_prefix
+        # is)
+        name = fix_name(name) if attributes[:python_fix_dependencies?]
 
-      # convert dependencies from python-Foo to python-foo
-      name = name.downcase if attributes[:python_downcase_dependencies?]
-      "#{name} #{cmp} #{version}"
-    end
+        # convert dependencies from python-Foo to python-foo
+        name = name.downcase if attributes[:python_downcase_dependencies?]
+        "#{name} #{cmp} #{version}"
+      end
+    end # if attributes[:python_dependencies?]
   end # def load_package_info
 
   # Sanitize package name.
