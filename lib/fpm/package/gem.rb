@@ -35,6 +35,8 @@ class FPM::Package::Gem < FPM::Package
     :default => true
   option "--fix-dependencies", :flag, "Should the package dependencies be " \
     "prefixed?", :default => true
+  option "--env-shebang", :flag, "Should the target package have the " \
+    "shebang rewritten to use env?", :default => true
 
   def input(gem)
     # 'arg'  is the name of the rubygem we should unpack.
@@ -170,7 +172,10 @@ class FPM::Package::Gem < FPM::Package
     ::FileUtils.mkdir_p(installdir)
     # TODO(sissel): Allow setting gem tool path
     args = [attributes[:gem_gem], "install", "--quiet", "--no-ri", "--no-rdoc",
-       "--install-dir", installdir, "--ignore-dependencies", "-E"]
+       "--install-dir", installdir, "--ignore-dependencies"]
+    if attributes[:gem_env_shebang?]
+      args += ["-E"]
+    end
     if attributes[:gem_bin_path]
       bin_path = File.join(staging_path, attributes[:gem_bin_path])
       args += ["--bindir", bin_path]
