@@ -301,8 +301,8 @@ class FPM::Package::Deb < FPM::Package
       dest_changelog = File.join(staging_path, "usr/share/doc/#{attributes[:name]}/changelog.Debian")
       FileUtils.mkdir_p(File.dirname(dest_changelog))
       FileUtils.cp attributes[:deb_changelog], dest_changelog
-      safesystem("gzip", dest_changelog)
       File.chmod(0644, dest_changelog)
+      safesystem("gzip", dest_changelog)
     end
 
     args = [ tar_cmd, "-C", staging_path, compression ] + tar_flags + [ "-cf", datatar, "." ]
