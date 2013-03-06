@@ -28,6 +28,9 @@ class FPM::Package::RPM < FPM::Package
     "bzip2" => "w9.bzdio"
   } unless defined?(COMPRESSION_MAP)
 
+  option "--use-file-permissions", :flag, 
+      "Use existing file permissions when defining ownership and modes"
+
   option "--user", "USER",
     "Set the user to USER in the %files section.", 
     :default => 'root' do |value|
@@ -78,6 +81,19 @@ class FPM::Package::RPM < FPM::Package
   option "--sign", :flag, "Pass --sign to rpmbuild"
 
   private
+
+  def output_file_line(file)
+    if attributes[:rpm_use_file_permissions?]
+      stat  = File.stat( file.gsub(/\"/, '') )
+      user  = Etc.getpwuid(stat.uid).name
+      group = Etc.getgrgid(stat.gid).name
+      mode  = stat.mode
+      "%%attr(%o, %s, %s) %s\n" % [ mode & 4095 , user, group, file ]
+    else 
+      "#{file}\n"
+    end
+  end
+
 
   # Handle any architecture naming conversions.
   # For example, debian calls amd64 what redhat calls x86_64, this
