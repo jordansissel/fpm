@@ -29,7 +29,7 @@ class FPM::Package::RPM < FPM::Package
   } unless defined?(COMPRESSION_MAP)
 
   option "--user", "USER",
-    "Set the user to USER in the %files section.", 
+    "Set the user to USER in the %files section.",
     :default => 'root' do |value|
       value
   end
@@ -42,8 +42,8 @@ class FPM::Package::RPM < FPM::Package
 
   option "--rpmbuild-define", "DEFINITION",
     "Pass a --define argument to rpmbuild." do |define|
-    attributes[:rpm_rpmbuild_define] ||= []
-    attributes[:rpm_rpmbuild_define] << define
+    $rpm_rpmbuild_define ||= []
+    $rpm_rpmbuild_define << define
   end
 
   option "--digest", DIGEST_ALGORITHM_MAP.keys.join("|"),
@@ -198,7 +198,7 @@ class FPM::Package::RPM < FPM::Package
       [name, operator, version].join(" ")
     end
     #input.replaces += replaces
-    
+
     self.config_files += rpm.config_files
 
     # rpms support '%dir' things for specifying empty directories to package,
@@ -235,7 +235,7 @@ class FPM::Package::RPM < FPM::Package
 
     args += ["--sign"] if attributes[:rpm_sign?]
 
-    (attributes[:rpm_rpmbuild_define] or []).each do |define|
+    ($rpm_rpmbuild_define or []).each do |define|
       args += ["--define", define]
     end
 
