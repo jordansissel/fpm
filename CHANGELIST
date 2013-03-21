@@ -1,3 +1,10 @@
+0.4.31 (March 21, 2013)
+  - rpm: new flag --rpm-use-file-permissions which try to create an rpm
+    that has file ownership/modes that exactly mirror how they are on 
+    the filesystem at package time. (#377, patch by Paul Rhodes)
+  - general: remove empty directories only when they match the exclude 
+    pattern (#323, patch by Pranay Kanwar)
+
 0.4.30 (March 21, 2013)
   - Solaris: --solaris-user and --solaris-group flags to specify
     the owner of files in a package. (#342, patch by Derek Olsen)
