@@ -19,7 +19,7 @@ Gem::Specification.new do |spec|
 
   # For parsing JSON (required for some Python support, etc)
   # http://flori.github.com/json/doc/index.html
-  spec.add_dependency("json", ">= 1.6.6") # license: Ruby License
+  spec.add_dependency("json", "~> 1.7.7") # license: Ruby License
   
   # For logging
   # https://github.com/jordansissel/ruby-cabin
@@ -30,7 +30,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency("backports", "2.6.2") # license: MIT
 
   # For reading and writing rpms
-  spec.add_dependency("arr-pm", "~> 0.0.7") # license: Apache 2
+  spec.add_dependency("arr-pm", "~> 0.0.8") # license: Apache 2
 
   # For command-line flag support
   # https://github.com/mdub/clamp/blob/master/README.markdown
