@@ -1,6 +1,7 @@
 require "fpm/namespace" # local
 require "fpm/util" # local
 require "pathname" # stdlib
+require "find"
 require "tmpdir" # stdlib
 require "backports" # gem 'backports'
 require "socket" # stdlib, for Socket.gethostname
@@ -361,43 +362,20 @@ class FPM::Package
       installdir = staging_path
     end
 
-    exclude_path = proc do |file|
-      FileUtils.remove_entry_secure(staging_path(file))
-      Pathname.new(staging_path(file)).parent.ascend do |d|
-        if (::Dir.entries(d) - %w[ . .. ]).empty?
-          ::Dir.rmdir(d)
-          @logger.info("Deleting empty directory left by removing exluded file", :path => d)
-        else
+    Find.find(staging_path) do |path|
+      match_path = path.sub("#{staging_path}/", '')
+
+      attributes[:excludes].each do |wildcard|
+        @logger.debug("Checking path against wildcard", :path => path, :wildcard => wildcard)
+
+        if File.fnmatch(wildcard, match_path)
+          @logger.info("Removing excluded path", :path => path, :matches => wildcard)
+          FileUtils.remove_entry_secure(path)
+          Find.prune
           break
         end
       end
-    end # exclude_path
-
-    attributes[:excludes].each do |wildcard|
-      @logger.debug("Checking for things to exclude", :wildcard => wildcard)
-      files.each do |file|
-        @logger.debug("Checking path against wildcard", :path => file, :wildcard => wildcard)
-        if File.fnmatch(wildcard, file)
-          @logger.info("Removing excluded file", :path => file, :matches => wildcard)
-          exclude_path.call(file)
-          next
-        end
-
-        @logger.debug("Checking if path is a child of an excluded directory",
-                      :path => file, :wildcard => wildcard,
-                      :directory? => File.directory?(staging_path(wildcard)))
-        if File.directory?(staging_path(wildcard))
-          # issue #248, if the excludes entry is a directory, ignore that
-          # directory and anything inside it.
-          exclude_re = Regexp.new("^#{Regexp.escape(wildcard)}($|/)")
-          if exclude_re.match(file)
-            @logger.info("Removing excluded file which has a parent excluded directory",
-                         :path => file, :excluded => wildcard)
-            exclude_path.call(file)
-          end
-        end
-      end 
-    end # files.each
+    end
   end # def exclude
 
 
