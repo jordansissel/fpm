@@ -1,7 +1,21 @@
-0.4.30 (???)
+0.4.30 (March 21, 2013)
   - Solaris: --solaris-user and --solaris-group flags to specify
-    the owner of files in a package. (#342)
-  
+    the owner of files in a package. (#342, patch by Derek Olsen)
+  - rpm: (bug fix) epoch of 0 is permitted now (#343, patch by Ben Hughes)
+  - pear: add flags --pear-bin-dir --pear-php-bin --pear-php-dir (#358, patch
+    by Zsolt Takács)
+  - New 'source' type: empty. Allows you to create packages without any files
+    in them (sometimes called 'meta packages'). Useful when you want to have
+    one package be simply dependencies or when you want to spoof a package
+    you don't want installed, etc. (#359, 349; patch by Pranay Kanwar)
+  - solaris: Add --solaris-user and --solaris-group flags (#342, Patch by Derek
+    Olsen)
+  - gem: new flag --env-shebang; default true (disable with --no-env-shebang).
+    Lets you disable #! (shebang) mangling done by gem installation. (#363,
+    patch by Grier Johnson)
+  - deb: fix bug on changelog handling (#376, patch by mbakke)
+  - rpm: fix --rpm-rpmbuild-define (#383, patch by Eric Merritt)
+
 0.4.29 (January 22, 2013)
   - Copy links literally, not what they point at (#337, patch by Dane Knecht)
 
