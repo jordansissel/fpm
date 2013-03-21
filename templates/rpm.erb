@@ -119,11 +119,11 @@ cp <%= source_safe %> <%= target_safe %>
 <% end -%>
 <% subdirs = [] -%>
 <% directories.each do |path| -%>
-%dir <%= output_file_line(File.join(prefix, path)) %>
+%dir <%= rpm_file_entry(File.join(prefix, path)) %>
 <%#  We need to include hidden directories, but exclude . and .. -%>
 <%   ::Dir.glob("#{path}/**/*/", File::FNM_DOTMATCH) do |subdir| -%>
 <%     next if File.basename(subdir) =~ /^\.+$/ -%>
-%dir <%= output_file_line(File.join(prefix, subdir)) %>
+%dir <%= rpm_file_entry(File.join(prefix, subdir)) %>
 <% subdirs << subdir -%>
 <%   end -%>
 <% end -%>
@@ -146,7 +146,8 @@ cp <%= source_safe %> <%= target_safe %>
     .collect { |f| f.gsub("*", "[*]") } \
     .collect { |f| f.gsub("?", "[?]") } \
     .collect { |f| f.gsub("%", "[%]") } \
-    .map { |f| output_file_line(f) }
+    .map { |f| rpm_file_entry(f) }
+    .join("\n")
     #.collect { |f| File.join(prefix, f) } \
 %>
 
