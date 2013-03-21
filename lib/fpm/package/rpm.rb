@@ -83,16 +83,14 @@ class FPM::Package::RPM < FPM::Package
 
   private
 
-  def output_file_line(file)
-    if attributes[:rpm_use_file_permissions?]
-      stat  = File.stat( file.gsub(/\"/, '') )
-      user  = Etc.getpwuid(stat.uid).name
-      group = Etc.getgrgid(stat.gid).name
-      mode  = stat.mode
-      "%%attr(%o, %s, %s) %s\n" % [ mode & 4095 , user, group, file ]
-    else 
-      "#{file}\n"
-    end
+  def rpm_file_entry(file)
+    return file unless attributes[:rpm_use_file_permissions?]
+
+    stat = File.stat( file.gsub(/\"/, '') )
+    user = Etc.getpwuid(stat.uid).name
+    group = Etc.getgrgid(stat.gid).name
+    mode = stat.mode
+    return sprintf("%%attr(%o, %s, %s) %s\n", mode & 4095 , user, group, file)
   end
 
 
