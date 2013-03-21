@@ -146,7 +146,7 @@ cp <%= source_safe %> <%= target_safe %>
     .collect { |f| f.gsub("*", "[*]") } \
     .collect { |f| f.gsub("?", "[?]") } \
     .collect { |f| f.gsub("%", "[%]") } \
-    .map { |f| rpm_file_entry(f) }
+    .map { |f| rpm_file_entry(f) } \
     .join("\n")
     #.collect { |f| File.join(prefix, f) } \
 %>
