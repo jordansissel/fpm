@@ -40,10 +40,11 @@ class FPM::Package::RPM < FPM::Package
       value
   end
 
+  rpmbuild_define = []
   option "--rpmbuild-define", "DEFINITION",
     "Pass a --define argument to rpmbuild." do |define|
-    attributes[:rpm_rpmbuild_define] ||= []
-    attributes[:rpm_rpmbuild_define] << define
+    rpmbuild_define << define
+    next rpmbuild_define
   end
 
   option "--digest", DIGEST_ALGORITHM_MAP.keys.join("|"),
