@@ -60,6 +60,9 @@ class FPM::Package::Python < FPM::Package
     "DATA_PATH"
   option "--dependencies", :flag, "Include requirements defined in setup.py" \
     " as dependencies.", :default => true
+  option "--obey-requirements-txt", :flag, "Use a requirements.txt file" \
+    "in the top-level directory of the python package for dependency " \
+    "detection.", :default => false
 
   private
 
@@ -180,7 +183,7 @@ class FPM::Package::Python < FPM::Package
     self.name = self.name.downcase if attributes[:python_downcase_name?]
 
     requirements_txt = File.join(setup_dir, "requirements.txt")
-    if File.exists?(requirements_txt)
+    if attributes[:python_obey_requirements_txt?] && File.exists?(requirements_txt) 
       @logger.info("Found requirements.txt, using it instead of setup.py " \
                     "for dependency information", :path => requirements_txt)
       @logger.debug("Clearing dependency list (from setup.py) in prep for " \
