@@ -183,7 +183,7 @@ class FPM::Package::Python < FPM::Package
     self.name = self.name.downcase if attributes[:python_downcase_name?]
 
     requirements_txt = File.join(setup_dir, "requirements.txt")
-    if attributes[:python_obey_requirements_txt?] && File.exists?(requirements_txt) 
+    if !attributes[:no_auto_depends?] && attributes[:python_obey_requirements_txt?] && File.exists?(requirements_txt)
       @logger.info("Found requirements.txt, using it instead of setup.py " \
                     "for dependency information", :path => requirements_txt)
       @logger.debug("Clearing dependency list (from setup.py) in prep for " \
@@ -191,7 +191,7 @@ class FPM::Package::Python < FPM::Package
       # Best I can tell, requirements.txt are a superset of what
       # is already supported as 'dependencies' in setup.py
       # So we'll parse them the same way below.
-      
+
       # requirements.txt can have dependencies, flags, and comments.
       # We only want the comments, so remove comment and flag lines.
       metadata["dependencies"] = File.read(requirements_txt).split("\n") \
@@ -201,7 +201,7 @@ class FPM::Package::Python < FPM::Package
         .map(&:strip)
     end
 
-    if attributes[:python_dependencies?]
+    if !attributes[:no_auto_depends?] and attributes[:python_dependencies?]
       self.dependencies += metadata["dependencies"].collect do |dep|
         dep_re = /^([^<>!= ]+)\s*(?:([<>!=]{1,2})\s*(.*))?$/
         match = dep_re.match(dep)
