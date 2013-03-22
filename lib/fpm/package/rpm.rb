@@ -203,9 +203,12 @@ class FPM::Package::RPM < FPM::Package
     #    #{tags[prein]}
     # TODO(sissel): put 'trigger scripts' stuff into attributes
 
-    self.dependencies += rpm.requires.collect do |name, operator, version|
-      [name, operator, version].join(" ")
+    if !attributes[:no_auto_depends?]
+      self.dependencies += rpm.requires.collect do |name, operator, version|
+        [name, operator, version].join(" ")
+      end
     end
+
     self.conflicts += rpm.conflicts.collect do |name, operator, version|
       [name, operator, version].join(" ")
     end
@@ -281,12 +284,15 @@ class FPM::Package::RPM < FPM::Package
     #return File.join("BUILD", prefix)
   end # def prefix
 
-  # The default epoch value must be 1 (backward compatibility for rpms built
-  # with fpm 0.4.3 and older)
+  # The default epoch value must be nil, see #381
   def epoch
-    return 1 if @epoch.nil?
     return @epoch if @epoch.is_a?(Numeric)
-    return nil if @epoch.empty?
+
+    if @epoch.nil? or @epoch.empty?
+      @logger.warn("no value for epoch is set, defaulting to nil")
+      return nil
+    end
+
     return @epoch
   end # def epoch
 
