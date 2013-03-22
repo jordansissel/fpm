@@ -7,3 +7,4 @@ script: rspec
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq rpm
+  - gem update 1.8.25
