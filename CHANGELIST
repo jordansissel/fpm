@@ -1,3 +1,9 @@
+0.4.:) ???
+  - python: new flag --python-obey-requirements-txt which makes a
+    requirements.txt file from the python package used for the package
+    dependencies instead of the usual setup.py dependencies. The default
+    behavior without this flag is to respect setup.py. (#384)
+
 0.4.31 (March 21, 2013)
   - rpm: new flag --rpm-use-file-permissions which try to create an rpm
     that has file ownership/modes that exactly mirror how they are on 
