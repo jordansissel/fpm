@@ -487,6 +487,13 @@ class FPM::Package
     if !File.directory?(File.dirname(output_path))
       raise ParentDirectoryMissing.new(output_path)
     end
+    if File.exists?(output_path)
+      if attributes[:force?]
+        @logger.warn("--force flag given, overwriting package at #{output_path}")
+      else
+        raise FileAlreadyExists.new(output_path)
+      end
+    end
   end # def output_path
 
   def provides=(value)

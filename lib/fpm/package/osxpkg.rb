@@ -130,7 +130,6 @@ class FPM::Package::OSXpkg < FPM::Package
   # Output a pkgbuild pkg.
   def output(output_path)
     output_check(output_path)
-    raise FileAlreadyExists.new(output_path) if File.exists?(output_path)
 
     temp_info = pkginfo_template_path
 
