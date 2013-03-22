@@ -55,6 +55,8 @@ class FPM::Command < Clamp::Command
     "be necessary for all input packages. For example, the 'gem' type will" \
     "prefix with your gem directory automatically."
   option ["-p", "--package"], "OUTPUT", "The package file path to output."
+  option ["-f", "--force"], :flag, "Force output even if it will overwrite an " \
+    "existing file", :default => false
   option ["-n", "--name"], "NAME", "The name to give to the package"
   option "--verbose", :flag, "Enable verbose output"
   option "--debug", :flag, "Enable debug output"
