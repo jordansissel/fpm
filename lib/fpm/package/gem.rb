@@ -1,9 +1,9 @@
 require "fpm/namespace"
 require "fpm/package"
-require "rubygems/package"
 require "rubygems"
 require "fileutils"
 require "fpm/util"
+require "yaml"
 
 # A rubygems package.
 #
@@ -38,6 +38,8 @@ class FPM::Package::Gem < FPM::Package
   option "--env-shebang", :flag, "Should the target package have the " \
     "shebang rewritten to use env?", :default => true
 
+  option "--prerelease", :flag, "Allow prerelease versions of a gem", :default => false
+
   def input(gem)
     # 'arg'  is the name of the rubygem we should unpack.
     path_to_gem = download_if_necessary(gem, version)
@@ -61,106 +63,112 @@ class FPM::Package::Gem < FPM::Package
   end # def download_if_necessary
 
   def download(gem_name, gem_version=nil)
-    # This code mostly mutated from rubygem's fetch_command.rb
-    # Code use permissible by rubygems's "GPL or these conditions below"
-    # http://rubygems.rubyforge.org/rubygems-update/LICENSE_txt.html
 
     @logger.info("Trying to download", :gem => gem_name, :version => gem_version)
-    dep = ::Gem::Dependency.new(gem_name, gem_version)
 
-    # TODO(sissel): Make a flag to allow prerelease gems?
-    #dep.prerelease = options[:prerelease]
+    gemdir = %x{#{attributes[:gem_gem]} env gemdir}.chomp
 
-    if ::Gem::SpecFetcher.fetcher.respond_to?(:fetch_with_errors)
-      specs_and_sources, errors =
-        ::Gem::SpecFetcher.fetcher.fetch_with_errors(dep, true, true, false)
-    else
-      specs_and_sources =
-        ::Gem::SpecFetcher.fetcher.fetch(dep, true)
-      errors = "???"
+    gem_cache_dir = File.join(gemdir, "cache")
+
+    gem_fetch = [ "#{attributes[:gem_gem]}", "fetch", gem_name]
+
+    gem_fetch += ["--prerelease"] if attributes[:gem_prelease?]
+    gem_fetch += ["--version '#{gem_version}'"] if gem_version
+
+
+    path = nil
+
+    ::Dir.chdir(gem_cache_dir) do |dir|
+      @logger.debug("Downloading in directory #{dir}")
+      gem_fetch_stdout = %x{#{gem_fetch.join(' ')}}
+
+      gem_file_re = /^Downloaded.(.*)/
+
+      if gem_fetch_stdout =~ gem_file_re
+        path = $1
+        path += '.gem'
+        path = File.expand_path(path)
+      end
+
+      if not path
+        @logger.error("Unable to download or find gem", :gem => gem_name,  :version => gem_version)
+        exit 1
+      end
+
+      @logger.debug("Downloaded #{path}")
     end
-    spec, source_uri = specs_and_sources.sort_by { |s,| s.version }.last
 
-    if spec.nil? then
-      @logger.error("Invalid gem?", :name => gem_name, :version => gem_version, :errors => errors)
-      raise InvalidArgument.new("Invalid gem: #{gem_name}")
-    end
-
-    path = ::Gem::RemoteFetcher.fetcher.download(spec, source_uri)
     return path
   end # def download
 
   def load_package_info(gem_path)
-    file = File.new(gem_path, 'r')
 
-    ::Gem::Package.open(file, 'r') do |gem|
-      spec = gem.metadata
+    spec = YAML.load(%x{#{attributes[:gem_gem]} spec #{gem_path} --yaml})
 
-      if !attributes[:gem_package_prefix].nil?
-        attributes[:gem_package_name_prefix] = attributes[:gem_package_prefix]
-      end
+    if !attributes[:gem_package_prefix].nil?
+      attributes[:gem_package_name_prefix] = attributes[:gem_package_prefix]
+    end
 
-      # name prefixing is optional, if enabled, a name 'foo' will become
-      # 'rubygem-foo' (depending on what the gem_package_name_prefix is)
-      self.name = spec.name
-      if attributes[:gem_fix_name?]
-        self.name = fix_name(spec.name)
-      end
+    # name prefixing is optional, if enabled, a name 'foo' will become
+    # 'rubygem-foo' (depending on what the gem_package_name_prefix is)
+    self.name = spec.name
+    if attributes[:gem_fix_name?]
+      self.name = fix_name(spec.name)
+    end
 
-      #self.name = [attributes[:gem_package_name_prefix], spec.name].join("-")
-      self.license = (spec.license or "no license listed in #{File.basename(file)}")
+    #self.name = [attributes[:gem_package_name_prefix], spec.name].join("-")
+    self.license = (spec.license or "no license listed in #{File.basename(gem_path)}")
 
-      # expand spec's version to match RationalVersioningPolicy to prevent cases
-      # where missing 'build' number prevents correct dependency resolution by target
-      # package manager. Ie. for dpkg 1.1 != 1.1.0
-      m = spec.version.to_s.scan(/(\d+)\.?/)
-      self.version = m.flatten.fill('0', m.length..2).join('.') 
+    # expand spec's version to match RationalVersioningPolicy to prevent cases
+    # where missing 'build' number prevents correct dependency resolution by target
+    # package manager. Ie. for dpkg 1.1 != 1.1.0
+    m = spec.version.to_s.scan(/(\d+)\.?/)
+    self.version = m.flatten.fill('0', m.length..2).join('.') 
 
-      self.vendor = spec.author
-      self.url = spec.homepage
-      self.category = "Languages/Development/Ruby"
+    self.vendor = spec.author
+    self.url = spec.homepage
+    self.category = "Languages/Development/Ruby"
 
-      # if the gemspec has C extensions defined, then this should be a 'native' arch.
-      if !spec.extensions.empty?
-        self.architecture = "native"
+    # if the gemspec has C extensions defined, then this should be a 'native' arch.
+    if !spec.extensions.empty?
+      self.architecture = "native"
+    else
+      self.architecture = "all"
+    end
+
+    # make sure we have a description
+    description_options = [ spec.description, spec.summary, "#{spec.name} - no description given" ]
+    self.description = description_options.find { |d| !(d.nil? or d.strip.empty?) }
+
+    # Upstream rpms seem to do this, might as well share.
+    # TODO(sissel): Figure out how to hint this only to rpm? 
+    # maybe something like attributes[:rpm_provides] for rpm specific stuff?
+    # Or just ignore it all together.
+    #self.provides << "rubygem(#{self.name})"
+
+    # By default, we'll usually automatically provide this, but in the case that we are
+    # composing multiple packages, it's best to explicitly include it in the provides list.
+    self.provides << "#{self.name} = #{self.version}"
+
+    spec.runtime_dependencies.map do |dep|
+      # rubygems 1.3.5 doesn't have 'Gem::Dependency#requirement'
+      if dep.respond_to?(:requirement)
+        reqs = dep.requirement.to_s
       else
-        self.architecture = "all"
+        reqs = dep.version_requirements
       end
 
-      # make sure we have a description
-      description_options = [ spec.description, spec.summary, "#{spec.name} - no description given" ]
-      self.description = description_options.find { |d| !(d.nil? or d.strip.empty?) }
-
-      # Upstream rpms seem to do this, might as well share.
-      # TODO(sissel): Figure out how to hint this only to rpm? 
-      # maybe something like attributes[:rpm_provides] for rpm specific stuff?
-      # Or just ignore it all together.
-      #self.provides << "rubygem(#{self.name})"
-
-      # By default, we'll usually automatically provide this, but in the case that we are
-      # composing multiple packages, it's best to explicitly include it in the provides list.
-      self.provides << "#{self.name} = #{self.version}"
-
-      spec.runtime_dependencies.map do |dep|
-        # rubygems 1.3.5 doesn't have 'Gem::Dependency#requirement'
-        if dep.respond_to?(:requirement)
-          reqs = dep.requirement.to_s
-        else
-          reqs = dep.version_requirements
+      # Some reqs can be ">= a, < b" versions, let's handle that.
+      reqs.to_s.split(/, */).each do |req|
+        if attributes[:gem_fix_dependencies?] 
+          name = fix_name(dep.name) 
+        else 
+          name = dep.name
         end
-
-        # Some reqs can be ">= a, < b" versions, let's handle that.
-        reqs.to_s.split(/, */).each do |req|
-          if attributes[:gem_fix_dependencies?] 
-            name = fix_name(dep.name) 
-          else 
-            name = dep.name
-          end
-          self.dependencies << "#{name} #{req}"
-        end
-      end # runtime_dependencies
-    end # ::Gem::Package
-  end # def load_package_info
+        self.dependencies << "#{name} #{req}"
+      end
+    end # runtime_dependencies
+end # def load_package_info
 
   def install_to_staging(gem_path)
     if attributes.include?(:prefix) && ! attributes[:prefix].nil?
