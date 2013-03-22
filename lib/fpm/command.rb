@@ -87,6 +87,9 @@ class FPM::Command < Clamp::Command
   option "--no-depends", :flag, "Do not list any dependencies in this package",
     :default => false
 
+  option "--no-auto-depends", :flag, "Do not list any dependencies in this package automatically",
+    :default => false
+
   option "--provides", "PROVIDES",
     "What this package provides (usually a name). This flag can be "\
     "specified multiple times." do |val|
