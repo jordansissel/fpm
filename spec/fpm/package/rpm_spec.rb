@@ -39,8 +39,8 @@ describe FPM::Package::RPM do
   end
 
   describe "#epoch" do
-    it "should default to 1" do
-      insist { subject.epoch.to_s } == "1"
+    it "should default to empty" do
+      insist { subject.epoch.to_s } == ""
     end
     it "should cope with it being zero" do
       subject.epoch = 0
@@ -357,9 +357,9 @@ describe FPM::Package::RPM do
         rpmtags[tag.tag] = tag.value
       end
 
-      # Default epoch must be '1'
+      # Default epoch must be empty, see #381
       # For some reason, epoch is an array of numbers in rpm?
-      insist { rpmtags[:epoch] } == [1]
+      insist { rpmtags[:epoch] } == nil
 
       # Default release must be '1'
       insist { rpmtags[:release] } == "1"
