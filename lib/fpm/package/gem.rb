@@ -71,10 +71,8 @@ class FPM::Package::Gem < FPM::Package
     gem_fetch += ["--prerelease"] if attributes[:gem_prerelease?]
     gem_fetch += ["--version '#{gem_version}'"] if gem_version
 
-
     download_dir = build_path(gem_name)
     FileUtils.mkdir(download_dir) unless File.directory?(download_dir)
-
 
     ::Dir.chdir(download_dir) do |dir|
       @logger.debug("Downloading in directory #{dir}")
@@ -139,25 +137,27 @@ class FPM::Package::Gem < FPM::Package
     # composing multiple packages, it's best to explicitly include it in the provides list.
     self.provides << "#{self.name} = #{self.version}"
 
-    spec.runtime_dependencies.map do |dep|
-      # rubygems 1.3.5 doesn't have 'Gem::Dependency#requirement'
-      if dep.respond_to?(:requirement)
-        reqs = dep.requirement.to_s
-      else
-        reqs = dep.version_requirements
-      end
-
-      # Some reqs can be ">= a, < b" versions, let's handle that.
-      reqs.to_s.split(/, */).each do |req|
-        if attributes[:gem_fix_dependencies?] 
-          name = fix_name(dep.name) 
-        else 
-          name = dep.name
+    if !attributes[:no_auto_depends?]
+      spec.runtime_dependencies.map do |dep|
+        # rubygems 1.3.5 doesn't have 'Gem::Dependency#requirement'
+        if dep.respond_to?(:requirement)
+          reqs = dep.requirement.to_s
+        else
+          reqs = dep.version_requirements
         end
-        self.dependencies << "#{name} #{req}"
-      end
-    end # runtime_dependencies
-end # def load_package_info
+
+        # Some reqs can be ">= a, < b" versions, let's handle that.
+        reqs.to_s.split(/, */).each do |req|
+          if attributes[:gem_fix_dependencies?]
+            name = fix_name(dep.name)
+          else
+            name = dep.name
+          end
+          self.dependencies << "#{name} #{req}"
+        end
+      end # runtime_dependencies
+    end #no_auto_depends
+  end # def load_package_info
 
   def install_to_staging(gem_path)
     if attributes.include?(:prefix) && ! attributes[:prefix].nil?
