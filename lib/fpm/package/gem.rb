@@ -66,39 +66,28 @@ class FPM::Package::Gem < FPM::Package
 
     @logger.info("Trying to download", :gem => gem_name, :version => gem_version)
 
-    gemdir = %x{#{attributes[:gem_gem]} env gemdir}.chomp
-
-    gem_cache_dir = File.join(gemdir, "cache")
-
     gem_fetch = [ "#{attributes[:gem_gem]}", "fetch", gem_name]
 
     gem_fetch += ["--prerelease"] if attributes[:gem_prelease?]
     gem_fetch += ["--version '#{gem_version}'"] if gem_version
 
 
-    path = nil
+    download_dir = build_path(gem_name)
+    FileUtils.mkdir(download_dir) unless File.directory?(download_dir)
 
-    ::Dir.chdir(gem_cache_dir) do |dir|
+
+    ::Dir.chdir(download_dir) do |dir|
       @logger.debug("Downloading in directory #{dir}")
-      gem_fetch_stdout = %x{#{gem_fetch.join(' ')}}
-
-      gem_file_re = /^Downloaded.(.*)/
-
-      if gem_fetch_stdout =~ gem_file_re
-        path = $1
-        path += '.gem'
-        path = File.expand_path(path)
-      end
-
-      if not path
-        @logger.error("Unable to download or find gem", :gem => gem_name,  :version => gem_version)
-        exit 1
-      end
-
-      @logger.debug("Downloaded #{path}")
+      safesystem(*gem_fetch)
     end
 
-    return path
+    gem_files = ::Dir.glob(File.join(download_dir, "*.gem"))
+
+    if gem_files.length != 1
+      raise "Unexpected number of gem files in #{download_dir},  #{gem_files.length} should be 1"
+    end
+
+    return gem_files.first
   end # def download
 
   def load_package_info(gem_path)
