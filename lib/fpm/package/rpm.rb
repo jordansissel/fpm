@@ -203,9 +203,12 @@ class FPM::Package::RPM < FPM::Package
     #    #{tags[prein]}
     # TODO(sissel): put 'trigger scripts' stuff into attributes
 
-    self.dependencies += rpm.requires.collect do |name, operator, version|
-      [name, operator, version].join(" ")
+    if !attributes[:no_auto_depends?]
+      self.dependencies += rpm.requires.collect do |name, operator, version|
+        [name, operator, version].join(" ")
+      end
     end
+
     self.conflicts += rpm.conflicts.collect do |name, operator, version|
       [name, operator, version].join(" ")
     end
