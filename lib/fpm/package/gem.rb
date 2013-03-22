@@ -4,6 +4,7 @@ require "rubygems/package"
 require "rubygems"
 require "fileutils"
 require "fpm/util"
+require "pp"
 
 # A rubygems package.
 #
@@ -141,25 +142,27 @@ class FPM::Package::Gem < FPM::Package
       # composing multiple packages, it's best to explicitly include it in the provides list.
       self.provides << "#{self.name} = #{self.version}"
 
-      spec.runtime_dependencies.map do |dep|
-        # rubygems 1.3.5 doesn't have 'Gem::Dependency#requirement'
-        if dep.respond_to?(:requirement)
-          reqs = dep.requirement.to_s
-        else
-          reqs = dep.version_requirements
-        end
-
-        # Some reqs can be ">= a, < b" versions, let's handle that.
-        reqs.to_s.split(/, */).each do |req|
-          if attributes[:gem_fix_dependencies?] 
-            name = fix_name(dep.name) 
-          else 
-            name = dep.name
+      if !attributes[:no_auto_depends?]
+        spec.runtime_dependencies.map do |dep|
+          # rubygems 1.3.5 doesn't have 'Gem::Dependency#requirement'
+          if dep.respond_to?(:requirement)
+            reqs = dep.requirement.to_s
+          else
+            reqs = dep.version_requirements
           end
-          self.dependencies << "#{name} #{req}"
-        end
-      end # runtime_dependencies
-    end # ::Gem::Package
+
+          # Some reqs can be ">= a, < b" versions, let's handle that.
+          reqs.to_s.split(/, */).each do |req|
+            if attributes[:gem_fix_dependencies?]
+              name = fix_name(dep.name)
+            else
+              name = dep.name
+            end
+            self.dependencies << "#{name} #{req}"
+          end
+        end # runtime_dependencies
+      end # ::Gem::Package
+    end # no_auto_depends
   end # def load_package_info
 
   def install_to_staging(gem_path)
