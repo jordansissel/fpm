@@ -177,7 +177,7 @@ class FPM::Package::Deb < FPM::Package
           return value.split(": ",2).last
         end
       end
-      
+
       # Parse 'epoch:version-iteration' in the version string
       version_re = /^(?:([0-9]+):)?(.+?)(?:-(.*))?$/
       m = version_re.match(parse.call("Version"))
@@ -204,7 +204,7 @@ class FPM::Package::Deb < FPM::Package
 
       #self.config_files = config_files
 
-      self.dependencies += parse_depends(parse.call("Depends"))
+      self.dependencies += parse_depends(parse.call("Depends")) if !attributes[:no_auto_depends?]
     end
   end # def extract_info
 
