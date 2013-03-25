@@ -58,7 +58,7 @@ class get_metadata(Command):
         final_deps = []
 
         if self.load_requirements_txt:
-            print "processing  requirements.txt, %s" % self.requirements_txt
+            print "processing requirements.txt, %s" % self.requirements_txt
             for line in open(self.requirements_txt):
                 for req in pkg_resources.parse_requirements(line):
                     if req.specs:
