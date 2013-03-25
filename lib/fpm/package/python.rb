@@ -150,10 +150,17 @@ class FPM::Package::Python < FPM::Package
     output = ::Dir.chdir(setup_dir) do
       setup_cmd = "env PYTHONPATH=#{pylib} #{attributes[:python_bin]} " \
         "setup.py --command-packages=pyfpm get_metadata"
+
+      if attributes[:python_obey_requirements_txt?]
+        setup_cmd += " --load-requirements-txt"
+      end
+
       # Capture the output, which will be JSON metadata describing this python
       # package. See fpm/lib/fpm/package/pyfpm/get_metadata.py for more
       # details.
-      output = `#{setup_cmd}`
+      @logger.info("fetching package metadata", :setup_cmd => setup_cmd)
+
+      output = %x{#{setup_cmd}}
       if !$?.success?
         @logger.error("setup.py get_metadata failed", :command => setup_cmd,
                       :exitcode => $?.exitcode)
@@ -182,27 +189,8 @@ class FPM::Package::Python < FPM::Package
     # convert python-Foo to python-foo if flag is set
     self.name = self.name.downcase if attributes[:python_downcase_name?]
 
-    requirements_txt = File.join(setup_dir, "requirements.txt")
-    if !attributes[:no_auto_depends?] && attributes[:python_obey_requirements_txt?] && File.exists?(requirements_txt)
-      @logger.info("Found requirements.txt, using it instead of setup.py " \
-                    "for dependency information", :path => requirements_txt)
-      @logger.debug("Clearing dependency list (from setup.py) in prep for " \
-                    "reading requirements.txt")
-      # Best I can tell, requirements.txt are a superset of what
-      # is already supported as 'dependencies' in setup.py
-      # So we'll parse them the same way below.
-
-      # requirements.txt can have dependencies, flags, and comments.
-      # We only want the comments, so remove comment and flag lines.
-      metadata["dependencies"] = File.read(requirements_txt).split("\n") \
-        .reject { |l| l =~ /^\s*$/ } \
-        .reject { |l| l =~ /^\s*#/ } \
-        .reject { |l| l =~ /^-/ } \
-        .map(&:strip)
-    end
-
     if !attributes[:no_auto_depends?] and attributes[:python_dependencies?]
-      self.dependencies += metadata["dependencies"].collect do |dep|
+      self.dependencies = metadata["dependencies"].collect do |dep|
         dep_re = /^([^<>!= ]+)\s*(?:([<>!=]{1,2})\s*(.*))?$/
         match = dep_re.match(dep)
         if match.nil?
