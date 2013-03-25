@@ -31,11 +31,21 @@ class get_metadata(Command):
         if self.load_requirements_txt:
             self.load_requirements_txt = os.path.exists(self.requirements_txt)
 
-    def fix_op(self, op):
-        fop = op
-        if op == "==":
-            fop = "="
-        return fop
+    def process_dep(self, dep):
+        deps = []
+        if dep.specs:
+            for operator, version in dep.specs:
+                final_operator = operator
+
+                if operator == "==":
+                    final_operator = "="
+
+                deps.append("%s %s %s" % (dep.project_name,
+                    final_operator, version))
+        else:
+            deps.append(dep.project_name)
+
+        return deps
 
     def run(self):
         data = {
@@ -59,27 +69,14 @@ class get_metadata(Command):
 
         if self.load_requirements_txt:
             print "processing requirements.txt, %s" % self.requirements_txt
-            for line in open(self.requirements_txt):
-                for req in pkg_resources.parse_requirements(line):
-                    if req.specs:
-                        for spec in req.specs:
-                            final_deps.append("%s %s %s" % (req.project_name,
-                                self.fix_op(spec[0]), spec[1]))
-                    else:
-                        final_deps.append(req.project_name)
+            requirement = open(self.requirements_txt).readlines()
+            for dep in pkg_resources.parse_requirements(requirement):
+                final_deps.extend(self.process_dep(dep))
         else:
             if getattr(self.distribution, 'install_requires', None):
                 for dep in pkg_resources.parse_requirements(
                         self.distribution.install_requires):
-                    # add all defined specs to the dependecy list separately.
-                    if dep.specs:
-                        for operator, version in dep.specs:
-                                final_deps.append("%s %s %s" %
-                                        (dep.project_name,
-                                            self.fix_op(operator),
-                                            version))
-                    else:
-                        final_deps.append(dep.project_name)
+                    final_deps.extend(self.process_dep(dep))
 
         data["dependencies"] = final_deps
 
