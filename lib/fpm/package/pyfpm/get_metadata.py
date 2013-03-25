@@ -61,9 +61,12 @@ class get_metadata(Command):
             print "processing  requirements.txt, %s" % self.requirements_txt
             for line in open(self.requirements_txt):
                 for req in pkg_resources.parse_requirements(line):
-                    for spec in req.specs:
-                        final_deps.append("%s %s %s" % (req.project_name,
-                            self.fix_op(spec[0]), spec[1]))
+                    if req.specs:
+                        for spec in req.specs:
+                            final_deps.append("%s %s %s" % (req.project_name,
+                                self.fix_op(spec[0]), spec[1]))
+                    else:
+                        final_deps.append(req.project_name)
         else:
             if getattr(self.distribution, 'install_requires', None):
                 for dep in pkg_resources.parse_requirements(
