@@ -69,7 +69,7 @@ class FPM::Package::Gem < FPM::Package
     gem_fetch = [ "#{attributes[:gem_gem]}", "fetch", gem_name]
 
     gem_fetch += ["--prerelease"] if attributes[:gem_prerelease?]
-    gem_fetch += ["--version '#{gem_version}'"] if gem_version
+    gem_fetch += ["--version", gem_version] if gem_version
 
     download_dir = build_path(gem_name)
     FileUtils.mkdir(download_dir) unless File.directory?(download_dir)
