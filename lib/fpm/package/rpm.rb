@@ -171,6 +171,20 @@ class FPM::Package::RPM < FPM::Package
         dep_ok
       end
     end
+
+    # Convert any dashes in version strings to underscores.
+    self.dependencies = self.dependencies.collect do |dep|
+      name, op, version = dep.split(/\s+/)
+      if version.include?("-")
+        @logger.warn("Dependency package '#{name}' version '#{version}' " \
+                     "includes dashes, converting to underscores")
+        version = version.gsub(/-/, "_")
+        "#{name} #{op} #{version}"
+      else
+        dep
+      end
+    end
+
   end # def converted
 
   def input(path)
@@ -283,6 +297,16 @@ class FPM::Package::RPM < FPM::Package
     return "BUILD"
     #return File.join("BUILD", prefix)
   end # def prefix
+
+  def version
+    if @version.kind_of?(String) and @version.include?("-")
+      @logger.warn("Package version '#{@version}' includes dashes, converting" \
+                   " to underscores")
+      @version = @version.gsub(/-/, "_")
+    end
+
+    return @version
+  end
 
   # The default epoch value must be nil, see #381
   def epoch
