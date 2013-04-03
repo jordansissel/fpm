@@ -167,7 +167,9 @@ class FPM::Package::Python < FPM::Package
 
     self.architecture = metadata["architecture"]
     self.description = metadata["description"]
-    self.license = metadata["license"]
+    # Sometimes the license field is multiple lines; do best-effort and just
+    # use the first line.
+    self.license = metadata["license"].split(/[\r\n]+/).first
     self.version = metadata["version"]
     self.url = metadata["url"]
 
