@@ -23,6 +23,7 @@ class FPM::Package::RPM < FPM::Package
   } unless defined?(DIGEST_ALGORITHM_MAP)
 
   COMPRESSION_MAP = {
+    "none" => "w0.gzdio",
     "xz" => "w2.xzdio",
     "gzip" => "w9.gzdio",
     "bzip2" => "w9.bzdio"
