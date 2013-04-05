@@ -367,8 +367,9 @@ class FPM::Package::Deb < FPM::Package
       nextversion = nextversion.join(".")
       return ["#{name} (>= #{version})", "#{name} (<< #{nextversion})"]
     elsif (m = dep.match(/(\S+)\s+\(!= (.+)\)/))
-      # Append this to conflicts
-      self.conflicts += [dep.gsub(/!=/,"=")]
+      # Move '!=' dependency specifications into 'Breaks'
+      self.attributes[:deb_breaks] ||= []
+      self.attributes[:deb_breaks] << dep.gsub(/!=/,"=")
       return []
     elsif (m = dep.match(/(\S+)\s+\(= (.+)\)/)) and
         self.attributes[:deb_ignore_iteration_in_dependencies?]
