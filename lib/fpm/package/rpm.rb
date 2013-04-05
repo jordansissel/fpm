@@ -175,7 +175,7 @@ class FPM::Package::RPM < FPM::Package
     # Convert any dashes in version strings to underscores.
     self.dependencies = self.dependencies.collect do |dep|
       name, op, version = dep.split(/\s+/)
-      if version.include?("-")
+      if !version.nil? and version.include?("-")
         @logger.warn("Dependency package '#{name}' version '#{version}' " \
                      "includes dashes, converting to underscores")
         version = version.gsub(/-/, "_")
