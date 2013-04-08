@@ -5,6 +5,7 @@ require "fpm/errors"
 require "fpm/util"
 require "backports"
 require "fileutils"
+require "digest"
 
 # Support for debian packages (.deb files)
 #
@@ -403,6 +404,7 @@ class FPM::Package::Deb < FPM::Package
     write_scripts # write the maintainer scripts
     write_conffiles # write the conffiles
     write_debconf # write the debconf files
+    write_md5sums # write the md5sums file
 
     # Make the control.tar.gz
     with(build_path("control.tar.gz")) do |controltar|
@@ -484,6 +486,26 @@ class FPM::Package::Deb < FPM::Package
       File.chmod(0755, control_path("templates"))
     end
   end # def write_debconf
+
+  def write_md5sums
+    md5_sums = {}
+
+    Find.find(staging_path) do |path|
+      if File.file? path
+        md5 = Digest::MD5.file(path).hexdigest
+        md5_path = path.gsub("#{staging_path}/", "")
+        md5_sums[md5_path] = md5
+      end
+    end
+
+    if not md5_sums.empty?
+      File.open(control_path("md5sums"), "w") do |out|
+        md5_sums.each do |path, md5|
+          out.puts "#{md5} #{path}"
+        end
+      end
+    end
+  end # def write_md5sums
 
   def to_s(format=nil)
     # Default format if nil
