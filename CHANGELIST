@@ -1,4 +1,8 @@
-0.4.:) ???
+0.4.32 (April 9, 2013)
+  - COMPATIBILITY WARNING: rpm: The default epoch is now nothing because this
+    aligns more closely with typical rpm packages in the real world. This
+    decision was reached in #381. If you need the previous behavior, you
+    must now specify '--epoch 1' (#388, patch by Pranay Kanwar)
   - python: new flag --python-obey-requirements-txt which makes a
     requirements.txt file from the python package used for the package
     dependencies instead of the usual setup.py dependencies. The default
@@ -6,6 +10,28 @@
   - deb: new flag --deb-shlibs to specify the content of the 'shlibs' file
     in the debian package (#405, patch by Aman Gupta)
   - deb: fixed a few lintian errors (empty conffiles, md5sums on symlinks, etc)
+  - Add '-f' / '--force' flag to force overwriting an existing package output
+    path (#385, Timothy Sutton)
+  - New flag: --no-auto-depends flag to skip any automatic dependencies
+    that would normally be added by gem, python, deb, and rpms input packages.
+    (#386, #374; patch by Pranay Kanwar)
+  - gem: Use 'gem' command to download gems and read gem package information.
+    (#389, #394, #378, #233; patches by Pranay Kanwar and Chris Roberts)
+  - rpm: dashes are now replaced with underscores in rpm version strings
+    (#395, #393, #399;  patches by Jeff Terrace and Richard Guest)
+  - python: Only use the first line of a license; some python packages (like
+    'requests') embed their full license copy into the license field. For
+    the sake of sanity and function with most packaging systems, fpm only
+    uses the first line of that license.
+  - rpm: Add new 'none' option to --rpm-compression to disable compression
+    entirely. (#398, patch by Richard Guest)
+  - deb: Make dependencies using the '!=' operator represented as "Breaks"
+    in the deb package (previously used "Conflicts"). (#400)
+  - deb: Add md5sums to the debian packages which improves correctness
+    of the package. (#403, #401; patch by Pranay Kanwar)
+  - rpm: Convert all '!=' dependency operators to 'Conflicts'. Previously,
+    this only applied to packages converting from python to rpm. 
+    (#404, #396; patch by Pranay Kanwar)
 
 0.4.31 (March 21, 2013)
   - rpm: new flag --rpm-use-file-permissions which try to create an rpm
