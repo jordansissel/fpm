@@ -489,7 +489,8 @@ class FPM::Package
     end
     if File.file?(output_path)
       if attributes[:force?]
-        @logger.warn("--force flag given, overwriting package at #{output_path}")
+        @logger.warn("Force flag given. Overwriting package at #{output_path}")
+        File.delete(output_path)
       else
         raise FileAlreadyExists.new(output_path)
       end
