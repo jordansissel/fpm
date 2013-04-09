@@ -48,13 +48,13 @@ class FPM::Package::Deb < FPM::Package
     "Custom version of the Debian control file." do |control|
     File.expand_path(control)
   end
-    
+
   # Add custom debconf config file
   option "--config", "SCRIPTPATH",
     "Add SCRIPTPATH as debconf config file." do |config|
      File.expand_path(config)
   end
-    
+
   # Add custom debconf templates file
   option "--templates", "FILEPATH",
     "Add FILEPATH as debconf templates file." do |templates|
@@ -95,6 +95,10 @@ class FPM::Package::Deb < FPM::Package
     field, value = fv.split(/: */, 2)
     @custom_fields[field] = value
     next @custom_fields
+  end
+
+  option "--shlibs", "SHLIBS", "Include control/shlibs file with SHLIBS" do |shlib|
+    @shlibs = shlibs
   end
 
   def initialize(*args)
@@ -401,6 +405,7 @@ class FPM::Package::Deb < FPM::Package
   def write_control_tarball
     # Use custom Debian control file when given ...
     write_control # write the control file
+    write_shlibs # write optional shlibs file
     write_scripts # write the maintainer scripts
     write_conffiles # write the conffiles
     write_debconf # write the debconf files
@@ -474,6 +479,13 @@ class FPM::Package::Deb < FPM::Package
       config_files.each { |cf| out.puts(cf) }
     end
   end # def write_conffiles
+
+  def write_shlibs
+    return unless @shlibs
+    File.open(control_path('shlibs'), "w") do |out|
+      out.write @shlibs
+    end
+  end # def write_shlibs
 
   def write_debconf
     if attributes[:deb_config]
