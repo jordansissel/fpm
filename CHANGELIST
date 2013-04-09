@@ -1,3 +1,7 @@
+0.4.33 (April 9, 2013)
+  - Now supports npm, the node package manager. For example: 
+    'fpm -s npm -t deb express'
+
 0.4.32 (April 9, 2013)
   - COMPATIBILITY WARNING: rpm: The default epoch is now nothing because this
     aligns more closely with typical rpm packages in the real world. This
