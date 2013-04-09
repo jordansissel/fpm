@@ -1,4 +1,5 @@
 from distutils.core import Command
+import os
 import pkg_resources
 try:
     import json
@@ -10,15 +11,41 @@ except ImportError:
 # possible some of my techniques below are outdated or bad.
 # If you have fixes, let me know.
 
+
 class get_metadata(Command):
     description = "get package metadata"
-    user_options = []
+    user_options = [
+        ('load-requirements-txt', 'l',
+         "load dependencies from requirements.txt"),
+        ]
+    boolean_options = ['load-requirements-txt']
 
     def initialize_options(self):
-        pass
+        self.load_requirements_txt = False
+        self.cwd = None
 
     def finalize_options(self):
-        pass
+        self.cwd = os.getcwd()
+        self.requirements_txt = os.path.join(self.cwd, "requirements.txt")
+        # make sure we have a requirements.txt
+        if self.load_requirements_txt:
+            self.load_requirements_txt = os.path.exists(self.requirements_txt)
+
+    def process_dep(self, dep):
+        deps = []
+        if dep.specs:
+            for operator, version in dep.specs:
+                final_operator = operator
+
+                if operator == "==":
+                    final_operator = "="
+
+                deps.append("%s %s %s" % (dep.project_name,
+                    final_operator, version))
+        else:
+            deps.append(dep.project_name)
+
+        return deps
 
     def run(self):
         data = {
@@ -26,7 +53,7 @@ class get_metadata(Command):
             "version": self.distribution.get_version(),
             "author": "%s <%s>" % (
                 self.distribution.get_author(),
-                self.distribution.get_author_email()
+                self.distribution.get_author_email(),
             ),
             "description": self.distribution.get_description(),
             "license": self.distribution.get_license(),
@@ -39,19 +66,16 @@ class get_metadata(Command):
             data["architecture"] = "all"
 
         final_deps = []
-        if getattr(self.distribution, 'install_requires', None):
-            for dep in pkg_resources.parse_requirements(
-                    self.distribution.install_requires):
-                # add all defined specs to the dependecy list separately.
-                if dep.specs:
-                    for operator, version in dep.specs:
-                        final_deps.append("%s %s %s" % (
-                            dep.project_name,
-                            (lambda x: "=" if x == "==" else x)(operator),
-                            version
-                        ))
-                else:
-                    final_deps.append(dep.project_name)
+
+        if self.load_requirements_txt:
+            requirement = open(self.requirements_txt).readlines()
+            for dep in pkg_resources.parse_requirements(requirement):
+                final_deps.extend(self.process_dep(dep))
+        else:
+            if getattr(self.distribution, 'install_requires', None):
+                for dep in pkg_resources.parse_requirements(
+                        self.distribution.install_requires):
+                    final_deps.extend(self.process_dep(dep))
 
         data["dependencies"] = final_deps
 
