@@ -1,1 +1,1 @@
-__all__ = [ "list_dependencies" ]
+__all__ = [ "get_metadata" ]
