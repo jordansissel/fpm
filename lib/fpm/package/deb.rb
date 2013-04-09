@@ -97,9 +97,10 @@ class FPM::Package::Deb < FPM::Package
     next @custom_fields
   end
 
-  option "--shlibs", "SHLIBS", "Include control/shlibs file with SHLIBS" do |shlib|
-    @shlibs = shlibs
-  end
+  option "--shlibs", "SHLIBS", "Include control/shlibs content. This flag " \
+    "expects a string that is used as the contents of the shlibs file. " \
+    "See the following url for a description of this file and its format: " \
+    "http://www.debian.org/doc/debian-policy/ch-sharedlibs.html#s-shlibs"
 
   def initialize(*args)
     super(*args)
@@ -481,9 +482,10 @@ class FPM::Package::Deb < FPM::Package
   end # def write_conffiles
 
   def write_shlibs
-    return unless @shlibs
-    File.open(control_path('shlibs'), "w") do |out|
-      out.write @shlibs
+    return unless attributes[:deb_shlibs]
+    @logger.info("Adding shlibs", :content => attributes[:deb_shlibs])
+    File.open(control_path("shlibs"), "w") do |out|
+      out.write(attributes[:deb_shlibs])
     end
   end # def write_shlibs
 
