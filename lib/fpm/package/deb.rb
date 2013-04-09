@@ -277,6 +277,23 @@ class FPM::Package::Deb < FPM::Package
     # create 'debian-binary' file, required to make a valid debian package
     File.write(build_path("debian-binary"), "2.0\n")
 
+    # If we are given --deb-shlibs but no --after-install script, we
+    # should implicitly create a before/after scripts that run ldconfig
+    if attributes[:deb_shlibs] 
+      if !script?(:after_install)
+        @logger.info("You gave --deb-shlibs but no --after-install, so " \
+                     "I am adding an after-install script that runs " \
+                     "ldconfig to update the system library cache")
+        scripts[:after_install] = template("deb/ldconfig.sh.erb").result(binding)
+      end
+      if !script?(:after_remove)
+        @logger.info("You gave --deb-shlibs but no --after-remove, so " \
+                     "I am adding an after-remove script that runs " \
+                     "ldconfig to update the system library cache")
+        scripts[:after_remove] = template("deb/ldconfig.sh.erb").result(binding)
+      end
+    end
+
     write_control_tarball
 
     # Tar up the staging_path into data.tar.{compression type}
@@ -474,6 +491,7 @@ class FPM::Package::Deb < FPM::Package
   end # def write_scripts
 
   def write_conffiles
+    return unless config_files.any?
     File.open(control_path("conffiles"), "w") do |out|
       # 'config_files' comes from FPM::Package and is usually set with
       # FPM::Command's --config-files flag
@@ -505,7 +523,7 @@ class FPM::Package::Deb < FPM::Package
     md5_sums = {}
 
     Find.find(staging_path) do |path|
-      if File.file? path
+      if File.file?(path) && !File.symlink?(path)
         md5 = Digest::MD5.file(path).hexdigest
         md5_path = path.gsub("#{staging_path}/", "")
         md5_sums[md5_path] = md5
