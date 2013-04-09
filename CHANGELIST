@@ -3,6 +3,9 @@
     requirements.txt file from the python package used for the package
     dependencies instead of the usual setup.py dependencies. The default
     behavior without this flag is to respect setup.py. (#384)
+  - deb: new flag --deb-shlibs to specify the content of the 'shlibs' file
+    in the debian package (#405, patch by Aman Gupta)
+  - deb: fixed a few lintian errors (empty conffiles, md5sums on symlinks, etc)
 
 0.4.31 (March 21, 2013)
   - rpm: new flag --rpm-use-file-permissions which try to create an rpm
