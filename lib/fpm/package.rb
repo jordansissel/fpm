@@ -99,7 +99,10 @@ class FPM::Package
   # a summary or description of the package
   attr_accessor :description
 
-  # hash of paths for maintainer/package scripts (postinstall, etc)
+  # hash of scripts for maintainer/package scripts (postinstall, etc)
+  #
+  # The keys are :before_install, etc
+  # The values are the text to use in the script.
   attr_accessor :scripts
 
   # Array of configuration files
@@ -313,7 +316,7 @@ class FPM::Package
   end # def files
  
   def template(path)
-    template_dir = File.join(File.dirname(__FILE__), "..", "..", "templates")
+    template_dir = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "templates"))
     template_path = File.join(template_dir, path)
     template_code = File.read(template_path)
     @logger.info("Reading template", :path => template_path)
