@@ -134,12 +134,14 @@ class FPM::Command < Clamp::Command
     "a name suffix to append to package and dependencies."
   option ["-e", "--edit"], :flag,
     "Edit the package spec before building.", :default => false
+
+  excludes = []
   option ["-x", "--exclude"], "EXCLUDE_PATTERN",
     "Exclude paths matching pattern (shell wildcard globs valid here). " \
     "If you have multiple file patterns to exclude, specify this flag " \
     "multiple times.", :attribute_name => :excludes do |val|
-    @excludes ||= []
-    @excludes << val
+    excludes << val
+    next excludes
   end # -x / --exclude
   option "--description", "DESCRIPTION", "Add a description for this package." \
     " You can include '\n' sequences to indicate newline breaks.",
@@ -239,7 +241,6 @@ class FPM::Command < Clamp::Command
     @dependencies = []
     @config_files = []
     @directories = []
-    @excludes = []
   end # def initialize
 
   # Execute this command. See Clamp::Command#execute and Clamp's documentation
