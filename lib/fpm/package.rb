@@ -93,9 +93,6 @@ class FPM::Package
   # (Not all packages support this)
   attr_accessor :replaces
 
-  # Array of glob patterns to exclude from this package
-  attr_accessor :excludes
-
   # a summary or description of the package
   attr_accessor :description
 
