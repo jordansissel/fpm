@@ -93,8 +93,7 @@ describe FPM::Package::Deb do
     end
 
     it "should replace underscores with dashes in the package name" do
-      # Insist the package.name does not include "_"
-      insist { insist { subject.name }.include?("_") }.fails
+      reject { subject.name }.include?("_")
     end
   end
 
@@ -117,6 +116,9 @@ describe FPM::Package::Deb do
       @original.dependencies << "something > 10"
       @original.dependencies << "hello >= 20"
       @original.provides = "#{@original.name} = #{@original.version}"
+
+      @original.conflicts = ["foo < 123"]
+      @original.attributes[:deb_breaks] = ["baz < 123"]
 
       @original.attributes[:deb_priority] = "fizzle"
       @original.attributes[:deb_field_given?] = true
@@ -186,6 +188,14 @@ describe FPM::Package::Deb do
 
       it "should have a custom field 'foo: bar'" do
         insist { dpkg_field("foo") } == "bar"
+      end
+      
+      it "should have the correct Conflicts" do
+        insist { dpkg_field("Conflicts") } == "foo (<< 123)"
+      end
+
+      it "should have the correct Breaks" do
+        insist { dpkg_field("Breaks") } == "baz (<< 123)"
       end
     end
   end # #output

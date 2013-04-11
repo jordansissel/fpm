@@ -9,10 +9,10 @@ Installed-Size: <%= attributes[:deb_installed_size] %>
 Depends: <%= dependencies.collect { |d| fix_dependency(d) }.flatten.join(", ") %>
 <% end -%>
 <% if !conflicts.empty? -%>
-Conflicts: <%= conflicts.join(", ") %>
+Conflicts: <%= conflicts.collect { |d| fix_dependency(d) }.flatten.join(", ") %>
 <% end -%>
 <% if attributes[:deb_breaks] -%>
-Breaks: <%= attributes[:deb_breaks].join(", ") %>
+Breaks: <%= attributes[:deb_breaks].collect { |d| fix_dependency(d) }.flatten.join(", ") %>
 <% end -%>
 <% if attributes[:deb_pre_depends_given?] -%>
 Pre-Depends: <%= attributes[:deb_pre_depends].collect { |d| fix_dependency(d) }.flatten.join(", ") %>
