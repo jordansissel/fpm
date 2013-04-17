@@ -86,7 +86,21 @@ class FPM::Package::RPM < FPM::Package
 
   private
 
+  # Fix path name
+  # Replace [ with [\[] to make rpm not use globs
+  # Replace * with [*] to make rpm not use globs
+  # Replace ? with [?] to make rpm not use globs
+  # Replace % with [%] to make rpm not expand macros
+  def rpm_fix_name(name)
+    name = "\"#{name}\"" if name[/\s/]
+    name = name.gsub("[", "[\\[]")
+    name = name.gsub("*", "[*]")
+    name = name.gsub("?", "[?]")
+    name = name.gsub("%", "[%]")
+  end
+
   def rpm_file_entry(file)
+    file = rpm_fix_name(file)
     return file unless attributes[:rpm_use_file_permissions?]
 
     stat = File.stat( file.gsub(/\"/, '') )
