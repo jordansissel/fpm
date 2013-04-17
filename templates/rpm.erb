@@ -115,17 +115,11 @@ cp <%= source_safe %> <%= target_safe %>
 %defattr(-,<%= attributes[:rpm_user] %>,<%= attributes[:rpm_group] %>,-)
 <%# Output config files and then regular files. -%>
 <% config_files.each do |path| -%>
-%config(noreplace) <%= File.join(prefix, path) %>
+%config(noreplace) <%= path %>
 <% end -%>
-<% subdirs = [] -%>
+<%# list directories %>
 <% directories.each do |path| -%>
-%dir <%= rpm_file_entry(File.join(prefix, path)) %>
-<%#  We need to include hidden directories, but exclude . and .. -%>
-<%   ::Dir.glob("#{path}/**/*/", File::FNM_DOTMATCH) do |subdir| -%>
-<%     next if File.basename(subdir) =~ /^\.+$/ -%>
-%dir <%= rpm_file_entry(File.join(prefix, subdir)) %>
-<% subdirs << subdir -%>
-<%   end -%>
+%dir <%= rpm_file_entry(path) %>
 <% end -%>
 <%# list only files, not directories? -%>
 <%= 
@@ -140,7 +134,7 @@ cp <%= source_safe %> <%= target_safe %>
   # Replace % with [%] to make rpm not expand macros
   files.collect { |f| "/#{f}" } \
     .reject { |f| config_files.include?(f) } \
-    .reject { |f| subdirs.include?("#{f}/") } \
+    .reject { |f| directories.include?(f) } \
     .collect { |f| f[/\s/] and "\"#{f}\"" or f } \
     .collect { |f| f.gsub("[", "[\\[]") } \
     .collect { |f| f.gsub("*", "[*]") } \
