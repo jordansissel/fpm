@@ -312,8 +312,11 @@ class FPM::Package
       .collect { |path| path[staging_path.length + 1.. -1] }
   end # def files
  
+  def template_dir
+    File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "templates"))
+  end
+
   def template(path)
-    template_dir = File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "templates"))
     template_path = File.join(template_dir, path)
     template_code = File.read(template_path)
     @logger.info("Reading template", :path => template_path)

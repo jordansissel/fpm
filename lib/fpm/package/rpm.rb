@@ -82,6 +82,8 @@ class FPM::Package::RPM < FPM::Package
 
   option "--sign", :flag, "Pass --sign to rpmbuild"
 
+  option "--auto-add-directories", :flag, "Auto add directories not part of filesystem"
+
   private
 
   def rpm_file_entry(file)
@@ -264,6 +266,32 @@ class FPM::Package::RPM < FPM::Package
     ]
 
     args += ["--sign"] if attributes[:rpm_sign?]
+
+    if attributes[:rpm_auto_add_directories?]
+      fs_dirs_list = File.join(template_dir, "rpm", "filesystem_list")
+      fs_dirs = File.readlines(fs_dirs_list).reject { |x| x =~ /^\s*#/}.map { |x| x.chomp }
+
+      Find.find(staging_path) do |path|
+        next if path == staging_path
+        if File.directory? path
+          add_path = path.gsub(/^#{staging_path}/,'')
+          self.directories << add_path if not fs_dirs.include? add_path
+        end
+      end
+    else
+      self.directories = self.directories.map { |x| File.join(self.prefix, x) }
+      alldirs = []
+      self.directories.each do |path|
+        Find.find(File.join(staging_path, path)) do |subpath|
+          if File.directory? subpath
+            alldirs << subpath.gsub(/^#{staging_path}/, '')
+          end
+        end
+      end
+      self.directories = alldirs
+    end
+
+    self.config_files = self.config_files.map { |x| File.join(self.prefix, x) }
 
     (attributes[:rpm_rpmbuild_define] or []).each do |define|
       args += ["--define", define]
