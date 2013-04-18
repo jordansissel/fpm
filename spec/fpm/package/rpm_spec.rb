@@ -326,11 +326,22 @@ describe FPM::Package::RPM do
       File.delete(@target)
     end # after
 
+    it "should escape '%' characters in filenames" do
+      Dir.mkdir(subject.staging_path("/example"))
+      File.write(subject.staging_path("/example/%name%"), "Hello")
+      subject.output(@target)
+
+      rpm = ::RPM::File.new(@target)
+      insist { rpm.files } == [ "/example/%name%" ]
+    end
+
     it "should permit spaces in filenames (issue #164)" do
       File.write(subject.staging_path("file with space"), "Hello")
 
       # This will raise an exception if rpmbuild fails.
       subject.output(@target)
+      rpm = ::RPM::File.new(@target)
+      insist { rpm.files } == [ "/file with space" ]
     end
 
     it "should permit brackets in filenames (issue #202)" do
@@ -338,6 +349,8 @@ describe FPM::Package::RPM do
 
       # This will raise an exception if rpmbuild fails.
       subject.output(@target)
+      rpm = ::RPM::File.new(@target)
+      insist { rpm.files } == [ "/file[with]bracket" ]
     end
 
     it "should permit asterisks in filenames (issue #202)" do
@@ -345,6 +358,8 @@ describe FPM::Package::RPM do
 
       # This will raise an exception if rpmbuild fails.
       subject.output(@target)
+      rpm = ::RPM::File.new(@target)
+      insist { rpm.files } == [ "/file*asterisk" ]
     end
 
     it "should have some reasonable defaults that never change" do
