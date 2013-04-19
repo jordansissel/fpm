@@ -27,8 +27,9 @@ AutoReqProv: no
 # Seems specifying BuildRoot is required on older rpmbuild (like on CentOS 5)
 # fpm passes '--define buildroot ...' on the commandline, so just reuse that.
 BuildRoot: %buildroot
+# Add prefix, must not end with /
 <% if !prefix.nil? and !prefix.empty? %>
-Prefix: <%= prefix %>
+Prefix: <%= prefix.gsub(/\/$/, '') %>
 <% end -%>
 
 Group: <%= category %>
@@ -115,41 +116,21 @@ cp <%= source_safe %> <%= target_safe %>
 %defattr(-,<%= attributes[:rpm_user] %>,<%= attributes[:rpm_group] %>,-)
 <%# Output config files and then regular files. -%>
 <% config_files.each do |path| -%>
-%config(noreplace) <%= File.join(prefix, path) %>
+%config(noreplace) <%= rpm_fix_name(path) %>
 <% end -%>
-<% subdirs = [] -%>
+<%# list directories %>
 <% directories.each do |path| -%>
-%dir <%= rpm_file_entry(File.join(prefix, path)) %>
-<%#  We need to include hidden directories, but exclude . and .. -%>
-<%   ::Dir.glob("#{path}/**/*/", File::FNM_DOTMATCH) do |subdir| -%>
-<%     next if File.basename(subdir) =~ /^\.+$/ -%>
-%dir <%= rpm_file_entry(File.join(prefix, subdir)) %>
-<% subdirs << subdir -%>
-<%   end -%>
+%dir <%= rpm_file_entry(path) %>
 <% end -%>
 <%# list only files, not directories? -%>
-<%= 
-  # Reject config files already listed or parent directories, then prefix files
-  # with "/", then make sure paths with spaces are quoted. I hate rpm so much.
-
-  # 'files' here is the method FPM::Package#files.
-  # The 'files' section of rpm can be 
-  # Replace [ with [\[] to make rpm not use globs
-  # Replace * with [*] to make rpm not use globs
-  # Replace ? with [?] to make rpm not use globs
-  # Replace % with [%] to make rpm not expand macros
-  files.collect { |f| "/#{f}" } \
-    .reject { |f| config_files.include?(f) } \
-    .reject { |f| subdirs.include?("#{f}/") } \
-    .collect { |f| f[/\s/] and "\"#{f}\"" or f } \
-    .collect { |f| f.gsub("[", "[\\[]") } \
-    .collect { |f| f.gsub("*", "[*]") } \
-    .collect { |f| f.gsub("?", "[?]") } \
-    .collect { |f| f.gsub("%", "[%]") } \
-    .map { |f| rpm_file_entry(f) } \
-    .join("\n")
-    #.collect { |f| File.join(prefix, f) } \
-%>
+# Reject config files already listed or parent directories, then prefix files
+# with "/", then make sure paths with spaces are quoted. I hate rpm so much.
+<% files.each do |path| -%>
+<%   path = "/#{path}" -%>
+<%   next if config_files.include?(path)-%>
+<%   next if directories.include?(path)-%>
+<%= rpm_file_entry(path) %>
+<% end -%>
 
 %changelog
 <%= attributes[:rpm_changelog] %>
