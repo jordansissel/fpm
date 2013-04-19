@@ -18,7 +18,7 @@ exec {
 
 file {
   # Sometimes veewee leaves behind this...
-  "/EMPTY": ensure => absent;
+  "/EMPTY": ensure => absent, backup => false;
 }
 
 package {
