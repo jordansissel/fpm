@@ -126,9 +126,14 @@ class FPM::Package::Deb < FPM::Package
         @architecture = %x{uname -m}.chomp
       end
     end
-    if @architecture == "x86_64"
+
+    case @architecture
+    when "x86_64"
       # Debian calls x86_64 "amd64"
       @architecture = "amd64"
+    when "noarch"
+      # Debian calls noarch "all"
+      @architecture = "all"
     end
     return @architecture
   end # def architecture
