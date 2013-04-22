@@ -29,7 +29,7 @@ AutoReqProv: no
 BuildRoot: %buildroot
 # Add prefix, must not end with /
 <% if !prefix.nil? and !prefix.empty? %>
-Prefix: <%= prefix.gsub(/\/$/, '') %>
+Prefix: <%= prefix.gsub(/([^\/]+)(\/$)/, '') %>
 <% end -%>
 
 Group: <%= category %>
