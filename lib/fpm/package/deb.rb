@@ -432,7 +432,7 @@ class FPM::Package::Deb < FPM::Package
     # Make the control.tar.gz
     with(build_path("control.tar.gz")) do |controltar|
       @logger.info("Creating", :path => controltar, :from => control_path)
-      safesystem(tar_cmd, "--numeric-owner", "--owner=0", "--group=0", "-zcf",
+      safesystem(tar_cmd, "--owner=root", "--group=root", "-zcf",
                  controltar, "-C", control_path, ".")
     end
 
