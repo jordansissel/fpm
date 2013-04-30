@@ -51,7 +51,10 @@ class FPM::Package::CPAN < FPM::Package
     # TODO(sissel): dependencies in metadata["prereqs"]["runtime"]["requires"] ?
 
     ::Dir.chdir(build_path) do
-      # TODO(sissel): install build and config dependencies temporarily?
+      # TODO(sissel): install build and config dependencies to resolve
+      # build/configure requirements.
+      # META.yml calls it 'configure_requires' and 'build_requires'
+      # META.json calls it prereqs/build and prereqs/configure
  
       safesystem(attributes[:cpan_perl_bin], "Makefile.PL")
       make = [ "make" ]
