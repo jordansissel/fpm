@@ -323,7 +323,7 @@ describe FPM::Package::RPM do
 
     after :each do
       subject.cleanup
-      File.delete(@target)
+      File.delete(@target) rescue nil
     end # after
 
     it "should escape '%' characters in filenames" do
