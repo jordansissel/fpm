@@ -1,3 +1,7 @@
+0.4.?? (??)
+  - Now supports CPAN - Perl mongers rejoice! For example:
+    'fpm -s cpan -t deb DBI'
+
 0.4.33 (April 9, 2013)
   - Now supports npm, the node package manager. For example: 
     'fpm -s npm -t deb express'
