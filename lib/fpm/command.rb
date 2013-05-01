@@ -77,52 +77,34 @@ class FPM::Command < Clamp::Command
   option ["-d", "--depends"], "DEPENDENCY",
     "A dependency. This flag can be specified multiple times. Value is " \
     "usually in the form of: -d 'name' or -d 'name > version'",
-    :default => [], :attribute_name => :dependencies do |val|
-    # Clamp doesn't support multivalue flags (ie; specifying -d multiple times)
-    # so we can hack around it with this trickery.
-    @dependencies ||= []
-    @dependencies << val
-  end # -d / --depends
+    :multivalued => true, :attribute_name => :dependencies
 
   option "--no-depends", :flag, "Do not list any dependencies in this package",
     :default => false
 
-  option "--no-auto-depends", :flag, "Do not list any dependencies in this package automatically",
-    :default => false
+  option "--no-auto-depends", :flag, "Do not list any dependencies in this" \
+    "package automatically", :default => false
 
   option "--provides", "PROVIDES",
     "What this package provides (usually a name). This flag can be "\
-    "specified multiple times." do |val|
-    @provides ||= []
-    @provides << val
-  end # --provides
+    "specified multiple times.", :multivalued => true,
+    :attribute_name => :provides
   option "--conflicts", "CONFLICTS",
     "Other packages/versions this package conflicts with. This flag can " \
-    "specified multiple times." do |val|
-    @conflicts ||= []
-    @conflicts << val
-  end # --conflicts
+    "specified multiple times.", :multivalued => true,
+    :attribute_name => :conflicts
   option "--replaces", "REPLACES",
     "Other packages/versions this package replaces. This flag can be "\
-    "specified multiple times." do |val|
-    @replaces ||= []
-    @replaces << val
-  end # --replaces
+    "specified multiple times.", :multivalued => true,
+    :attribute_name => :replaces
+
   option "--config-files", "CONFIG_FILES",
     "Mark a file in the package as being a config file. This uses 'conffiles'" \
     " in debs and %config in rpm. If you have multiple files to mark as " \
-    "configuration files, specify this flag multiple times." do |val|
-    #You can specify a directory to have it scanned marking all files found as
-    #config files. If you have multiple "
-    @config_files ||= []
-    @config_files << val
-  end # --config-files
-  option "--directories", "DIRECTORIES",
-    "Mark a directory as being owned by the package" \
-    do |val|
-    @directories ||= []
-    @directories << val
-  end # directories
+    "configuration files, specify this flag multiple times.",
+    :multivalued => true, :attribute_name => :config_files
+  option "--directories", "DIRECTORIES", "Mark a directory as being owned " \
+    "by the package", :multivalued => true, :attribute_name => :directories
   option ["-a", "--architecture"], "ARCHITECTURE",
     "The architecture name. Usually matches 'uname -m'. For automatic values," \
     " you can use '-a all' or '-a native'. These two strings will be " \
@@ -201,10 +183,10 @@ class FPM::Command < Clamp::Command
 
   option "--template-value", "KEY=VALUE",
     "Make 'key' available in script templates, so <%= key %> given will be " \
-    "the provided value. Implies --template-scripts" do |kv|
+    "the provided value. Implies --template-scripts",
+    :multivalued => true do |kv| 
     @template_scripts = true
-    @template_values ||= []
-    @template_values << kv.split("=", 2)
+    next kv.split("=", 2)
   end
 
   option "--workdir", "WORKDIR",
@@ -222,16 +204,6 @@ class FPM::Command < Clamp::Command
     klass.apply_options(self)
   end
 
-  # TODO(sissel): expose 'option' and 'parameter' junk to FPM::Package and subclasses.
-  # Apply those things to this command.
-  #
-  # Add extra flags from plugins
-  #FPM::Package::Gem.flags(FPM::Flags.new(opts, "gem", "gem only"), @settings)
-  #FPM::Package::Python.flags(FPM::Flags.new(opts, "python", "python only"),
-                            #@settings)
-  #FPM::Package::Deb.flags(FPM::Flags.new(opts, "deb", "deb only"), @settings)
-  #FPM::Package::Rpm.flags(FPM::Flags.new(opts, "rpm", "rpm only"), @settings)
-  
   # A new FPM::Command
   def initialize(*args)
     super(*args)
@@ -407,8 +379,8 @@ class FPM::Command < Clamp::Command
     output = input.convert(output_class)
 
     # Provide any template values as methods on the package.
-    if !@template_values.nil?
-      @template_values.each do |key, value|
+    if template_scripts?
+      template_value_list.each do |key, value|
         (class << output; self; end).send(:define_method, key) { value }
       end
     end
