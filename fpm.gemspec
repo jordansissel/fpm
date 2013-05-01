@@ -50,6 +50,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency("rspec") # license: MIT (according to wikipedia)
   spec.add_development_dependency("insist", "~> 0.0.5") # license: ???
   spec.add_development_dependency("minitest")
+  spec.add_development_dependency("pry")
 
   spec.files = files
   spec.require_paths << "lib"
