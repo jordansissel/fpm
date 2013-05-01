@@ -37,7 +37,7 @@ Gem::Specification.new do |spec|
 
   # For command-line flag support
   # https://github.com/mdub/clamp/blob/master/README.markdown
-  spec.add_dependency("clamp", "0.3.1") # license: MIT
+  spec.add_dependency("clamp", "0.6.0") # license: MIT
 
   # For starting external processes that give access to stdout, stderr and exit
   # status (open3 in ruby 1.8.7's stdlib doesn't properly set $?)
