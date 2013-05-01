@@ -7,9 +7,11 @@ class FPM::Package::CPAN < FPM::Package
   # Flags '--foo' will be accessable  as attributes[:npm_foo]
   option "--perl-bin", "PERL_EXECUTABLE",
     "The path to the perl executable you wish to run.", :default => "perl"
-
-  option "--package-name-prefix", "PREFIX", "Name to prefix the package " \
+  option "--cpanm-bin", "CPANM_EXECUTABLE",
+    "The path to the cpanm executable you wish to run.", :default => "cpanm"
+  option "--package-name-prefix", "NAME_PREFIX", "Name to prefix the package " \
     "name with.", :default => "perl"
+  option "--test", :flag, "Run the tests before packaging?", :default => true
 
   private
   def input(package)
@@ -19,14 +21,14 @@ class FPM::Package::CPAN < FPM::Package
     agent = FTW::Agent.new
     result = search(package, agent)
     tarball = download(result, agent)
-    unpack(tarball)
+    moduledir = unpack(tarball)
 
-    # TODO(sissel): read metadata froM META.json
-    if File.exists?(build_path("META.json"))
-      metadata = JSON.parse(File.read(build_path("META.json")))
-    elsif File.exists?(build_path("META.yml"))
+    # Read package metadata (name, version, etc)
+    if File.exists?(File.join(moduledir, "META.json"))
+      metadata = JSON.parse(File.read(File.join(moduledir, ("META.json"))))
+    elsif File.exists?(File.join(moduledir, ("META.yml")))
       require "yaml"
-      metadata = YAML.load_file(build_path("META.yml"))
+      metadata = YAML.load_file(File.join(moduledir, ("META.yml")))
     else
       raise FPM::InvalidPackageConfiguration, 
         "Could not find package metadata. Checked for META.json and META.yml"
@@ -39,35 +41,68 @@ class FPM::Package::CPAN < FPM::Package
       else; metadata["license"]
     end
     self.name = fix_name(metadata["name"])
-    self.vendor = metadata["author"].join(", ")
-    self.url = metadata["resources"]["homepage"]
+
+    # Not all things have 'author' listed.
+    self.vendor = metadata["author"].join(", ") if metadata.include?("author")
+    self.url = metadata["resources"]["homepage"] rescue "unknown"
 
     # TODO(sissel): figure out if this perl module compiles anything
     # and set the architecture appropriately.
     self.architecture = "all"
 
-    # If it was yaml, dependencies will be at the top level
-    # If it was json, the dependencies will be in the 'prereq' key
-    # TODO(sissel): dependencies in metadata["prereqs"]["runtime"]["requires"] ?
+    # Install any build/configure dependencies with cpanm.
+    # We'll install to a temporary directory.
+    @logger.info("Installing any build or configure dependencies")
+    safesystem(attributes[:cpan_cpanm_bin], "-L", build_path("cpan"), moduledir)
 
-    ::Dir.chdir(build_path) do
+    if !attributes[:no_auto_depends?]
+      metadata["requires"].each do |dep_name, version|
+        dep = search(dep_name, agent)
+        name = fix_name(dep["name"])
+        require "pry"; binding.pry
+        if version.to_s == "0"
+          # Assume 'Foo = 0' means any version?
+          self.dependencies << "#{name}"
+        else
+          self.dependencies << "#{name} = #{version}"
+        end
+      end
+    end #no_auto_depends
+
+    ::Dir.chdir(moduledir) do
       # TODO(sissel): install build and config dependencies to resolve
       # build/configure requirements.
       # META.yml calls it 'configure_requires' and 'build_requires'
       # META.json calls it prereqs/build and prereqs/configure
  
-      safesystem(attributes[:cpan_perl_bin], "Makefile.PL")
+      prefix = attributes[:prefix] || "/usr/local"
+      # TODO(sissel): Set default INSTALL path?
+      # perl -e 'use Config; print "$Config{sitelib}"'
+      safesystem(attributes[:cpan_perl_bin],
+                 "-Mlocal::lib=#{build_path("cpan")}",
+                 "Makefile.PL",
+                 "PREFIX=#{prefix}",
+                 # Have to specify INSTALL_BASE as empty otherwise
+                 # Makefile.PL lies and claims we've set both PREFIX and
+                 # INSTALL_BASE.
+                 "INSTALL_BASE="
+                )
+
       make = [ "make" ]
-      make << "PREFIX=#{attributes[:prefix]}" unless attributes[:prefix].nil?
 
       safesystem(*make)
+      safesystem(*(make + ["test"])) if attributes[:cpan_test?]
       safesystem(*(make + ["DESTDIR=#{staging_path}", "install"]))
     end
   end
 
   def unpack(tarball)
-    args = [ "-C", build_path, "-zxf", tarball, "--strip-components", "1" ]
+    directory = build_path("module")
+    ::Dir.mkdir(directory)
+    args = [ "-C", directory, "-zxf", tarball,
+      "--strip-components", "1" ]
     safesystem("tar", *args)
+    return directory
   end
 
   def download(metadata, agent)
