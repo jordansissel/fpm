@@ -84,6 +84,8 @@ class FPM::Package::RPM < FPM::Package
 
   option "--auto-add-directories", :flag, "Auto add directories not part of filesystem"
 
+  option "--autoreqprov", :flag, "Enable RPM's AutoReqProv option"
+
   private
 
   # Fix path name
