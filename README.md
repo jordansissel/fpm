@@ -68,9 +68,17 @@ You can install fpm with gem:
 
     gem install fpm
 
-Running it:
+Building a package named "awesome" might look something like this:
 
-    fpm -s TYPE -t TYPE ...
+    fpm -n awesome -t <output package type> -s <source type> [list of sources]...
+
+You have two options for learning to run FPM:
+
+1. If you're impatient, just scan through `fpm --help`; you'll need various options, and
+they're reasonably straightforward. Note that with the `-s` option, for source type `dir`,
+the `-s dir <list of directories>` must be the final argument.
+1. [The wiki](https://github.com/jordansissel/fpm/wiki) has explanations and examples.
+
 
 ## Things that are in the works or should work:
 
