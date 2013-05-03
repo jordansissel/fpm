@@ -33,7 +33,7 @@ Release: <%= iteration or 1 %>
 <%# use the first line of the description as the summary -%>
 Summary: <%= description.split("\n").first.empty? ? "_" :  description.split("\n").first %>
 BuildArch: <%= architecture %>
-<% if !attributes[:rpm_autoprov?] -%>
+<% if !attributes[:rpm_autoreqprov?] -%>
 AutoReqProv: no
 <% else -%>
 AutoReqProv: yes

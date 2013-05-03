@@ -100,11 +100,6 @@ class FPM::Package::RPM < FPM::Package
     rpmbuild_filter_from_requires << filter_from_requires
     next rpmbuild_filter_from_requires
   end
-  #option "--filter-from-requires", "REGEX",
-  #  "Set %filter_from_requires to the supplied REGEX.",
-  #  :default => nil do |value|
-  #    value
-  #end
 
   private
 
