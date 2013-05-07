@@ -84,6 +84,23 @@ class FPM::Package::RPM < FPM::Package
 
   option "--auto-add-directories", :flag, "Auto add directories not part of filesystem"
 
+  option "--autoreqprov", :flag, "Enable RPM's AutoReqProv option"
+  option "--autoreq", :flag, "Enable RPM's AutoReq option"
+  option "--autoprov", :flag, "Enable RPM's AutoProv option"
+
+  rpmbuild_filter_from_provides = []
+  option "--filter-from-provides", "REGEX",
+    "Set %filter_from_provides to the supplied REGEX." do |filter_from_provides|
+    rpmbuild_filter_from_provides << filter_from_provides
+    next rpmbuild_filter_from_provides
+  end
+  rpmbuild_filter_from_requires = []
+  option "--filter-from-requires", "REGEX",
+    "Set %filter_from_requires to the supplied REGEX." do |filter_from_requires|
+    rpmbuild_filter_from_requires << filter_from_requires
+    next rpmbuild_filter_from_requires
+  end
+
   private
 
   # Fix path name
