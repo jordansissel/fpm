@@ -44,6 +44,18 @@ class FPM::Package::RPM < FPM::Package
       value
   end
 
+  option "--defattrfile", "ATTR",
+    "Set the default file mode (%defattr).",
+    :default => '-' do |value|
+      value
+  end
+
+  option "--defattrdir", "ATTR",
+    "Set the default dir mode (%defattr).",
+    :default => '-' do |value|
+      value
+  end
+
   rpmbuild_define = []
   option "--rpmbuild-define", "DEFINITION",
     "Pass a --define argument to rpmbuild." do |define|

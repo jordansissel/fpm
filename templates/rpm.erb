@@ -142,7 +142,7 @@ cp <%= source_safe %> <%= target_safe %>
 <% end -%>
 
 %files
-%defattr(-,<%= attributes[:rpm_user] %>,<%= attributes[:rpm_group] %>,-)
+%defattr(<%= attributes[:rpm_defattrfile] %>,<%= attributes[:rpm_user] %>,<%= attributes[:rpm_group] %>,<%= attributes[:rpm_defattrdir] %>)
 <%# Output config files and then regular files. -%>
 <% config_files.each do |path| -%>
 %config(noreplace) <%= rpm_fix_name(path) %>
