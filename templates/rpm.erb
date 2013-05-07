@@ -14,6 +14,16 @@
 # Use <%= attributes[:rpm_compression] %> payload compression
 %define _binary_payload <%= payload_compression %> 
 
+<% (attributes[:rpm_filter_from_requires] or []).each do |reqfilter| -%>
+%filter_from_requires <%= reqfilter %>
+<% end -%>
+<% (attributes[:rpm_filter_from_provides] or []).each do |provfilter| -%>
+%filter_from_provides <%= provfilter %>
+<% end -%>
+<% if !attributes[:rpm_filter_from_requires].empty? or !attributes[:rpm_filter_from_provides].empty?-%>
+%filter_setup
+<% end -%>
+
 Name: <%= name %>
 Version: <%= version %>
 <% if epoch -%>
@@ -23,7 +33,17 @@ Release: <%= iteration or 1 %>
 <%# use the first line of the description as the summary -%>
 Summary: <%= description.split("\n").first.empty? ? "_" :  description.split("\n").first %>
 BuildArch: <%= architecture %>
+<% if !attributes[:rpm_autoreqprov?] -%>
 AutoReqProv: no
+<% else -%>
+AutoReqProv: yes
+<% end -%>
+<% if attributes[:rpm_autoreq?] -%>
+AutoReq: yes
+<% end -%>
+<% if attributes[:rpm_autoprov?] -%>
+AutoProv: yes
+<% end -%>
 # Seems specifying BuildRoot is required on older rpmbuild (like on CentOS 5)
 # fpm passes '--define buildroot ...' on the commandline, so just reuse that.
 BuildRoot: %buildroot
