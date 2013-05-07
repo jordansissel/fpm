@@ -2,6 +2,7 @@ require "fpm/namespace"
 require "fpm/package"
 require "fpm/util"
 require "fileutils"
+require "find"
 
 class FPM::Package::CPAN < FPM::Package
   # Flags '--foo' will be accessable  as attributes[:npm_foo]
@@ -40,7 +41,16 @@ class FPM::Package::CPAN < FPM::Package
       when Array; metadata["license"].first
       else; metadata["license"]
     end
-    self.name = fix_name(metadata["name"])
+
+    if metadata.include?("distribution")
+      @logger.info("Setting package name from 'distribution'",
+                   :distribution => metadata["distribution"])
+      self.name = fix_name(metadata["distribution"])
+    else
+      @logger.info("Setting package name from 'name'",
+                   :name => metadata["name"])
+      self.name = fix_name(metadata["name"])
+    end
 
     # Not all things have 'author' listed.
     self.vendor = metadata["author"].join(", ") if metadata.include?("author")
@@ -55,16 +65,28 @@ class FPM::Package::CPAN < FPM::Package
     @logger.info("Installing any build or configure dependencies")
     safesystem(attributes[:cpan_cpanm_bin], "-L", build_path("cpan"), moduledir)
 
-    if !attributes[:no_auto_depends?]
-      metadata["requires"].each do |dep_name, version|
-        dep = search(dep_name, agent)
-        name = fix_name(dep["name"])
-        require "pry"; binding.pry
-        if version.to_s == "0"
-          # Assume 'Foo = 0' means any version?
-          self.dependencies << "#{name}"
-        else
-          self.dependencies << "#{name} = #{version}"
+    if !attributes[:no_auto_depends?] 
+      if metadata.include?("requires")
+        metadata["requires"].each do |dep_name, version|
+          # Special case for representing perl core as a version.
+          if dep_name == "perl"
+            self.dependencies << "#{dep_name} >= #{version}"
+            next
+          end
+          dep = search(dep_name, agent)
+          
+          if dep.include?("distribution")
+            name = fix_name(dep["distribution"])
+          else
+            name = fix_name(dep_name)
+          end
+
+          if version.to_s == "0"
+            # Assume 'Foo = 0' means any version?
+            self.dependencies << "#{name}"
+          else
+            self.dependencies << "#{name} = #{version}"
+          end
         end
       end
     end #no_auto_depends
@@ -93,6 +115,20 @@ class FPM::Package::CPAN < FPM::Package
       safesystem(*make)
       safesystem(*(make + ["test"])) if attributes[:cpan_test?]
       safesystem(*(make + ["DESTDIR=#{staging_path}", "install"]))
+    end
+
+    # TODO(sissel): figure out if this perl module compiles anything
+    # and set the architecture appropriately.
+    self.architecture = "all"
+
+    # Find any shared objects in the staging directory to set architecture as
+    # native if found; otherwise keep the 'all' default.
+    Find.find(staging_path) do |path|
+      if path =~ /\.so$/  
+        @logger.info("Found shared library, setting architecture=native",
+                     :path => path)
+        self.architecture = "native" 
+      end
     end
   end
 
