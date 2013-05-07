@@ -22,6 +22,11 @@ describe FPM::Package::Deb do
       insist { subject.architecture } == "amd64"
     end
 
+    it "should convert noarch to all" do
+      subject.architecture = "noarch"
+      insist { subject.architecture } == "all"
+    end
+
     it "should default to native" do
       expected = ""
       if program_in_path?("dpkg")
