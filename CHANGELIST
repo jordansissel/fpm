@@ -3,6 +3,9 @@
     'fpm -s cpan -t deb DBI'
   - deb: fixed some additional complaints by lintian (#420, patch by Pranay
     Kanwar)
+  - rpm: add flags --rpm-autoreqprov, --rpm-autoreq, and --rpm-autoprov
+    to tell rpm to enable that feature in the rpm spec. (#416, patch by Adam
+    Stephens)
 
 0.4.33 (April 9, 2013)
   - Now supports npm, the node package manager. For example: 
