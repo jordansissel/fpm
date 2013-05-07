@@ -46,13 +46,13 @@ class FPM::Package::RPM < FPM::Package
 
   option "--defattrfile", "ATTR",
     "Set the default file mode (%defattr).",
-    :default => '644' do |value|
+    :default => '-' do |value|
       value
   end
 
   option "--defattrdir", "ATTR",
     "Set the default dir mode (%defattr).",
-    :default => '755' do |value|
+    :default => '-' do |value|
       value
   end
 
