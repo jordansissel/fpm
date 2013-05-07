@@ -20,7 +20,7 @@
 <% (attributes[:rpm_filter_from_provides] or []).each do |provfilter| -%>
 %filter_from_provides <%= provfilter %>
 <% end -%>
-<% if !attributes[:rpm_filter_from_requires].empty? or !attributes[:rpm_filter_from_provides].empty?-%>
+<% if !(attributes[:rpm_filter_from_requires] or []).empty? or !(attributes[:rpm_filter_from_provides] or []).empty?-%>
 %filter_setup
 <% end -%>
 
