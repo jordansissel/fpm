@@ -1,5 +1,5 @@
 require "fpm/namespace"
-require "open4"
+require "childprocess"
 
 # Some utility functions
 module FPM::Util
@@ -28,17 +28,26 @@ module FPM::Util
     end
 
     @logger.debug("Running command", :args => args)
-    
-    status = Open4::popen4(*args) do |pid, stdin, stdout, stderr|
-      stdin.close
 
-      @logger.debug("Process is running", :pid => pid)
-      @logger.pipe(stdout => :info, stderr => :error)
-    end
-    success = (status.exitstatus == 0)
+    # Create a pair of pipes to connect the
+    # invoked process to the cabin logger
+    stdout_r, stdout_w = IO.pipe
+    stderr_r, stderr_w = IO.pipe
+
+    process           = ChildProcess.build(*args)
+    process.io.stdout = stdout_w
+    process.io.stderr = stderr_w
+
+    process.start
+    stdout_w.close; stderr_w.close
+    @logger.debug('Process is running', :pid => process.pid)
+    @logger.pipe(stdout_r => :info, stderr_r => :error)
+
+    process.wait
+    success = (process.exit_code == 0)
 
     if !success
-      raise ProcessFailed.new("#{program} failed (exit code #{status.exitstatus})" \
+      raise ProcessFailed.new("#{program} failed (exit code #{process.exit_code})" \
                               ". Full command was:#{args.inspect}")
     end
     return success
