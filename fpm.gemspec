@@ -39,9 +39,8 @@ Gem::Specification.new do |spec|
   # https://github.com/mdub/clamp/blob/master/README.markdown
   spec.add_dependency("clamp", "0.6.0") # license: MIT
 
-  # For starting external processes that give access to stdout, stderr and exit
-  # status (open3 in ruby 1.8.7's stdlib doesn't properly set $?)
-  spec.add_dependency("open4") # license: Ruby License
+  # For starting external processes across various ruby interpreters
+  spec.add_dependency("childprocess") # license: ???
 
   # For simple shell/file hackery in the tests. 
   # http://rush.heroku.com/rdoc/
