@@ -138,8 +138,6 @@ class FPM::Package::CPAN < FPM::Package
           "I don't know how to build #{name}. No Makefile.PL nor " \
           "Build.PL found"
       end
-      require "pry"
-      binding.pry
     end
 
 
