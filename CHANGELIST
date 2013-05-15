@@ -1,3 +1,12 @@
+0.4.36 (May 15, 2013)
+  - pear: only do channel-discover if necessary (#438, patch by Hatt)
+  - cpan: now supports cpan modules that use Module::Build
+  - cpan: --no-cpan-test now skips tests for build/configure dependencies
+  - rpm: Add --rpm-defattrfile and --rpm-defattrdir flags (#428, patch 
+    by phrawzty)
+
+0.4.35 -- was not announced 
+
 0.4.34 (May 7, 2013)
   - Now supports CPAN - Perl mongers rejoice! For example:
     'fpm -s cpan -t deb DBI'
