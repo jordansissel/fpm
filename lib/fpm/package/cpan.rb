@@ -104,23 +104,44 @@ class FPM::Package::CPAN < FPM::Package
  
       prefix = attributes[:prefix] || "/usr/local"
       # TODO(sissel): Set default INSTALL path?
-      # perl -e 'use Config; print "$Config{sitelib}"'
-      safesystem(attributes[:cpan_perl_bin],
-                 "-Mlocal::lib=#{build_path("cpan")}",
-                 "Makefile.PL",
-                 "PREFIX=#{prefix}",
-                 # Have to specify INSTALL_BASE as empty otherwise
-                 # Makefile.PL lies and claims we've set both PREFIX and
-                 # INSTALL_BASE.
-                 "INSTALL_BASE="
-                )
 
-      make = [ "make" ]
+      # Try Makefile.PL, Build.PL
+      #
+      if File.exists?("Makefile.PL")
+        safesystem(attributes[:cpan_perl_bin],
+                   "-Mlocal::lib=#{build_path("cpan")}",
+                   "Makefile.PL",
+                   "PREFIX=#{prefix}",
+                   # Empty install_base to avoid local::lib being used.
+                   "INSTALL_BASE=")
+        make = [ "make" ]
+        safesystem(*make)
+        safesystem(*(make + ["test"])) if attributes[:cpan_test?]
+        safesystem(*(make + ["DESTDIR=#{staging_path}", "install"]))
+      elsif File.exists?("Build.PL")
+        # Module::Build is in use here; different actions required.
+        safesystem(attributes[:cpan_perl_bin],
+                   "-Mlocal::lib=#{build_path("cpan")}",
+                   "Build.PL")
+        safesystem("./Build")
 
-      safesystem(*make)
-      safesystem(*(make + ["test"])) if attributes[:cpan_test?]
-      safesystem(*(make + ["DESTDIR=#{staging_path}", "install"]))
+        if attributes[:cpan_test?]
+          safesystem("./Build", "test")
+        end
+
+        safesystem("./Build", "install",
+                   "--prefix", prefix, "--destdir", staging_path,
+                   # Empty install_base to avoid local::lib being used.
+                   "--install_base", "")
+      else
+        raise FPM::InvalidPackageConfiguration, 
+          "I don't know how to build #{name}. No Makefile.PL nor " \
+          "Build.PL found"
+      end
+      require "pry"
+      binding.pry
     end
+
 
     # TODO(sissel): figure out if this perl module compiles anything
     # and set the architecture appropriately.
