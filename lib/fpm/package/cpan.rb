@@ -63,7 +63,12 @@ class FPM::Package::CPAN < FPM::Package
     # Install any build/configure dependencies with cpanm.
     # We'll install to a temporary directory.
     @logger.info("Installing any build or configure dependencies")
-    safesystem(attributes[:cpan_cpanm_bin], "-L", build_path("cpan"), moduledir)
+
+    if attributes[:cpan_test?]
+      safesystem(attributes[:cpan_cpanm_bin], "-L", build_path("cpan"), moduledir)
+    else
+      safesystem(attributes[:cpan_cpanm_bin], "-nL", build_path("cpan"), moduledir)
+    end
 
     if !attributes[:no_auto_depends?] 
       if metadata.include?("requires")
