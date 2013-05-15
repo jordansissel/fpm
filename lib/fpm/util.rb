@@ -19,6 +19,11 @@ module FPM::Util
 
   # Run a command safely in a way that gets reports useful errors.
   def safesystem(*args)
+    # ChildProcess isn't smart enough to run a $SHELL if there's
+    # spaces in the first arg and there's only 1 arg.
+    if args.size == 1
+      args = [ ENV["SHELL"], "-c", args[0] ]
+    end
     program = args[0]
 
     # Scan path to find the executable
