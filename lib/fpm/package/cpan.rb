@@ -13,6 +13,7 @@ class FPM::Package::CPAN < FPM::Package
   option "--package-name-prefix", "NAME_PREFIX", "Name to prefix the package " \
     "name with.", :default => "perl"
   option "--test", :flag, "Run the tests before packaging?", :default => true
+  option "--perl-lib-path", "PERL_LIB_PATH", "Path of target Perl Libraries"
 
   private
   def input(package)
@@ -108,15 +109,27 @@ class FPM::Package::CPAN < FPM::Package
       # Try Makefile.PL, Build.PL
       #
       if File.exists?("Makefile.PL")
-        safesystem(attributes[:cpan_perl_bin],
-                   "-Mlocal::lib=#{build_path("cpan")}",
-                   "Makefile.PL",
-                   "PREFIX=#{prefix}",
-                   # Empty install_base to avoid local::lib being used.
-                   "INSTALL_BASE=")
+	if attributes[:cpan_perl_lib_path]	
+	  perl_lib_path = attributes[:cpan_perl_lib_path]
+          safesystem(attributes[:cpan_perl_bin],
+                     "-Mlocal::lib=#{build_path("cpan")}",
+                     "Makefile.PL",
+                     "PREFIX=#{prefix}",
+		     "LIB=#{perl_lib_path}",
+                     # Empty install_base to avoid local::lib being used.
+                     "INSTALL_BASE=")
+	else 
+	  safesystem(attributes[:cpan_perl_bin],
+	    "-Mlocal::lib=#{build_path("cpan")}",
+	    "Makefile.PL",
+	    "PREFIX=#{prefix}",
+	    # Empty install_base to avoid local::lib being used.
+	    "INSTALL_BASE=")
+	end
         make = [ "make" ]
         safesystem(*make)
         safesystem(*(make + ["test"])) if attributes[:cpan_test?]
+	safesystem(*(make + ["DESTDIR=#{staging_path}", "install"]))
         safesystem(*(make + ["DESTDIR=#{staging_path}", "install"]))
       elsif File.exists?("Build.PL")
         # Module::Build is in use here; different actions required.
@@ -128,11 +141,16 @@ class FPM::Package::CPAN < FPM::Package
         if attributes[:cpan_test?]
           safesystem("./Build", "test")
         end
-
-        safesystem("./Build", "install",
-                   "--prefix", prefix, "--destdir", staging_path,
-                   # Empty install_base to avoid local::lib being used.
-                   "--install_base", "")
+	if attributes[:cpan_perl_lib_path]
+	  perl_lib_path = attributes[:cpan_perl_lib_path]
+	  safesystem("./Build install --install_path lib=#{perl_lib_path} \
+		     --destdir #{staging_path} --prefix #{prefix} --destdir #{staging_path}")
+	else
+       	  safesystem("./Build", "install",
+                     "--prefix", prefix, "--destdir", staging_path,
+                     # Empty install_base to avoid local::lib being used.
+                     "--install_base", "")
+        end
       else
         raise FPM::InvalidPackageConfiguration, 
           "I don't know how to build #{name}. No Makefile.PL nor " \
