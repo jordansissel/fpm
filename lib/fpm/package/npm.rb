@@ -57,7 +57,11 @@ class FPM::Package::NPM < FPM::Package
     # We do this by using 'npm ls' with json + long enabled to query details
     # about the installed package.
     npm_ls_cmd = [attributes[:npm_bin], "ls", "--json", "--long", package] + npm_flags
-    npm_ls_fd = IO.popen(npm_ls_cmd)
+    # Ruby 1.8.7's IO.popen is incompatible with Ruby 1.9.3's IO.popen.
+    # WEEEEEEeee... So let's do some janky Shellwords escaping to make
+    # a string :(
+    npm_ls_cmd_str = npm_ls_cmd.collect { |v| Shellwords.escape(v) }.join(" ")
+    npm_ls_fd = IO.popen(npm_ls_cmd_str)
     npm_ls_out = npm_ls_fd.read()
     pid, status = Process.waitpid2(npm_ls_fd.pid)
     if !status.success?
