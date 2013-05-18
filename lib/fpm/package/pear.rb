@@ -59,16 +59,9 @@ class FPM::Package::PEAR < FPM::Package
     # do channel-discover if required
     if !attributes[:pear_channel].nil?
       @logger.info("Custom channel specified", :channel => attributes[:pear_channel])
-      pear_lc_cmd = "pear -c #{config} list-channels"
-      pear_lc_fd = IO.popen(pear_lc_cmd)
-      pear_lc_out = pear_lc_fd.read()
-      pid, status = Process.waitpid2(pear_lc_fd.pid)
-      if !status.success?
-        raise FPM::Util::ProcessFailed.new("#{pear_ls_cmd.first} failed (exit " \
-                                         "code #{status.exitstatus}). " \
-                                         "Full command was: #{pear_ls_cmd.inspect}")
-      end
-      if !pear_lc_out =~ /#{Regexp.quote(attributes[:pear_channel])}/
+      channel_list = safesystemout("pear", "-c", config, "list-channels")
+
+      if !channel_list =~ /#{Regexp.quote(attributes[:pear_channel])}/
         @logger.info("Discovering new channel", :channel => attributes[:pear_channel])
         safesystem("pear", "-c", config, "channel-discover", attributes[:pear_channel])
       end
