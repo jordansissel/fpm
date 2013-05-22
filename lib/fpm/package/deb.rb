@@ -322,7 +322,7 @@ class FPM::Package::Deb < FPM::Package
     end
     if !attributes[:deb_group].nil?
       if attributes[:deb_group] == 'root'
-        tar_flags += [ "--group", '0' ]
+        tar_flags += [ "--numeric-owner", "--group", "0" ]
       else
         tar_flags += [ "--group", attributes[:deb_group] ]
       end
