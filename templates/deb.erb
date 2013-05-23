@@ -17,6 +17,9 @@ Breaks: <%= attributes[:deb_breaks].collect { |d| fix_dependency(d) }.flatten.jo
 <% if attributes[:deb_pre_depends_given?] -%>
 Pre-Depends: <%= attributes[:deb_pre_depends].collect { |d| fix_dependency(d) }.flatten.join(", ") %>
 <% end -%>
+<% if attributes[:deb_build_depends_given?] -%>
+Build-Depends: <%= attributes[:deb_build_depends].collect { |d| fix_dependency(d) }.flatten.join(", ") %>
+<% end -%>
 <% if !provides.empty? -%>
 <%# Turn each provides from 'foo = 123' to simply 'foo' because Debian :\ -%>
 <%#  http://www.debian.org/doc/debian-policy/ch-relationships.html -%>
