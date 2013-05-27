@@ -488,7 +488,7 @@ class FPM::Package::Deb < FPM::Package
 
       with(control_path(filename)) do |controlscript|
         @logger.debug("Writing control script", :source => filename, :target => controlscript)
-        File.write(controlscript, script(scriptname))
+        File.write(controlscript, File.read(script(scriptname)))
         # deb maintainer scripts are required to be executable
         File.chmod(0755, controlscript)
       end
