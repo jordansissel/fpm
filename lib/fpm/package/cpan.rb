@@ -17,6 +17,13 @@ class FPM::Package::CPAN < FPM::Package
 
   private
   def input(package)
+    if RUBY_VERSION =~ /^1\.8/
+      raise FPM::Package::InvalidArgument,
+        "Sorry, CPAN support requires ruby 1.9 or higher. You have " \
+        "#{RUBY_VERSION}. If this negatively impacts you, please let " \
+        "me know by filing an issue: " \
+        "https://github.com/jordansissel/fpm/issues"
+    end
     require "ftw" # for http access
     require "json"
 
