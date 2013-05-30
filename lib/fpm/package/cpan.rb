@@ -109,23 +109,20 @@ class FPM::Package::CPAN < FPM::Package
       # Try Makefile.PL, Build.PL
       #
       if File.exists?("Makefile.PL")
-        if attributes[:cpan_perl_lib_path]	
-	        perl_lib_path = attributes[:cpan_perl_lib_path]
+        if attributes[:cpan_perl_lib_path]
+          perl_lib_path = attributes[:cpan_perl_lib_path]
           safesystem(attributes[:cpan_perl_bin],
                      "-Mlocal::lib=#{build_path("cpan")}",
-                     "Makefile.PL",
-                     "PREFIX=#{prefix}",
-		                 "LIB=#{perl_lib_path}",
+                     "Makefile.PL", "PREFIX=#{prefix}", "LIB=#{perl_lib_path}",
                      # Empty install_base to avoid local::lib being used.
                      "INSTALL_BASE=")
-	      else 
-	        safesystem(attributes[:cpan_perl_bin],
-	                   "-Mlocal::lib=#{build_path("cpan")}",
-	                   "Makefile.PL",
-	                   "PREFIX=#{prefix}",
-	                   # Empty install_base to avoid local::lib being used.
-	                   "INSTALL_BASE=")
-	      end
+        else 
+          safesystem(attributes[:cpan_perl_bin],
+                     "-Mlocal::lib=#{build_path("cpan")}",
+                     "Makefile.PL", "PREFIX=#{prefix}",
+                     # Empty install_base to avoid local::lib being used.
+                     "INSTALL_BASE=")
+        end
         make = [ "make" ]
         safesystem(*make)
         safesystem(*(make + ["test"])) if attributes[:cpan_test?]
@@ -140,12 +137,12 @@ class FPM::Package::CPAN < FPM::Package
         if attributes[:cpan_test?]
           safesystem("./Build", "test")
         end
-	      if attributes[:cpan_perl_lib_path]
-	        perl_lib_path = attributes[:cpan_perl_lib_path]
-	        safesystem("./Build install --install_path lib=#{perl_lib_path} \
-		                 --destdir #{staging_path} --prefix #{prefix} --destdir #{staging_path}")
-	      else
-       	  safesystem("./Build", "install",
+        if attributes[:cpan_perl_lib_path]
+          perl_lib_path = attributes[:cpan_perl_lib_path]
+          safesystem("./Build install --install_path lib=#{perl_lib_path} \
+                     --destdir #{staging_path} --prefix #{prefix} --destdir #{staging_path}")
+        else
+           safesystem("./Build", "install",
                      "--prefix", prefix, "--destdir", staging_path,
                      # Empty install_base to avoid local::lib being used.
                      "--install_base", "")
