@@ -28,6 +28,12 @@ class FPM::Package::Deb < FPM::Package
             "version. Default is to be specific. This option allows the same " \
             "version of a package but any iteration is permitted"
 
+  option "--build-depends", "DEPENDENCY",
+    "Add DEPENDENCY as a Build-Depends" do |dep|
+    @build_depends ||= []
+    @build_depends << dep
+  end
+
   option "--pre-depends", "DEPENDENCY",
     "Add DEPENDENCY as a Pre-Depends" do |dep|
     @pre_depends ||= []
