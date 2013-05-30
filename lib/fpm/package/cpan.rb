@@ -198,7 +198,8 @@ class FPM::Package::CPAN < FPM::Package
     version = metadata["version"] if version.nil?
 
     tarball = "#{distribution}-#{version}.tar.gz"
-    url = "http://search.cpan.org/CPAN/authors/id/#{author[0,1]}/#{author[0,2]}/#{author}/#{tarball}"
+    url = "http://www.cpan.org/CPAN/authors/id/#{author[0,1]}/#{author[0,2]}/#{author}/#{tarball}"
+    @logger.debug("Fetching perl module", :url => url)
     response = agent.get!(url)
     if response.error?
       @logger.error("Download failed", :error => response.status_line,
