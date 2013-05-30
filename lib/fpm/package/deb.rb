@@ -322,6 +322,7 @@ class FPM::Package::Deb < FPM::Package
         raise FPM::InvalidPackageConfiguration,
           "Unknown compression type '#{self.attributes[:deb_compression]}'"
     end
+
     tar_flags = []
     if !attributes[:deb_user].nil?
       tar_flags += [ "--owner", attributes[:deb_user] ]
@@ -333,8 +334,6 @@ class FPM::Package::Deb < FPM::Package
         tar_flags += [ "--group", attributes[:deb_group] ]
       end
     end
-
-    write_control_tarball(tar_flags)
 
     if attributes[:deb_changelog]
       dest_changelog = File.join(staging_path, "usr/share/doc/#{attributes[:name]}/changelog.Debian")
@@ -437,7 +436,7 @@ class FPM::Package::Deb < FPM::Package
     end
   end # def control_path
 
-  def write_control_tarball(tar_flags=[])
+  def write_control_tarball
     # Use custom Debian control file when given ...
     write_control # write the control file
     write_shlibs # write optional shlibs file
@@ -450,7 +449,8 @@ class FPM::Package::Deb < FPM::Package
     with(build_path("control.tar.gz")) do |controltar|
       @logger.info("Creating", :path => controltar, :from => control_path)
 
-      args = [ tar_cmd, "-C", control_path, "-z" ] + tar_flags + [ "-cf", controltar, "." ]
+      args = [ tar_cmd, "-C", control_path, "-zcf", controltar, 
+        "--owner=0", "--group=0", "--numeric-owner", "." ]
       safesystem(*args)
     end
 
