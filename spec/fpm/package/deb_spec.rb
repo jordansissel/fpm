@@ -125,6 +125,11 @@ describe FPM::Package::Deb do
       @original.conflicts = ["foo < 123"]
       @original.attributes[:deb_breaks] = ["baz < 123"]
 
+      @original.attributes[:deb_build_depends_given?] = true
+      @original.attributes[:deb_build_depends] ||= []
+      @original.attributes[:deb_build_depends] << 'something-else > 0.0.0'
+      @original.attributes[:deb_build_depends] << 'something-else < 1.0.0'
+
       @original.attributes[:deb_priority] = "fizzle"
       @original.attributes[:deb_field_given?] = true
       @original.attributes[:deb_field] = { "foo" => "bar" }
@@ -189,6 +194,10 @@ describe FPM::Package::Deb do
       it "should have the correct dependency list" do
         # 'something > 10' should convert to 'something (>> 10)', etc.
         insist { dpkg_field("Depends") } == "something (>> 10), hello (>= 20)"
+      end
+
+      it "should have the correct build dependency list" do
+        insist { dpkg_field("Build-Depends") } == "something-else (>> 0.0.0), something-else (<< 1.0.0)"
       end
 
       it "should have a custom field 'foo: bar'" do
