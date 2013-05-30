@@ -58,6 +58,41 @@ module FPM::Util
     return success
   end # def safesystem
 
+# Run a command safely in a way that captures output and status.
+  def safesystemout(*args)
+    if args.size == 1
+      args = [ ENV["SHELL"], "-c", args[0] ]
+    end
+    program = args[0]
+
+    if !program.include?("/") and !program_in_path?(program)
+      raise ExecutableNotFound.new(program)
+    end
+
+    @logger.debug("Running command", :args => args)
+
+    stdout_r, stdout_w = IO.pipe
+    stderr_r, stderr_w = IO.pipe
+
+    process           = ChildProcess.build(*args)
+    process.io.stdout = stdout_w
+    process.io.stderr = stderr_w
+
+    process.start
+    stdout_w.close; stderr_w.close
+    @logger.debug("Process is running", :pid => process.pid)
+
+    process.wait
+    success = (process.exit_code == 0)
+
+    if !success
+      raise ProcessFailed.new("#{program} failed (exit code #{process.exit_code})" \
+                              ". Full command was:#{args.inspect}")
+    end
+
+    return :stdout_r
+  end # def safesystemout
+
   # Get the recommended 'tar' command for this platform.
   def tar_cmd
     # Rely on gnu tar for solaris and OSX.
