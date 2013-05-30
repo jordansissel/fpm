@@ -20,3 +20,6 @@ Gemfile.lock
 
 # OS X
 .DS_Store
+
+.rbx
+.vagrant
