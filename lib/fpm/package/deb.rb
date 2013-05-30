@@ -327,8 +327,14 @@ class FPM::Package::Deb < FPM::Package
       tar_flags += [ "--owner", attributes[:deb_user] ]
     end
     if !attributes[:deb_group].nil?
-      tar_flags += [ "--group", attributes[:deb_group] ]
+      if attributes[:deb_group] == 'root'
+        tar_flags += [ "--numeric-owner", "--group", "0" ]
+      else
+        tar_flags += [ "--group", attributes[:deb_group] ]
+      end
     end
+
+    write_control_tarball(tar_flags)
 
     if attributes[:deb_changelog]
       dest_changelog = File.join(staging_path, "usr/share/doc/#{attributes[:name]}/changelog.Debian")
@@ -431,7 +437,7 @@ class FPM::Package::Deb < FPM::Package
     end
   end # def control_path
 
-  def write_control_tarball
+  def write_control_tarball(tar_flags=[])
     # Use custom Debian control file when given ...
     write_control # write the control file
     write_shlibs # write optional shlibs file
@@ -443,8 +449,9 @@ class FPM::Package::Deb < FPM::Package
     # Make the control.tar.gz
     with(build_path("control.tar.gz")) do |controltar|
       @logger.info("Creating", :path => controltar, :from => control_path)
-      safesystem(tar_cmd, "--owner=root", "--group=root", "-zcf",
-                 controltar, "-C", control_path, ".")
+
+      args = [ tar_cmd, "-C", control_path, "-z" ] + tar_flags + [ "-cf", controltar, "." ]
+      safesystem(*args)
     end
 
     @logger.debug("Removing no longer needed control dir", :path => control_path)
