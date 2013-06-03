@@ -80,6 +80,8 @@ module FPM::Util
 
     process.start
     stdout_w.close; stderr_w.close
+    stdout_r_str = stdout_r.read
+    stdout_r.close; stderr_r.close
     @logger.debug("Process is running", :pid => process.pid)
 
     process.wait
@@ -90,7 +92,7 @@ module FPM::Util
                               ". Full command was:#{args.inspect}")
     end
 
-    return :stdout_r
+    return stdout_r_str
   end # def safesystemout
 
   # Get the recommended 'tar' command for this platform.
