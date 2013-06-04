@@ -56,7 +56,7 @@ class FPM::Package::NPM < FPM::Package
     # Query details about our now-installed package.
     # We do this by using 'npm ls' with json + long enabled to query details
     # about the installed package.
-    npm_ls_out = safesystemout(attributes[:npm_bin], "ls", "--json", "--long", package, *npm_flags)
+    npm_ls_out = safesystemout(attributes[:npm_bin], "ls", "--json", "--long", *npm_flags)
     npm_ls = JSON.parse(npm_ls_out)
     name, info = npm_ls["dependencies"].first
 
