@@ -56,12 +56,12 @@ class FPM::Package::NPM < FPM::Package
     # Query details about our now-installed package.
     # We do this by using 'npm ls' with json + long enabled to query details
     # about the installed package.
-    npm_ls_out = safesystemout(attributes[:npm_bin], "ls", "--json", "--long", package, *npm_flags)
+    npm_ls_out = safesystemout(attributes[:npm_bin], "ls", "--json", "--long", *npm_flags)
     npm_ls = JSON.parse(npm_ls_out)
     name, info = npm_ls["dependencies"].first
 
     self.name = [attributes[:npm_package_name_prefix], name].join("-")
-    self.version = info["version"]
+    self.version = info.fetch("version", "0.0.0")
 
     if info.include?("repository")
       self.url = info["repository"]["url"]
@@ -70,8 +70,15 @@ class FPM::Package::NPM < FPM::Package
     end
 
     self.description = info["description"]
-    self.vendor = sprintf("%s <%s>", info["author"]["name"],
-                          info["author"]["email"])
+    # Supposedly you can upload a package for npm with no author/author email 
+    # so I'm being safer with this
+    if info.include?("author")
+      author_info = info["author"]
+      self.vendor = sprintf("%s <%s>", author_info.fetch("name", "unknown"),
+                            author_info.fetch("email", "unknown@unknown.unknown"))
+    else
+      self.vendor = "Unknown <unknown@unknown.unknown>"
+    end
 
     # npm installs dependencies in the module itself, so if you do
     # 'npm install express' it installs dependencies (like 'connect')
