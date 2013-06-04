@@ -70,8 +70,15 @@ class FPM::Package::NPM < FPM::Package
     end
 
     self.description = info["description"]
-    self.vendor = sprintf("%s <%s>", info["author"]["name"],
-                          info["author"]["email"])
+    # Supposedly you can upload a package for npm with no author/author email 
+    # so I'm being safer with this
+    if info.include?("author")
+      author_info = info["author"]
+      self.vendor = sprintf("%s <%s>", author_info.fetch("name", "unknown"),
+                            author_info.fetch("email", "unknown@unknown.unknown"))
+    else
+      self.vendor = "Unknown <unknown@unknown.unknown>"
+    end
 
     # npm installs dependencies in the module itself, so if you do
     # 'npm install express' it installs dependencies (like 'connect')
