@@ -61,7 +61,7 @@ class FPM::Package::NPM < FPM::Package
     name, info = npm_ls["dependencies"].first
 
     self.name = [attributes[:npm_package_name_prefix], name].join("-")
-    self.version = info["version"]
+    self.version = info.fetch("version", "0.0.0")
 
     if info.include?("repository")
       self.url = info["repository"]["url"]
