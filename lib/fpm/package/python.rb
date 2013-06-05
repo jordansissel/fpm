@@ -200,6 +200,13 @@ class FPM::Package::Python < FPM::Package
           raise FPM::InvalidPackageConfiguration, "Invalid dependency '#{dep}'"
         end
         name, cmp, version = match.captures
+
+        # convert == to =
+        if cmp == "=="
+          @logger.info("Converting == dependency requirement to =", :dependency => dep )
+          cmp = "="
+        end
+
         # dependency name prefixing is optional, if enabled, a name 'foo' will
         # become 'python-foo' (depending on what the python_package_name_prefix
         # is)

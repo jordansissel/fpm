@@ -35,13 +35,8 @@ class get_metadata(Command):
         deps = []
         if dep.specs:
             for operator, version in dep.specs:
-                final_operator = operator
-
-                if operator == "==":
-                    final_operator = "="
-
                 deps.append("%s %s %s" % (dep.project_name,
-                    final_operator, version))
+                        operator, version))
         else:
             deps.append(dep.project_name)
 

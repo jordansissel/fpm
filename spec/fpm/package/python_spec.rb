@@ -69,4 +69,16 @@ describe FPM::Package::Python, :if => python_usable? do
       end
     end
   end
+
+  context "when python_obey_requirements_txt? is true" do
+    before :each do
+      subject.attributes[:python_obey_requirements_txt?] = true
+      subject.attributes[:python_dependencies?] = true
+    end
+
+    it "it should load requirements.txt" do
+      subject.input(example_dir)
+      insist { subject.dependencies.sort } == ["rtxt-dep1 > 0.1", "rtxt-dep2 = 0.1"]
+     end
+  end
 end # describe FPM::Package::Python
