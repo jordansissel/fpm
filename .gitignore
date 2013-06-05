@@ -12,6 +12,8 @@ fpm.wiki
 
 # RVM
 .rvmrc
+.ruby-gemset
+.ruby-version
 
 .yardoc
 coverage
