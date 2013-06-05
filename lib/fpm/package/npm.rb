@@ -71,13 +71,18 @@ class FPM::Package::NPM < FPM::Package
 
     self.description = info["description"]
     # Supposedly you can upload a package for npm with no author/author email 
-    # so I'm being safer with this
+    # so I'm being safer with this. Author can also be a hash or a string
+    self.vendor = "Unknown <unknown@unknown.unknown>"
     if info.include?("author")
       author_info = info["author"]
-      self.vendor = sprintf("%s <%s>", author_info.fetch("name", "unknown"),
-                            author_info.fetch("email", "unknown@unknown.unknown"))
-    else
-      self.vendor = "Unknown <unknown@unknown.unknown>"
+      # If a hash, assemble into a string
+      if author_info.respond_to? :fetch
+        self.vendor = sprintf("%s <%s>", author_info.fetch("name", "unknown"),
+                              author_info.fetch("email", "unknown@unknown.unknown"))
+      else
+        # Probably will need a better check for validity here
+        self.vendor = author_info unless author_info == ""
+      end
     end
 
     # npm installs dependencies in the module itself, so if you do
