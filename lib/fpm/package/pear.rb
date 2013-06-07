@@ -60,8 +60,7 @@ class FPM::Package::PEAR < FPM::Package
     if !attributes[:pear_channel].nil?
       @logger.info("Custom channel specified", :channel => attributes[:pear_channel])
       channel_list = safesystemout("pear", "-c", config, "list-channels")
-
-      if !channel_list =~ /#{Regexp.quote(attributes[:pear_channel])}/
+      if channel_list !~ /#{Regexp.quote(attributes[:pear_channel])}/
         @logger.info("Discovering new channel", :channel => attributes[:pear_channel])
         safesystem("pear", "-c", config, "channel-discover", attributes[:pear_channel])
       end
