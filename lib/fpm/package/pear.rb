@@ -93,10 +93,9 @@ class FPM::Package::PEAR < FPM::Package
     # Remove the stuff we don't want
     delete_these = [".depdb", ".depdblock", ".filemap", ".lock", ".channel", "cache", "temp", "download", ".channels", ".registry"]
     Find.find(staging_path) do |path|
-      if File.file?(path) && File.executable?(path)
-        @logger.info("replacing pear_dir in binary", :binary => path)
-        staging_path_re = Regexp.new("^" + Regexp.escape(staging_path))
-        content = File.read(path).gsub(staging_path_re, "")
+      if File.file?(path)
+        @logger.info("replacing staging_path in file", :replace_in => path, :staging_path => staging_path)
+        content = File.read(path).gsub(/#{Regexp.escape(staging_path)}/, "")
         File.write(path, content)
       end
       FileUtils.rm_r(path) if delete_these.include?(File.basename(path))
