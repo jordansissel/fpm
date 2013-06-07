@@ -25,6 +25,9 @@ class FPM::Package::PEAR < FPM::Package
   option "--php-dir", "PHP_DIR",
     "Specify php dir relative to prefix if differs from pear default (pear/php)"
 
+  option "--data-dir", "DATA_DIR",
+    "Specify php dir relative to prefix if differs from pear default (pear/data)"
+
   # Input a PEAR package.
   #
   # The parameter is a PHP PEAR package name.
@@ -46,6 +49,11 @@ class FPM::Package::PEAR < FPM::Package
     if attributes[:pear_php_dir]
       @logger.info("Setting php_dir", :php_dir => attributes[:pear_php_dir])
       safesystem("pear", "-c", config, "config-set", "php_dir", "#{staging_path(installroot)}/#{attributes[:pear_php_dir]}")
+    end
+
+    if attributes[:pear_data_dir]
+      @logger.info("Setting data_dir", :data_dir => attributes[:pear_data_dir])
+      safesystem("pear", "-c", config, "config-set", "data_dir", "#{staging_path(installroot)}/#{attributes[:pear_data_dir]}")
     end
 
     bin_dir = attributes[:pear_bin_dir] || "usr/bin"
