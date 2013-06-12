@@ -49,10 +49,11 @@ class FPM::Package::Tar < FPM::Package
   def output(output_path)
     output_check(output_path)
     # Unpack the tarball to the staging path
-    args = ["-cf", output_path, "-C", staging_path, "."]
+    args = ["-cf", output_path, "-C", staging_path]
     with(tar_compression_flag(output_path)) do |flag|
       args << flag unless flag.nil?
     end
+    args << "."
 
     safesystem("tar", *args)
   end # def output
