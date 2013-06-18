@@ -162,7 +162,7 @@ class FPM::Package::CPAN < FPM::Package
 
       # Fix any files likely to cause conflicts. 
       # https://github.com/jordansissel/fpm/issues/443
-      ::Dir.glob(File.join(staging_path, prefix, "lib/perl/*/perllocal.pod")).each do |path|
+      ::Dir.glob(File.join(staging_path, prefix, "lib*/perl/*/perllocal.pod")).each do |path|
         @logger.debug("Removing useless file.",
                       :path => path.gsub(staging_path, ""))
         File.unlink(path)
