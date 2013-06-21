@@ -163,7 +163,8 @@ class FPM::Package::Gem < FPM::Package
     if attributes.include?(:prefix) && ! attributes[:prefix].nil?
       installdir = "#{staging_path}/#{attributes[:prefix]}"
     else
-      installdir = File.join(staging_path, ::Gem::dir)
+      gemdir = safesystemout("#{attributes[:gem_gem]} env gemdir").chomp
+      installdir = File.join(staging_path, gemdir)
     end
 
     ::FileUtils.mkdir_p(installdir)
