@@ -24,12 +24,12 @@ class FPM::Package::CPAN < FPM::Package
         "me know by filing an issue: " \
         "https://github.com/jordansissel/fpm/issues"
     end
-    require "ftw" # for http access
+    #require "ftw" # for http access
+    require "net/http"
     require "json"
 
-    agent = FTW::Agent.new
-    result = search(package, agent)
-    tarball = download(result, agent)
+    result = search(package)
+    tarball = download(result)
     moduledir = unpack(tarball)
 
     # Read package metadata (name, version, etc)
@@ -86,7 +86,7 @@ class FPM::Package::CPAN < FPM::Package
             self.dependencies << "#{dep_name} >= #{version}"
             next
           end
-          dep = search(dep_name, agent)
+          dep = search(dep_name)
           
           if dep.include?("distribution")
             name = fix_name(dep["distribution"])
@@ -194,7 +194,7 @@ class FPM::Package::CPAN < FPM::Package
     return directory
   end
 
-  def download(metadata, agent)
+  def download(metadata)
     distribution = metadata["distribution"]
     author = metadata["author"]
     @logger.info("Downloading perl module",
@@ -207,31 +207,40 @@ class FPM::Package::CPAN < FPM::Package
     tarball = "#{distribution}-#{version}.tar.gz"
     url = "http://www.cpan.org/CPAN/authors/id/#{author[0,1]}/#{author[0,2]}/#{author}/#{tarball}"
     @logger.debug("Fetching perl module", :url => url)
-    response = agent.get!(url)
-    if response.error?
-      @logger.error("Download failed", :error => response.status_line,
+    
+    begin
+      response = httpfetch(url)
+    rescue Net::HTTPServerException
+      #@logger.error("Download failed", :error => response.status_line,
+                    #:url => url)
+      @logger.error("Download failed", :error => response.message,
                     :url => url)
       raise FPM::InvalidPackageConfiguration, "metacpan query failed"
     end
 
     File.open(build_path(tarball), "w") do |fd|
-      response.read_body { |c| fd.write(c) }
+      #response.read_body { |c| fd.write(c) }
+      fd.write(response.body)
     end
     return build_path(tarball)
   end # def download
 
-  def search(package, agent)
+  def search(package)
     @logger.info("Asking metacpan about a module", :module => package)
     metacpan_url = "http://api.metacpan.org/v0/module/" + package
-    response = agent.get!(metacpan_url)
-    if response.error?
-      @logger.error("metacpan query failed.", :error => response.status_line,
+    begin
+      response = httpfetch(metacpan_url)
+    rescue Net::HTTPServerException
+      #@logger.error("metacpan query failed.", :error => response.status_line,
+                    #:module => package, :url => metacpan_url)
+      @logger.error("metacpan query failed.", :error => response.message,
                     :module => package, :url => metacpan_url)
       raise FPM::InvalidPackageConfiguration, "metacpan query failed"
     end
 
-    data = ""
-    response.read_body { |c| data << c }
+    #data = ""
+    #response.read_body { |c| p c; data << c }
+    data = response.body
     metadata = JSON.parse(data)
     return metadata
   end # def metadata
@@ -239,6 +248,17 @@ class FPM::Package::CPAN < FPM::Package
   def fix_name(name)
     return [attributes[:cpan_package_name_prefix], name].join("-").gsub("::", "-")
   end # def fix_name
+
+  def httpfetch(url)
+    uri = URI.parse(url)
+    http = Net::HTTP.new(uri.host, uri.port)
+    response = http.request(Net::HTTP::Get.new(uri.request_uri))
+    case response
+      when Net::HTTPSuccess; return response
+      when Net::HTTPRedirection; return httpfetch(response["location"])
+      else; response.error!
+    end
+  end
 
   public(:input)
 end # class FPM::Package::NPM
