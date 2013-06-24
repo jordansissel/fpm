@@ -1,3 +1,10 @@
+0.4.38 (June 24, 2013)
+  - cpan: fpm's cpan code now works under ruby 1.8.7
+  - python: fix a bug in dependency handling (#461, Pranay Kanwar)
+  - pear: Added --pear-data-dir flag (#465, Zsolt Takács)
+  - cpan: fix a bug with some clean up on certain 64bit systems
+  - gem: improve detection of the gem bin install path (#476, Tray Torrance)
+
 0.4.37 (May 30, 2013)
   - deb: fix creation failures on OS X (#450, patch by Anthony Scalisi and
     Matthew M. Boedicker)
