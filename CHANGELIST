@@ -4,6 +4,8 @@
   - pear: Added --pear-data-dir flag (#465, Zsolt Takács)
   - cpan: fix a bug with some clean up on certain 64bit systems
   - gem: improve detection of the gem bin install path (#476, Tray Torrance)
+  - rpm: fix bug when calling using --rpm-use-file-permissions 
+    (#464, Rich Horwood)
 
 0.4.37 (May 30, 2013)
   - deb: fix creation failures on OS X (#450, patch by Anthony Scalisi and
