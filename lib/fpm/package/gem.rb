@@ -163,7 +163,8 @@ class FPM::Package::Gem < FPM::Package
     if attributes.include?(:prefix) && ! attributes[:prefix].nil?
       installdir = "#{staging_path}/#{attributes[:prefix]}"
     else
-      installdir = File.join(staging_path, ::Gem::dir)
+      gemdir = safesystemout(*[attributes[:gem_gem], 'env', 'gemdir']).chomp
+      installdir = File.join(staging_path, gemdir)
     end
 
     ::FileUtils.mkdir_p(installdir)
@@ -175,10 +176,13 @@ class FPM::Package::Gem < FPM::Package
     end
     if attributes[:gem_bin_path]
       bin_path = File.join(staging_path, attributes[:gem_bin_path])
-      args += ["--bindir", bin_path]
-      ::FileUtils.mkdir_p(bin_path)
+    else
+      gem_env  = safesystemout(*[attributes[:gem_gem], 'env']).split("\n")
+      bin_path = gem_env.select{ |line| line =~ /EXECUTABLE DIRECTORY/ }.first.split(': ').last
     end
 
+    args += ["--bindir", bin_path]
+    ::FileUtils.mkdir_p(bin_path)
     args << gem_path
     safesystem(*args)
   end # def install_to_staging
