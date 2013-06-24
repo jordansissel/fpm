@@ -16,8 +16,7 @@ require "yaml"
 # * :gem_gem
 class FPM::Package::Gem < FPM::Package
   # Flags '--foo' will be accessable  as attributes[:gem_foo]
-  option "--bin-path", "DIRECTORY", "The directory to install gem executables",
-    :default => ::Gem::bindir
+  option "--bin-path", "DIRECTORY", "The directory to install gem executables"
   option "--package-prefix", "NAMEPREFIX",
     "(DEPRECATED, use --package-name-prefix) Name to prefix the package " \
     "name with." do |value|
@@ -174,11 +173,13 @@ class FPM::Package::Gem < FPM::Package
     if attributes[:gem_env_shebang?]
       args += ["-E"]
     end
-    if attributes[:gem_bin_path]
+
+    if attributes.include?(:gem_bin_path) && ! attributes[:gem_bin_path].nil?
       bin_path = File.join(staging_path, attributes[:gem_bin_path])
     else
       gem_env  = safesystemout(*[attributes[:gem_gem], 'env']).split("\n")
-      bin_path = gem_env.select{ |line| line =~ /EXECUTABLE DIRECTORY/ }.first.split(': ').last
+      gem_bin  = gem_env.select{ |line| line =~ /EXECUTABLE DIRECTORY/ }.first.split(': ').last
+      bin_path = File.join(staging_path, gem_bin)
     end
 
     args += ["--bindir", bin_path]
