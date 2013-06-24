@@ -25,6 +25,9 @@ class FPM::Package::PEAR < FPM::Package
   option "--php-dir", "PHP_DIR",
     "Specify php dir relative to prefix if differs from pear default (pear/php)"
 
+  option "--data-dir", "DATA_DIR",
+    "Specify php dir relative to prefix if differs from pear default (pear/data)"
+
   # Input a PEAR package.
   #
   # The parameter is a PHP PEAR package name.
@@ -48,6 +51,11 @@ class FPM::Package::PEAR < FPM::Package
       safesystem("pear", "-c", config, "config-set", "php_dir", "#{staging_path(installroot)}/#{attributes[:pear_php_dir]}")
     end
 
+    if attributes[:pear_data_dir]
+      @logger.info("Setting data_dir", :data_dir => attributes[:pear_data_dir])
+      safesystem("pear", "-c", config, "config-set", "data_dir", "#{staging_path(installroot)}/#{attributes[:pear_data_dir]}")
+    end
+
     bin_dir = attributes[:pear_bin_dir] || "usr/bin"
     @logger.info("Setting bin_dir", :bin_dir => bin_dir)
     safesystem("pear", "-c", config, "config-set", "bin_dir", bin_dir)
@@ -60,8 +68,7 @@ class FPM::Package::PEAR < FPM::Package
     if !attributes[:pear_channel].nil?
       @logger.info("Custom channel specified", :channel => attributes[:pear_channel])
       channel_list = safesystemout("pear", "-c", config, "list-channels")
-
-      if !channel_list =~ /#{Regexp.quote(attributes[:pear_channel])}/
+      if channel_list !~ /#{Regexp.quote(attributes[:pear_channel])}/
         @logger.info("Discovering new channel", :channel => attributes[:pear_channel])
         safesystem("pear", "-c", config, "channel-discover", attributes[:pear_channel])
       end
@@ -94,11 +101,14 @@ class FPM::Package::PEAR < FPM::Package
     # Remove the stuff we don't want
     delete_these = [".depdb", ".depdblock", ".filemap", ".lock", ".channel", "cache", "temp", "download", ".channels", ".registry"]
     Find.find(staging_path) do |path|
-      if File.file?(path) && File.executable?(path)
-        @logger.info("replacing pear_dir in binary", :binary => path)
-        staging_path_re = Regexp.new("^" + Regexp.escape(staging_path))
-        content = File.read(path).gsub(staging_path_re, "")
-        File.write(path, content)
+      if File.file?(path)
+        @logger.info("replacing staging_path in file", :replace_in => path, :staging_path => staging_path)
+        begin
+          content = File.read(path).gsub(/#{Regexp.escape(staging_path)}/, "")
+          File.write(path, content)
+        rescue ArgumentError
+          @logger.warn("error replacing staging_path in file", :replace_in => path)
+        end
       end
       FileUtils.rm_r(path) if delete_these.include?(File.basename(path))
     end
