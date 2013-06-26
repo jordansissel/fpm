@@ -108,6 +108,10 @@ class FPM::Package::Deb < FPM::Package
     "See the following url for a description of this file and its format: " \
     "http://www.debian.org/doc/debian-policy/ch-sharedlibs.html#s-shlibs"
 
+  option "--init", "FILEPATH", "Add FILEPATH as an init script" do |file|
+    File.expand_path(file)
+  end
+
   def initialize(*args)
     super(*args)
     attributes[:deb_priority] = "extra"
@@ -341,6 +345,13 @@ class FPM::Package::Deb < FPM::Package
       FileUtils.cp attributes[:deb_changelog], dest_changelog
       File.chmod(0644, dest_changelog)
       safesystem("gzip", dest_changelog)
+    end
+
+    if attributes[:deb_init]
+      dest_init = File.join(staging_path, "etc/init.d/#{attributes[:name]}")
+      FileUtils.mkdir_p(File.dirname(dest_init))
+      FileUtils.cp attributes[:deb_init], dest_init
+      File.chmod(0755, dest_init)
     end
 
     args = [ tar_cmd, "-C", staging_path, compression ] + tar_flags + [ "-cf", datatar, "." ]
