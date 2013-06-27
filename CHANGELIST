@@ -1,3 +1,7 @@
+0.4.39 (June 27, 2013)
+  - cpan: support more complex dependency specifications (reported by Mabi
+    Knittel)
+  
 0.4.38 (June 24, 2013)
   - cpan: fpm's cpan code now works under ruby 1.8.7
   - python: fix a bug in dependency handling (#461, Pranay Kanwar)
