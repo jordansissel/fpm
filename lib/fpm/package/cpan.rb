@@ -218,11 +218,10 @@ class FPM::Package::CPAN < FPM::Package
     
     begin
       response = httpfetch(url)
-    rescue Net::HTTPServerException
+    rescue Net::HTTPServerException => e
       #@logger.error("Download failed", :error => response.status_line,
                     #:url => url)
-      @logger.error("Download failed", :error => response.message,
-                    :url => url)
+      @logger.error("Download failed", :error => e, :url => url)
       raise FPM::InvalidPackageConfiguration, "metacpan query failed"
     end
 
