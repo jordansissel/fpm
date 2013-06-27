@@ -98,7 +98,15 @@ class FPM::Package::CPAN < FPM::Package
             # Assume 'Foo = 0' means any version?
             self.dependencies << "#{name}"
           else
-            self.dependencies << "#{name} = #{version}"
+            # The 'version' string can be something complex like:
+            #   ">= 0, != 1.0, != 1.2"
+            version.split(/\s*,\s*/).each do |v|
+              if v =~ /\s*[><=]/
+                self.dependencies << "#{name} #{v}"
+              else
+                self.dependencies << "#{name} = #{v}"
+              end
+            end
           end
         end
       end
