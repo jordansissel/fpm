@@ -100,12 +100,16 @@ class FPM::Package::CPAN < FPM::Package
           else
             # The 'version' string can be something complex like:
             #   ">= 0, != 1.0, != 1.2"
-            version.split(/\s*,\s*/).each do |v|
-              if v =~ /\s*[><=]/
-                self.dependencies << "#{name} #{v}"
-              else
-                self.dependencies << "#{name} = #{v}"
+            if version.is_a?(String)
+              version.split(/\s*,\s*/).each do |v|
+                if v =~ /\s*[><=]/
+                  self.dependencies << "#{name} #{v}"
+                else
+                  self.dependencies << "#{name} = #{v}"
+                end
               end
+            else
+              self.dependencies << "#{name} >= #{version}"
             end
           end
         end
