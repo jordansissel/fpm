@@ -49,7 +49,7 @@ class FPM::Package::Python < FPM::Package
     "be in lowercase?", :default => true
 
   option "--install-bin", "BIN_PATH", "The path to where python scripts " \
-    "should be installed to.", :default => "/usr/bin"
+    "should be installed to."
   option "--install-lib", "LIB_PATH", "The path to where python libs " \
     "should be installed to (default depends on your python installation). " \
     "Want to what your target platform is using? Run this: " \
