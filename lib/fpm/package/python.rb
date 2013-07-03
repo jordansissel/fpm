@@ -163,7 +163,7 @@ class FPM::Package::Python < FPM::Package
       output = %x{#{setup_cmd}}
       if !$?.success?
         @logger.error("setup.py get_metadata failed", :command => setup_cmd,
-                      :exitcode => $?.exitcode)
+                      :exitcode => $?.exitstatus)
         raise "An unexpected error occurred while processing the setup.py file"
       end
       output
