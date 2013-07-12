@@ -42,14 +42,11 @@ Gem::Specification.new do |spec|
   # For starting external processes across various ruby interpreters
   spec.add_dependency("childprocess") # license: ???
 
-  # For simple shell/file hackery in the tests. 
-  # http://rush.heroku.com/rdoc/
-  spec.add_development_dependency("rush") # license: MIT
-
   spec.add_development_dependency("rspec") # license: MIT (according to wikipedia)
   spec.add_development_dependency("insist", "~> 0.0.5") # license: ???
   spec.add_development_dependency("minitest")
   spec.add_development_dependency("pry")
+  spec.add_development_dependency("stud")
 
   spec.files = files
   spec.require_paths << "lib"

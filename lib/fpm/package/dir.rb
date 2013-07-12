@@ -14,6 +14,15 @@ class FPM::Package::Dir < FPM::Package
 
   # Add a new path to this package.
   #
+  # A special handling of the path occurs if it includes a '=' symbol.
+  # You can say "source=destination" and it will copy files from that source
+  # to the given destination in the package.
+  #
+  # This lets you take a local directory and map it to the desired location at
+  # packaging time. Such as: "./src/redis-server=/usr/local/bin" will make
+  # the local file ./src/redis-server appear as /usr/local/bin/redis-server in
+  # your package.
+  #
   # If the path is a directory, it is copied recursively. The behavior
   # of the copying is modified by the :chdir and :prefix attributes.
   #
@@ -27,14 +36,38 @@ class FPM::Package::Dir < FPM::Package
   #     package.attributes[:chdir] = "/etc"
   #     package.input("X11")
   def input(path)
-    @logger.debug("Copying", :input => path)
-    @logger["method"] = "input"
-    ::Dir.chdir(@attributes[:chdir] || ".") do
-      if @attributes[:prefix]
-        clone(path, File.join(staging_path, @attributes[:prefix]))
+    chdir = attributes[:chdir] || "."
+
+    # Support mapping source=dest
+    if path =~ /.=./
+      origin, destination = path.split("=", 2)
+
+      # file -> directory
+      #   ./some/file=/usr/local should result in /usr/local/file
+      # directory -> directory
+      #   ./some=/usr/local should result in /usr/local/...
+      #   if ./some/file, then /usr/local/file
+      if File.directory?(origin)
+        chdir = origin
+        source = "."
       else
-        clone(path, staging_path)
+        chdir = File.dirname(origin)
+        source = File.basename(origin)
       end
+    else
+      source, destination = path, "/"
+    end
+
+    if attributes[:prefix]
+      destination = File.join(attributes[:prefix], destination)
+    end
+
+    destination = File.join(staging_path, destination)
+
+    @logger["method"] = "input"
+    @logger.debug("Copying", :input => source, :output => destination)
+    ::Dir.chdir(chdir) do
+      clone(source, destination)
     end
 
     # Set some defaults. This is useful because other package types
@@ -75,7 +108,7 @@ class FPM::Package::Dir < FPM::Package
   # /tmp/example/hello/world
   def clone(source, destination)
     # Copy all files from 'path' into staging_path
-
+    #p :clone => { source => destination } 
     Find.find(source) do |path|
       target = File.join(destination, path)
       copy(path, target)

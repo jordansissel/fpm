@@ -1,6 +1,5 @@
 require "rubygems" # for ruby 1.8
 require "insist" # gem "insist"
-require "rush" # gem "rush"
 require "cabin" # gem "cabin"
 require "tmpdir" # stdlib
 require "tempfile" # stdlib
