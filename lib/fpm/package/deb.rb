@@ -108,16 +108,19 @@ class FPM::Package::Deb < FPM::Package
     "See the following url for a description of this file and its format: " \
     "http://www.debian.org/doc/debian-policy/ch-sharedlibs.html#s-shlibs"
 
-  option "--init", "FILEPATH", "Add FILEPATH as an init script" do |file|
-    File.expand_path(file)
+  option "--init", "FILEPATH", "Add FILEPATH as an init script",
+	:multivalued => true do |file|
+    next File.expand_path(file)
   end
 
-  option "--default", "FILEPATH", "Add FILEPATH as /etc/default configuration" do |file|
-    File.expand_path(file)
+  option "--default", "FILEPATH", "Add FILEPATH as /etc/default configuration",
+	:multivalued => true do |file|
+    next File.expand_path(file)
   end
 
-  option "--upstart", "FILEPATH", "Add FILEPATH as an upstart script" do |file|
-    File.expand_path(file)
+  option "--upstart", "FILEPATH", "Add FILEPATH as an upstart script",
+	:multivalued => true do |file|
+    next File.expand_path(file)
   end
 
   def initialize(*args)
@@ -355,24 +358,27 @@ class FPM::Package::Deb < FPM::Package
       safesystem("gzip", dest_changelog)
     end
 
-    if attributes[:deb_init]
-      dest_init = File.join(staging_path, "etc/init.d/#{attributes[:name]}")
+    attributes.fetch(:deb_init_list, []).each do |init|
+      name = File.basename(init, ".init")
+      dest_init = File.join(staging_path, "etc/init.d/#{name}")
       FileUtils.mkdir_p(File.dirname(dest_init))
-      FileUtils.cp attributes[:deb_init], dest_init
+      FileUtils.cp init, dest_init
       File.chmod(0755, dest_init)
     end
 
-    if attributes[:deb_default]
-      dest_default = File.join(staging_path, "etc/default/#{attributes[:name]}")
+    attributes.fetch(:deb_default_list, []).each do |default|
+      name = File.basename(default, ".default")
+      dest_default = File.join(staging_path, "etc/default/#{name}")
       FileUtils.mkdir_p(File.dirname(dest_default))
-      FileUtils.cp attributes[:deb_default], dest_default
+      FileUtils.cp default, dest_default
       File.chmod(0644, dest_default)
     end
 
-    if attributes[:deb_upstart]
-      dest_upstart = File.join(staging_path, "etc/init/#{attributes[:name]}.conf")
+    attributes.fetch(:deb_upstart_list, []).each do |upstart|
+      name = File.basename(upstart, ".upstart")
+      dest_upstart = File.join(staging_path, "etc/init/#{name}.conf")
       FileUtils.mkdir_p(File.dirname(dest_upstart))
-      FileUtils.cp attributes[:deb_upstart], dest_upstart
+      FileUtils.cp upstart, dest_upstart
       File.chmod(0644, dest_upstart)
     end
 
