@@ -1,3 +1,16 @@
+0.4.40 (July 12, 2013)
+  - dir: supports mapping one path to another.
+    You set mappings by using 'source=destination' syntax. For example:
+    % fpm -s dir -t deb -n example /home/jls/.zshrc=/etc/skel/
+    The key above is the '=' symbol. The result of the above will be a package
+    containing only /etc/skel/.zshrc
+    For more, see https://github.com/jordansissel/fpm/wiki/Source:-dir#mapping
+  - python: the default scripts location is now chosen by python itself. The
+    previous default was "/usr/bin" and was not a good default. (#480)
+  - rpm: config files should have attributes (#484, patch by adamcstephens)
+  - python: correctly log the python setup.py exit code (#481, patch by Derek
+    Ludwig)
+
 0.4.39 (June 27, 2013)
   - cpan: support more complex dependency specifications (reported by Mabi
     Knittel)
