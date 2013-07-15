@@ -47,6 +47,7 @@ class FPM::Package::CPAN < FPM::Package
 
     self.license = case metadata["license"]
       when Array; metadata["license"].first
+      when nil; "unknown"
       else; metadata["license"]
     end
 
