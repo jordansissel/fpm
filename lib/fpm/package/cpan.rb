@@ -261,8 +261,11 @@ class FPM::Package::CPAN < FPM::Package
   end # def fix_name
 
   def httpfetch(url)
+    if ENV['http_proxy']
+        proxy = URI.parse(ENV['http_proxy'])
+    end
     uri = URI.parse(url)
-    http = Net::HTTP.new(uri.host, uri.port)
+    http = Net::HTTP.Proxy(proxy.host,proxy.port,proxy.user,proxy.password).new(uri.host, uri.port)
     response = http.request(Net::HTTP::Get.new(uri.request_uri))
     case response
       when Net::HTTPSuccess; return response
