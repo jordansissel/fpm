@@ -16,6 +16,7 @@ Gem::Specification.new do |spec|
   spec.description = "Convert directories, rpms, python eggs, rubygems, and " \
     "more to rpms, debs, solaris packages and more. Win at package " \
     "management without wasting pointless hours debugging bad rpm specs!"
+  spec.license = "MIT-like"
 
   # For parsing JSON (required for some Python support, etc)
   # http://flori.github.com/json/doc/index.html
