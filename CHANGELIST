@@ -1,3 +1,7 @@
+0.4.41 (July 17, 2013)
+  - cpan: handle cases where modules don't specify a license
+  - deb: support multiple init scripts (#487, patch by Kristian Glass)
+
 0.4.40 (July 12, 2013)
   - dir: supports mapping one path to another.
     You set mappings by using 'source=destination' syntax. For example:
