@@ -365,14 +365,14 @@ class FPM::Package
       installdir = staging_path
     end
 
-    Find.find(staging_path) do |path|
-      match_path = path.sub("#{staging_path}/", '')
+    Find.find(installdir) do |path|
+      match_path = path.sub("#{installdir}/", '')
 
       attributes[:excludes].each do |wildcard|
-        @logger.debug("Checking path against wildcard", :path => path, :wildcard => wildcard)
+        @logger.debug("Checking path against wildcard", :path => match_path, :wildcard => wildcard)
 
         if File.fnmatch(wildcard, match_path)
-          @logger.info("Removing excluded path", :path => path, :matches => wildcard)
+          @logger.info("Removing excluded path", :path => match_path, :matches => wildcard)
           FileUtils.remove_entry_secure(path)
           Find.prune
           break
