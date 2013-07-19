@@ -24,10 +24,38 @@ describe FPM::Package::Python, :if => python_usable? do
     before :each do
       subject.attributes[:python_downcase_name?] = false
     end
-    
-    it "should leave the package name as is" do
-      subject.input(example_dir)
-      insist { subject.name } == "Example"
+
+    context "when :python_fix_name? is true" do
+      before :each do
+        subject.attributes[:python_fix_name?] = true
+      end
+
+      context "and :python_package_name_prefix is nil/default" do
+        it "should prefix the package with 'python-'" do
+          subject.input(example_dir)
+          insist { subject.name } == "python-Example"
+        end
+      end
+
+      context "and :python_package_name_prefix is set" do
+        it "should prefix the package name appropriately" do
+          prefix = "whoa"
+          subject.attributes[:python_package_name_prefix] = prefix
+          subject.input(example_dir)
+          insist { subject.name } == "#{prefix}-Example"
+        end
+      end
+    end
+
+    context "when :python_fix_name? is false" do
+      before :each do
+        subject.attributes[:python_fix_name?] = false
+      end
+
+      it "should leave the package name as is" do
+        subject.input(example_dir)
+        insist { subject.name } == "Example"
+      end
     end
   end
 
@@ -76,9 +104,26 @@ describe FPM::Package::Python, :if => python_usable? do
       subject.attributes[:python_dependencies?] = true
     end
 
-    it "it should load requirements.txt" do
-      subject.input(example_dir)
-      insist { subject.dependencies.sort } == ["rtxt-dep1 > 0.1", "rtxt-dep2 = 0.1"]
-     end
+    context "and :python_fix_dependencies? is true" do
+      before :each do
+        subject.attributes[:python_fix_dependencies?] = true
+      end
+
+      it "it should prefix requirements.txt" do
+        subject.input(example_dir)
+        insist { subject.dependencies.sort } == ["python-rtxt-dep1 > 0.1", "python-rtxt-dep2 = 0.1"]
+      end
+    end
+
+    context "and :python_fix_dependencies? is false" do
+      before :each do
+        subject.attributes[:python_fix_dependencies?] = false
+      end
+
+      it "it should load requirements.txt" do
+        subject.input(example_dir)
+        insist { subject.dependencies.sort } == ["rtxt-dep1 > 0.1", "rtxt-dep2 = 0.1"]
+      end
+    end
   end
 end # describe FPM::Package::Python

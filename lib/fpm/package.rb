@@ -436,7 +436,7 @@ class FPM::Package
     def default_attributes(&block)
       return if @options.nil?
       @options.each do |flag, param, help, options, block|
-        attr = flag.first.gsub(/^-+/, "").gsub(/-/, "_")
+        attr = flag.first.gsub(/^-+/, "").gsub(/-/, "_").gsub("[no_]", "")
         attr += "?" if param == :flag
         yield attr.to_sym, options[:default]
       end
