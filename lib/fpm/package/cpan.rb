@@ -242,10 +242,10 @@ class FPM::Package::CPAN < FPM::Package
     metacpan_url = "http://api.metacpan.org/v0/module/" + package
     begin
       response = httpfetch(metacpan_url)
-    rescue Net::HTTPServerException
+    rescue Net::HTTPServerException => e
       #@logger.error("metacpan query failed.", :error => response.status_line,
                     #:module => package, :url => metacpan_url)
-      @logger.error("metacpan query failed.", :error => response.message,
+      @logger.error("metacpan query failed.", :error => e.message,
                     :module => package, :url => metacpan_url)
       raise FPM::InvalidPackageConfiguration, "metacpan query failed"
     end
