@@ -267,7 +267,7 @@ class FPM::Package::CPAN < FPM::Package
                       :path => path.gsub(staging_path, ""))
         File.unlink(path)
       end
-      
+
       # Remove useless .packlist files and their empty parent folders
       # https://github.com/jordansissel/fpm/issues/1179
       ::Dir.glob(File.join(staging_path, glob_prefix, "**/.packlist")).each do |path|
@@ -323,7 +323,7 @@ class FPM::Package::CPAN < FPM::Package
     else
       self.version = "#{cpan_version}"
     end
-    
+
     # Search metacpan to get download URL for this version of the module
     metacpan_search_url = "https://fastapi.metacpan.org/v1/release/_search"
     metacpan_search_query = '{"fields":["download_url"],"filter":{"term":{"name":"' + "#{distribution}-#{self.version}" + '"}}}'
