@@ -218,7 +218,8 @@ class FPM::Package::CPAN < FPM::Package
     version = metadata["version"] if version.nil?
 
     tarball = "#{distribution}-#{version}.tar.gz"
-    url = "http://www.cpan.org/CPAN/authors/id/#{author[0,1]}/#{author[0,2]}/#{author}/#{tarball}"
+    #url = "http://www.cpan.org/CPAN/authors/id/#{author[0,1]}/#{author[0,2]}/#{author}/#{tarball}"
+    url = "http://www.cpan.org/authors/id/#{author[0,1]}/#{author[0,2]}/#{author}/#{tarball}"
     @logger.debug("Fetching perl module", :url => url)
     
     begin
