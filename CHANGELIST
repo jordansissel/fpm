@@ -1,3 +1,7 @@
+?.?.? (????)
+  - dir: make source=destination mappings behave the same way 'rsync -a' does
+    with respect to the paths in copying files/directories/etc.
+
 0.4.41 (July 17, 2013)
   - cpan: handle cases where modules don't specify a license
   - deb: support multiple init scripts (#487, patch by Kristian Glass)
