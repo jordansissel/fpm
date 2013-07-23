@@ -4,10 +4,10 @@ require "fpm/package/dir" # local
 require "stud/temporary"
 
 describe FPM::Package::Dir do
-  #let(:tmpdir) { Stud::Temporary.directory("tmpdir") }
-  #let(:output) { Stud::Temporary.directory("output") }
-  let(:tmpdir) { ::Dir.mkdir("/tmp/tmpdir"); "/tmp/tmpdir" }
-  let(:output) { ::Dir.mkdir("/tmp/output"); "/tmp/output" }
+  let(:tmpdir) { Stud::Temporary.directory("tmpdir") }
+  let(:output) { Stud::Temporary.directory("output") }
+  #let(:tmpdir) { ::Dir.mkdir("/tmp/tmpdir"); "/tmp/tmpdir" }
+  #let(:output) { ::Dir.mkdir("/tmp/output"); "/tmp/output" }
 
   after :each do
     subject.cleanup
@@ -78,22 +78,24 @@ describe FPM::Package::Dir do
   end
 
   context "path mapping" do
-    it "should map a file -> directory" do
-      file = File.join(tmpdir, "hello")
-      File.write(file, "Hello world")
-      subject.input("#{tmpdir}=/usr/local")
-      subject.output(output)
-      insist { File }.exists?(File.join(output, "/usr/local", "hello"))
-    end
+    # 'rsync -a' semantics
+    mappings = {
+      # this input    => should produce this file
+      "/a/b=/example" => "./example",
+      "/a/b=/example/" => "./example/b",
+      "/a=/example/" => "./example/a/b",
+      "/a=/example" => "./example/a/b",
+      "/a/=/example/" => "./example/b"
+    }
 
-    it "should map a directory -> directory" do
-      file = File.join(tmpdir, "example", "hello")
-      dir = File.dirname(file)
-      ::Dir.mkdir(dir)
-      File.write(file, "Hello world")
-      subject.input("#{tmpdir}=/usr/local")
-      subject.output(output)
-      insist { File }.exists?(File.join(output, "/usr/local", "example", "hello"))
+    mappings.each do |input, expected_file|
+      it "should take #{input} and produce #{expected_file}" do
+        Dir.mkdir(File.join(tmpdir, "a"))
+        File.write(File.join(tmpdir, "a", "b"), "hello world")
+        subject.input(File.join(tmpdir, input))
+        subject.output(output)
+        insist { File }.exist?(File.join(output, expected_file))
+      end
     end
   end
 end # describe FPM::Package::Dir

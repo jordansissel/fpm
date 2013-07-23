@@ -39,48 +39,22 @@ class FPM::Package::Dir < FPM::Package
     chdir = attributes[:chdir] || "."
 
     # Support mapping source=dest
+    # This mapping should work the same way 'rsync -a' does
+    #   Meaning 'rsync -a source dest'
+    #   and 'source=dest' in fpm work the same as the above rsync
     if path =~ /.=./
       origin, destination = path.split("=", 2)
 
-      # file -> directory
-      #   ./some/file=/usr/local should result in /usr/local/file
-      # directory -> directory
-      #   ./some=/usr/local should result in /usr/local/...
-      #   if ./some/file, then /usr/local/file
-
-      # if file?
-      #   ends with "/" => destination/origin
-      #   else destination
-      # else
-      #   ends with "/" => destination/origin
-      #   else destination
-
-      #if File.file?(origin)
-        #chdir = File.dirname(origin)
-        #source = File.basename(origin)
-      #else
-        if File.directory?(origin) && origin[-1,1] == "/"
-          chdir = origin
-          source = "."
-        else
-          chdir = File.dirname(origin)
-          source = File.basename(origin)
-        end
-      #end
-      #p [chdir,source, destination]
-      
-      #if File.directory?(origin)
-        #chdir = origin
-        #source = "."
-      #else
-        #chdir = File.dirname(origin)
-        #source = File.basename(origin)
-      #end
+      if File.directory?(origin) && origin[-1,1] == "/"
+        chdir = origin
+        source = "."
+      else
+        chdir = File.dirname(origin)
+        source = File.basename(origin)
+      end
     else
       source, destination = path, "/"
     end
-
-    p [chdir, source, destination]
 
     if attributes[:prefix]
       destination = File.join(attributes[:prefix], destination)
