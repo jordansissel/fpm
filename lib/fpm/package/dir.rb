@@ -47,16 +47,40 @@ class FPM::Package::Dir < FPM::Package
       # directory -> directory
       #   ./some=/usr/local should result in /usr/local/...
       #   if ./some/file, then /usr/local/file
-      if File.directory?(origin)
-        chdir = origin
-        source = "."
-      else
-        chdir = File.dirname(origin)
-        source = File.basename(origin)
-      end
+
+      # if file?
+      #   ends with "/" => destination/origin
+      #   else destination
+      # else
+      #   ends with "/" => destination/origin
+      #   else destination
+
+      #if File.file?(origin)
+        #chdir = File.dirname(origin)
+        #source = File.basename(origin)
+      #else
+        if File.directory?(origin) && origin[-1,1] == "/"
+          chdir = origin
+          source = "."
+        else
+          chdir = File.dirname(origin)
+          source = File.basename(origin)
+        end
+      #end
+      #p [chdir,source, destination]
+      
+      #if File.directory?(origin)
+        #chdir = origin
+        #source = "."
+      #else
+        #chdir = File.dirname(origin)
+        #source = File.basename(origin)
+      #end
     else
       source, destination = path, "/"
     end
+
+    p [chdir, source, destination]
 
     if attributes[:prefix]
       destination = File.join(attributes[:prefix], destination)
@@ -65,7 +89,6 @@ class FPM::Package::Dir < FPM::Package
     destination = File.join(staging_path, destination)
 
     @logger["method"] = "input"
-    @logger.debug("Copying", :input => source, :output => destination)
     ::Dir.chdir(chdir) do
       clone(source, destination)
     end
@@ -107,11 +130,20 @@ class FPM::Package::Dir < FPM::Package
   # The above will copy, recursively, /tmp/hello/world into
   # /tmp/example/hello/world
   def clone(source, destination)
-    # Copy all files from 'path' into staging_path
-    #p :clone => { source => destination } 
-    Find.find(source) do |path|
-      target = File.join(destination, path)
-      copy(path, target)
+    @logger.debug("Cloning path", :source => source, :destination => destination)
+    # For single file copies, permit file destinations
+    if File.file?(source) && !File.directory?(destination) 
+      if destination[-1,1] == "/"
+        copy(source, File.join(destination, source))
+      else
+        copy(source, destination)
+      end
+    else
+      # Copy all files from 'path' into staging_path
+      Find.find(source) do |path|
+        target = File.join(destination, path)
+        copy(path, target)
+      end
     end
   end # def clone
 
@@ -120,6 +152,7 @@ class FPM::Package::Dir < FPM::Package
   # Files will be hardlinked if possible, but copied otherwise.
   # Symlinks should be copied as symlinks.
   def copy(source, destination)
+    @logger.debug("Copying path", :source => source, :destination => destination)
     directory = File.dirname(destination)
     if !File.directory?(directory)
       FileUtils.mkdir_p(directory)
@@ -149,6 +182,9 @@ class FPM::Package::Dir < FPM::Package
         # Hardlink attempt failed, copy it instead
         @logger.debug("Copying", :source => source, :destination => destination)
         FileUtils.copy_entry(source, destination)
+      rescue Errno::EEXIST
+        sane_path = destination.gsub(staging_path, "")
+        @logger.error("Cannot copy file, the destination path is probably a directory and I attempted to write a file.", :path => sane_path, :staging => staging_path)
       end
     end
 
