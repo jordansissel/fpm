@@ -1,6 +1,6 @@
-?.?.? (????)
+0.4.42 (July 23, 2013)
   - dir: make source=destination mappings behave the same way 'rsync -a' does
-    with respect to the paths in copying files/directories/etc.
+    with respect to source and destination paths.
 
 0.4.41 (July 17, 2013)
   - cpan: handle cases where modules don't specify a license
