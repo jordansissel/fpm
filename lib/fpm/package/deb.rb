@@ -76,9 +76,9 @@ class FPM::Package::Deb < FPM::Package
   option "--priority", "PRIORITY", 
     "The debian package 'priority' value.", :default => "extra"
 
-  option "--user", "USER", "The owner of files in this package"
+  option "--user", "USER", "The owner of files in this package", :default => 'root'
 
-  option "--group", "GROUP", "The group owner of files in this package"
+  option "--group", "GROUP", "The group owner of files in this package", :default => 'root'
 
   option "--changelog", "FILEPATH", "Add FILEPATH as debian changelog" do |file|
     File.expand_path(file)
@@ -340,8 +340,13 @@ class FPM::Package::Deb < FPM::Package
 
     tar_flags = []
     if !attributes[:deb_user].nil?
-      tar_flags += [ "--owner", attributes[:deb_user] ]
+      if attributes[:deb_user] == 'root'
+        tar_flags += [ "--numeric-owner", "--owner", "0" ]
+      else
+        tar_flags += [ "--owner", attributes[:deb_user] ]
+      end
     end
+
     if !attributes[:deb_group].nil?
       if attributes[:deb_group] == 'root'
         tar_flags += [ "--numeric-owner", "--group", "0" ]
