@@ -504,6 +504,9 @@ class FPM::Package::Deb < FPM::Package
   end # def write_control_tarball
 
   def write_control
+    # warn user if epoch is set
+    @logger.warn("epoch in Version is set", :epoch => self.epoch) if self.epoch
+
     # calculate installed-size if necessary:
     if attributes[:deb_installed_size].nil?
       @logger.info("No deb_installed_size set, calculating now.")
