@@ -334,7 +334,17 @@ class FPM::Package::RPM < FPM::Package
       self.directories = alldirs
     end
 
-    self.config_files = self.config_files.map { |x| File.join(self.prefix, x) }
+    # scan all conf file paths for files and add them
+    allconfigs = []
+    self.config_files.each do |path|
+      cfg_path = File.expand_path(path, staging_path)
+      Find.find(cfg_path) do |p|
+        allconfigs << p.gsub("#{staging_path}/", '') if File.file? p
+      end
+    end
+    allconfigs.sort!.uniq!
+
+    self.config_files = allconfigs.map { |x| File.join(self.prefix, x) }
 
     (attributes[:rpm_rpmbuild_define] or []).each do |define|
       args += ["--define", define]
