@@ -557,10 +557,21 @@ class FPM::Package::Deb < FPM::Package
 
   def write_conffiles
     return unless config_files.any?
+
+    # scan all conf file paths for files and add them
+    allconfigs = []
+    config_files.each do |path|
+      cfg_path = File.expand_path(path, staging_path)
+      Find.find(cfg_path) do |p|
+        allconfigs << p.gsub("#{staging_path}/", '') if File.file? p
+      end
+    end
+    allconfigs.sort!.uniq!
+
     File.open(control_path("conffiles"), "w") do |out|
       # 'config_files' comes from FPM::Package and is usually set with
       # FPM::Command's --config-files flag
-      config_files.each { |cf| out.puts(cf) }
+      allconfigs.each { |cf| out.puts(cf) }
     end
   end # def write_conffiles
 
