@@ -46,10 +46,11 @@ class FPM::Package::Dir < FPM::Package
       origin, destination = path.split("=", 2)
 
       if File.directory?(origin) && origin[-1,1] == "/"
-        chdir = origin
+        chdir = chdir == '.' ? origin : File.join(chdir, origin)
         source = "."
       else
-        chdir = File.dirname(origin)
+        origin_dir = File.dirname(origin)
+        chdir = chdir == '.' ? origin_dir : File.join(chdir, origin_dir)
         source = File.basename(origin)
       end
     else
