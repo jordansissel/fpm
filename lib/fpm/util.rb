@@ -1,8 +1,19 @@
 require "fpm/namespace"
 require "childprocess"
+require "ffi"
 
 # Some utility functions
 module FPM::Util
+  extend FFI::Library
+  ffi_lib FFI::Library::LIBC
+
+  # mknod is __xmknod in glibc
+  begin
+    attach_function :mknod, :mknod, [:string, :uint32, :ulong], :int
+  rescue FFI::NotFoundError
+    attach_function :mknod, :__xmknod, [:string, :uint32, :ulong], :int
+  end
+
   # Raised if safesystem cannot find the program to run.
   class ExecutableNotFound < StandardError; end
 
@@ -113,4 +124,18 @@ module FPM::Util
   def with(value, &block)
     block.call(value)
   end # def with
+
+  def copy_entry(src, dst)
+    case File.ftype(src)
+    when 'fifo'
+    when 'characterSpecial'
+    when 'blockSpecial'
+    when 'socket'
+      st = File.stat(src)
+      rc = mknod(dst, st.mode, st.dev)
+      raise SystemCallError.new("mknod error", FFI.errno) if rc == -1
+    else
+      FileUtils.copy_entry(src, dst)
+    end
+  end
 end # module FPM::Util
