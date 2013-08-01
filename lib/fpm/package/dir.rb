@@ -1,4 +1,5 @@
 require "fpm/package"
+require "fpm/util"
 require "backports"
 require "fileutils"
 require "find"
@@ -155,7 +156,7 @@ class FPM::Package::Dir < FPM::Package
       rescue Errno::ENOENT, Errno::EXDEV, Errno::EPERM
         # Hardlink attempt failed, copy it instead
         @logger.debug("Copying", :source => source, :destination => destination)
-        FileUtils.copy_entry(source, destination)
+        copy_entry(source, destination)
       rescue Errno::EEXIST
         sane_path = destination.gsub(staging_path, "")
         @logger.error("Cannot copy file, the destination path is probably a directory and I attempted to write a file.", :path => sane_path, :staging => staging_path)
