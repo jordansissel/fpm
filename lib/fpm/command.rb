@@ -217,8 +217,6 @@ class FPM::Command < Clamp::Command
 
   # Execute this command. See Clamp::Command#execute and Clamp's documentation
   def execute
-    @logger = Cabin::Channel.get
-    @logger.subscribe(STDOUT)
     @logger.level = :warn
 
     if (stray_flags = args.grep(/^-/); stray_flags.any?)
@@ -414,6 +412,29 @@ class FPM::Command < Clamp::Command
     input.cleanup unless input.nil?
     output.cleanup unless output.nil?
   end # def execute
+
+  def run(*args)
+    @logger = Cabin::Channel.get
+    @logger.subscribe(STDOUT)
+
+    # fpm initialization files, note the order of the following array is
+    # important, try .fpm in users home directory first and then the current
+    # directory
+    rc_files = [File.join(ENV['HOME'],'.fpm'), '.fpm']
+
+    rc_files.each do |rc_file|
+      if File.readable? rc_file
+        @logger.warn("Loading flags from rc file #{rc_file}")
+        File.readlines(rc_file).each do |line|
+          Shellwords.shellsplit(line).each do |e|
+            ARGV << e
+          end
+        end
+      end
+    end
+
+    super(*args)
+  end # def run
 
   # A simple flag validator
   #
