@@ -463,6 +463,10 @@ class FPM::Package::Deb < FPM::Package
       nextversion[-1] += 1
       nextversion = nextversion.join(".")
       return ["#{name} (>= #{version})", "#{name} (<< #{nextversion})"]
+    elsif (m = dep.match(/(\S+)\s+\(> (.+)\)/))
+      # Convert 'foo (> x) to 'foo (>> x)'
+      name, version = m[1..2]
+      return ["#{name} (>> #{version})"]
     else
       # otherwise the dep is probably fine
       return dep.rstrip
