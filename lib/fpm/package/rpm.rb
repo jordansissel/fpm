@@ -113,6 +113,11 @@ class FPM::Package::RPM < FPM::Package
     next rpmbuild_filter_from_requires
   end
 
+  option "--ignore-iteration-in-dependencies", :flag,
+            "For '=' (equal) dependencies, allow iterations on the specified " \
+            "version. Default is to be specific. This option allows the same " \
+            "version of a package but any iteration is permitted"
+
   private
 
   # Fix path name
@@ -227,6 +232,23 @@ class FPM::Package::RPM < FPM::Package
       else
         dep
       end
+    end
+
+    # if --ignore-iteration-in-dependencies is true convert foo = X, to
+    # foo >= X , foo < X+1
+    if self.attributes[:rpm_ignore_iteration_in_dependencies?]
+      self.dependencies = self.dependencies.collect do |dep|
+        name, op, version = dep.split(/\s+/)
+        if op == '='
+          nextversion = version.split('.').collect { |v| v.to_i }
+          nextversion[-1] += 1
+          nextversion = nextversion.join(".")
+          @logger.warn("Converting dependency #{dep} to #{name} >= #{version}, #{name} < #{nextversion}")
+          ["#{name} >= #{version}", "#{name} < #{nextversion}"]
+        else
+          dep
+        end
+      end.flatten
     end
 
   end # def converted
