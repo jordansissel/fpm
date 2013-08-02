@@ -259,7 +259,10 @@ class FPM::Package::CPAN < FPM::Package
   end # def metadata
 
   def fix_name(name)
-    return [attributes[:cpan_package_name_prefix], name].join("-").gsub("::", "-")
+    case name
+      when "perl"; return "perl"
+      else; return [attributes[:cpan_package_name_prefix], name].join("-").gsub("::", "-")
+    end
   end # def fix_name
 
   def httpfetch(url)
