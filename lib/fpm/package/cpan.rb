@@ -143,7 +143,11 @@ class FPM::Package::CPAN < FPM::Package
                      # Empty install_base to avoid local::lib being used.
                      "INSTALL_BASE=")
         end
-        make = [ "make" ]
+        if attributes[:cpan_test?]
+          make = [ "env", "PERL5LIB=#{build_path("cpan/lib/perl5")}", "make" ]
+        else
+          make = [ "make" ]
+        end
         safesystem(*make)
         safesystem(*(make + ["test"])) if attributes[:cpan_test?]
         safesystem(*(make + ["DESTDIR=#{staging_path}", "install"]))
@@ -152,10 +156,14 @@ class FPM::Package::CPAN < FPM::Package
         safesystem(attributes[:cpan_perl_bin],
                    "-Mlocal::lib=#{build_path("cpan")}",
                    "Build.PL")
-        safesystem("./Build")
+        safesystem(attributes[:cpan_perl_bin],
+                   "-Mlocal::lib=#{build_path("cpan")}",
+                   "./Build")
 
         if attributes[:cpan_test?]
-          safesystem("./Build", "test")
+          safesystem(attributes[:cpan_perl_bin],
+                   "-Mlocal::lib=#{build_path("cpan")}",
+                   "./Build", "test")
         end
         if attributes[:cpan_perl_lib_path]
           perl_lib_path = attributes[:cpan_perl_lib_path]
