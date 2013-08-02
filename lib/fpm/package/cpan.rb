@@ -156,10 +156,14 @@ class FPM::Package::CPAN < FPM::Package
         safesystem(attributes[:cpan_perl_bin],
                    "-Mlocal::lib=#{build_path("cpan")}",
                    "Build.PL")
-        safesystem("./Build")
+        safesystem(attributes[:cpan_perl_bin],
+                   "-Mlocal::lib=#{build_path("cpan")}",
+                   "./Build")
 
         if attributes[:cpan_test?]
-          safesystem("./Build", "test")
+          safesystem(attributes[:cpan_perl_bin],
+                   "-Mlocal::lib=#{build_path("cpan")}",
+                   "./Build", "test")
         end
         if attributes[:cpan_perl_lib_path]
           perl_lib_path = attributes[:cpan_perl_lib_path]
