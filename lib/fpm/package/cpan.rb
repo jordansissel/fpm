@@ -181,9 +181,11 @@ class FPM::Package::CPAN < FPM::Package
           "Build.PL found"
       end
 
-      # Fix any files likely to cause conflicts. 
+      # Fix any files likely to cause conflicts that are duplicated
+      # across packages.
       # https://github.com/jordansissel/fpm/issues/443
-      ::Dir.glob(File.join(staging_path, prefix, "lib*/perl/*/perllocal.pod")).each do |path|
+      # https://github.com/jordansissel/fpm/issues/510
+      ::Dir.glob(File.join(staging_path, prefix, "**/perllocal.pod")).each do |path|
         @logger.debug("Removing useless file.",
                       :path => path.gsub(staging_path, ""))
         File.unlink(path)
