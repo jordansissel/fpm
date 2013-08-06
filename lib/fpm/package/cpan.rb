@@ -80,7 +80,7 @@ class FPM::Package::CPAN < FPM::Package
     end
 
     if !attributes[:no_auto_depends?] 
-      if metadata.include?("requires")
+      if metadata.include?("requires") && !metadata["requires"].nil?
         metadata["requires"].each do |dep_name, version|
           # Special case for representing perl core as a version.
           if dep_name == "perl"
