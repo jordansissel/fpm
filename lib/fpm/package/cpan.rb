@@ -225,7 +225,7 @@ class FPM::Package::CPAN < FPM::Package
                  :version => version)
 
     # default to latest versionunless we specify one
-    version = metadata["version"] if version.nil?
+    self.version = metadata["version"] if version.nil?
 
     tarball = "#{distribution}-#{version}.tar.gz"
     #url = "http://www.cpan.org/CPAN/authors/id/#{author[0,1]}/#{author[0,2]}/#{author}/#{tarball}"
