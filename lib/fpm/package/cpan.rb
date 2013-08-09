@@ -29,7 +29,7 @@ class FPM::Package::CPAN < FPM::Package
     require "json"
 
     result = search(package)
-    tarball = download(result)
+    tarball = download(result, version)
     moduledir = unpack(tarball)
 
     # Read package metadata (name, version, etc)
@@ -217,17 +217,25 @@ class FPM::Package::CPAN < FPM::Package
     return directory
   end
 
-  def download(metadata)
+  def download(metadata, cpan_version=nil)
     distribution = metadata["distribution"]
     author = metadata["author"]
     @logger.info("Downloading perl module",
                  :distribution => distribution,
-                 :version => version)
+                 :version => cpan_version)
 
     # default to latest versionunless we specify one
-    version = metadata["version"] if version.nil?
+    if cpan_version.nil?
+      self.version = metadata["version"]
+    else
+      if metadata["version"] =~ /^v\d/
+        self.version = "v#{cpan_version}"
+      else
+        self.version = cpan_version
+      end
+    end
 
-    tarball = "#{distribution}-#{version}.tar.gz"
+    tarball = "#{distribution}-#{self.version}.tar.gz"
     #url = "http://www.cpan.org/CPAN/authors/id/#{author[0,1]}/#{author[0,2]}/#{author}/#{tarball}"
     url = "http://www.cpan.org/authors/id/#{author[0,1]}/#{author[0,2]}/#{author}/#{tarball}"
     @logger.debug("Fetching perl module", :url => url)
