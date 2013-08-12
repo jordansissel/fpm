@@ -1,0 +1,136 @@
+#!/bin/bash
+
+set -e
+
+# This is the self-extracting installer script for an FPM shell installer package.
+# It contains the logic to unpack a tar bzipped archive appended to the end of this script
+# and optionally run post install logic.
+# Run the package file with -h to see a usage message or look at the print_usage method.
+#
+# The post install scripts are called with INSTALL_ROOT, INSTALL_DIR and VERBOSE exported
+# into the environment for their use.
+# 
+# INSTALL_ROOT = the path passed in with -i or a relative directory of the name of the package
+#                file with no extension
+# INSTALL_DIR  = the same as INSTALL_ROOT unless -c (capistrano release directory) argumetn
+#                is used. Then it is $INSTALL_ROOT/releases/<datestamp>
+# CURRENT_DIR  = if -c argument is used, this is set to the $INSTALL_ROOT/current which is
+#                symlinked to INSTALL_DIR
+# VERBOSE      = is set if the package was called with -v for verbose output
+function main() {
+    set_install_dir
+
+    unpack_payload
+    
+    create_symlinks
+    
+    run_post_install
+    
+    log "Installation complete." 
+}
+
+
+function set_install_dir(){
+    # if INSTALL_ROOT isn't set by parsed args, use basename of package file with no extension
+    DEFAULT_DIR=$(echo $(basename $0) | sed -e 's/\.[^\.]*$//')
+    INSTALL_DIR=${INSTALL_ROOT:-$DEFAULT_DIR}
+    if [ -n $USE_RELEASE_DIRECTORY ] ; then
+        DATESTAMP=$(date +%Y%m%d%H%M%S)
+        INSTALL_DIR="$INSTALL_DIR/releases/$DATESTAMP"
+    fi
+
+    mkdir -p "$INSTALL_DIR" || die "Unable to create install directory $INSTALL_DIR"
+
+    export INSTALL_DIR
+    
+    log "Installing package to '$INSTALL_DIR'"
+}
+
+function unpack_payload(){
+    log "Unpacking payload . . ."
+    archive_line=$(egrep --text --line-number '__ARCHIVE__$' $0 | cut -f1 -d:)
+    tail -n +$((archive_line + 1)) $0 | tar -C $INSTALL_DIR -xjf - > /dev/null || die "Failed to unpack payload from the end of '$0' into '$INSTALL_DIR'"
+}
+
+function run_post_install(){
+    AFTER_INSTALL=$INSTALL_DIR/.fpm/after_install
+    if [ -r $AFTER_INSTALL ] ; then
+        chmod +x $AFTER_INSTALL
+        log "Running post install script"
+        $AFTER_INSTALL
+    fi
+}
+
+function create_symlinks(){
+    if [ -n $USE_RELEASE_DIRECTORY ] ; then
+        export CURRENT_DIR="$INSTALL_ROOT/current"
+	if [ -e "$CURRENT_DIR" ] ; then
+	    rm "$CURRENT_DIR"
+	fi
+	ln -s "$INSTALL_DIR" "$CURRENT_DIR"
+	log "Symlinked '$INSTALL_DIR' to '$CURRENT_DIR'"
+    fi
+}
+
+function print_usage(){
+    echo "Usage: `basename $0` [options]"
+    echo "Install this package"
+    echo "  -i <DIRECTORY> : install_root - an optional directory to install to."
+    echo "      Default is package file name without file extension"
+    echo "  -r: capistrano style release directories - If set, create a releases directory inside"
+    echo "      install_root and unpack contents into a date stamped directory under the release"
+    echo "      directory. Then create a 'current' symlink under install_root to the unpacked"
+    echo "      directory once installation is complete replacing the symlink if it already "
+    echo "      exists."
+    echo "  -v: verbose - More output on installation"
+    echo "  -h: help -  Display this message"
+}
+
+function die () {
+    local message=$*
+    echo "Error: $message : $!"
+    exit 1
+}
+
+function log(){
+    local message=$*
+    if [ -n "$VERBOSE" ] ; then
+        echo "$*"
+    fi
+}
+
+function parse_args() {
+    args=`getopt i:r:vh $*`
+    if [ $? != 0 ] ; then
+        print_usage
+        exit 2
+    fi
+    set -- $args
+    for i
+    do
+        case "$i"
+            in
+            -r)
+                USE_RELEASE_DIRECTORY=1
+                shift;;
+	    -i)
+                export INSTALL_ROOT="$2"
+		shift;;
+            -v)
+                export VERBOSE=1
+                shift;;
+            -h)
+                print_usage
+		exit 0
+                shift;;
+            --)
+                shift; break;;
+        esac
+    done
+}
+
+parse_args $*
+main
+exit 0
+
+__ARCHIVE__
