@@ -338,7 +338,7 @@ class FPM::Package::RPM < FPM::Package
 
       Find.find(staging_path) do |path|
         next if path == staging_path
-        if File.directory? path
+        if File.directory? path and !File.symlink? path
           add_path = path.gsub(/^#{staging_path}/,'')
           self.directories << add_path if not fs_dirs.include? add_path
         end
@@ -348,7 +348,7 @@ class FPM::Package::RPM < FPM::Package
       alldirs = []
       self.directories.each do |path|
         Find.find(File.join(staging_path, path)) do |subpath|
-          if File.directory? subpath
+          if File.directory? subpath and !File.symlink? subpath
             alldirs << subpath.gsub(/^#{staging_path}/, '')
           end
         end
