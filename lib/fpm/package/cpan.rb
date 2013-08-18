@@ -8,12 +8,24 @@ class FPM::Package::CPAN < FPM::Package
   # Flags '--foo' will be accessable  as attributes[:npm_foo]
   option "--perl-bin", "PERL_EXECUTABLE",
     "The path to the perl executable you wish to run.", :default => "perl"
+
   option "--cpanm-bin", "CPANM_EXECUTABLE",
     "The path to the cpanm executable you wish to run.", :default => "cpanm"
-  option "--package-name-prefix", "NAME_PREFIX", "Name to prefix the package " \
-    "name with.", :default => "perl"
-  option "--test", :flag, "Run the tests before packaging?", :default => true
-  option "--perl-lib-path", "PERL_LIB_PATH", "Path of target Perl Libraries"
+
+  option "--mirror", "CPAN_MIRROR",
+    "The CPAN mirror to use instead of the default."
+
+  option "--mirror-only", :flag,
+    "Only use the specified mirror for metadata.", :default => false
+
+  option "--package-name-prefix", "NAME_PREFIX",
+    "Name to prefix the package name with.", :default => "perl"
+
+  option "--test", :flag,
+    "Run the tests before packaging?", :default => true
+
+  option "--perl-lib-path", "PERL_LIB_PATH",
+    "Path of target Perl Libraries"
 
   private
   def input(package)
@@ -73,11 +85,12 @@ class FPM::Package::CPAN < FPM::Package
     # We'll install to a temporary directory.
     @logger.info("Installing any build or configure dependencies")
 
-    if attributes[:cpan_test?]
-      safesystem(attributes[:cpan_cpanm_bin], "-L", build_path("cpan"), moduledir)
-    else
-      safesystem(attributes[:cpan_cpanm_bin], "-nL", build_path("cpan"), moduledir)
-    end
+    cpanm_flags = ["-L", build_path("cpan"), moduledir]
+    cpanm_flags += ["-n"] if attributes[:cpan_test?]
+    cpanm_flags += ["--mirror", "#{attributes[:cpan_mirror]}"] if !attributes[:cpan_mirror].nil?
+    cpanm_flags += ["--mirror-only"] if attributes[:cpan_mirror_only?] && !attributes[:cpan_mirror].nil?
+
+    safesystem(attributes[:cpan_cpanm_bin], *cpanm_flags)
 
     if !attributes[:no_auto_depends?] 
       if metadata.include?("requires") && !metadata["requires"].nil?
