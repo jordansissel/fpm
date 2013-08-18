@@ -11,6 +11,9 @@ class FPM::Package::NPM < FPM::Package
   option "--package-name-prefix", "PREFIX", "Name to prefix the package " \
     "name with.", :default => "node"
 
+  option "--registry", "NPM_REGISTRY",
+    "The npm registry to use instead of the default."
+
   private
   def input(package)
     # Notes:
@@ -18,7 +21,8 @@ class FPM::Package::NPM < FPM::Package
     settings = {
       "cache" => build_path("npm_cache"),
       "loglevel" => "warn",
-      "global" => "true"
+      "global" => "true",
+      "registry" => attributes[:npm_registry]
     }
 
     if attributes.include?(:prefix) && !attributes[:prefix].nil?
