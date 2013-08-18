@@ -8,12 +8,18 @@ class FPM::Package::CPAN < FPM::Package
   # Flags '--foo' will be accessable  as attributes[:npm_foo]
   option "--perl-bin", "PERL_EXECUTABLE",
     "The path to the perl executable you wish to run.", :default => "perl"
+
   option "--cpanm-bin", "CPANM_EXECUTABLE",
     "The path to the cpanm executable you wish to run.", :default => "cpanm"
-  option "--package-name-prefix", "NAME_PREFIX", "Name to prefix the package " \
-    "name with.", :default => "perl"
-  option "--test", :flag, "Run the tests before packaging?", :default => true
-  option "--perl-lib-path", "PERL_LIB_PATH", "Path of target Perl Libraries"
+
+  option "--package-name-prefix", "NAME_PREFIX",
+    "Name to prefix the package name with.", :default => "perl"
+
+  option "--test", :flag,
+    "Run the tests before packaging?", :default => true
+
+  option "--perl-lib-path", "PERL_LIB_PATH",
+    "Path of target Perl Libraries"
 
   private
   def input(package)
