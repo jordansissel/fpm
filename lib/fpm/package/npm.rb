@@ -21,9 +21,12 @@ class FPM::Package::NPM < FPM::Package
     settings = {
       "cache" => build_path("npm_cache"),
       "loglevel" => "warn",
-      "global" => "true",
-      "registry" => attributes[:npm_registry]
+      "global" => "true"
     }
+
+    if attributes.include?(:npm_registry) && !attributes[:npm_registry].nil?
+      settings["registry"] = attributes[:npm_registry]
+    end
 
     if attributes.include?(:prefix) && !attributes[:prefix].nil?
       settings["prefix"] = staging_path(attributes[:prefix])
