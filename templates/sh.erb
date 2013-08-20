@@ -100,7 +100,7 @@ function log(){
 }
 
 function parse_args() {
-    args=`getopt i:r:vh $*`
+    args=`getopt i:rvh $*`
     if [ $? != 0 ] ; then
         print_usage
         exit 2
