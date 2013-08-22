@@ -52,7 +52,7 @@ class FPM::Command < Clamp::Command
     :attribute_name => :chdir
   option "--prefix", "PREFIX",
     "A path to prefix files with when building the target package. This may " \
-    "be necessary for all input packages. For example, the 'gem' type will" \
+    "be necessary for all input packages. For example, the 'gem' type will " \
     "prefix with your gem directory automatically."
   option ["-p", "--package"], "OUTPUT", "The package file path to output."
   option ["-f", "--force"], :flag, "Force output even if it will overwrite an " \
