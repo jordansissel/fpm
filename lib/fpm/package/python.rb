@@ -55,12 +55,12 @@ class FPM::Package::Python < FPM::Package
     "Want to what your target platform is using? Run this: " \
     "python -c 'from distutils.sysconfig import get_python_lib; " \
     "print get_python_lib()'"
-  option "--install-data", "DATA_PATH", "The path to where data should be." \
+  option "--install-data", "DATA_PATH", "The path to where data should be " \
     "installed to. This is equivalent to 'python setup.py --install-data " \
     "DATA_PATH"
   option "--dependencies", :flag, "Include requirements defined in setup.py" \
     " as dependencies.", :default => true
-  option "--obey-requirements-txt", :flag, "Use a requirements.txt file" \
+  option "--obey-requirements-txt", :flag, "Use a requirements.txt file " \
     "in the top-level directory of the python package for dependency " \
     "detection.", :default => false
 
