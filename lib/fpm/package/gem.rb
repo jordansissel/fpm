@@ -89,7 +89,7 @@ class FPM::Package::Gem < FPM::Package
 
   def load_package_info(gem_path)
 
-    spec = YAML.load(%x{#{attributes[:gem_gem]} spec #{gem_path} --yaml})
+    spec = YAML.load(%x{#{attributes[:gem_gem]} specification #{gem_path} --yaml})
 
     if !attributes[:gem_package_prefix].nil?
       attributes[:gem_package_name_prefix] = attributes[:gem_package_prefix]
