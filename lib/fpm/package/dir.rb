@@ -106,6 +106,9 @@ class FPM::Package::Dir < FPM::Package
   # The above will copy, recursively, /tmp/hello/world into
   # /tmp/example/hello/world
   def clone(source, destination)
+    @logger.debug("Checking Source Exists", :source => source)
+    clone_check(source)
+
     @logger.debug("Cloning path", :source => source, :destination => destination)
     # For single file copies, permit file destinations
     if File.file?(source) && !File.directory?(destination) 

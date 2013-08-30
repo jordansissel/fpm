@@ -34,6 +34,14 @@ class FPM::Package
     end # def to_s
   end # class ParentDirectoryMissing
 
+  # This class is raised when you try to clone from a directory
+  # that does not exist
+  class SourceDirectoryMissing < StandardError
+    def to_s
+      return "Source directory does not exist: #{super}"
+    end # def to_s
+  end # class SourceDirectoryMissing
+
   # The name of this package
   attr_accessor :name
 
@@ -499,6 +507,12 @@ class FPM::Package
       end
     end
   end # def output_path
+
+  def clone_check(source_path)
+    if !File.directory?(source_path)
+      raise SourceDirectoryMissing.new(source_path)
+    end
+  end # def input_check
 
   def provides=(value)
     if !value.is_a?(Array)
