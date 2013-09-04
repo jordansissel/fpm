@@ -19,6 +19,9 @@ set -e
 # VERBOSE      = is set if the package was called with -v for verbose output
 function main() {
     set_install_dir
+    
+    set_owner
+    
     unpack_payload
     create_symlinks
     run_post_install
@@ -42,6 +45,11 @@ function set_install_dir(){
     export INSTALL_DIR
 
     log "Installing package to '$INSTALL_DIR'"
+}
+
+function set_owner(){
+    export OWNER=${OWNER:-$USER}
+    log "Installing as user $OWNER"
 }
 
 function unpack_payload(){
@@ -75,6 +83,8 @@ function print_usage(){
     echo "Install this package"
     echo "  -i <DIRECTORY> : install_root - an optional directory to install to."
     echo "      Default is package file name without file extension"
+    echo "  -o <USER>     : owner - the name of the user that will own the files installed"
+    echo "                   by the slug. Defaults to current user"
     echo "  -r: capistrano style release directories - If set, create a releases directory inside"
     echo "      install_root and unpack contents into a date stamped directory under the release"
     echo "      directory. Then create a 'current' symlink under install_root to the unpacked"
@@ -98,7 +108,8 @@ function log(){
 }
 
 function parse_args() {
-    args=`getopt i:rvh $*`
+    args=`getopt i:o:rvh $*`
+    
     if [ $? != 0 ] ; then
         print_usage
         exit 2
@@ -112,9 +123,14 @@ function parse_args() {
                 USE_RELEASE_DIRECTORY=1
                 shift;;
             -i)
-                export INSTALL_ROOT="$2"
+                shift;
+                export INSTALL_ROOT="$1"
                 shift;;
-            -v)
+	    -o)
+		shift;
+                export OWNER="$1"
+                shift;;
+	    -v)
                 export VERBOSE=1
                 shift;;
             -h)
