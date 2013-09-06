@@ -76,6 +76,9 @@ class FPM::Package::Deb < FPM::Package
   option "--priority", "PRIORITY", 
     "The debian package 'priority' value.", :default => "extra"
 
+  option "--use-file-permissions", :flag, 
+    "Use existing file permissions when defining ownership and modes"
+
   option "--user", "USER", "The owner of files in this package", :default => 'root'
 
   option "--group", "GROUP", "The group owner of files in this package", :default => 'root'
@@ -339,19 +342,21 @@ class FPM::Package::Deb < FPM::Package
     end
 
     tar_flags = []
-    if !attributes[:deb_user].nil?
-      if attributes[:deb_user] == 'root'
-        tar_flags += [ "--numeric-owner", "--owner", "0" ]
-      else
-        tar_flags += [ "--owner", attributes[:deb_user] ]
+    if attributes[:deb_use_file_permissions?].nil?
+      if !attributes[:deb_user].nil?
+        if attributes[:deb_user] == 'root'
+          tar_flags += [ "--numeric-owner", "--owner", "0" ]
+        else
+          tar_flags += [ "--owner", attributes[:deb_user] ]
+        end
       end
-    end
 
-    if !attributes[:deb_group].nil?
-      if attributes[:deb_group] == 'root'
-        tar_flags += [ "--numeric-owner", "--group", "0" ]
-      else
-        tar_flags += [ "--group", attributes[:deb_group] ]
+      if !attributes[:deb_group].nil?
+        if attributes[:deb_group] == 'root'
+          tar_flags += [ "--numeric-owner", "--group", "0" ]
+        else
+          tar_flags += [ "--group", attributes[:deb_group] ]
+        end
       end
     end
 
