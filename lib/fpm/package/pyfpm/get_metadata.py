@@ -17,12 +17,14 @@ class get_metadata(Command):
     user_options = [
         ('load-requirements-txt', 'l',
          "load dependencies from requirements.txt"),
-        ]
+        ("output=", "o", "output destination for metadata json")
+    ]
     boolean_options = ['load-requirements-txt']
 
     def initialize_options(self):
         self.load_requirements_txt = False
         self.cwd = None
+        self.output = None
 
     def finalize_options(self):
         self.cwd = os.getcwd()
@@ -74,8 +76,9 @@ class get_metadata(Command):
 
         data["dependencies"] = final_deps
 
+        output = open(self.output, "w")
         if hasattr(json, 'dumps'):
-            print(json.dumps(data, indent=2))
+            output.write(json.dumps(data, indent=2))
         else:
             # For Python 2.5 and Debian's python-json
-            print(json.write(data))
+            output.write(json.write(data))
