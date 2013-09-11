@@ -148,8 +148,9 @@ class FPM::Package::Python < FPM::Package
     setup_dir = File.dirname(setup_py)
 
     output = ::Dir.chdir(setup_dir) do
+      tmp = build_path("metadata.json")
       setup_cmd = "env PYTHONPATH=#{pylib} #{attributes[:python_bin]} " \
-        "setup.py --command-packages=pyfpm get_metadata"
+        "setup.py --command-packages=pyfpm get_metadata --output=#{tmp}"
 
       if attributes[:python_obey_requirements_txt?]
         setup_cmd += " --load-requirements-txt"
@@ -160,16 +161,17 @@ class FPM::Package::Python < FPM::Package
       # details.
       @logger.info("fetching package metadata", :setup_cmd => setup_cmd)
 
-      output = %x{#{setup_cmd}}
-      if !$?.success?
+      success = safesystem(setup_cmd)
+      #%x{#{setup_cmd}}
+      if !success
         @logger.error("setup.py get_metadata failed", :command => setup_cmd,
                       :exitcode => $?.exitstatus)
         raise "An unexpected error occurred while processing the setup.py file"
       end
-      output
+      File.read(tmp)
     end
-    @logger.debug("full text from `setup.py get_metadata`", :data => output)
-    metadata = JSON.parse(output[/\{.*\}/msx])
+    @logger.debug("result from `setup.py get_metadata`", :data => output)
+    metadata = JSON.parse(output)
     @logger.info("object output of get_metadata", :json => metadata)
 
     self.architecture = metadata["architecture"]
