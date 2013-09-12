@@ -571,8 +571,13 @@ class FPM::Package::Deb < FPM::Package
     allconfigs = []
     config_files.each do |path|
       cfg_path = File.expand_path(path, staging_path)
-      Find.find(cfg_path) do |p|
-        allconfigs << p.gsub("#{staging_path}/", '') if File.file? p
+      begin
+        Find.find(cfg_path) do |p|
+          allconfigs << p.gsub("#{staging_path}/", '') if File.file? p
+        end
+      rescue Errno::ENOENT => e
+        raise FPM::InvalidPackageConfiguration,
+          "Error trying to use '#{cfg_path}' as a config file in the package. Does it exist?"
       end
     end
     allconfigs.sort!.uniq!
