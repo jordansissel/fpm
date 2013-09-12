@@ -382,9 +382,11 @@ class FPM::Package::Deb < FPM::Package
     attributes.fetch(:deb_upstart_list, []).each do |upstart|
       name = File.basename(upstart, ".upstart")
       dest_upstart = File.join(staging_path, "etc/init/#{name}.conf")
+      dest_init = File.join(staging_path, "etc/init.d/#{name}")
       FileUtils.mkdir_p(File.dirname(dest_upstart))
       FileUtils.cp upstart, dest_upstart
       File.chmod(0644, dest_upstart)
+      FileUtils.ln_s dest_init, "/lib/init/upstart-job"
     end
 
     args = [ tar_cmd, "-C", staging_path, compression ] + tar_flags + [ "-cf", datatar, "." ]
