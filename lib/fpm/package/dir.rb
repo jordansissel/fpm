@@ -65,8 +65,18 @@ class FPM::Package::Dir < FPM::Package
     destination = File.join(staging_path, destination)
 
     @logger["method"] = "input"
-    ::Dir.chdir(chdir) do
-      clone(source, destination)
+    begin
+      ::Dir.chdir(chdir) do
+        begin
+          clone(source, destination)
+        rescue Errno::ENOENT => e
+          raise FPM::InvalidPackageConfiguration,
+            "Cannot package the path '#{source}', does it exist?"
+        end
+      end
+    rescue Errno::ENOENT => e
+      raise FPM::InvalidPackageConfiguration, 
+        "Cannot chdir to '#{chdir}'. Does it exist?"
     end
 
     # Set some defaults. This is useful because other package types
