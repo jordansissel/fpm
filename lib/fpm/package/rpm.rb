@@ -134,14 +134,15 @@ class FPM::Package::RPM < FPM::Package
   end
 
   def rpm_file_entry(file)
-    file = rpm_fix_name(file)
-    return file unless attributes[:rpm_use_file_permissions?]
+    # We need to keep the original name to stat the file if necessary.
+    fixed_file = rpm_fix_name(file)
+    return fixed_file unless attributes[:rpm_use_file_permissions?]
 
     stat = File.lstat(file.gsub(/\"/, ''))
     user = Etc.getpwuid(stat.uid).name
     group = Etc.getgrgid(stat.gid).name
     mode = stat.mode
-    return sprintf("%%attr(%o, %s, %s) %s\n", mode & 4095 , user, group, file)
+    return sprintf("%%attr(%o, %s, %s) %s\n", mode & 4095 , user, group, fixed_file)
   end
 
 
