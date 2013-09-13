@@ -137,7 +137,7 @@ class FPM::Package::RPM < FPM::Package
     file = rpm_fix_name(file)
     return file unless attributes[:rpm_use_file_permissions?]
 
-    stat = File.stat(file.gsub(/\"/, '').sub(/^\//,''))
+    stat = File.lstat(file.gsub(/\"/, ''))
     user = Etc.getpwuid(stat.uid).name
     group = Etc.getgrgid(stat.gid).name
     mode = stat.mode
