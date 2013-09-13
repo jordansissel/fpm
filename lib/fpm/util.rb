@@ -57,7 +57,9 @@ module FPM::Util
     process.start
     stdout_w.close; stderr_w.close
     @logger.debug('Process is running', :pid => process.pid)
-    @logger.pipe(stdout_r => :info, stderr_r => :error)
+    # Log both stdout and stderr as 'info' because nobody uses stderr for
+    # actually reporting errors and as a result 'stderr' is a misnomer.
+    @logger.pipe(stdout_r => :info, stderr_r => :info)
 
     process.wait
     success = (process.exit_code == 0)
