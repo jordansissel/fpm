@@ -21,7 +21,7 @@ function main() {
     set_install_dir
     
     set_owner
-    
+
     unpack_payload
     create_symlinks
     run_post_install
@@ -29,17 +29,74 @@ function main() {
     log "Installation complete."
 }
 
+# echos metadata file. A function so that we can have it change after we set INSTALL_ROOT
+function fpm_metadata_file(){
+    echo "${INSTALL_ROOT}/.install-metadata"
+}
+
+# if this slug was installed at this location already we will find a metadata file with the details
+# about the installation that we left here. Load from that if available but allow command line args to trump
+function load_environment(){
+    METADATA=$(fpm_metadata_file)
+    if [ -r "${METADATA}" ] ; then
+        log "Found existing metadata file '${METADATA}'. Loading previous install details"
+        source "${METADATA}"
+    fi
+}
+
+# write out metadata for future installs
+function save_environment(){
+    METADATA=$(fpm_metadata_file)
+    echo -n "" > ${METADATA} # empty file
+
+    # just piping env to a file doesn't quote the variables. This does. Phew
+    env |  while read ENVVAR ; do
+        FIRST=true
+        if echo $ENVVAR | grep -q "^_=" ; then # _ is a readonly variable
+            continue
+        fi
+
+        # split the line into spaces on the first = sign then write out the line with quotes
+        for THING in ${ENVVAR/=/ } ; do
+            if $FIRST ; then        
+                echo -n "$THING=\"" >> ${METADATA}
+            else
+                echo -n $THING >> ${METADATA}
+            fi
+            FIRST=false
+        done
+        echo "\"" >> ${METADATA}
+    done
+
+    chown ${OWNER} ${METADATA}
+}
+
 function set_install_dir(){
     # if INSTALL_ROOT isn't set by parsed args, use basename of package file with no extension
     DEFAULT_DIR=$(echo $(basename $0) | sed -e 's/\.[^\.]*$//')
     INSTALL_DIR=${INSTALL_ROOT:-$DEFAULT_DIR}
 
-    if [ -n $USE_RELEASE_DIRECTORY ] ; then
+    if [ -z "$USE_FLAT_RELEASE_DIRECTORY" ] ; then
         RELEASE_ID=<%= release_id %>
         DATESTAMP=$(date +%Y%m%d%H%M%S)
         INSTALL_DIR="$INSTALL_DIR/releases/${RELEASE_ID:-$DATESTAMP}"
     fi
 
+    if [ -d "${INSTALL_DIR}" ] ; then
+        
+        if [ -z "${CONFIRM}" ] ; then
+            echo "Install directory '${INSTALL_DIR}' already exists. Would you like to delete it? [y/n]"
+            read CONFIRM
+        fi
+        
+        if [ "${CONFIRM}" = "y" ] ; then
+            log "Clobbering existing installation in ${INSTALL_DIR}"
+            rm -rf "${INSTALL_DIR}"
+        else
+            die "Aborting install because installation directory already exists."
+        fi
+    fi
+    
     mkdir -p "$INSTALL_DIR" || die "Unable to create install directory $INSTALL_DIR"
 
     export INSTALL_DIR
@@ -68,14 +125,14 @@ function run_post_install(){
 }
 
 function create_symlinks(){
-    if [ -n $USE_RELEASE_DIRECTORY ] ; then
-        export CURRENT_DIR="$INSTALL_ROOT/current"
-        if [ -e "$CURRENT_DIR" ] ; then
-            rm "$CURRENT_DIR"
-        fi
-        ln -s "$INSTALL_DIR" "$CURRENT_DIR"
-        log "Symlinked '$INSTALL_DIR' to '$CURRENT_DIR'"
+    [ -n "$USE_FLAT_RELEASE_DIRECTORY" ] && return 
+
+    export CURRENT_DIR="$INSTALL_ROOT/current"
+    if [ -e "$CURRENT_DIR" ] ; then
+        rm "$CURRENT_DIR"
     fi
+    ln -s "$INSTALL_DIR" "$CURRENT_DIR"
+    log "Symlinked '$INSTALL_DIR' to '$CURRENT_DIR'"
 }
 
 function print_usage(){
@@ -85,11 +142,12 @@ function print_usage(){
     echo "      Default is package file name without file extension"
     echo "  -o <USER>     : owner - the name of the user that will own the files installed"
     echo "                   by the slug. Defaults to current user"
-    echo "  -r: capistrano style release directories - If set, create a releases directory inside"
-    echo "      install_root and unpack contents into a date stamped directory under the release"
+    echo "  -r: disable capistrano style release directories - Default behavior is to create a releases directory inside"
+    echo "      install_root and unpack contents into a date stamped (or build time id named) directory under the release"
     echo "      directory. Then create a 'current' symlink under install_root to the unpacked"
     echo "      directory once installation is complete replacing the symlink if it already "
-    echo "      exists."
+    echo "      exists. If this flag is set just install into install_root directly"
+    echo "  -y: yes - Don't prompt to clobber existing installations"
     echo "  -v: verbose - More output on installation"
     echo "  -h: help -  Display this message"
 }
@@ -108,7 +166,7 @@ function log(){
 }
 
 function parse_args() {
-    args=`getopt i:o:rvh $*`
+    args=`getopt i:o:ryvh $*`
     
     if [ $? != 0 ] ; then
         print_usage
@@ -120,18 +178,21 @@ function parse_args() {
         case "$i"
             in
             -r)
-                USE_RELEASE_DIRECTORY=1
+                USE_FLAT_RELEASE_DIRECTORY=1
                 shift;;
             -i)
                 shift;
                 export INSTALL_ROOT="$1"
                 shift;;
-	    -o)
-		shift;
+            -o)
+                shift;
                 export OWNER="$1"
                 shift;;
-	    -v)
+            -v)
                 export VERBOSE=1
+                shift;;
+            -y)
+                CONFIRM="y"
                 shift;;
             -h)
                 print_usage
@@ -143,8 +204,15 @@ function parse_args() {
     done
 }
 
+# parse args first to get install root
 parse_args $*
+# load environment from previous installations so we get defaults from that
+load_environment
+# reparse args so they can override any settings from previous installations if provided on the command line
+parse_args $*
+
 main
+save_environment
 exit 0
 
 __ARCHIVE__
