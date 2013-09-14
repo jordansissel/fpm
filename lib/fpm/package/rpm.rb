@@ -372,6 +372,13 @@ class FPM::Package::RPM < FPM::Package
       args += ["--define", define]
     end
 
+    # copy all files from staging to BUILD dir
+    Find.find(staging_path) do |path|
+      src = path.gsub(/^#{staging_path}/, '')
+      dst = File.join(build_path, build_sub_dir, src)
+      copy_entry(path, dst)
+    end
+
     rpmspec = template("rpm.erb").result(binding)
     specfile = File.join(build_path("SPECS"), "#{name}.spec")
     File.write(specfile, rpmspec)
