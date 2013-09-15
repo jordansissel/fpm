@@ -106,6 +106,7 @@ Targets:
 * solaris
 * tar
 * directories
+* Mac OS X `.pkg` files (`osxpkg`)
 
 ## Need Help or Want to Contribute?
 
