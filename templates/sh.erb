@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# bail out if any part of this fails
 set -e
 
 # This is the self-extracting installer script for an FPM shell installer package.
@@ -23,9 +24,11 @@ function main() {
     set_owner
 
     unpack_payload
-    create_symlinks
+    
     run_post_install
 
+    create_symlinks
+	
     log "Installation complete."
 }
 
@@ -121,7 +124,9 @@ function run_post_install(){
         chmod +x $AFTER_INSTALL
         log "Running post install script"
         $AFTER_INSTALL
+	return $?
     fi
+    return 0
 }
 
 function create_symlinks(){
@@ -132,6 +137,7 @@ function create_symlinks(){
         rm "$CURRENT_DIR"
     fi
     ln -s "$INSTALL_DIR" "$CURRENT_DIR"
+
     log "Symlinked '$INSTALL_DIR' to '$CURRENT_DIR'"
 }
 
