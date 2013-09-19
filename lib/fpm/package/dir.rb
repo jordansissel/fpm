@@ -43,7 +43,7 @@ class FPM::Package::Dir < FPM::Package
     # This mapping should work the same way 'rsync -a' does
     #   Meaning 'rsync -a source dest'
     #   and 'source=dest' in fpm work the same as the above rsync
-    if path =~ /.=./
+    if path =~ /.=./ && !File.exists?(chdir == '.' ? path : File.join(chdir, path))
       origin, destination = path.split("=", 2)
 
       if File.directory?(origin) && origin[-1,1] == "/"
