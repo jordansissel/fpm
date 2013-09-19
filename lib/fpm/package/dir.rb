@@ -116,6 +116,9 @@ class FPM::Package::Dir < FPM::Package
   # The above will copy, recursively, /tmp/hello/world into
   # /tmp/example/hello/world
   def clone(source, destination)
+    @logger.debug("Checking Source Exists", :source => source)
+    clone_check(source)
+
     @logger.debug("Cloning path", :source => source, :destination => destination)
     # Edge case check; abort if the temporary directory is the source.
     # If the temporary dir is the same path as the source, it causes

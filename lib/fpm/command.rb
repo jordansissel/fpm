@@ -408,6 +408,9 @@ class FPM::Command < Clamp::Command
   rescue FPM::Util::ProcessFailed => e
     @logger.error("Process failed: #{e}")
     return 1
+  rescue FPM::Package::SourceDirectoryMissing => e
+    @logger.fatal(e.message)
+    return 1
   ensure
     input.cleanup unless input.nil?
     output.cleanup unless output.nil?
