@@ -24,12 +24,17 @@ function main() {
     set_owner
 
     unpack_payload
-    
-    run_post_install
 
     create_symlinks
-	
-    log "Installation complete."
+
+    set +e # don't exit on errors to allow us to clean up
+    if ! run_post_install ; then
+        revert_symlinks
+        log "Installation failed."
+        exit 1
+    else
+        log "Installation complete."    
+    fi
 }
 
 # echos metadata file. A function so that we can have it change after we set INSTALL_ROOT
@@ -124,21 +129,35 @@ function run_post_install(){
         chmod +x $AFTER_INSTALL
         log "Running post install script"
         $AFTER_INSTALL
-	return $?
+        return $?
     fi
     return 0
 }
 
 function create_symlinks(){
     [ -n "$USE_FLAT_RELEASE_DIRECTORY" ] && return 
-
+    
     export CURRENT_DIR="$INSTALL_ROOT/current"
     if [ -e "$CURRENT_DIR" ] ; then
+        OLD_CURRENT_TARGET=$(readlink $CURRENT_DIR)
         rm "$CURRENT_DIR"
     fi
     ln -s "$INSTALL_DIR" "$CURRENT_DIR"
 
     log "Symlinked '$INSTALL_DIR' to '$CURRENT_DIR'"
+}
+
+# in case post install fails we may have to back out switching the symlink to current
+# We can't switch the symlink after because post install may assume that it is in the
+# exact state of being installed (services looking to current for their latest code)
+function revert_symlinks(){
+    if [ -n "$OLD_CURRENT_TARGET" ] ; then
+        log "Putting current symlink back to '$OLD_CURRENT_TARGET'"
+        if [ -e "$CURRENT_DIR" ] ; then
+            rm "$CURRENT_DIR"
+        fi
+        ln -s "$OLD_CURRENT_TARGET" "$CURRENT_DIR"
+    fi
 }
 
 function print_usage(){
