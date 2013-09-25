@@ -33,6 +33,7 @@ function main() {
         log "Installation failed."
         exit 1
     else
+        clean_out_old_releases
         log "Installation complete."    
     fi
 }
@@ -87,7 +88,7 @@ function set_install_dir(){
     if [ -z "$USE_FLAT_RELEASE_DIRECTORY" ] ; then
         RELEASE_ID=<%= release_id %>
         DATESTAMP=$(date +%Y%m%d%H%M%S)
-        INSTALL_DIR="$INSTALL_DIR/releases/${RELEASE_ID:-$DATESTAMP}"
+        INSTALL_DIR="${RELEASES_DIR}/${RELEASE_ID:-$DATESTAMP}"
     fi
 
     if [ -d "${INSTALL_DIR}" ] ; then
@@ -160,6 +161,16 @@ function revert_symlinks(){
     fi
 }
 
+function clean_out_old_releases(){
+    [ -n "$USE_FLAT_RELEASE_DIRECTORY" ] && return
+    
+    while [ $(ls -tr "${RELEASES_DIR}" | wc -l) -gt 2 ] ; do
+        OLDEST_RELEASE=$(ls -tr "${RELEASES_DIR}" | head -1)
+        log "Deleting old release '${OLDEST_RELEASE}'"
+        rm -rf "$OLDEST_RELEASE"
+    done
+}
+
 function print_usage(){
     echo "Usage: `basename $0` [options]"
     echo "Install this package"
@@ -208,6 +219,7 @@ function parse_args() {
             -i)
                 shift;
                 export INSTALL_ROOT="$1"
+                export RELEASES_DIR="${INSTALL_ROOT}/releases"
                 shift;;
             -o)
                 shift;
