@@ -65,8 +65,18 @@ class FPM::Package::Dir < FPM::Package
     destination = File.join(staging_path, destination)
 
     @logger["method"] = "input"
-    ::Dir.chdir(chdir) do
-      clone(source, destination)
+    begin
+      ::Dir.chdir(chdir) do
+        begin
+          clone(source, destination)
+        rescue Errno::ENOENT => e
+          raise FPM::InvalidPackageConfiguration,
+            "Cannot package the path '#{source}', does it exist?"
+        end
+      end
+    rescue Errno::ENOENT => e
+      raise FPM::InvalidPackageConfiguration, 
+        "Cannot chdir to '#{chdir}'. Does it exist?"
     end
 
     # Set some defaults. This is useful because other package types
@@ -107,6 +117,20 @@ class FPM::Package::Dir < FPM::Package
   # /tmp/example/hello/world
   def clone(source, destination)
     @logger.debug("Cloning path", :source => source, :destination => destination)
+    # Edge case check; abort if the temporary directory is the source.
+    # If the temporary dir is the same path as the source, it causes
+    # fpm to recursively (and forever) copy the staging directory by
+    # accident (#542).
+    if File.expand_path(source) == File.expand_path(::Dir.tmpdir)
+      raise FPM::InvalidPackageConfiguration,
+        "A source directory cannot be the root of your temporary " \
+        "directory (#{::Dir.tmpdir}). fpm uses the temporary directory " \
+        "to stage files during packaging, so this setting would have " \
+        "caused fpm to loop creating staging directories and copying " \
+        "them into your package! Oops! If you are confused, maybe you could " \
+        "check your TMPDIR or TEMPDIR environment variables?"
+    end
+
     # For single file copies, permit file destinations
     if File.file?(source) && !File.directory?(destination) 
       if destination[-1,1] == "/"

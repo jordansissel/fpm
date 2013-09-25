@@ -104,24 +104,7 @@ Obsoletes: <%= repl %>
 # noop
 
 %install
-<% files.each do |path| -%>
-<%   source = File.join(staging_path, path) -%>
-<%   source_safe = Shellwords.shellescape(source).gsub("%", "%%") -%>
-<%   # Copy to the build_path/BUILD/ to make rpmbuild happy -%>
-<%   target_safe = Shellwords.shellescape(File.join(build_path, build_sub_dir, path)).gsub("%", "%%") -%>
-<%   st = File.lstat(source) -%>
-<%   dir = File.dirname(target_safe) -%>
-[ ! -d <%= dir %> ] && mkdir -p <%= dir %>
-<%   if st.symlink? -%>
-ln -s <%= File.readlink(source) %> <%= target_safe %>
-<%   elsif st.directory? -%>
-mkdir <%= target_safe %>
-<%   elsif File.ftype(source) == 'fifo' -%>
-mkfifo <%= target_safe %>
-<%   else -%>
-cp <%= source_safe %> <%= target_safe %>
-<%   end -%>
-<% end %>
+# noop
 
 %clean
 # noop
