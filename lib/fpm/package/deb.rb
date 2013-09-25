@@ -361,7 +361,7 @@ class FPM::Package::Deb < FPM::Package
     end
 
     if attributes[:deb_changelog]
-      dest_changelog = File.join(staging_path, "usr/share/doc/#{attributes[:name]}/changelog.Debian")
+      dest_changelog = File.join(staging_path, "usr/share/doc/#{name}/changelog.Debian")
       FileUtils.mkdir_p(File.dirname(dest_changelog))
       FileUtils.cp attributes[:deb_changelog], dest_changelog
       File.chmod(0644, dest_changelog)
@@ -386,10 +386,15 @@ class FPM::Package::Deb < FPM::Package
 
     attributes.fetch(:deb_upstart_list, []).each do |upstart|
       name = File.basename(upstart, ".upstart")
-      dest_upstart = File.join(staging_path, "etc/init/#{name}.conf")
+      dest_upstart = staging_path("etc/init/#{name}.conf")
       FileUtils.mkdir_p(File.dirname(dest_upstart))
-      FileUtils.cp upstart, dest_upstart
+      FileUtils.cp(upstart, dest_upstart)
       File.chmod(0644, dest_upstart)
+
+      # Install an init.d shim that calls upstart
+      dest_init = staging_path("/etc/init.d/#{name}")
+      FileUtils.mkdir_p(File.dirname(dest_init))
+      FileUtils.ln_s("/lib/init/upstart-job", dest_init)
     end
 
     args = [ tar_cmd, "-C", staging_path, compression ] + tar_flags + [ "-cf", datatar, "." ]
@@ -571,8 +576,13 @@ class FPM::Package::Deb < FPM::Package
     allconfigs = []
     config_files.each do |path|
       cfg_path = File.expand_path(path, staging_path)
-      Find.find(cfg_path) do |p|
-        allconfigs << p.gsub("#{staging_path}/", '') if File.file? p
+      begin
+        Find.find(cfg_path) do |p|
+          allconfigs << p.gsub("#{staging_path}/", '') if File.file? p
+        end
+      rescue Errno::ENOENT => e
+        raise FPM::InvalidPackageConfiguration,
+          "Error trying to use '#{cfg_path}' as a config file in the package. Does it exist?"
       end
     end
     allconfigs.sort!.uniq!
