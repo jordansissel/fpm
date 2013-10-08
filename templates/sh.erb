@@ -20,7 +20,7 @@ set -e
 # VERBOSE      = is set if the package was called with -v for verbose output
 function main() {
     set_install_dir
-    
+
     set_owner
 
     unpack_payload
@@ -34,7 +34,7 @@ function main() {
         exit 1
     else
         clean_out_old_releases
-        log "Installation complete."    
+        log "Installation complete."
     fi
 }
 
@@ -60,23 +60,24 @@ function save_environment(){
 
     # just piping env to a file doesn't quote the variables. This does. Phew
     env |  while read ENVVAR ; do
-        FIRST=true
         if echo $ENVVAR | grep -q "^_=" ; then # _ is a readonly variable
             continue
         fi
 
         # split the line into spaces on the first = sign then write out the line with quotes
+        token=0
         for THING in ${ENVVAR/=/ } ; do
-            if $FIRST ; then        
+            (( token++ ))
+            if [ $token -eq 1 ] ; then
                 echo -n "$THING=\"" >> ${METADATA}
-            else
+            elif [ $token -eq 2 ] ; then
                 echo -n $THING >> ${METADATA}
+            else
+                echo -n " $THING" >> ${METADATA}
             fi
-            FIRST=false
         done
         echo "\"" >> ${METADATA}
     done
-
     chown ${OWNER} ${METADATA}
 }
 
@@ -92,12 +93,12 @@ function set_install_dir(){
     fi
 
     if [ -d "${INSTALL_DIR}" ] ; then
-        
+
         if [ -z "${CONFIRM}" ] ; then
             echo "Install directory '${INSTALL_DIR}' already exists. Would you like to delete it? [y/n]"
             read CONFIRM
         fi
-        
+
         if [ "${CONFIRM}" = "y" ] ; then
             log "Clobbering existing installation in ${INSTALL_DIR}"
             rm -rf "${INSTALL_DIR}"
@@ -105,7 +106,7 @@ function set_install_dir(){
             die "Aborting install because installation directory already exists."
         fi
     fi
-    
+
     mkdir -p "$INSTALL_DIR" || die "Unable to create install directory $INSTALL_DIR"
 
     export INSTALL_DIR
@@ -136,8 +137,8 @@ function run_post_install(){
 }
 
 function create_symlinks(){
-    [ -n "$USE_FLAT_RELEASE_DIRECTORY" ] && return 
-    
+    [ -n "$USE_FLAT_RELEASE_DIRECTORY" ] && return
+
     export CURRENT_DIR="$INSTALL_ROOT/current"
     if [ -e "$CURRENT_DIR" ] ; then
         OLD_CURRENT_TARGET=$(readlink $CURRENT_DIR)
@@ -163,7 +164,7 @@ function revert_symlinks(){
 
 function clean_out_old_releases(){
     [ -n "$USE_FLAT_RELEASE_DIRECTORY" ] && return
-    
+
     while [ $(ls -tr "${RELEASES_DIR}" | wc -l) -gt 2 ] ; do
         OLDEST_RELEASE=$(ls -tr "${RELEASES_DIR}" | head -1)
         log "Deleting old release '${OLDEST_RELEASE}'"
@@ -203,7 +204,7 @@ function log(){
 
 function parse_args() {
     args=`getopt i:o:ryvh $*`
-    
+
     if [ $? != 0 ] ; then
         print_usage
         exit 2
