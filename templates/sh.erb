@@ -46,39 +46,36 @@ function fpm_metadata_file(){
 # if this slug was installed at this location already we will find a metadata file with the details
 # about the installation that we left here. Load from that if available but allow command line args to trump
 function load_environment(){
-    METADATA=$(fpm_metadata_file)
+    local METADATA=$(fpm_metadata_file)
     if [ -r "${METADATA}" ] ; then
-        log "Found existing metadata file '${METADATA}'. Loading previous install details"
+        log "Found existing metadata file '${METADATA}'. Loading previous install details. Env vars in current environment will take precedence over saved values."
+        local TMP="/tmp/$(basename $0).$$.tmp"
+        # save existing environment, load saved environment from previous run from install-metadata and then
+        # overlay current environment so that anything set currencly will take precedence
+        # but missing values will be loaded from previous runs.
+        save_environment "$TMP"
         source "${METADATA}"
+        source $TMP
+        rm "$TMP"
     fi
 }
-
+  
 # write out metadata for future installs
 function save_environment(){
-    METADATA=$(fpm_metadata_file)
+    local METADATA=$1
     echo -n "" > ${METADATA} # empty file
 
-    # just piping env to a file doesn't quote the variables. This does. Phew
-    env |  while read ENVVAR ; do
-        if echo $ENVVAR | grep -q "^_=" ; then # _ is a readonly variable
-            continue
-        fi
-
-        # split the line into spaces on the first = sign then write out the line with quotes
-        token=0
-        for THING in ${ENVVAR/=/ } ; do
-            (( token++ ))
-            if [ $token -eq 1 ] ; then
-                echo -n "$THING=\"" >> ${METADATA}
-            elif [ $token -eq 2 ] ; then
-                echo -n $THING >> ${METADATA}
-            else
-                echo -n " $THING" >> ${METADATA}
-            fi
-        done
-        echo "\"" >> ${METADATA}
+    # just piping env to a file doesn't quote the variables. This does
+    # filter out multiline junk and _. _ is a readonly variable 
+    env | egrep "^[^ ]+=.*" | grep -v "^_=" | while read ENVVAR ; do
+        local NAME=${ENVVAR%%=*}
+        local VALUE=$(eval echo '$'$NAME)
+        echo "export $NAME=\"$VALUE\"" >> ${METADATA}
     done
-    chown ${OWNER} ${METADATA}
+    
+    if [ -n "${OWNER}" ] ; then
+        chown ${OWNER} ${METADATA}
+    fi
 }
 
 function set_install_dir(){
@@ -121,12 +118,12 @@ function set_owner(){
 
 function unpack_payload(){
     log "Unpacking payload . . ."
-    archive_line=$(egrep --text --line-number '__ARCHIVE__$' $0 | cut -f1 -d:)
+    local archive_line=$(egrep --text --line-number '__ARCHIVE__$' $0 | cut -f1 -d:)
     tail -n +$((archive_line + 1)) $0 | tar -C $INSTALL_DIR -xjf - > /dev/null || die "Failed to unpack payload from the end of '$0' into '$INSTALL_DIR'"
 }
 
 function run_post_install(){
-    AFTER_INSTALL=$INSTALL_DIR/.fpm/after_install
+    local AFTER_INSTALL=$INSTALL_DIR/.fpm/after_install
     if [ -r $AFTER_INSTALL ] ; then
         chmod +x $AFTER_INSTALL
         log "Running post install script"
@@ -250,7 +247,7 @@ load_environment
 parse_args $*
 
 main
-save_environment
+save_environment $(fpm_metadata_file)
 exit 0
 
 __ARCHIVE__
