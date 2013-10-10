@@ -50,6 +50,11 @@ class FPM::Package::CPAN < FPM::Package
     elsif File.exists?(File.join(moduledir, ("META.yml")))
       require "yaml"
       metadata = YAML.load_file(File.join(moduledir, ("META.yml")))
+    elsif File.exists?(File.join(moduledir, "MYMETA.json"))
+      metadata = JSON.parse(File.read(File.join(moduledir, ("MYMETA.json"))))
+    elsif File.exists?(File.join(moduledir, ("MYMETA.yml")))
+      require "yaml"
+      metadata = YAML.load_file(File.join(moduledir, ("MYMETA.yml")))
     else
       raise FPM::InvalidPackageConfiguration, 
         "Could not find package metadata. Checked for META.json and META.yml"
