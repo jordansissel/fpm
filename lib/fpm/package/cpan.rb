@@ -40,9 +40,13 @@ class FPM::Package::CPAN < FPM::Package
     require "net/http"
     require "json"
 
-    result = search(package)
-    tarball = download(result, version)
-    moduledir = unpack(tarball)
+    if (attributes[:cpan_local_module?])
+      moduledir = package
+    else
+      result = search(package)
+      tarball = download(result, version)
+      moduledir = unpack(tarball)
+    end
 
     # Read package metadata (name, version, etc)
     if File.exists?(File.join(moduledir, "META.json"))
