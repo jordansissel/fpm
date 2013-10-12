@@ -69,7 +69,11 @@ function save_environment(){
     # filter out multiline junk and _. _ is a readonly variable 
     env | egrep "^[^ ]+=.*" | grep -v "^_=" | while read ENVVAR ; do
         local NAME=${ENVVAR%%=*}
-        local VALUE=$(eval echo '$'$NAME)
+        # sed is to preserve variable values with dollars (for escaped variables or $() style command replacement),
+        # and command replacement backticks
+        # Escaped parens captures backward reference \1 which gets replaced with backslash and \1 to esape them in the saved
+        # variable value
+        local VALUE=$(eval echo '$'$NAME | sed 's/\([$`]\)/\\\1/g')
         echo "export $NAME=\"$VALUE\"" >> ${METADATA}
     done
     
