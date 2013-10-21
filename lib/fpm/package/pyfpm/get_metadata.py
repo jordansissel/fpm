@@ -1,12 +1,22 @@
-from __future__ import unicode_literals
-
 from distutils.core import Command
 import os
+import sys
 import pkg_resources
 try:
     import json
 except ImportError:
     import simplejson as json
+
+PY3 = sys.version_info[0] == 3
+
+if PY3:
+    def u(s):
+        return s
+else:
+    def u(s):
+        if isinstance(u, unicode):
+            return u
+        return s.decode('utf-8')
 
 
 # Note, the last time I coded python daily was at Google, so it's entirely
@@ -50,9 +60,9 @@ class get_metadata(Command):
         data = {
             "name": self.distribution.get_name(),
             "version": self.distribution.get_version(),
-            "author": "%s <%s>" % (
-                self.distribution.get_author(),
-                self.distribution.get_author_email(),
+            "author": u("%s <%s>") % (
+                u(self.distribution.get_author()),
+                u(self.distribution.get_author_email()),
             ),
             "description": self.distribution.get_description(),
             "license": self.distribution.get_license(),
