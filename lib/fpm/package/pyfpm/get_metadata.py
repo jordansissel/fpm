@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from distutils.core import Command
 import os
 import pkg_resources
