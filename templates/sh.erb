@@ -87,25 +87,15 @@ function set_install_dir(){
     DEFAULT_DIR=$(echo $(basename $0) | sed -e 's/\.[^\.]*$//')
     INSTALL_DIR=${INSTALL_ROOT:-$DEFAULT_DIR}
 
+    DATESTAMP=$(date +%Y%m%d%H%M%S)
     if [ -z "$USE_FLAT_RELEASE_DIRECTORY" ] ; then
         RELEASE_ID=<%= release_id %>
-        DATESTAMP=$(date +%Y%m%d%H%M%S)
         INSTALL_DIR="${RELEASES_DIR}/${RELEASE_ID:-$DATESTAMP}"
     fi
 
     if [ -d "${INSTALL_DIR}" ] ; then
-
-        if [ -z "${CONFIRM}" ] ; then
-            echo "Install directory '${INSTALL_DIR}' already exists. Would you like to delete it? [y/n]"
-            read CONFIRM
-        fi
-
-        if [ "${CONFIRM}" = "y" ] ; then
-            log "Clobbering existing installation in ${INSTALL_DIR}"
-            rm -rf "${INSTALL_DIR}"
-        else
-            die "Aborting install because installation directory already exists."
-        fi
+        log "Install directory ${INSTALL_DIR} already exists. Installing with datestamp to '${INSTALL_DIR}-${DATESTAMP}'"
+        INSTALL_DIR="${INSTALL_DIR}-${DATESTAMP}"
     fi
 
     mkdir -p "$INSTALL_DIR" || die "Unable to create install directory $INSTALL_DIR"
