@@ -138,6 +138,7 @@ describe FPM::Package::Deb do
       original.architecture = "all"
       original.dependencies << "something > 10"
       original.dependencies << "hello >= 20"
+      original.dependencies << "semver ~> 3"
       original.provides << "#{original.name} = #{original.version}"
 
       # Test to cover PR#591 (fix provides names)
@@ -260,7 +261,7 @@ describe FPM::Package::Deb do
 
       it "should have the correct dependency list" do
         # 'something > 10' should convert to 'something (>> 10)', etc.
-        insist { dpkg_field("Depends") } == "something (>> 10), hello (>= 20)"
+        insist { dpkg_field("Depends") } == "something (>> 10), hello (>= 20), semver (>= 3)"
       end
 
       it "should have the correct build dependency list" do
