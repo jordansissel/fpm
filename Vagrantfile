@@ -20,4 +20,10 @@ Vagrant.configure("2") do |config|
     puppet.manifests_path = "test"
     puppet.manifest_file = "vagrant.pp"
   end
+
+config.vm.define :smartos do |smartos|
+    smartos.vm.box = "smartos-base1310-64-virtualbox-20130806.box"
+    smartos.vm.box_url = "http://dlc-int.openindiana.org/aszeszo/vagrant/smartos-base1310-64-virtualbox-20130806.box"
+  end
+
 end
