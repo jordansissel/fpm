@@ -6,7 +6,7 @@ GEM=$(NAME)-$(VERSION).gem
 .PHONY: test
 test:
 	rm -rf .yardoc
-	sh notify-failure.sh ruby test/all.rb
+	sh notify-failure.sh rspec
 
 .PHONY: testloop
 testloop:
