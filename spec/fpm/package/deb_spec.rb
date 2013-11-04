@@ -261,7 +261,7 @@ describe FPM::Package::Deb do
 
       it "should have the correct dependency list" do
         # 'something > 10' should convert to 'something (>> 10)', etc.
-        insist { dpkg_field("Depends") } == "something (>> 10), hello (>= 20), semver (>= 3)"
+        insist { dpkg_field("Depends") } == "something (>> 10), hello (>= 20), semver (>= 3.0), semver (<< 4.0)"
       end
 
       it "should have the correct build dependency list" do

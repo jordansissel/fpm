@@ -650,16 +650,13 @@ class FPM::Package::Deb < FPM::Package
     # Convert gem ~> X.Y.Z to '>= X.Y.Z' and << X.Y+1.0
     if dep =~ /\(~>/
       name, version = dep.gsub(/[()~>]/, "").split(/ +/)[0..1]
-      if version.match(/\./)
-        nextversion = version.split(".").collect { |v| v.to_i }
-        l = nextversion.length
-        nextversion[l-2] += 1
-        nextversion[l-1] = 0
-        nextversion = nextversion.join(".")
-        return ["#{name} (>= #{version})", "#{name} (<< #{nextversion})"]
-      else
-        return "#{name} (>= #{version})"
-      end
+      version = "#{version}.0" unless version.match(/\./)
+      nextversion = version.split(".").collect { |v| v.to_i }
+      l = nextversion.length
+      nextversion[l-2] += 1
+      nextversion[l-1] = 0
+      nextversion = nextversion.join(".")
+      return ["#{name} (>= #{version})", "#{name} (<< #{nextversion})"]
     elsif (m = dep.match(/(\S+)\s+\(!= (.+)\)/))
       # Move '!=' dependency specifications into 'Breaks'
       self.attributes[:deb_breaks] ||= []
