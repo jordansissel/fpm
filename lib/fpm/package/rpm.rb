@@ -193,25 +193,19 @@ class FPM::Package::RPM < FPM::Package
       # Convert 'rubygem-foo' provides values to 'rubygem(foo)'
       # since that's what most rpm packagers seem to do.
       self.provides = self.provides.collect do |provides|
-        first, remainder = provides.split("-", 2)
-        if first == "rubygem"
-          name, remainder = remainder.split(" ", 2)
-          # yield rubygem(name)...
-          "rubygem(#{name})#{remainder ? " #{remainder}" : ""}"
+        if name=/^(#{attributes[:gem_package_name_prefix]})-([^\s]+)\s+(.*)$/.match(provides)
+          "#{name[1]}(#{name[2]})#{name[3] ? " #{name[3]}" : ""}"
         else
           provides
         end
       end
       self.dependencies = self.dependencies.collect do |dependency|
-        first, remainder = dependency.split("-", 2)
-        if first == "rubygem"
-          name, remainder = remainder.split(" ", 2)
-          "rubygem(#{name})#{remainder ? " #{remainder}" : ""}"
+        if name=/^(#{attributes[:gem_package_name_prefix]})-([^\s]+)\s+(.*)$/.match(dependency)
+          "#{name[1]}(#{name[2]})#{name[3] ? " #{name[3]}" : ""}"
         else
           dependency
         end
       end
-      #self.provides << "rubygem(#{self.name})"
     end
 
     # Convert != dependency as Conflict =, as rpm doesn't understand !=
