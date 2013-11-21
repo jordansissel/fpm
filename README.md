@@ -95,6 +95,7 @@ Sources:
 * python modules (autodownload for you)
 * pear (also downloads for you)
 * directories
+* tar(.gz) archives
 * rpm
 * deb
 * node packages (npm)
