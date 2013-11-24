@@ -193,6 +193,8 @@ class FPM::Package::RPM < FPM::Package
       # Convert 'rubygem-foo' provides values to 'rubygem(foo)'
       # since that's what most rpm packagers seem to do.
       self.provides = self.provides.collect do |provides|
+        # Tries to match rubygem_prefix [1], gem_name [2] and version [3] if present
+        # and return it in rubygem_prefix(gem_name) form
         if name=/^(#{attributes[:gem_package_name_prefix]})-([^\s]+)\s*(.*)$/.match(provides)
           "#{name[1]}(#{name[2]})#{name[3] ? " #{name[3]}" : ""}"
         else
@@ -200,6 +202,8 @@ class FPM::Package::RPM < FPM::Package
         end
       end
       self.dependencies = self.dependencies.collect do |dependency|
+        # Tries to match rubygem_prefix [1], gem_name [2] and version [3] if present
+        # and return it in rubygem_prefix(gem_name) form
         if name=/^(#{attributes[:gem_package_name_prefix]})-([^\s]+)\s*(.*)$/.match(dependency)
           "#{name[1]}(#{name[2]})#{name[3] ? " #{name[3]}" : ""}"
         else
