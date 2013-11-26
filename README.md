@@ -156,21 +156,14 @@ Now change to the root of the fpm repo and run:
     $ bundle install
 
 This will install all of the dependencies required for running fpm from source.
-Most importantly, you should see the following output from the bundle command:
+Most importantly, you should see the following output from the bundle command
+when it lists the fpm gem:
 
-...
-
-Using ftw (0.0.36) 
-
-Using json (1.8.1) 
-
-**Using fpm (0.4.42) from source at .**
-
-Using hitimes (1.2.1) 
-
-Using insist (0.0.8) 
-
-...
+    ...
+    Using json (1.8.1) 
+    Using fpm (0.4.42) from source at .
+    Using hitimes (1.2.1) 
+    ...
 
 Next, run make in root of the fpm repo.  If there are any problems (such as
 missing dependencies) you should receive an error
