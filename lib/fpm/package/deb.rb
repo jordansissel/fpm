@@ -409,6 +409,10 @@ class FPM::Package::Deb < FPM::Package
     self.dependencies = self.dependencies.collect do |dep|
       fix_dependency(dep)
     end.flatten
+    self.provides = self.provides.collect do |provides|
+	fix_provides(provides)
+    end.flatten
+      
   end # def converted_from
 
   def debianize_op(op)
@@ -440,7 +444,7 @@ class FPM::Package::Deb < FPM::Package
     end
 
     if dep.include?("_")
-      @logger.warn("Replacing underscores with dashes in '#{dep}' because " \
+      @logger.warn("Replacing dependency underscores with dashes in '#{dep}' because " \
                    "debs don't like underscores")
       dep = dep.gsub("_", "-")
     end
@@ -477,6 +481,23 @@ class FPM::Package::Deb < FPM::Package
       return dep.rstrip
     end
   end # def fix_dependency
+
+  def fix_provides(provides)
+    name_re = /^[^ \(]+/
+    name = provides[name_re]
+    if name =~ /[A-Z]/
+      @logger.warn("Downcasing provides '#{name}' because deb packages " \
+                   " don't work so good with uppercase names")
+      provides = provides.gsub(name_re) { |n| n.downcase }
+    end
+
+    if provides.include?("_")
+      @logger.warn("Replacing 'provides' underscores with dashes in '#{provides}' because " \
+                   "debs don't like underscores")
+      provides = provides.gsub("_", "-")
+    end
+    return provides.rstrip
+  end
 
   def control_path(path=nil)
     @control_path ||= build_path("control")
