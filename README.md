@@ -136,6 +136,44 @@ That said, some basic guidelines, which you are free to ignore :)
   irc.freenode.org) is a good place for this as is the 
   [mailing list](http://groups.google.com/group/fpm-users)
 
+### Contributing by forking from GitHub
+
+First, create a github account if you do not already have one.  Log in to
+github and go to [the main fpm github page](https://github.com/jordansissel/fpm).
+
+At the top right, click on the button labeled "Fork".  This will put a forked
+copy of the main fpm repo into your account.  Next, clone your account's github
+repo of fpm.  For example:
+
+    $ git clone git@github.com:yourusername/fpm.git
+
+If you don't already have the bundler gem installed, install it now:
+
+    $ gem install bundler
+
+Now change to the root of the fpm repo and run:
+
+    $ bundle install
+
+This will install all of the dependencies required for running fpm from source.
+Most importantly, you should see the following output from the bundle command:
+
+    ...
+    Using ftw (0.0.36) 
+    Using json (1.8.1) 
+    **Using fpm (0.4.42) from source at .**
+    Using hitimes (1.2.1) 
+    Using insist (0.0.8) 
+    ...
+
+At this point, the fpm command should run directly from the code in your cloned
+repo.  Now simply make whatever changes you want, commit the code, and push
+your commit back to master.
+
+If you think your changes are ready to be merged back to the main fpm repo, you
+can generate a pull request on the github website for your repo and send it in
+for review.
+
 ## More Documentation
 
 [See the wiki for more docs](https://github.com/jordansissel/fpm/wiki)
