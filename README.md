@@ -159,11 +159,17 @@ This will install all of the dependencies required for running fpm from source.
 Most importantly, you should see the following output from the bundle command:
 
 ...
+
 Using ftw (0.0.36) 
+
 Using json (1.8.1) 
+
 **Using fpm (0.4.42) from source at .**
+
 Using hitimes (1.2.1) 
+
 Using insist (0.0.8) 
+
 ...
 
 Next, run make in root of the fpm repo.  If there are any problems (such as
