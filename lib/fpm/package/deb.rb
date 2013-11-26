@@ -410,7 +410,7 @@ class FPM::Package::Deb < FPM::Package
       fix_dependency(dep)
     end.flatten
     self.provides = self.provides.collect do |provides|
-	fix_provides(provides)
+      fix_provides(provides)
     end.flatten
       
   end # def converted_from
