@@ -626,6 +626,7 @@ class FPM::Package::Deb < FPM::Package
           out.puts "#{md5} #{path}"
         end
       end
+      File.chmod(0644, control_path("md5sums"))
     end
   end # def write_md5sums
 
