@@ -97,5 +97,22 @@ describe FPM::Package::Dir do
         insist { File }.exist?(File.join(output, expected_file))
       end
     end
+
+    it "should not map existing paths with = in them" do
+      File.write(File.join(tmpdir, "a=b"), "hello world")
+      subject.input(File.join(tmpdir, "a=b"))
+      subject.output(output)
+      insist { File }.exist?(File.join(output, tmpdir, "a=b"))
+    end
+
+    it "should not map existing paths with = in them and obey :chdir and :prefix attributes" do
+      Dir.mkdir(File.join(tmpdir, "a"))
+      File.write(File.join(tmpdir,"a",  "a=b"), "hello world")
+      subject.attributes[:chdir] = tmpdir
+      subject.attributes[:prefix] = "/foo"
+      subject.input(File.join("a", "a=b"))
+      subject.output(output)
+      insist { File }.exist?(File.join(output, "foo", "a", "a=b"))
+    end
   end
 end # describe FPM::Package::Dir
