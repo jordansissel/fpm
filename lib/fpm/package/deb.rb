@@ -225,7 +225,10 @@ class FPM::Package::Deb < FPM::Package
       self.name = parse.call("Package")
       self.url = parse.call("Homepage")
       self.vendor = parse.call("Vendor") || self.vendor
-      self.provides = parse.call("Provides") || self.provides
+      with(parse.call("Provides")) do |provides_str|
+        next if provides_str.nil?
+        self.provides = provides_str.split(/\s*,\s*/)
+      end
 
       # The description field is a special flower, parse it that way.
       # The description is the first line as a normal Description field, but also continues
@@ -297,6 +300,7 @@ class FPM::Package::Deb < FPM::Package
   end # def extract_files
 
   def output(output_path)
+    self.provides = self.provides.collect { |p| fix_provides(p) }
     output_check(output_path)
     # Abort if the target path already exists.
 
