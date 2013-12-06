@@ -75,20 +75,46 @@ class FPM::Package::Python < FPM::Package
   # * The path to a setup.py
   def input(package)
     path_to_package = download_if_necessary(package, version)
+    if (attributes[:python_pip] and path_to_package.kind_of?(Array))
+      path_to_package.each do |path|
+        if File.directory?(path)
+          setup_py = File.join(path, "setup.py")
+        else
+          setup_py = path
+        end
 
-    if File.directory?(path_to_package)
-      setup_py = File.join(path_to_package, "setup.py")
+        if !File.exists?(setup_py)
+          @logger.error("Could not find 'setup.py'", :path => setup_py)
+          raise "Unable to find python package; tried #{setup_py}"
+        end
+
+        load_package_info(setup_py)
+        install_to_staging(setup_py)
+      end
     else
-      setup_py = path_to_package
+      path = path_to_package.first
+      # not sure why this was needed since download_if_needed only returned dirs.first
+      # moved here anyway, should never fail since .first
+      if path.length != 1
+        raise "Unexpected directory layout after easy_install. Maybe file a bug?"
+      end
+
+      if File.directory?(path)
+        setup_py = File.join(path, "setup.py")
+      else
+        setup_py = path
+      end
+        
+      if !File.exists?(setup_py)
+        @logger.error("Could not find 'setup.py'", :path => setup_py)
+        raise "Unable to find python package; tried #{setup_py}"
+      end
+
+      load_package_info(setup_py)
+      install_to_staging(setup_py)
+
     end
 
-    if !File.exists?(setup_py)
-      @logger.error("Could not find 'setup.py'", :path => setup_py)
-      raise "Unable to find python package; tried #{setup_py}"
-    end
-
-    load_package_info(setup_py)
-    install_to_staging(setup_py)
   end # def input
 
   # Download the given package if necessary. If version is given, that version
@@ -128,10 +154,7 @@ class FPM::Package::Python < FPM::Package
     # easy_install will put stuff in @tmpdir/packagename/, so find that:
     #  @tmpdir/somepackage/setup.py
     dirs = ::Dir.glob(File.join(target, "*"))
-    if dirs.length != 1
-      raise "Unexpected directory layout after easy_install. Maybe file a bug? The directory is #{build_path}"
-    end
-    return dirs.first
+    return dirs
   end # def download
 
   # Load the package information like name, version, dependencies.
