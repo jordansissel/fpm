@@ -1,8 +1,56 @@
-?.?.? (???)
-  - cpan: catch more cases of perllocal.pod and delete them (#510)
+1.0.0 (December ???, 2013)
+  - Config file of flags is now supported. Searches for $HOME/.fpm and
+    $PWD/.fpm. If both exist, $HOME is loaded first so $PWD can override.
+    (Pranay Kanwar)
+  - pkgin: Basic support for SmartOS/pkgsrc's pkgin format. (#567, Brian Akins)
+  - cpan: catch more cases of perllocal.pod and delete them 
+    (#510, Jordan Sissel)
+  - cpan: Correctly support module version selection (#518, Matt Sharpe)
+  - cpan: include builddeps in PERL5LIB when running cpan tests 
+    (#500, Matt Sharpe)
+  - cpan: Avoid old system perl modules when doing module builds 
+    (#442, #513; Matt Sharpe)
   - python: safer gathering of python module dependencies.
   - python: better handling of unicode strings in python package metadata
     (#575, Bruno Renié)
+  - cpan: Support 'http_proxy' env var. (#491, Patrick Cable)
+  - deb: --deb-user and --deb-group both default to 'root' now 
+    (#504, Pranay Kanwar)
+  - deb: convert '>' to '>>' in deb version constraints 
+    (#503, #439, Pranay Kanwar)
+  - deb: Warn if epoch is set. Just so you know what's going on, since
+    the default filename doesn't include the epoch. (#502, Pranay Kanwar)
+  - deb,rpm: --config-files is now recursive if you give it a directory.
+    This seems to be the most expected behavior by users. 
+    (#171, #506; Pranay Kanwar)
+  - dir: Respect -C when using path mapping (#498, #507; Pranay Kanwar)
+  - rpm: Add --rpm-ignore-iteration-in-dependencies to let you to depend
+    on any release (aka iteration) of the same version of a package.
+    (#364, #508; Pranay Kanwar)
+  - dir: Handle copying of special files when possible 
+    (#347, #511, #539, #561; Pranay Kanwar)
+  - rpm: Don't mistake symlinks as actual directories (#521, Nathan Huff)
+  - npm: Choose an alternate npm registry with --npm-registry (#445, #524; 
+    Matt Sharpe)
+  - cpan: Choose an alternate cpan server with --cpan-mirror. Additionally, you
+    can use --cpan-mirror-only to only use this mirror for metadata queries.
+    (#524, Matt Sharpe)
+  - deb: Fix broken --deb-changelog flag (#543, #544; Tray Torrance)
+  - deb: When --deb-upstart is given, automatically create an upstart-sysv
+    symlink /etc/init.d/<name> to /lib/init/upstart-job (#545, Igor Galić)
+  - rpm: Fix bug when generating spec file listings on files with strange
+    characters in the names. (#547, Chris Chandler)
+  - dir: Fix bug where the new directory mapping feature would cause you not
+    to be able to select files with '=' in the name for packaging. 
+    (#556, #554; Pranay Kanwar)
+  - python: Fix some unicode string issues in package metadata 
+    (#575, Bruno Renié)
+  - gem-rpm: Now respects the --gem-package-name-prefix when generating the
+    'rubygem(name)' provides statement (#585, Stepan Stipl)
+  - deb: Downcase and replace underscores with dashes in 'provides' list.
+    (#591, Eric Connell)
+  - deb: Fix a lintian complaint about md5sums permissions (#593, Sam Crang)
+  - cpan: Modules with 'MYMETA' files are now supported (#573, Michael Donlon)
 
 0.4.42 (July 23, 2013)
   - dir: make source=destination mappings behave the same way 'rsync -a' does
