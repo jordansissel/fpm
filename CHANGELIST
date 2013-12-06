@@ -1,6 +1,8 @@
 ?.?.? (???)
   - cpan: catch more cases of perllocal.pod and delete them (#510)
   - python: safer gathering of python module dependencies.
+  - python: better handling of unicode strings in python package metadata
+    (#575, Bruno Renié)
 
 0.4.42 (July 23, 2013)
   - dir: make source=destination mappings behave the same way 'rsync -a' does
