@@ -1,4 +1,4 @@
-1.0.0 (December ???, 2013)
+1.0.0 (December 5, 2013)
   - Config file of flags is now supported. Searches for $HOME/.fpm and
     $PWD/.fpm. If both exist, $HOME is loaded first so $PWD can override.
     (Pranay Kanwar)
