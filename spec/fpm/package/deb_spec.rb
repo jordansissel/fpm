@@ -120,7 +120,10 @@ describe FPM::Package::Deb do
       @original.architecture = "all"
       @original.dependencies << "something > 10"
       @original.dependencies << "hello >= 20"
-      @original.provides = "#{@original.name} = #{@original.version}"
+      @original.provides << "#{@original.name} = #{@original.version}"
+
+      # Test to cover PR#591 (fix provides names)
+      @original.provides << "Some-SILLY_name"
 
       @original.conflicts = ["foo < 123"]
       @original.attributes[:deb_breaks] = ["baz < 123"]
@@ -169,7 +172,11 @@ describe FPM::Package::Deb do
 
       it "should ignore versions and conditions in 'provides' (#280)" do
         # Provides is an array because rpm supports multiple 'provides'
-        insist { @input.provides } == [ @original.name ]
+        insist { @input.provides }.include?(@original.name)
+      end
+
+      it "should fix capitalization and underscores-to-dashes (#591)" do
+        insist { @input.provides }.include?("some-silly-name")
       end
     end # package attributes
 
