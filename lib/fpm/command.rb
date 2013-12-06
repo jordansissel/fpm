@@ -103,7 +103,7 @@ class FPM::Command < Clamp::Command
     " in debs and %config in rpm. If you have multiple files to mark as " \
     "configuration files, specify this flag multiple times.",
     :multivalued => true, :attribute_name => :config_files
-  option "--directories", "DIRECTORIES", "Mark a directory as being owned " \
+  option "--directories", "DIRECTORIES", "Recursively mark a directory as being owned " \
     "by the package", :multivalued => true, :attribute_name => :directories
   option ["-a", "--architecture"], "ARCHITECTURE",
     "The architecture name. Usually matches 'uname -m'. For automatic values," \
