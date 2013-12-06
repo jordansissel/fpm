@@ -8,7 +8,10 @@ describe "FPM::Package#convert" do
 
   subject do
     source = FPM::Package::Gem.new
-    source.attributes[:gem_package_name_prefix ] = 'rubygem19'
+    prefix = source.attributes[:gem_package_name_prefix ] = 'rubygem19'
+    name = source.name = "whatever"
+    version = source.version = "1.0"
+    source.provides << "#{prefix}-#{name} = #{version}"
     source.convert(FPM::Package::RPM)
   end
 
@@ -18,5 +21,9 @@ describe "FPM::Package#convert" do
 
   it "remembers attributes applied to source" do
     insist { subject.attributes[:gem_package_name_prefix] } == gem_package_name_prefix
+  end
+
+  it "should list provides matching the gem_package_name_prefix (#585)" do
+    insist { subject.provides }.include?("rubygem19(whatever) = 1.0")
   end
 end
