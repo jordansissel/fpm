@@ -595,6 +595,8 @@ class FPM::Package::Deb < FPM::Package
     # scan all conf file paths for files and add them
     allconfigs = []
     config_files.each do |path|
+      # Strip leading /
+      path = path[1..-1] if path[0,1] == "/"
       cfg_path = File.expand_path(path, staging_path)
       begin
         Find.find(cfg_path) do |p|
