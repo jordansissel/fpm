@@ -1,3 +1,6 @@
+1.0.1 (December 7, 2013)
+  - deb: Correctly handle --config-files given with a leading / (Jordan Sissel)
+
 1.0.0 (December 5, 2013)
   - Config file of flags is now supported. Searches for $HOME/.fpm and
     $PWD/.fpm. If both exist, $HOME is loaded first so $PWD can override.
