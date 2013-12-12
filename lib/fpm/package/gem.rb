@@ -44,6 +44,8 @@ class FPM::Package::Gem < FPM::Package
   option "--disable-dependency", "gem_name",
     "The gem name to remove from dependency list",
     :multivalued => true, :attribute_name => :gem_disable_dependencies
+  option "--include-dependencies", :flag, "Should the gem dependencies " \
+    "be installed?", :default => false
 
   option "--version-bins", :flag, "Append the version to the bins", :default => false
 
@@ -160,7 +162,7 @@ class FPM::Package::Gem < FPM::Package
     # composing multiple packages, it's best to explicitly include it in the provides list.
     self.provides << "#{self.name} = #{self.version}"
 
-    if !attributes[:no_auto_depends?]
+    if !attributes[:no_auto_depends?] && !attributes[:gem_include_dependencies?]
       spec.runtime_dependencies.map do |dep|
         # rubygems 1.3.5 doesn't have 'Gem::Dependency#requirement'
         if dep.respond_to?(:requirement)
@@ -197,7 +199,12 @@ class FPM::Package::Gem < FPM::Package
     ::FileUtils.mkdir_p(installdir)
     # TODO(sissel): Allow setting gem tool path
     args = [attributes[:gem_gem], "install", "--quiet", "--no-ri", "--no-rdoc",
-       "--no-user-install", "--install-dir", installdir, "--ignore-dependencies"]
+       "--no-user-install", "--install-dir", installdir]
+
+    if !attributes[:gem_include_dependencies?]
+      args += ["--ignore-dependencies"]
+    end
+
     if attributes[:gem_env_shebang?]
       args += ["-E"]
     end
