@@ -223,19 +223,6 @@ class FPM::Package::RPM < FPM::Package
       dep_ok
     end
 
-    # Convert any dashes in version strings to underscores.
-    self.dependencies = self.dependencies.collect do |dep|
-      name, op, version = dep.split(/\s+/)
-      if !version.nil? and version.include?("-")
-        @logger.warn("Dependency package '#{name}' version '#{version}' " \
-                     "includes dashes, converting to underscores")
-        version = version.gsub(/-/, "_")
-        "#{name} #{op} #{version}"
-      else
-        dep
-      end
-    end
-
     # if --ignore-iteration-in-dependencies is true convert foo = X, to
     # foo >= X , foo < X+1
     if self.attributes[:rpm_ignore_iteration_in_dependencies?]
