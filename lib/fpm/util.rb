@@ -117,7 +117,11 @@ module FPM::Util
     when "SunOS"
       return "gtar"
     when "Darwin"
-      return "gnutar"
+      # Try running gnutar, it was renamed(??) in homebrew to 'gtar' at some point, I guess? I don't know.
+      ["gnutar", "gtar"].each do |tar|
+        system("#{tar} > /dev/null 2> /dev/null")
+        return tar unless $?.exitstatus == 127
+      end
     else
       return "tar"
     end
