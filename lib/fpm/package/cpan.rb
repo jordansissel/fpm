@@ -273,8 +273,12 @@ class FPM::Package::CPAN < FPM::Package
 
     # should probably be basepathed from the url 
     tarball = File.basename(archive)
+
+    url_base = "http://www.cpan.org/"
+    url_base = "#{attributes[:cpan_mirror]}" if !attributes[:cpan_mirror].nil?
+
     #url = "http://www.cpan.org/CPAN/authors/id/#{author[0,1]}/#{author[0,2]}/#{author}/#{tarball}"
-    url = "http://www.cpan.org/authors/id/#{author[0,1]}/#{author[0,2]}/#{author}/#{archive}"
+    url = "#{url_base}/authors/id/#{author[0,1]}/#{author[0,2]}/#{author}/#{archive}"
     @logger.debug("Fetching perl module", :url => url)
     
     begin
