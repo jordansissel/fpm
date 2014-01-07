@@ -106,8 +106,8 @@ class FPM::Package::PEAR < FPM::Package
         begin
           content = File.read(path).gsub(/#{Regexp.escape(staging_path)}/, "")
           File.write(path, content)
-        rescue ArgumentError
-          @logger.warn("error replacing staging_path in file", :replace_in => path)
+        rescue ArgumentError => e
+          @logger.warn("error replacing staging_path in file", :replace_in => path, :error => e)
         end
       end
       FileUtils.rm_r(path) if delete_these.include?(File.basename(path))
