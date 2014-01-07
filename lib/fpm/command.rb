@@ -420,14 +420,18 @@ class FPM::Command < Clamp::Command
     # fpm initialization files, note the order of the following array is
     # important, try .fpm in users home directory first and then the current
     # directory
-    rc_files = [File.join(ENV['HOME'],'.fpm'), '.fpm']
+    rc_files = [ ".fpm" ]
+    rc_files << File.join(ENV["HOME"], ".fpm") if ENV["HOME"]
 
     rc_files.each do |rc_file|
       if File.readable? rc_file
         @logger.warn("Loading flags from rc file #{rc_file}")
         File.readlines(rc_file).each do |line|
-          Shellwords.shellsplit(line).each do |e|
-            ARGV << e
+          # reverse becasue 'unshift' pushes onto the left side of the array.
+          Shellwords.shellsplit(line).reverse.each do |arg|
+            # Put '.fpm'-file flags *before* the command line flags
+            # so that we the CLI can override the .fpm flags
+            ARGV.unshift(arg)
           end
         end
       end
