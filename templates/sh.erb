@@ -21,6 +21,12 @@ set -e
 function main() {
     set_install_dir
 
+    create_pid
+
+    wait_for_others
+    
+    kill_others
+
     set_owner
 
     unpack_payload
@@ -36,6 +42,38 @@ function main() {
         clean_out_old_releases
         log "Installation complete."
     fi
+}
+
+# deletes the PID file for this installation
+function delete_pid(){
+    rm -f ${INSTALL_DIR}/$$.pid 2> /dev/null
+}
+
+# creates a PID file for this installation
+function create_pid(){
+    trap "delete_pid" EXIT
+    echo $$> ${INSTALL_DIR}/$$.pid
+}
+
+
+# checks for other PID files and sleeps for a grace period if found
+function wait_for_others(){
+    local count=`ls ${INSTALL_DIR}/*.pid | wc -l`
+
+    if [ $count -gt 1 ] ; then
+        sleep 10
+    fi 
+}
+
+# kills other running slug installations
+function kill_others(){
+    for PID_FILE in $(ls ${INSTALL_DIR}/*.pid) ; do
+        local p=`cat ${PID_FILE}`
+        if ! [ $p == $$ ] ; then
+            kill -9 $p
+            rm -f $PID_FILE 2> /dev/null
+        fi
+    done
 }
 
 # echos metadata file. A function so that we can have it change after we set INSTALL_ROOT
