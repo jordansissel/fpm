@@ -228,7 +228,10 @@ class FPM::Package::Deb < FPM::Package
       self.name = parse.call("Package")
       self.url = parse.call("Homepage")
       self.vendor = parse.call("Vendor") || self.vendor
-      self.provides = parse.call("Provides") || self.provides
+      with(parse.call("Provides")) do |provides_str|
+        next if provides_str.nil?
+        self.provides = provides_str.split(/\s*,\s*/)
+      end
 
       # The description field is a special flower, parse it that way.
       # The description is the first line as a normal Description field, but also continues
@@ -300,6 +303,7 @@ class FPM::Package::Deb < FPM::Package
   end # def extract_files
 
   def output(output_path)
+    self.provides = self.provides.collect { |p| fix_provides(p) }
     output_check(output_path)
     # Abort if the target path already exists.
 
@@ -414,6 +418,10 @@ class FPM::Package::Deb < FPM::Package
     self.dependencies = self.dependencies.collect do |dep|
       fix_dependency(dep)
     end.flatten
+    self.provides = self.provides.collect do |provides|
+      fix_provides(provides)
+    end.flatten
+      
   end # def converted_from
 
   def debianize_op(op)
@@ -445,7 +453,7 @@ class FPM::Package::Deb < FPM::Package
     end
 
     if dep.include?("_")
-      @logger.warn("Replacing underscores with dashes in '#{dep}' because " \
+      @logger.warn("Replacing dependency underscores with dashes in '#{dep}' because " \
                    "debs don't like underscores")
       dep = dep.gsub("_", "-")
     end
@@ -482,6 +490,23 @@ class FPM::Package::Deb < FPM::Package
       return dep.rstrip
     end
   end # def fix_dependency
+
+  def fix_provides(provides)
+    name_re = /^[^ \(]+/
+    name = provides[name_re]
+    if name =~ /[A-Z]/
+      @logger.warn("Downcasing provides '#{name}' because deb packages " \
+                   " don't work so good with uppercase names")
+      provides = provides.gsub(name_re) { |n| n.downcase }
+    end
+
+    if provides.include?("_")
+      @logger.warn("Replacing 'provides' underscores with dashes in '#{provides}' because " \
+                   "debs don't like underscores")
+      provides = provides.gsub("_", "-")
+    end
+    return provides.rstrip
+  end
 
   def control_path(path=nil)
     @control_path ||= build_path("control")
@@ -575,6 +600,8 @@ class FPM::Package::Deb < FPM::Package
     # scan all conf file paths for files and add them
     allconfigs = []
     config_files.each do |path|
+      # Strip leading /
+      path = path[1..-1] if path[0,1] == "/"
       cfg_path = File.expand_path(path, staging_path)
       begin
         Find.find(cfg_path) do |p|
@@ -631,6 +658,7 @@ class FPM::Package::Deb < FPM::Package
           out.puts "#{md5} #{path}"
         end
       end
+      File.chmod(0644, control_path("md5sums"))
     end
   end # def write_md5sums
 
