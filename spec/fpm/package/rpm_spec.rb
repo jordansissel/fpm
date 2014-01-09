@@ -335,6 +335,18 @@ describe FPM::Package::RPM do
       insist { rpm.files } == [ "/example/%name%" ]
     end
 
+    it "should escape '%' characters in filenames while preserving permissions" do
+      Dir.mkdir(subject.staging_path("/example"))
+      File.write(subject.staging_path("/example/%name%"), "Hello")
+      File.chmod(01777,subject.staging_path("/example/%name%"))
+      subject.attributes[:rpm_use_file_permissions?] = true
+      subject.output(@target)
+
+      rpm = ::RPM::File.new(@target)
+      insist { rpm.files } == [ "/example/%name%" ]
+      insist { `rpm -qlv -p #{@target}`.chomp.split.first } == "-rwxrwxrwt"
+    end
+
     it "should permit spaces in filenames (issue #164)" do
       File.write(subject.staging_path("file with space"), "Hello")
 

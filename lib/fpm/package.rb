@@ -195,7 +195,7 @@ class FPM::Package
 
     # copy other bits
     ivars = [
-      :@architecture, :@attributes, :@category, :@config_files, :@conflicts,
+      :@architecture, :@category, :@config_files, :@conflicts,
       :@dependencies, :@description, :@epoch, :@iteration, :@license, :@maintainer,
       :@name, :@provides, :@replaces, :@scripts, :@url, :@vendor, :@version,
       :@directories, :@staging_path
@@ -205,6 +205,11 @@ class FPM::Package
                     #:from => self.type, :to => pkg.type)
       pkg.instance_variable_set(ivar, instance_variable_get(ivar))
     end
+
+    # Attributes are special! We do not want to remove the default values of
+    # the destination package type unless their value is specified on the
+    # source package object.
+    pkg.attributes.merge!(self.attributes)
 
     pkg.converted_from(self.class)
     return pkg
@@ -366,7 +371,7 @@ class FPM::Package
     end
 
     Find.find(installdir) do |path|
-      match_path = path.sub("#{installdir}/", '')
+      match_path = path.sub("#{installdir.chomp('/')}/", '')
 
       attributes[:excludes].each do |wildcard|
         @logger.debug("Checking path against wildcard", :path => match_path, :wildcard => wildcard)
