@@ -1,3 +1,11 @@
+1.0.2 (January 10, 2013)
+  - rpm: No longer converts - to _ in dependency strings (#603, Bulat
+    Shakirzyanov)
+  - Handle Darwin/OSX tar invocations (now tries 'gnutar' and 'gtar'). (Jordan
+    Sissel)
+  - Process $HOME/.fpm, and $PWD/.fpm in the correct order and allow CLI flags
+    to override fpm config file settings. (#615, Jordan Sissel)
+
 1.0.1 (December 7, 2013)
   - deb: Correctly handle --config-files given with a leading / (Jordan Sissel)
 
