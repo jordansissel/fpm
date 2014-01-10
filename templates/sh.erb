@@ -131,11 +131,6 @@ function set_install_dir(){
         INSTALL_DIR="${RELEASES_DIR}/${RELEASE_ID:-$DATESTAMP}"
     fi
 
-    if [ -d "${INSTALL_DIR}" ] ; then
-        log "Install directory ${INSTALL_DIR} already exists. Installing with datestamp to '${INSTALL_DIR}-${DATESTAMP}'"
-        INSTALL_DIR="${INSTALL_DIR}-${DATESTAMP}"
-    fi
-
     mkdir -p "$INSTALL_DIR" || die "Unable to create install directory $INSTALL_DIR"
 
     export INSTALL_DIR
@@ -149,9 +144,14 @@ function set_owner(){
 }
 
 function unpack_payload(){
-    log "Unpacking payload . . ."
-    local archive_line=$(egrep --text --line-number '__ARCHIVE__$' $0 | cut -f1 -d:)
-    tail -n +$((archive_line + 1)) $0 | tar -C $INSTALL_DIR -xjf - > /dev/null || die "Failed to unpack payload from the end of '$0' into '$INSTALL_DIR'"
+    if [ `find $INSTALL_DIR -prune -empty` ] ; then
+        log "Unpacking payload . . ."
+        local archive_line=$(egrep --text --line-number '__ARCHIVE__$' $0 | cut -f1 -d:)
+        tail -n +$((archive_line + 1)) $0 | tar -C $INSTALL_DIR -xjf - > /dev/null || die "Failed to unpack payload from the end of '$0' into '$INSTALL_DIR'"
+    else
+        # Files are already here, just move symlinks
+        log "Directory already exists. Not upacking payload."
+    fi
 }
 
 function run_post_install(){
