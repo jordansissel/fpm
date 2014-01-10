@@ -7,7 +7,8 @@
     to override fpm config file settings. (#615, Jordan Sissel)
   - Don't leave empty gem bin paths in packages that don't need them (#612,
     Jordan Sissel)
-  - deb: Make --deb-compression=gz work correctly (#616, Evan Krall)
+  - deb: Make --deb-compression=gz work correctly (#616, #617; Evan Krall,
+    Jason Yan)
 
 1.0.1 (December 7, 2013)
   - deb: Correctly handle --config-files given with a leading / (Jordan Sissel)
