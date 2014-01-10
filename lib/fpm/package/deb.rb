@@ -41,7 +41,7 @@ class FPM::Package::Deb < FPM::Package
   end
 
   option "--compression", "COMPRESSION", "The compression type to use, must " \
-    "be one of #{COMPRESSION_TYPES.join(", ")}.", :default => "gzip" do |value|
+    "be one of #{COMPRESSION_TYPES.join(", ")}.", :default => "gz" do |value|
     if !COMPRESSION_TYPES.include?(value)
       raise ArgumentError, "deb compression value of '#{value}' is invalid. " \
         "Must be one of #{COMPRESSION_TYPES.join(", ")}"
