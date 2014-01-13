@@ -69,8 +69,7 @@ class FPM::Package::PECL < FPM::Package
         # Default directorys for extensions and configs
         ext_dir = safesystemout('php-config', '--extension-dir').chomp
         config_dir = '/tmp/php.d'
-        safesystemout('php-config', '--configure-options')
-        .split(/\s+/).each do |line|
+        safesystemout('php-config', '--configure-options').split(/\s+/).each do |line|
           if line.start_with?('--with-config-file-scan-dir')
             config_dir = line.sub('--with-config-file-scan-dir=', '')
             break
