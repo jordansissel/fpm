@@ -144,7 +144,7 @@ function set_owner(){
 }
 
 function unpack_payload(){
-    if [ `find $INSTALL_DIR -prune -empty` ] ; then
+    if [ "$FORCE" == "y" ] || [ `find $INSTALL_DIR -prune -empty` ] ; then
         log "Unpacking payload . . ."
         local archive_line=$(egrep --text --line-number '__ARCHIVE__$' $0 | cut -f1 -d:)
         tail -n +$((archive_line + 1)) $0 | tar -C $INSTALL_DIR -xjf - > /dev/null || die "Failed to unpack payload from the end of '$0' into '$INSTALL_DIR'"
@@ -213,6 +213,7 @@ function print_usage(){
     echo "      directory. Then create a 'current' symlink under install_root to the unpacked"
     echo "      directory once installation is complete replacing the symlink if it already "
     echo "      exists. If this flag is set just install into install_root directly"
+    echo "  -f: force - Always overwrite existing installations"
     echo "  -y: yes - Don't prompt to clobber existing installations"
     echo "  -v: verbose - More output on installation"
     echo "  -h: help -  Display this message"
@@ -232,7 +233,7 @@ function log(){
 }
 
 function parse_args() {
-    args=`getopt i:o:ryvh $*`
+    args=`getopt i:o:rfyvh $*`
 
     if [ $? != 0 ] ; then
         print_usage
@@ -257,6 +258,9 @@ function parse_args() {
                 shift;;
             -v)
                 export VERBOSE=1
+                shift;;
+            -f)
+                FORCE="y"
                 shift;;
             -y)
                 CONFIRM="y"
