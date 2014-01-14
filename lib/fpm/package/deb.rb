@@ -345,21 +345,21 @@ class FPM::Package::Deb < FPM::Package
           "Unknown compression type '#{self.attributes[:deb_compression]}'"
     end
 
-    tar_flags = []
+    @data_tar_flags = []
     if attributes[:deb_use_file_permissions?].nil?
       if !attributes[:deb_user].nil?
         if attributes[:deb_user] == 'root'
-          tar_flags += [ "--numeric-owner", "--owner", "0" ]
+          @data_tar_flags += [ "--numeric-owner", "--owner", "0" ]
         else
-          tar_flags += [ "--owner", attributes[:deb_user] ]
+          @data_tar_flags += [ "--owner", attributes[:deb_user] ]
         end
       end
 
       if !attributes[:deb_group].nil?
         if attributes[:deb_group] == 'root'
-          tar_flags += [ "--numeric-owner", "--group", "0" ]
+          @data_tar_flags += [ "--numeric-owner", "--group", "0" ]
         else
-          tar_flags += [ "--group", attributes[:deb_group] ]
+          @data_tar_flags += [ "--group", attributes[:deb_group] ]
         end
       end
     end
@@ -401,7 +401,7 @@ class FPM::Package::Deb < FPM::Package
       FileUtils.ln_s("/lib/init/upstart-job", dest_init)
     end
 
-    args = [ tar_cmd, "-C", staging_path, compression ] + tar_flags + [ "-cf", datatar, "." ]
+    args = [ tar_cmd, "-C", staging_path, compression ] + @data_tar_flags + [ "-cf", datatar, "." ]
     safesystem(*args)
 
     # pack up the .deb, which is just an 'ar' archive with 3 files
@@ -669,5 +669,6 @@ class FPM::Package::Deb < FPM::Package
     return super(format)
   end # def to_s
 
-  public(:input, :output, :architecture, :name, :prefix, :converted_from, :to_s)
+  attr_reader :data_tar_flags
+  public(:input, :output, :architecture, :name, :prefix, :converted_from, :to_s, :data_tar_flags)
 end # class FPM::Target::Deb
