@@ -62,6 +62,12 @@ describe FPM::Package::Deb do
     end
   end
 
+  describe "use-file-permissions" do
+    it "should be nil by default" do
+      insist { subject.attributes[:deb_use_file_permissions?] }.nil?
+    end
+  end
+
   describe "#to_s" do
     it "should have a default output usable as a filename" do
       subject.name = "name"
@@ -255,4 +261,40 @@ describe FPM::Package::Deb do
       insist { @input.dependencies }.empty?
     end
   end # #output with no dependencies
+
+  describe "#tar_flags" do
+    before :each do
+      tmpfile = Tempfile.new("fpm-test-deb")
+      @target = tmpfile.path
+      # The target file must not exist.
+      tmpfile.unlink
+      @package = FPM::Package::Deb.new
+      @package.name = "name"
+    end
+
+    after :each do
+      @package.cleanup
+    end # after
+
+    it "should set the user for the package's data files" do
+      @package.attributes[:deb_user] = "nobody"
+      # output a package so that @data_tar_flags is computed
+      @package.output(@target)
+      insist { @package.data_tar_flags } == ["--owner", "nobody", "--numeric-owner", "--group", "0"]
+    end
+
+    it "should set the group for the package's data files" do
+      @package.attributes[:deb_group] = "nogroup"
+      # output a package so that @data_tar_flags is computed
+      @package.output(@target)
+      insist { @package.data_tar_flags } == ["--numeric-owner", "--owner", "0", "--group", "nogroup"]
+    end
+
+    it "should not set the user or group for the package's data files if :deb_use_file_permissions? is not nil" do
+      @package.attributes[:deb_use_file_permissions?] = true
+      # output a package so that @data_tar_flags is computed
+      @package.output(@target)
+      insist { @package.data_tar_flags } == []
+    end
+  end # #tar_flags
 end # describe FPM::Package::Deb
