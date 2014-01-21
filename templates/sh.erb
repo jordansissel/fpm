@@ -131,11 +131,6 @@ function set_install_dir(){
         INSTALL_DIR="${RELEASES_DIR}/${RELEASE_ID:-$DATESTAMP}"
     fi
 
-    if [ -d "${INSTALL_DIR}" ] ; then
-        log "Install directory ${INSTALL_DIR} already exists. Installing with datestamp to '${INSTALL_DIR}-${DATESTAMP}'"
-        INSTALL_DIR="${INSTALL_DIR}-${DATESTAMP}"
-    fi
-
     mkdir -p "$INSTALL_DIR" || die "Unable to create install directory $INSTALL_DIR"
 
     export INSTALL_DIR
@@ -149,9 +144,14 @@ function set_owner(){
 }
 
 function unpack_payload(){
-    log "Unpacking payload . . ."
-    local archive_line=$(egrep --text --line-number '__ARCHIVE__$' $0 | cut -f1 -d:)
-    tail -n +$((archive_line + 1)) $0 | tar -C $INSTALL_DIR -xjf - > /dev/null || die "Failed to unpack payload from the end of '$0' into '$INSTALL_DIR'"
+    if $FORCE || [ ! "$(ls -A $INSTALL_DIR)" ] ; then
+        log "Unpacking payload . . ."
+        local archive_line=$(egrep --text --line-number '__ARCHIVE__$' $0 | cut -f1 -d:)
+        tail -n +$((archive_line + 1)) $0 | tar -C $INSTALL_DIR -xjf - > /dev/null || die "Failed to unpack payload from the end of '$0' into '$INSTALL_DIR'"
+    else
+        # Files are already here, just move symlinks
+        log "Directory already exists and has contents ($INSTALL_DIR). Not unpacking payload."
+    fi
 }
 
 function run_post_install(){
@@ -213,6 +213,7 @@ function print_usage(){
     echo "      directory. Then create a 'current' symlink under install_root to the unpacked"
     echo "      directory once installation is complete replacing the symlink if it already "
     echo "      exists. If this flag is set just install into install_root directly"
+    echo "  -f: force - Always overwrite existing installations"
     echo "  -y: yes - Don't prompt to clobber existing installations"
     echo "  -v: verbose - More output on installation"
     echo "  -h: help -  Display this message"
@@ -232,7 +233,7 @@ function log(){
 }
 
 function parse_args() {
-    args=`getopt i:o:ryvh $*`
+    args=`getopt i:o:rfyvh $*`
 
     if [ $? != 0 ] ; then
         print_usage
@@ -257,6 +258,9 @@ function parse_args() {
                 shift;;
             -v)
                 export VERBOSE=1
+                shift;;
+            -f)
+                FORCE=true
                 shift;;
             -y)
                 CONFIRM="y"
