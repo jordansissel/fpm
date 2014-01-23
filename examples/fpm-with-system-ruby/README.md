@@ -11,9 +11,8 @@
 
  - build-essential (perhaps more, but basically the standard packages you need
    for deb packaging)
- - ruby1.9.3 (can be changed)
+ - ruby and ruby-dev
 
 # Usage
 
- - $ cd examples/fpm-with-system-ruby
- - $ make package
+ - $ cd examples/fpm-with-system-ruby && make package
