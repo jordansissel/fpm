@@ -118,6 +118,19 @@ class FPM::Package::RPM < FPM::Package
             "version. Default is to be specific. This option allows the same " \
             "version of a package but any iteration is permitted"
 
+  [:un,:in,:postun].each do |trigger_type|
+    rpm_trigger = []
+    option "--trigger-#{trigger_type}", "[OPT]PACKAGE: FILEPATH", "Adds a %trigger#{trigger_type} OPT -- PACKAGE section to the " \
+           "package with the script located in FILEPATH" do |trigger|
+      match = trigger.match(/^(\[.*\]|)(.*): (.*)$/)
+      @logger.fatal("Trigger '#{trigger_type}' definition can't be parsed ('#{trigger}')") unless match
+      opt, pkg, file = match.captures
+      @logger.fatal("File given for --trigger-#{trigger_type} does not exist (#{file})") unless File.exists?(file)
+      rpm_trigger << [pkg, File.read(file), opt.tr('[]','')]
+      next rpm_trigger
+    end
+  end
+
   private
 
   # Fix path name
@@ -242,6 +255,18 @@ class FPM::Package::RPM < FPM::Package
 
   end # def converted
 
+  def rpm_get_trigger_type(flag)
+    if (flag & (1 << 16)) == (1 << 16)
+       :rpm_trigger_in
+    elsif (flag & (1 << 17)) == (1 << 17)
+       :rpm_trigger_un
+    elsif (flag & (1 << 18)) == (1 << 18)
+       :rpm_trigger_postun
+    else
+       @logger.fatal("I don't know about this triggerflag ('#{flag}')")
+    end
+  end # def rpm_get_trigger
+
   def input(path)
     rpm = ::RPM::File.new(path)
 
@@ -270,7 +295,17 @@ class FPM::Package::RPM < FPM::Package
     # Also taking into account the value of tags[preinprog] etc, something like:
     #    #!#{tags[:preinprog]}
     #    #{tags[prein]}
-    # TODO(sissel): put 'trigger scripts' stuff into attributes
+
+    val = tags[:triggerindex].zip(tags[:triggername],tags[:triggerflags],tags[:triggerversion]).group_by{ |x| x[0]}
+    val = val.collect do |order,data|
+      new_data = data.collect { |x| [ x[1], rpm.operator(x[2]), x[3]].join(" ").strip}.join(", ")
+      [order, rpm_get_trigger_type(data[0][2]), new_data]
+    end
+    val.each do |order, attr,data|
+      self.attributes[attr] = [] if self.attributes[attr].nil?
+      scriptprog = (tags[:triggerscriptprog][order] == '/bin/sh') ? "" : "-p #{tags[:triggerscriptprog][order]}"
+      self.attributes[attr] << [data,tags[:triggerscripts][order],scriptprog]
+    end
 
     if !attributes[:no_auto_depends?]
       self.dependencies += rpm.requires.collect do |name, operator, version|
