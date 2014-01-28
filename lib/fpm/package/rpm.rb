@@ -118,10 +118,10 @@ class FPM::Package::RPM < FPM::Package
             "version. Default is to be specific. This option allows the same " \
             "version of a package but any iteration is permitted"
 
-  [:un,:in,:postun].each do |trigger_type|
+  ["before-install","after-install","before-uninstall","after-target-uninstall"].each do |trigger_type|
     rpm_trigger = []
-    option "--trigger-#{trigger_type}", "[OPT]PACKAGE: FILEPATH", "Adds a %trigger#{trigger_type} OPT -- PACKAGE section to the " \
-           "package with the script located in FILEPATH" do |trigger|
+    option "--trigger-#{trigger_type}", "'[OPT]PACKAGE: FILEPATH'", "Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'." \
+           "PACKAGE can be a comma seperated list of packages." do |trigger|
       match = trigger.match(/^(\[.*\]|)(.*): (.*)$/)
       @logger.fatal("Trigger '#{trigger_type}' definition can't be parsed ('#{trigger}')") unless match
       opt, pkg, file = match.captures
@@ -256,12 +256,15 @@ class FPM::Package::RPM < FPM::Package
   end # def converted
 
   def rpm_get_trigger_type(flag)
-    if (flag & (1 << 16)) == (1 << 16)
-       :rpm_trigger_in
+    puts "#{flag.to_s(2)}"
+    if (flag & (1 << 25)) == (1 << 25)
+       :rpm_trigger_before_install
+    elsif (flag & (1 << 16)) == (1 << 16)
+       :rpm_trigger_after_install
     elsif (flag & (1 << 17)) == (1 << 17)
-       :rpm_trigger_un
+       :rpm_trigger_before_uninstall
     elsif (flag & (1 << 18)) == (1 << 18)
-       :rpm_trigger_postun
+       :rpm_trigger_after_target_uninstall
     else
        @logger.fatal("I don't know about this triggerflag ('#{flag}')")
     end

@@ -127,9 +127,16 @@ Obsoletes: <%= repl %>
 <% end -%>
 
 <%# This section adds any triggers, as ordered in the command line -%>
-<% ['in','un','postun'].each do |type|
-    (attributes["rpm_trigger_#{type}".to_sym] or []).each do |trigger| -%>
-%trigger<%= type -%> <%= trigger[2] -%> -- <%= trigger[0] %>
+<%
+  triggermap = {
+    :before_install => "prein",
+    :after_install => "in",
+    :before_uninstall => "un",
+    :after_target_uninstall => "postun"
+  } 
+  triggermap.each do |name, rpmtype|
+    (attributes["rpm_trigger_#{name}".to_sym] or []).each do |trigger| -%>
+%trigger<%= rpmtype -%> <%= trigger[2] -%> -- <%= trigger[0] %>
 <%= trigger[1] %>
 <%   end -%>
 <% end -%>
