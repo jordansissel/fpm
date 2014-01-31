@@ -63,6 +63,12 @@ class FPM::Package::Python < FPM::Package
   option "--obey-requirements-txt", :flag, "Use a requirements.txt file " \
     "in the top-level directory of the python package for dependency " \
     "detection.", :default => false
+  option "--scripts-executable", "PYTHON_EXECUTABLE", "Set custom python " \
+    "interpreter in installing scripts. By default distutils will replace " \
+    "python interpreter in installing scripts (specified by shebang) with " \
+    "current python interpreter (sys.executable). This option is equivalent " \
+    "to appending 'build_scripts --executable PYTHON_EXECUTABLE' arguments " \
+    "to 'setup.py install' command."
 
   private
 
@@ -270,6 +276,11 @@ class FPM::Package::Python < FPM::Package
       elsif !attributes[:prefix].nil?
         # prefix given, but not python_install_bin, assume PREFIX/bin
         flags += [ "--install-scripts", File.join(prefix, "bin") ]
+      end
+
+      if !attributes[:python_scripts_executable].nil?
+        # Overwrite installed python scripts shebang binary with provided executable
+        flags += [ "build_scripts", "--executable", attributes[:python_scripts_executable] ]
       end
 
       safesystem(attributes[:python_bin], "setup.py", "install", *flags)
