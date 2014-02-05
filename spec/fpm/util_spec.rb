@@ -11,7 +11,7 @@ describe FPM::Util do
     end.new
   end
 
-  describe "#safe_system" do
+  describe "#safesystem" do
     context "with a missing $SHELL" do
       before do
         @orig_shell = ENV["SHELL"]
