@@ -3,6 +3,7 @@ require "fpm" # local
 require "fpm/package/rpm" # local
 require "fpm/package/dir" # local
 require "arr-pm/file" # gem 'arr-pm'
+require "stud/temporary" # gem 'stud'
 
 if !program_in_path?("rpmbuild")
   Cabin::Channel.get("rspec") \
@@ -112,8 +113,7 @@ describe FPM::Package::RPM do
   describe "#output", :if => program_in_path?("rpmbuild") do
     context "package attributes" do
       before :each do
-        @target = Tempfile.new("fpm-test-rpm").path
-        File.delete(@target)
+        @target = Stud::Temporary.pathname
         subject.name = "name"
         subject.version = "123"
         subject.architecture = "all"
@@ -242,8 +242,7 @@ describe FPM::Package::RPM do
 
     context "package default attributes" do
       before :each do
-        @target = Tempfile.new("fpm-test-rpm").path
-        File.delete(@target)
+        @target = Stud::Temporary.pathname
         subject.name = "name"
         subject.version = "123"
         # Write the rpm out
@@ -315,8 +314,8 @@ describe FPM::Package::RPM do
 
   describe "regressions should not occur", :if => program_in_path?("rpmbuild") do
     before :each do
-      @target = Tempfile.new("fpm-test-rpm").path
-      File.delete(@target)
+      @tempfile_handle = 
+      @target = Stud::Temporary.pathname
       subject.name = "name"
       subject.version = "1.23"
     end
@@ -396,8 +395,7 @@ describe FPM::Package::RPM do
   describe "#output with digest and compression settings", :if => program_in_path?("rpmbuild") do
     context "bzip2/sha1" do
       before :each do
-        @target = Tempfile.new("fpm-test-rpm").path
-        File.delete(@target)
+        @target = Stud::Temporary.pathname
         subject.name = "name"
         subject.version = "123"
         subject.architecture = "all"
