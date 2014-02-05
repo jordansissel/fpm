@@ -30,12 +30,18 @@ module FPM::Util
     return envpath.select { |p| File.executable?(File.join(p, program)) }.any?
   end # def program_in_path
 
+  def default_shell
+    shell = ENV["SHELL"] 
+    return "/bin/sh" if shell.nil? || shell.empty?
+    return shell
+  end
+
   # Run a command safely in a way that gets reports useful errors.
   def safesystem(*args)
     # ChildProcess isn't smart enough to run a $SHELL if there's
     # spaces in the first arg and there's only 1 arg.
     if args.size == 1
-      args = [ ENV["SHELL"], "-c", args[0] ]
+      args = [ default_shell, "-c", args[0] ]
     end
     program = args[0]
 
