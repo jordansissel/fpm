@@ -31,7 +31,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency("backports", ">= 2.6.2") # license: MIT
 
   # For reading and writing rpms
-  spec.add_dependency("arr-pm", "~> 0.0.8") # license: Apache 2
+  spec.add_dependency("arr-pm", "~> 0.0.9") # license: Apache 2
 
   # For http stuff
   spec.add_dependency("ftw", "~> 0.0.30") # license: Apache 2
