@@ -385,8 +385,9 @@ class FPM::Command < Clamp::Command
 
     # Write the output somewhere, package can be nil if no --package is specified, 
     # and that's OK.
+    package_file = output.to_s(package)
     begin
-      output.output(output.to_s(package))
+      output.output(package_file)
     rescue FPM::Package::FileAlreadyExists => e
       @logger.fatal(e.message)
       return 1
@@ -395,6 +396,7 @@ class FPM::Command < Clamp::Command
       return 1
     end
 
+    @logger.log("Created package", :path => package_file)
     return 0
   rescue FPM::Util::ExecutableNotFound => e
     @logger.error("Need executable '#{e}' to convert #{input_type} to #{output_type}")

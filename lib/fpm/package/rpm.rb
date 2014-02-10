@@ -383,8 +383,6 @@ class FPM::Package::RPM < FPM::Package
       # This should only output one rpm, should we verify this?
       FileUtils.cp(rpmpath, output_path)
     end
-
-    @logger.log("Created rpm", :path => output_path)
   end # def output
 
   def prefix
