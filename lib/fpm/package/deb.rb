@@ -406,7 +406,6 @@ class FPM::Package::Deb < FPM::Package
         safesystem("ar", "-qc", output_path, "debian-binary", "control.tar.gz", datatar)
       end
     end
-    @logger.log("Created deb package", :path => output_path)
   end # def output
 
   def converted_from(origin)

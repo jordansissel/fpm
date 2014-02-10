@@ -6,7 +6,7 @@ require "fpm/package/dir" # local
 describe FPM::Package::Deb do
   # dpkg-deb lets us query deb package files. 
   # Comes with debian and ubuntu systems.
-  have_dpkg_deb = program_in_path?("dpkg-deb")
+  have_dpkg_deb = program_exists?("dpkg-deb")
   if !have_dpkg_deb
     Cabin::Channel.get("rspec") \
       .warn("Skipping some deb tests because 'dpkg-deb' isn't in your PATH")
@@ -29,7 +29,7 @@ describe FPM::Package::Deb do
 
     it "should default to native" do
       expected = ""
-      if program_in_path?("dpkg")
+      if program_exists?("dpkg")
         expected = %x{dpkg --print-architecture}.chomp
       end
 

@@ -2,7 +2,7 @@ require "spec_setup"
 require "fpm" # local
 require "fpm/package/cpan" # local
 
-have_cpanm = program_in_path?("cpanm")
+have_cpanm = program_exists?("cpanm")
 if !have_cpanm
   Cabin::Channel.get("rspec") \
     .warn("Skipping CPAN#input tests because 'cpanm' isn't in your PATH")
