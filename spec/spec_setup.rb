@@ -8,7 +8,7 @@ require "fileutils" # stdlib
 # put "lib" in RUBYLIB
 $: << File.join(File.dirname(File.dirname(__FILE__)), "lib")
 
-# for method "program_in_path?" etc
+# for method "program_exists?" etc
 require "fpm/util"
 include FPM::Util
 

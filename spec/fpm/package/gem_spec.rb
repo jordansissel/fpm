@@ -2,7 +2,7 @@ require "spec_setup"
 require "fpm" # local
 require "fpm/package/gem" # local
 
-have_gem = program_in_path?("gem")
+have_gem = program_exists?("gem")
 if !have_gem
   Cabin::Channel.get("rspec") \
     .warn("Skipping Gem#input tests because 'gem' isn't in your PATH")

@@ -3,7 +3,7 @@ require "fpm" # local
 require "fpm/package/python" # local
 
 def python_usable?
-  return program_in_path?("python") && program_in_path?("easy_install")
+  return program_exists?("python") && program_exists?("easy_install")
 end
 
 if !python_usable?
