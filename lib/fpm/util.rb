@@ -45,9 +45,7 @@ module FPM::Util
     end
     program = args[0]
 
-    # Scan path to find the executable
-    # Do this to help the user get a better error message.
-    if !program.include?("/") and !program_in_path?(program)
+    if !program_exists?(program)
       raise ExecutableNotFound.new(program)
     end
 
@@ -78,6 +76,15 @@ module FPM::Util
     end
     return success
   end # def safesystem
+
+  def program_exists?(program)
+    # Scan path to find the executable
+    # Do this to help the user get a better error message.
+    if !program.include?("/") and !program_in_path?(program)
+      return false
+    end
+    return true
+  end # def program_exists?
 
 # Run a command safely in a way that captures output and status.
   def safesystemout(*args)
