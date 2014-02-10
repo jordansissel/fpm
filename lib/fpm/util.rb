@@ -30,6 +30,13 @@ module FPM::Util
     return envpath.select { |p| File.executable?(File.join(p, program)) }.any?
   end # def program_in_path
 
+  def program_exists?(program)
+    # Scan path to find the executable
+    # Do this to help the user get a better error message.
+    return program_in_path?(program) if !program.include?("/") 
+    return File.executable?(program)
+  end # def program_exists?
+
   def default_shell
     shell = ENV["SHELL"] 
     return "/bin/sh" if shell.nil? || shell.empty?
@@ -45,9 +52,7 @@ module FPM::Util
     end
     program = args[0]
 
-    # Scan path to find the executable
-    # Do this to help the user get a better error message.
-    if !program.include?("/") and !program_in_path?(program)
+    if !program_exists?(program)
       raise ExecutableNotFound.new(program)
     end
 
@@ -79,7 +84,7 @@ module FPM::Util
     return success
   end # def safesystem
 
-# Run a command safely in a way that captures output and status.
+  # Run a command safely in a way that captures output and status.
   def safesystemout(*args)
     if args.size == 1
       args = [ ENV["SHELL"], "-c", args[0] ]
