@@ -1,3 +1,6 @@
+1.1.0 (???)
+  - New package type: zip, for converting to and from zip files (Jordan Sissel)
+
 1.0.2 (January 10, 2013)
   - rpm: No longer converts - to _ in dependency strings (#603, Bulat
     Shakirzyanov)
