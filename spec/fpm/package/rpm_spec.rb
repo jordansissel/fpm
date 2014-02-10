@@ -5,7 +5,7 @@ require "fpm/package/dir" # local
 require "arr-pm/file" # gem 'arr-pm'
 require "stud/temporary" # gem 'stud'
 
-if !program_in_path?("rpmbuild")
+if !program_exists?("rpmbuild")
   Cabin::Channel.get("rspec") \
     .warn("Skipping RPM#output tests because 'rpmbuild' isn't in your PATH")
 end
@@ -110,7 +110,7 @@ describe FPM::Package::RPM do
     end # context
   end
 
-  describe "#output", :if => program_in_path?("rpmbuild") do
+  describe "#output", :if => program_exists?("rpmbuild") do
     context "package attributes" do
       before :each do
         @target = Stud::Temporary.pathname
@@ -312,7 +312,7 @@ describe FPM::Package::RPM do
     end # package attributes
   end # #output
 
-  describe "regressions should not occur", :if => program_in_path?("rpmbuild") do
+  describe "regressions should not occur", :if => program_exists?("rpmbuild") do
     before :each do
       @tempfile_handle = 
       @target = Stud::Temporary.pathname
@@ -392,7 +392,7 @@ describe FPM::Package::RPM do
     end
   end # regression stuff
 
-  describe "#output with digest and compression settings", :if => program_in_path?("rpmbuild") do
+  describe "#output with digest and compression settings", :if => program_exists?("rpmbuild") do
     context "bzip2/sha1" do
       before :each do
         @target = Stud::Temporary.pathname
