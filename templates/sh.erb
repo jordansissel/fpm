@@ -24,23 +24,27 @@ function main() {
     create_pid
 
     wait_for_others
-    
+
     kill_others
 
     set_owner
 
     unpack_payload
 
-    create_symlinks
-
-    set +e # don't exit on errors to allow us to clean up
-    if ! run_post_install ; then
-        revert_symlinks
-        log "Installation failed."
-        exit 1
+    if [[ -n $UNPACK_ONLY ]] ; then
+        echo "Unpacking complete, not moving symlinks or restarting because unpack only was specified."
     else
-        clean_out_old_releases
-        log "Installation complete."
+        create_symlinks
+
+        set +e # don't exit on errors to allow us to clean up
+        if ! run_post_install ; then
+            revert_symlinks
+            log "Installation failed."
+            exit 1
+        else
+            clean_out_old_releases
+            log "Installation complete."
+        fi
     fi
 }
 
@@ -62,7 +66,7 @@ function wait_for_others(){
 
     if [ $count -gt 1 ] ; then
         sleep 10
-    fi 
+    fi
 }
 
 # kills other running slug installations
@@ -97,14 +101,14 @@ function load_environment(){
         rm "$TMP"
     fi
 }
-  
+
 # write out metadata for future installs
 function save_environment(){
     local METADATA=$1
     echo -n "" > ${METADATA} # empty file
 
     # just piping env to a file doesn't quote the variables. This does
-    # filter out multiline junk and _. _ is a readonly variable 
+    # filter out multiline junk and _. _ is a readonly variable
     env | egrep "^[^ ]+=.*" | grep -v "^_=" | while read ENVVAR ; do
         local NAME=${ENVVAR%%=*}
         # sed is to preserve variable values with dollars (for escaped variables or $() style command replacement),
@@ -114,7 +118,7 @@ function save_environment(){
         local VALUE=$(eval echo '$'$NAME | sed 's/\([$`]\)/\\\1/g')
         echo "export $NAME=\"$VALUE\"" >> ${METADATA}
     done
-    
+
     if [ -n "${OWNER}" ] ; then
         chown ${OWNER} ${METADATA}
     fi
@@ -213,6 +217,7 @@ function print_usage(){
     echo "      directory. Then create a 'current' symlink under install_root to the unpacked"
     echo "      directory once installation is complete replacing the symlink if it already "
     echo "      exists. If this flag is set just install into install_root directly"
+    echo "  -u: Unpack the slug, but do not install / symlink new payload"
     echo "  -f: force - Always overwrite existing installations"
     echo "  -y: yes - Don't prompt to clobber existing installations"
     echo "  -v: verbose - More output on installation"
@@ -233,7 +238,7 @@ function log(){
 }
 
 function parse_args() {
-    args=`getopt i:o:rfyvh $*`
+    args=`getopt i:o:rfuyvh $*`
 
     if [ $? != 0 ] ; then
         print_usage
@@ -258,6 +263,9 @@ function parse_args() {
                 shift;;
             -v)
                 export VERBOSE=1
+                shift;;
+            -u)
+                UNPACK_ONLY=true
                 shift;;
             -f)
                 FORCE=true
