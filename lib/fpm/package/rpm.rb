@@ -95,6 +95,9 @@ class FPM::Package::RPM < FPM::Package
   option "--sign", :flag, "Pass --sign to rpmbuild"
 
   option "--auto-add-directories", :flag, "Auto add directories not part of filesystem"
+  option "--auto-add-exclude-directories", "DIRECTORIES",
+    "Additional directories ignored by '--rpm-auto-add-directories' flag",
+    :multivalued => true, :attribute_name => :auto_add_exclude_directories
 
   option "--autoreqprov", :flag, "Enable RPM's AutoReqProv option"
   option "--autoreq", :flag, "Enable RPM's AutoReq option"
@@ -324,6 +327,7 @@ class FPM::Package::RPM < FPM::Package
     if attributes[:rpm_auto_add_directories?]
       fs_dirs_list = File.join(template_dir, "rpm", "filesystem_list")
       fs_dirs = File.readlines(fs_dirs_list).reject { |x| x =~ /^\s*#/}.map { |x| x.chomp }
+      fs_dirs.concat((attributes[:auto_add_exclude_directories] or []))
 
       Find.find(staging_path) do |path|
         next if path == staging_path
