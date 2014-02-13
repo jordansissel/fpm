@@ -304,6 +304,10 @@ class FPM::Package::RPM < FPM::Package
     rpm.extract(staging_path)
   end # def input
 
+  def prefixed_path(path)
+    Pathname.new(path).absolute?() ? path : File.join(self.prefix, path)
+  end # def prefixed_path
+
   def output(output_path)
     output_check(output_path)
     %w(BUILD RPMS SRPMS SOURCES SPECS).each { |d| FileUtils.mkdir_p(build_path(d)) }
@@ -337,7 +341,7 @@ class FPM::Package::RPM < FPM::Package
         end
       end
     else
-      self.directories = self.directories.map { |x| File.join(self.prefix, x) }
+      self.directories = self.directories.map { |x| self.prefixed_path(x) }
       alldirs = []
       self.directories.each do |path|
         Find.find(File.join(staging_path, path)) do |subpath|
@@ -352,7 +356,7 @@ class FPM::Package::RPM < FPM::Package
     # scan all conf file paths for files and add them
     allconfigs = []
     self.config_files.each do |path|
-      cfg_path = File.expand_path(path, staging_path)
+      cfg_path = File.join(staging_path, path)
       raise "Config file path #{cfg_path} does not exist" unless File.exist?(cfg_path)
       Find.find(cfg_path) do |p|
         allconfigs << p.gsub("#{staging_path}/", '') if File.file? p
@@ -360,7 +364,7 @@ class FPM::Package::RPM < FPM::Package
     end
     allconfigs.sort!.uniq!
 
-    self.config_files = allconfigs.map { |x| File.join(self.prefix, x) }
+    self.config_files = allconfigs.map { |x| File.join("/", x) }
 
     (attributes[:rpm_rpmbuild_define] or []).each do |define|
       args += ["--define", define]
@@ -436,5 +440,5 @@ class FPM::Package::RPM < FPM::Package
 
   public(:input, :output, :converted_from, :architecture, :to_s, :iteration,
          :payload_compression, :digest_algorithm, :prefix, :build_sub_dir,
-         :epoch, :version)
+         :epoch, :version, :prefixed_path)
 end # class FPM::Package::RPM
