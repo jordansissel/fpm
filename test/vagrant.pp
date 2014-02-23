@@ -18,15 +18,10 @@ exec {
     path => [ "/bin", "/usr/bin", "/sbin", "/usr/sbin" ];
 }
 
-file {
-  # Sometimes veewee leaves behind this...
-  "/EMPTY": ensure => absent, backup => false;
-}
-
 package {
   "git": ensure => latest;
   "bundler": provider => "gem", ensure => latest;
   "ruby-$devsuffix": ensure => latest;
 }
 
-File["/EMPTY"] -> Exec["update-packages"] -> Package <| |>
+Exec["update-packages"] -> Package <| |>
