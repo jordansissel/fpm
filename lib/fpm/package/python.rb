@@ -121,7 +121,7 @@ class FPM::Package::Python < FPM::Package
                  "--build-directory", target, want_pkg)
     else
       @logger.debug("using pip", :pip => attributes[:python_pip])
-      safesystem(attributes[:python_pip], "install", "--no-install",
+      safesystem(attributes[:python_pip], "install", "--no-install", "-i", attributes[:python_pypi]
                  "-U", "--build", target, want_pkg)
     end
 
