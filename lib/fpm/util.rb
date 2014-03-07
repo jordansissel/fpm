@@ -166,7 +166,19 @@ module FPM::Util
     when 'directory'
       FileUtils.mkdir(dst) unless File.exists? dst
     else
-      FileUtils.copy_entry(src, dst)
+      # if the file with the same dev and inode has been copied already -
+      # hard link it's copy to `dst`, otherwise make an actual copy
+      st = File.stat(src)
+      if copied_entry = copied_entries[[st.dev, st.ino]]
+        FileUtils.ln(copied_entry, dst)
+      else
+        FileUtils.copy_entry(src, dst)
+        copied_entries.store([st.dev, st.ino], dst)
+      end
     end
+  end
+
+  def copied_entries
+    @copied_entries ||= {}
   end
 end # module FPM::Util
