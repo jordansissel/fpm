@@ -1,4 +1,4 @@
-# Effing Package Management.
+# Effing Package Management
 
 ## Preface
 
