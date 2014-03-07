@@ -166,7 +166,29 @@ module FPM::Util
     when 'directory'
       FileUtils.mkdir(dst) unless File.exists? dst
     else
-      FileUtils.copy_entry(src, dst)
-    end
-  end
+      # if the file with the same dev and inode has been copied already -
+      # hard link it's copy to `dst`, otherwise make an actual copy
+      st = File.lstat(src)
+      known_entry = copied_entries[[st.dev, st.ino]]
+      if known_entry
+        FileUtils.ln(known_entry, dst)
+      else
+        FileUtils.copy_entry(src, dst)
+        copied_entries[[st.dev, st.ino]] = dst
+      end
+    end # else...
+  end # def copy_entry
+
+  def copied_entries
+    # TODO(sissel): I wonder that this entry-copy knowledge needs to be put
+    # into a separate class/module. As is, calling copy_entry the same way
+    # in slightly different contexts will result in weird or bad behavior.
+    # What I mean is if we do:
+    #   pkg = FPM::Package::Dir...
+    #   pkg.output()...
+    #   pkg.output()...
+    # The 2nd output call will fail or behave weirdly because @copied_entries
+    # is already populated. even though this is anew round of copying.
+    return @copied_entries ||= {}
+  end # def copied_entries
 end # module FPM::Util
