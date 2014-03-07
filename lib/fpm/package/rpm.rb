@@ -393,7 +393,7 @@ class FPM::Package::RPM < FPM::Package
   def build_sub_dir
     return "BUILD"
     #return File.join("BUILD", prefix)
-  end # def prefix
+  end # def build_sub_dir
 
   def version
     if @version.kind_of?(String) and @version.include?("-")
