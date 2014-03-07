@@ -349,6 +349,7 @@ class FPM::Package::RPM < FPM::Package
     allconfigs = []
     self.config_files.each do |path|
       cfg_path = File.expand_path(path, staging_path)
+      raise "Config file path #{cfg_path} does not exist" unless File.exist?(cfg_path)
       Find.find(cfg_path) do |p|
         allconfigs << p.gsub("#{staging_path}/", '') if File.file? p
       end
