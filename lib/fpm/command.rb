@@ -101,7 +101,8 @@ class FPM::Command < Clamp::Command
   option "--config-files", "CONFIG_FILES",
     "Mark a file in the package as being a config file. This uses 'conffiles'" \
     " in debs and %config in rpm. If you have multiple files to mark as " \
-    "configuration files, specify this flag multiple times.",
+    "configuration files, specify this flag multiple times.  If argument is " \
+    "directory all files inside it will be recursively marked as config files.",
     :multivalued => true, :attribute_name => :config_files
   option "--directories", "DIRECTORIES", "Recursively mark a directory as being owned " \
     "by the package", :multivalued => true, :attribute_name => :directories
