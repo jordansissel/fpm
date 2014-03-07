@@ -1,6 +1,7 @@
 require "spec_setup"
 require "fpm" # local
 require "fpm/package/python" # local
+require "find" # stdlib
 
 def python_usable?
   return program_exists?("python") && program_exists?("easy_install")
@@ -124,6 +125,31 @@ describe FPM::Package::Python, :if => python_usable? do
         subject.input(example_dir)
         insist { subject.dependencies.sort } == ["rtxt-dep1 > 0.1", "rtxt-dep2 = 0.1"]
       end
+    end
+  end
+
+  context "python_scripts_executable is set" do
+    it "should have scripts with a custom hashbang line" do
+      subject.attributes[:python_scripts_executable] = "fancypants"
+      subject.input("django")
+      found = false
+      Find.find(subject.staging_path) do |path|
+        next unless path =~ /bin\/django-admin\.py$/
+
+        # TODO(sissel): This will find all files like bin/django-admin.py.
+        # There are usually two. THe one that came with django and the one
+        # that was installed by python usually outside the python module itself
+        # and additionally usually in something like /usr/local/bin
+
+        fd = File.new(path, "r")
+        topline = fd.readline
+        fd.close
+        if topline.chomp == "#!fancypants"
+          found = true
+        end
+        break
+      end
+      insist { found } == true
     end
   end
 end # describe FPM::Package::Python
