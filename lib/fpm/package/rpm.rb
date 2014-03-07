@@ -122,7 +122,7 @@ class FPM::Package::RPM < FPM::Package
     rpm_trigger = []
     option "--trigger-#{trigger_type}", "'[OPT]PACKAGE: FILEPATH'", "Adds a rpm trigger script located in FILEPATH, " \
            "having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. " \
-           "See: http://rpm5.org/docs/api/triggers.html" do |trigger|
+           "See: http://rpm.org/api/4.4.2.2/triggers.html" do |trigger|
       match = trigger.match(/^(\[.*\]|)(.*): (.*)$/)
       @logger.fatal("Trigger '#{trigger_type}' definition can't be parsed ('#{trigger}')") unless match
       opt, pkg, file = match.captures
