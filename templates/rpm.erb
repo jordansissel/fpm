@@ -135,9 +135,9 @@ Obsoletes: <%= repl %>
     :after_target_uninstall => "postun"
   } 
   triggermap.each do |name, rpmtype|
-    (attributes["rpm_trigger_#{name}".to_sym] or []).each do |trigger| -%>
-%trigger<%= rpmtype -%> <%= trigger[2] -%> -- <%= trigger[0] %>
-<%= trigger[1] %>
+    (attributes["rpm_trigger_#{name}".to_sym] or []).each do |trigger_name, trigger_script, trigger_scriptprog| -%>
+%trigger<%= rpmtype -%> <%= trigger_scriptprog -%> -- <%= trigger_name %>
+<%= trigger_script %>
 <%   end -%>
 <% end -%>
 
