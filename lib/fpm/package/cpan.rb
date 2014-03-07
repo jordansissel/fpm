@@ -242,6 +242,7 @@ class FPM::Package::CPAN < FPM::Package
   def download(metadata, cpan_version=nil)
     distribution = metadata["distribution"]
     author = metadata["author"]
+
     @logger.info("Downloading perl module",
                  :distribution => distribution,
                  :version => cpan_version)
@@ -257,9 +258,27 @@ class FPM::Package::CPAN < FPM::Package
       end
     end
 
-    tarball = "#{distribution}-#{self.version}.tar.gz"
+    metacpan_release_url = "http://api.metacpan.org/v0/release/#{author}/#{distribution}-#{self.version}"
+    begin
+      release_response = httpfetch(metacpan_release_url)
+    rescue Net::HTTPServerException => e
+      @logger.error("metacpan release query failed.", :error => e.message,
+                    :module => package, :url => metacpan_release_url)
+      raise FPM::InvalidPackageConfiguration, "metacpan release query failed"
+    end
+
+    data = release_response.body
+    release_metadata = JSON.parse(data)
+    archive = release_metadata["archive"]
+
+    # should probably be basepathed from the url 
+    tarball = File.basename(archive)
+
+    url_base = "http://www.cpan.org/"
+    url_base = "#{attributes[:cpan_mirror]}" if !attributes[:cpan_mirror].nil?
+
     #url = "http://www.cpan.org/CPAN/authors/id/#{author[0,1]}/#{author[0,2]}/#{author}/#{tarball}"
-    url = "http://www.cpan.org/authors/id/#{author[0,1]}/#{author[0,2]}/#{author}/#{tarball}"
+    url = "#{url_base}/authors/id/#{author[0,1]}/#{author[0,2]}/#{author}/#{archive}"
     @logger.debug("Fetching perl module", :url => url)
     
     begin
