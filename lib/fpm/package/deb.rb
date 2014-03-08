@@ -616,7 +616,10 @@ class FPM::Package::Deb < FPM::Package
     File.open(control_path("conffiles"), "w") do |out|
       # 'config_files' comes from FPM::Package and is usually set with
       # FPM::Command's --config-files flag
-      allconfigs.each { |cf| out.puts(cf) }
+      allconfigs.each do |cf|
+        # We need to put the leading / back. Stops lintian relative-conffile error.
+        out.puts("/" + cf)
+      end
     end
   end # def write_conffiles
 
