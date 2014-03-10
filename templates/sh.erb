@@ -31,7 +31,7 @@ function main() {
 
     unpack_payload
 
-    if [[ -n $UNPACK_ONLY ]] ; then
+    if [ "$UNPACK_ONLY" == "1" ] ; then
         echo "Unpacking complete, not moving symlinks or restarting because unpack only was specified."
     else
         create_symlinks
@@ -148,7 +148,7 @@ function set_owner(){
 }
 
 function unpack_payload(){
-    if $FORCE || [ ! "$(ls -A $INSTALL_DIR)" ] ; then
+    if [ "$FORCE" == "1" ] || [ ! "$(ls -A $INSTALL_DIR)" ] ; then
         log "Unpacking payload . . ."
         local archive_line=$(grep -a -n -m1 '__ARCHIVE__$' $0 | sed 's/:.*//')
         tail -n +$((archive_line + 1)) $0 | tar -C $INSTALL_DIR -xf - > /dev/null || die "Failed to unpack payload from the end of '$0' into '$INSTALL_DIR'"
@@ -163,7 +163,7 @@ function run_post_install(){
     if [ -r $AFTER_INSTALL ] ; then
         chmod +x $AFTER_INSTALL
         log "Running post install script"
-        $AFTER_INSTALL
+        log $($AFTER_INSTALL)
         return $?
     fi
     return 0
@@ -265,10 +265,10 @@ function parse_args() {
                 export VERBOSE=1
                 shift;;
             -u)
-                UNPACK_ONLY=true
+                UNPACK_ONLY=1
                 shift;;
             -f)
-                FORCE=true
+                FORCE=1
                 shift;;
             -y)
                 CONFIRM="y"
