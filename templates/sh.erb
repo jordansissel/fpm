@@ -131,7 +131,7 @@ function set_install_dir(){
 
     DATESTAMP=$(date +%Y%m%d%H%M%S)
     if [ -z "$USE_FLAT_RELEASE_DIRECTORY" ] ; then
-        RELEASE_ID=<%= release_id %>
+        <%= "RELEASE_ID=#{release_id}" if respond_to?(:release_id) %>
         INSTALL_DIR="${RELEASES_DIR}/${RELEASE_ID:-$DATESTAMP}"
     fi
 
