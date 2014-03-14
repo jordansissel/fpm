@@ -217,7 +217,7 @@ describe FPM::Package::RPM do
       end
 
       it "should have the correct 'verify' script" do
-        insist { @rpm.tags[:verify] } == "example verify_script"
+        insist { @rpm.tags[:verifyscript] } == "example verify_script"
         insist { @rpm.tags[:verifyprog] } == "/bin/sh"
       end
 
