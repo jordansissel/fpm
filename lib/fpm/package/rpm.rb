@@ -269,6 +269,7 @@ class FPM::Package::RPM < FPM::Package
     self.scripts[:after_install] = tags[:postin]
     self.scripts[:before_remove] = tags[:preun]
     self.scripts[:after_remove] = tags[:postun]
+    self.scripts[:verify_script] = tags[:verify]
     # TODO(sissel): prefix these scripts above with a shebang line if there isn't one?
     # Also taking into account the value of tags[preinprog] etc, something like:
     #    #!#{tags[:preinprog]}
