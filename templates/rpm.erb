@@ -117,6 +117,7 @@ Obsoletes: <%= repl %>
     :before_remove => "preun",
     :after_remove => "postun",
     :verify_script => "verifyscript",
+    :posttrans => "posttrans"
   }
   scriptmap.each do |name, rpmname| 
 -%>
