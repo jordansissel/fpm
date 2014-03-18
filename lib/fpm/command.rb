@@ -183,7 +183,6 @@ class FPM::Command < Clamp::Command
     "pretrans script (RPM only)" do |val|
     File.expand_path(val) # Get the full path to the script
   end # --pretrans
-  end # --posttrans
     option "--posttrans", "FILE",
     "posttrans script (RPM only)" do |val|
     File.expand_path(val) # Get the full path to the script
