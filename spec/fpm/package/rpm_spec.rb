@@ -220,7 +220,17 @@ describe FPM::Package::RPM do
       end
 
       it "should have the correct 'verify' script" do
-        insist { @rpm.tags[:verifyscript] } == "example verify_script"
+        insist { @rpm.tags[:verifyscript] } == "example verifyscript"
+        insist { @rpm.tags[:verifyprog] } == "/bin/sh"
+      end
+
+      it "should have the correct 'pretrans' script" do
+        insist { @rpm.tags[:pretrans] } == "example pretrans"
+        insist { @rpm.tags[:verifyprog] } == "/bin/sh"
+      end
+
+      it "should have the correct 'posttrans' script" do
+        insist { @rpm.tags[:pretrans] } == "example posttrans"
         insist { @rpm.tags[:verifyprog] } == "/bin/sh"
       end
 
