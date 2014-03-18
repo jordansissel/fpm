@@ -135,6 +135,8 @@ describe FPM::Package::RPM do
         subject.scripts[:after_remove] = "example after_remove"
         subject.scripts[:verify_script] = "example verify_script"
         subject.scripts[:posttrans] = "example posttrans"
+        subject.scripts[:pretrans] = "example pretrans"
+
 
         # Write the rpm out
         subject.output(@target)

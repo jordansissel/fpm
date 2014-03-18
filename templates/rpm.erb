@@ -109,7 +109,7 @@ Obsoletes: <%= repl %>
 %clean
 # noop
 
-<%# This next section puts any %pre, %post, %preun, or %postun scripts %>
+<%# This next section puts any %pre, %post, %preun, %postun, %verifyscript, %pretrans or %posttrans scripts %>
 <% 
   scriptmap = {
     :before_install => "pre",
@@ -117,7 +117,8 @@ Obsoletes: <%= repl %>
     :before_remove => "preun",
     :after_remove => "postun",
     :verify_script => "verifyscript",
-    :posttrans => "posttrans"
+    :posttrans => "posttrans",
+    :pretrans => "pretrans"
   }
   scriptmap.each do |name, rpmname| 
 -%>

@@ -170,6 +170,7 @@ describe FPM::Package do
       subject.scripts[:before_remove] = "<%= name %>"
       subject.scripts[:verify_script] = "<%= name %>"
       subject.scripts[:posttrans] = "<%= name %>"
+      subject.scripts[:pretrans] = "<%= name %>"
       subject.attributes[:template_scripts?] = true
       subject.name = "Example"
       insist { subject.script(:after_install) } == subject.name
@@ -186,7 +187,8 @@ describe FPM::Package do
       subject.scripts[:after_remove] = "<%= name %>"
       subject.scripts[:after_install] = "<%= name %>"
       subkect.scripts[:verify_script] = "<%= name %>"
-      subkect.scripts[:posttrans] = "<%= name %>"
+      subject.scripts[:posttrans] = "<%= name %>"
+      subject.scripts[:pretrans] = "<%= name %>"
       subject.attributes[:template_scripts?] = false
       insist { subject.script(:after_install) } == subject.scripts[:after_install]
       insist { subject.script(:before_install) } == subject.scripts[:before_install]
@@ -194,6 +196,7 @@ describe FPM::Package do
       insist { subject.script(:before_remove) } == subject.scripts[:before_remove]
       insist { subject.script(:verify_script) } == subject.scripts[:verify_script]
       insist { subject.script(:posttrans) } == subject.scripts[:posttrans]
+      insist { subject.script(:pretrans) } == subject.scripts[:pretrans]
     end
 
     it "should not template by default" do
