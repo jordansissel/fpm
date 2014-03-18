@@ -179,6 +179,7 @@ describe FPM::Package do
       insist { subject.script(:before_remove) } == subject.name
       insist { subject.script(:verifyscript) } == subject.name
       insist { subject.script(:posttrans) } == subject.name
+      insist { subject.script(:pretrans) } == subject.name
     end
 
     it "should not template when :template_scripts? is false" do
