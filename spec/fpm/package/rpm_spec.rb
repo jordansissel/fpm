@@ -133,7 +133,7 @@ describe FPM::Package::RPM do
         subject.scripts[:after_install] = "example after_install"
         subject.scripts[:before_remove] = "example before_remove"
         subject.scripts[:after_remove] = "example after_remove"
-        subject.scripts[:verify_script] = "example verify_script"
+        subject.scripts[:verifyscript] = "example verifyscript"
         subject.scripts[:posttrans] = "example posttrans"
         subject.scripts[:pretrans] = "example pretrans"
 

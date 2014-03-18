@@ -175,10 +175,10 @@ class FPM::Command < Clamp::Command
     "a script to be run before package removal" do |val|
     File.expand_path(val) # Get the full path to the script
   end # --before-remove
-  option "--verify_script", "FILE",
+  option "--verifyscript", "FILE",
     "a script to be run on verification" do |val|
     File.expand_path(val) # Get the full path to the script
-  end # --pretrans
+  end # --verifyscript
     option "--pretrans", "FILE",
     "pretrans script (RPM only)" do |val|
     File.expand_path(val) # Get the full path to the script
@@ -374,7 +374,7 @@ class FPM::Command < Clamp::Command
     setscript.call(:after_install)
     setscript.call(:before_remove)
     setscript.call(:after_remove)
-    setscript.call(:verify_script)
+    setscript.call(:verifyscript)
     setscript.call(:posttrans)
     setscript.call(:pretrans)
 
