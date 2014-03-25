@@ -44,4 +44,4 @@ class FPM::Package::Zip < FPM::Package
       safesystem("zip", "-9r", realpath, ".")
     end
   end # def output
-end # class FPM::Package::Tar
+end # class FPM::Package::Zip
