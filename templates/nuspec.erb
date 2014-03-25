@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata>
+        <id><%= name %></id>
+        <version><%= version %></version>
+        <authors><%= maintainer  %></authors>
+        <description><%= description.gsub(/^\s*$/, " .") %></description>
+        <language>en-US</language>
+        <projectUrl><%= url %></projectUrl>
+        <licenseUrl></licenseUrl>
+        <% if !dependencies.empty? and !attributes[:no_depends?] -%>
+        <dependencies>
+            <%= dependencies.collect { |d| fix_dependency(d) } %>
+        </dependencies>
+        <% end -%>
+    </metadata>
+</package>
