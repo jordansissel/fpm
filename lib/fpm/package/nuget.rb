@@ -16,8 +16,13 @@ class FPM::Package::Nuget < FPM::Package::Zip
 
     write_nuspec
 
-    files = Find.find(staging_path).to_a
-    safesystem("zip", output_path, *files)
+    with(File.expand_path(output_path)) do |output_path|
+      ::Dir.chdir(staging_path) do
+        files = Find.find('.').to_a
+        safesystem("zip", output_path, *files)
+      end
+    end
+
   end # def output
 
   def write_nuspec
