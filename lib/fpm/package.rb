@@ -408,6 +408,11 @@ class FPM::Package
     #
     # Lets us track all known FPM::Package subclasses
     def inherited(klass)
+      # Allow multi-level class hierarchy (e.g Package::Nuget < Package::Zip)
+      # https://groups.google.com/d/msg/comp.lang.ruby/DoEsfO9EapY/lUdBo1jnsH8J
+      if superclass.respond_to? :inherited
+        superclass.inherited(klass)
+      end
       @subclasses ||= {}
       @subclasses[klass.name.gsub(/.*:/, "").downcase] = klass
     end # def self.inherited
