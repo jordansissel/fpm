@@ -7,19 +7,27 @@ require "fpm/package/zip"
 #
 class FPM::Package::Nuget < FPM::Package::Zip
 
-  # Output a zip file.
+  # Nuget as input is inherited from Zip.
+
+  # Output a nuget package.
   def output(output_path)
     output_check(output_path)
+    # Abort if the target path already exists.
+
+    write_nuspec
 
     files = Find.find(staging_path).to_a
-    write_nuspec
     safesystem("zip", output_path, *files)
   end # def output
 
   def write_nuspec
-    nuspec_data = template("nuspec.erb").result(binding)
+    # Write the nuspec file <name>.<version>.nuspec
+    with(staging_path("#{name}.#{version}.nuspec")) do |nuspec|
+      nuspec_data = template("nuspec.erb").result(binding)
 
-    @logger.debug("Writing nuspec file", :path => nuspec)
-    File.write(nuspec, nuspec_data)
-  end
+      @logger.debug("Writing nuspec file", :path => nuspec)
+      File.write(nuspec, nuspec_data)
+    end
+  end # def write_nuspec
+
 end
