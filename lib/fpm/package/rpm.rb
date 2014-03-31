@@ -329,7 +329,7 @@ class FPM::Package::RPM < FPM::Package
     args += ["--sign"] if attributes[:rpm_sign?]
 
     if attributes[:rpm_auto_add_directories?]
-      fs_dirs_list = File.join(template_dir, "rpm", "filesystem_list")
+      fs_dirs_list = find_template_file(File.join("rpm", "filesystem_list"))
       fs_dirs = File.readlines(fs_dirs_list).reject { |x| x =~ /^\s*#/}.map { |x| x.chomp }
       fs_dirs.concat((attributes[:auto_add_exclude_directories] or []))
 

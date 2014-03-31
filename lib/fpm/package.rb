@@ -107,6 +107,9 @@ class FPM::Package
 
   attr_accessor :directories
 
+  # The directory for specifying user's package spec
+  attr_accessor :package_template_dir
+
   # Any other attributes specific to this package.
   # This is where you'd put rpm, deb, or other specific attributes.
   attr_accessor :attributes
@@ -151,7 +154,8 @@ class FPM::Package
     @category = "default"
     @license = "unknown"
     @vendor = "none"
-   
+    @package_template_dir = nil
+ 
     # Iterate over all the options and set defaults
     if self.class.respond_to?(:declared_options)
       self.class.declared_options.each do |option|
@@ -198,7 +202,7 @@ class FPM::Package
       :@architecture, :@category, :@config_files, :@conflicts,
       :@dependencies, :@description, :@epoch, :@iteration, :@license, :@maintainer,
       :@name, :@provides, :@replaces, :@scripts, :@url, :@vendor, :@version,
-      :@directories, :@staging_path
+      :@directories, :@staging_path, :@package_template_dir
     ]
     ivars.each do |ivar|
       #@logger.debug("Copying ivar", :ivar => ivar, :value => instance_variable_get(ivar),
@@ -321,8 +325,17 @@ class FPM::Package
     File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "templates"))
   end
 
+  def find_template_file(path)
+    dirs = [template_dir]
+    dirs.unshift(@package_template_dir) if @package_template_dir
+    dirs.each { |dir|
+      template_file = File.join(dir, path)
+      return template_file if File.exists?(template_file)
+    }
+  end # def find_template_file
+
   def template(path)
-    template_path = File.join(template_dir, path)
+    template_path = find_template_file(path)
     template_code = File.read(template_path)
     @logger.info("Reading template", :path => template_path)
     erb = ERB.new(template_code, nil, "-")

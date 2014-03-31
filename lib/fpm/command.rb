@@ -195,6 +195,11 @@ class FPM::Command < Clamp::Command
     "copying, downloading, etc. Roughly any scratch space fpm needs to build" \
     "your package.", :default => Dir.tmpdir
 
+  option "--package-template-dir", "PACKAGE_TEMPLATE_DIR",
+    "The directory to specify the package spec instead of bundled spec" do |dir|
+    File.expand_path(dir)
+  end # --package-template-dir
+
   parameter "[ARGS] ...",
     "Inputs to the source package type. For the 'dir' type, this is the files" \
     " and directories you want to include in the package. For others, like " \
@@ -333,6 +338,7 @@ class FPM::Command < Clamp::Command
     set.call(input, :vendor)
     set.call(input, :version)
     set.call(input, :architecture)
+    set.call(input, :package_template_dir)
 
     input.conflicts += conflicts
     input.dependencies += dependencies
