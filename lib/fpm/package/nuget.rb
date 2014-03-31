@@ -30,4 +30,11 @@ class FPM::Package::Nuget < FPM::Package::Zip
     end
   end # def write_nuspec
 
+  def to_s(format=nil)
+    # Default format if nil
+    # git_1.7.9.nuget
+    return super("NAME_VERSION.TYPE") if format.nil?
+    return super(format)
+  end # def to_s
+
 end
