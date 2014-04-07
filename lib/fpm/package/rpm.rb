@@ -121,6 +121,19 @@ class FPM::Package::RPM < FPM::Package
             "version. Default is to be specific. This option allows the same " \
             "version of a package but any iteration is permitted"
 
+  option "--verifyscript", "FILE",
+    "a script to be run on verification" do |val|
+    File.expand_path(val) # Get the full path to the script
+  end # --verifyscript
+  option "--pretrans", "FILE",
+    "pretrans script" do |val|
+    File.expand_path(val) # Get the full path to the script
+  end # --pretrans
+  option "--posttrans", "FILE",
+    "posttrans script" do |val|
+    File.expand_path(val) # Get the full path to the script
+  end # --posttrans
+
   private
 
   # Fix path name
@@ -269,9 +282,9 @@ class FPM::Package::RPM < FPM::Package
     self.scripts[:after_install] = tags[:postin]
     self.scripts[:before_remove] = tags[:preun]
     self.scripts[:after_remove] = tags[:postun]
-    self.scripts[:verifyscript] = tags[:verifyscript]
-    self.scripts[:posttrans] = tags[:posttrans]
-    self.scripts[:pretrans] = tags[:pretrans]
+    self.scripts[:verifyscript] = attributes[:rpm_verifyscript]
+    self.scripts[:posttrans] = attributes[:rpm_posttrans]
+    self.scripts[:pretrans] = attributes[:rpm_pretrans]
     # TODO(sissel): prefix these scripts above with a shebang line if there isn't one?
     # Also taking into account the value of tags[preinprog] etc, something like:
     #    #!#{tags[:preinprog]}
