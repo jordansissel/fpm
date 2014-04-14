@@ -133,9 +133,9 @@ describe FPM::Package::RPM do
         subject.scripts[:after_install] = "example after_install"
         subject.scripts[:before_remove] = "example before_remove"
         subject.scripts[:after_remove] = "example after_remove"
-        subject.scripts[:verifyscript] = "example verifyscript"
-        subject.scripts[:posttrans] = "example posttrans"
-        subject.scripts[:pretrans] = "example pretrans"
+        subject.scripts[:rpm_verifyscript] = "example rpm_verifyscript"
+        subject.scripts[:rpm_posttrans] = "example rpm_posttrans"
+        subject.scripts[:rpm_pretrans] = "example rpm_pretrans"
 
 
         # Write the rpm out
@@ -220,17 +220,17 @@ describe FPM::Package::RPM do
       end
 
       it "should have the correct 'verify' script" do
-        insist { @rpm.tags[:verifyscript] } == "example verifyscript"
+        insist { @rpm.tags[:verifyscript] } == "example rpm_verifyscript"
         insist { @rpm.tags[:verifyprog] } == "/bin/sh"
       end
 
       it "should have the correct 'pretrans' script" do
-        insist { @rpm.tags[:pretrans] } == "example pretrans"
+        insist { @rpm.tags[:pretrans] } == "example rpm_pretrans"
         insist { @rpm.tags[:verifyprog] } == "/bin/sh"
       end
 
       it "should have the correct 'posttrans' script" do
-        insist { @rpm.tags[:pretrans] } == "example posttrans"
+        insist { @rpm.tags[:pretrans] } == "example rpm_posttrans"
         insist { @rpm.tags[:verifyprog] } == "/bin/sh"
       end
 
