@@ -175,6 +175,18 @@ class FPM::Command < Clamp::Command
     "a script to be run before package removal" do |val|
     File.expand_path(val) # Get the full path to the script
   end # --before-remove
+  option "--verifyscript", "FILE",
+    "a script to be run on verification" do |val|
+    File.expand_path(val) # Get the full path to the script
+  end # --verifyscript
+    option "--pretrans", "FILE",
+    "pretrans script (RPM only)" do |val|
+    File.expand_path(val) # Get the full path to the script
+  end # --pretrans
+    option "--posttrans", "FILE",
+    "posttrans script (RPM only)" do |val|
+    File.expand_path(val) # Get the full path to the script
+  end # --posttrans
   option "--template-scripts", :flag,
     "Allow scripts to be templated. This lets you use ERB to template your " \
     "packaging scripts (for --after-install, etc). For example, you can do " \
@@ -362,6 +374,9 @@ class FPM::Command < Clamp::Command
     setscript.call(:after_install)
     setscript.call(:before_remove)
     setscript.call(:after_remove)
+    setscript.call(:verifyscript)
+    setscript.call(:posttrans)
+    setscript.call(:pretrans)
 
     # Bail if any setscript calls had errors. We don't need to log
     # anything because we've already logged the error(s) above.
