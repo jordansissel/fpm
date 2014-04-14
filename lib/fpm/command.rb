@@ -345,7 +345,6 @@ class FPM::Command < Clamp::Command
     setscript = proc do |scriptname|
       # 'self.send(scriptname) == self.before_install == --before-install
       # Gets the path to the script
-      @logger.error("SENDING SCRIPT", :path => scriptname)
       path = self.send(scriptname)
       # Skip scripts not set
       next if path.nil?
