@@ -39,6 +39,8 @@ class FPM::Package::Gem < FPM::Package
 
   option "--prerelease", :flag, "Allow prerelease versions of a gem", :default => false
 
+  option "--version-bins", :flag, "Append the version to the bins", :default => false
+
   def input(gem)
     # 'arg'  is the name of the rubygem we should unpack.
     path_to_gem = download_if_necessary(gem, version)
@@ -197,6 +199,11 @@ class FPM::Package::Gem < FPM::Package
       @logger.info("Deleting empty bin_path", :path => tmp)
       ::Dir.rmdir(tmp)
       tmp = File.dirname(tmp)
+    end
+    if attributes[:gem_version_bins?]
+      (::Dir.entries(bin_path) - ['.','..']).each do |bin|
+        FileUtils.mv("#{bin_path}/#{bin}", "#{bin_path}/#{bin}-#{self.version}")
+      end
     end
   end # def install_to_staging
   
