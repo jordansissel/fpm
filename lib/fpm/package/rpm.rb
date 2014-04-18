@@ -313,6 +313,10 @@ class FPM::Package::RPM < FPM::Package
     %w(BUILD RPMS SRPMS SOURCES SPECS).each { |d| FileUtils.mkdir_p(build_path(d)) }
     args = ["rpmbuild", "-bb"]
 
+    if %x{uname -m}.chomp != self.architecture
+      args += [ '--target', self.architecture ]
+    end
+
     # issue #309
     if !attributes[:rpm_os].nil?
       rpm_target = "#{architecture}-unknown-#{attributes[:rpm_os]}"
