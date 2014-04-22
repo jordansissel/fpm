@@ -30,19 +30,11 @@ class FPM::Package::RPM < FPM::Package
   } unless defined?(COMPRESSION_MAP)
 
   option "--use-file-permissions", :flag, 
-      "Use existing file permissions when defining ownership and modes"
+      "Use existing file permissions when defining ownership and modes."
 
-  option "--user", "USER",
-    "Set the user to USER in the %files section.", 
-    :default => 'root' do |value|
-      value
-  end
+  option "--user", "USER", "Set the user to USER in the %files section. Overrides the user when used with use-file-permissions setting."
 
-  option "--group", "GROUP",
-    "Set the group to GROUP in the %files section.",
-    :default => 'root' do |value|
-      value
-  end
+  option "--group", "GROUP", "Set the group to GROUP in the %files section. Overrides the group when used with use-file-permissions setting."
 
   option "--defattrfile", "ATTR",
     "Set the default file mode (%defattr).",
@@ -144,8 +136,11 @@ class FPM::Package::RPM < FPM::Package
     # Stat the original filename in the relative staging path
     ::Dir.chdir(staging_path) do
       stat = File.stat(original_file.gsub(/\"/, '').sub(/^\//,''))
-      user = Etc.getpwuid(stat.uid).name
-      group = Etc.getgrgid(stat.gid).name
+
+      # rpm_user and rpm_group attribute should override file ownership
+      # otherwise use the current file user/group by name.
+      user = attributes[:rpm_user] || Etc.getpwuid(stat.uid).name
+      group = attributes[:rpm_group] || Etc.getgrgid(stat.gid).name
       mode = stat.mode
       return sprintf("%%attr(%o, %s, %s) %s\n", mode & 4095 , user, group, file)
     end
