@@ -218,6 +218,12 @@ class FPM::Command < Clamp::Command
 
   # Execute this command. See Clamp::Command#execute and Clamp's documentation
   def execute
+    # Short-circuit if someone simply runs `fpm --version`
+    if ARGV == [ "--version" ]
+      puts FPM::VERSION
+      return 0
+    end
+
     @logger.level = :warn
 
     if (stray_flags = args.grep(/^-/); stray_flags.any?)
