@@ -1,5 +1,33 @@
 1.1.0 (???)
   - New package type: zip, for converting to and from zip files (Jordan Sissel)
+  - New package type: sh, a self-extracting package installation shell archive. (#651, Chris Gerber)
+  - 'fpm --version' will now emit the version of fpm.
+  - rpm: supports packaging fifo files (Adam Stephens)
+  - deb: Add --deb-use-file-permissions (Adam Stephens)
+  - cpan: Improve how fpm tries to find cpan artifacts for download (#614, Tim Nicholas)
+  - gem: Add --gem-disable-dependency for removing one or more specific rubygem
+    dependencies from the automatically-generated list (#598, Derek Olsen)
+  - python: Add --python-scripts-executable for setting a custom interpreter to
+    use for the hashbang line at the top of may python package scripts.
+    (#628, Vladimir Rutsky)
+  - Allow absolute paths with --directories even when --prefix is used (Vladimir Rutsky)
+  - dir: Now correctly identifies hardlinked files and creates a package correctly
+    with that knowledge (#365, #623, #659; Vladimir Rutsky)
+  - rpm: Add --rpm-auto-add-exclude-directories for excluding directories
+    from the --rpm-auto-add-directories behavior (#640, Vladimir Rutsky)
+  - general: --config-files now accepts directories and will recursively mark any
+    files within as config files inside the package (#642, Vladimir Rutsky)
+  - general: If you specify a --config-files path that doesn't exist, you will
+    now get an error. (#654, Alan Franzoni)
+  - python: Support --python-pypi when using --python-pip (#652, David Lindquist)
+  - deb: Tests now try to make packages ensure we don't upset lintian (#648, Sam Crang)
+  - rpm: Fix architecture targeting (#676, Rob Kinyon)
+  - rpm: Allow --rpm-user and --rpm-group to override the user/group even if
+    --rpm-use-file-permissions is enabled. (#679, Jordan Sissel)
+  - gem: Add --gem-version-bins for appending the gem version to the file name
+    of executable scripts a rubygem may install. (Jan Vansteenkiste)
+  - python: Attempt to provide better error messages for known issues in python
+    environments (#664, Jordan Sissel)
 
 1.0.2 (January 10, 2013)
   - rpm: No longer converts - to _ in dependency strings (#603, Bulat
