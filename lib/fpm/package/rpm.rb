@@ -113,6 +113,9 @@ class FPM::Package::RPM < FPM::Package
             "version. Default is to be specific. This option allows the same " \
             "version of a package but any iteration is permitted"
 
+  option "--prefix", "FILEPATH",
+	"In some cases you may only want to mark part of an rpm as relocatable."
+
   private
 
   # Fix path name
@@ -394,7 +397,7 @@ class FPM::Package::RPM < FPM::Package
   end # def output
 
   def prefix
-    return (attributes[:prefix] or "/")
+    return (attributes[:prefix] or attributes[:rpm_prefix] or "/")
   end # def prefix
 
   def build_sub_dir
