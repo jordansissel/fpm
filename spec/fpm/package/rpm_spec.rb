@@ -426,14 +426,14 @@ describe FPM::Package::RPM do
       File.delete(target) rescue nil
     end
 
-    it "should respect file user and group ownership" do
+    it "should respect file user and group ownership", :if => program_exists?("rpmbuild") do
       subject.attributes[:rpm_use_file_permissions?] = true
       subject.output(target)
       insist { rpm.tags[:fileusername].first } == Etc.getpwuid(path_stat.uid).name
       insist { rpm.tags[:filegroupname].first } == Etc.getgrgid(path_stat.gid).name
     end
 
-    it "rpm_group should override rpm_use_file_permissions-derived owner" do
+    it "rpm_group should override rpm_use_file_permissions-derived owner", :if => program_exists?("rpmbuild") do
       subject.attributes[:rpm_use_file_permissions?] = true
       subject.attributes[:rpm_user] = "hello"
       subject.attributes[:rpm_group] = "world"
