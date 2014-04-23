@@ -111,6 +111,23 @@ describe FPM::Package::RPM do
   end
 
   describe "#output", :if => program_exists?("rpmbuild") do
+    context "architecture" do
+      it "can be basically anything" do
+        subject.name = "example"
+        subject.architecture = "fancypants"
+        subject.version = "1.0"
+        target = Stud::Temporary.pathname
+
+        # Should not fail.
+        subject.output(target)
+
+        # Verify the arch tag.
+        rpm = ::RPM::File.new(target)
+        insist { rpm.tags[:arch] } == subject.architecture
+
+        File.unlink(target)
+      end
+    end
     context "package attributes" do
       before :each do
         @target = Stud::Temporary.pathname
