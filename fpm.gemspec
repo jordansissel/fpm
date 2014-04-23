@@ -33,9 +33,6 @@ Gem::Specification.new do |spec|
   # For reading and writing rpms
   spec.add_dependency("arr-pm", "~> 0.0.9") # license: Apache 2
 
-  # For http stuff
-  spec.add_dependency("ftw", "~> 0.0.30") # license: Apache 2
-
   # For command-line flag support
   # https://github.com/mdub/clamp/blob/master/README.markdown
   spec.add_dependency("clamp", "~> 0.6") # license: MIT
