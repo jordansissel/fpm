@@ -145,18 +145,19 @@ class FPM::Package::Python < FPM::Package
       attributes[:python_package_name_prefix] = attributes[:python_package_prefix]
     end
 
-    have_simplejson = safesystem("%{attributes[:python_bin]} -c 'import simplejson'")
-    have_json = safesystem("%{attributes[:python_bin]} -c 'import json'")
-    have_pkg_resources = safesystem("%{attributes[:python_bin]} -c 'import pkg_resources'")
-
-    if !(have_simplejson || have_json)
-      @logger.error("Your python environment is missing json support (either json or simplejson python module). I cannot continue without this.", :python => attributes[:python_bin])
-      raise "Python (#{attributes[:python_bin]}) is missing simplejson or json modules"
+    begin
+      safesystem("#{attributes[:python_bin]} -c 'import simplejson'")
+      safesystem("#{attributes[:python_bin]} -c 'import json'")
+    rescue FPM::Util::ProcessFailed => e
+      @logger.error("Your python environment is missing json support (either json or simplejson python module). I cannot continue without this.", :python => attributes[:python_bin], :error => e)
+      raise FPM::Util::ProcessFailed, "Python (#{attributes[:python_bin]}) is missing simplejson or json modules."
     end
 
-    if !have_pkg_resources
-      @logger.error("Your python environment is missing a working setuptools module. I tried to find the 'pkg_resources' module but failed.", :python => attributes[:python_bin])
-      raise "Python (#{attributes[:python_bin]}) is missing pkg_resources module"
+    begin
+      safesystem("#{attributes[:python_bin]} -c 'import pkg_resources'")
+    rescue FPM::Util::ProcessFailed => e
+      @logger.error("Your python environment is missing a working setuptools module. I tried to find the 'pkg_resources' module but failed.", :python => attributes[:python_bin], :error => e)
+      raise FPM::Util::ProcessFailed, "Python (#{attributes[:python_bin]}) is missing pkg_resources module."
     end
 
     # Add ./pyfpm/ to the python library path
