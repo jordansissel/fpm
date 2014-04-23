@@ -38,7 +38,7 @@ class FPM::Package::Gem < FPM::Package
     "shebang rewritten to use env?", :default => true
 
   option "--prerelease", :flag, "Allow prerelease versions of a gem", :default => false
-  option "--disable-dependencies", "gem_name",
+  option "--disable-dependency", "gem_name",
     "The gem name to remove from dependency list",
     :multivalued => true, :attribute_name => :gem_disable_dependencies
 
