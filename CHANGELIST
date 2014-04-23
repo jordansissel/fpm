@@ -1,4 +1,4 @@
-1.1.0 (???)
+1.1.0 (April 23, 2014)
   - New package type: zip, for converting to and from zip files (Jordan Sissel)
   - New package type: sh, a self-extracting package installation shell archive. (#651, Chris Gerber)
   - 'fpm --version' will now emit the version of fpm.
