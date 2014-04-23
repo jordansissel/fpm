@@ -145,9 +145,14 @@ class FPM::Package::Python < FPM::Package
       attributes[:python_package_name_prefix] = attributes[:python_package_prefix]
     end
 
-    begin
-      safesystem("#{attributes[:python_bin]} -c 'import simplejson'")
-      safesystem("#{attributes[:python_bin]} -c 'import json'")
+    begin 
+      json_test_code = [
+        "try:",
+        "  import json",
+        "except ImportError:",
+        "  import simplejson as json"
+      ].join("\n")
+      safesystem("#{attributes[:python_bin]} -c '#{json_test_code}'")
     rescue FPM::Util::ProcessFailed => e
       @logger.error("Your python environment is missing json support (either json or simplejson python module). I cannot continue without this.", :python => attributes[:python_bin], :error => e)
       raise FPM::Util::ProcessFailed, "Python (#{attributes[:python_bin]}) is missing simplejson or json modules."
