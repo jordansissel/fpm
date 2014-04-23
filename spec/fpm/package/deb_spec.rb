@@ -287,14 +287,12 @@ describe FPM::Package::Deb do
     it "should set the user for the package's data files" do
       @package.attributes[:deb_user] = "nobody"
       # output a package so that @data_tar_flags is computed
-      @package.output(@target)
       insist { @package.data_tar_flags } == ["--owner", "nobody", "--numeric-owner", "--group", "0"]
     end
 
     it "should set the group for the package's data files" do
       @package.attributes[:deb_group] = "nogroup"
       # output a package so that @data_tar_flags is computed
-      @package.output(@target)
       insist { @package.data_tar_flags } == ["--numeric-owner", "--owner", "0", "--group", "nogroup"]
     end
 
