@@ -113,6 +113,13 @@ class FPM::Package::RPM < FPM::Package
             "version. Default is to be specific. This option allows the same " \
             "version of a package but any iteration is permitted"
 
+  rpm_provides = []
+  option "--provides", "PROVIDES",
+    "Add an additional value to the %Provides section" do |provides|
+    rpm_provides << provides
+    next rpm_provides
+  end
+
   private
 
   # Fix path name
@@ -367,6 +374,10 @@ class FPM::Package::RPM < FPM::Package
 
     (attributes[:rpm_rpmbuild_define] or []).each do |define|
       args += ["--define", define]
+    end
+
+    (attributes[:rpm_provides] or []).each do |additional_provide|
+      self.provides << additional_provide
     end
 
     # copy all files from staging to BUILD dir
