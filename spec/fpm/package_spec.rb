@@ -168,18 +168,12 @@ describe FPM::Package do
       subject.scripts[:before_install] = "<%= name %>"
       subject.scripts[:after_remove] = "<%= name %>"
       subject.scripts[:before_remove] = "<%= name %>"
-      subject.scripts[:rpm_verifyscript] = "<%= name %>"
-      subject.scripts[:rpm_posttrans] = "<%= name %>"
-      subject.scripts[:rpm_pretrans] = "<%= name %>"
       subject.attributes[:template_scripts?] = true
       subject.name = "Example"
       insist { subject.script(:after_install) } == subject.name
       insist { subject.script(:before_install) } == subject.name
       insist { subject.script(:after_remove) } == subject.name
       insist { subject.script(:before_remove) } == subject.name
-      insist { subject.script(:rpm_verifyscript) } == subject.name
-      insist { subject.script(:rpm_posttrans) } == subject.name
-      insist { subject.script(:rpm_pretrans) } == subject.name
     end
 
     it "should not template when :template_scripts? is false" do
@@ -187,17 +181,11 @@ describe FPM::Package do
       subject.scripts[:before_install] = "<%= name %>"
       subject.scripts[:after_remove] = "<%= name %>"
       subject.scripts[:after_install] = "<%= name %>"
-      subkect.scripts[:rpm_verify_script] = "<%= name %>"
-      subject.scripts[:rpm_posttrans] = "<%= name %>"
-      subject.scripts[:rpm_pretrans] = "<%= name %>"
       subject.attributes[:template_scripts?] = false
       insist { subject.script(:after_install) } == subject.scripts[:after_install]
       insist { subject.script(:before_install) } == subject.scripts[:before_install]
       insist { subject.script(:after_remove) } == subject.scripts[:after_remove]
       insist { subject.script(:before_remove) } == subject.scripts[:before_remove]
-      insist { subject.script(:rpm_verifyscript) } == subject.scripts[:rpm_verifyscript]
-      insist { subject.script(:rpm_posttrans) } == subject.scripts[:rpm_posttrans]
-      insist { subject.script(:rpm_pretrans) } == subject.scripts[:rpm_pretrans]
     end
 
     it "should not template by default" do

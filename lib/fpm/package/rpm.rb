@@ -255,6 +255,21 @@ class FPM::Package::RPM < FPM::Package
       end.flatten
     end
 
+  setscript = proc do |scriptname|
+      script_path = self.attributes[scriptname]
+      # Skip scripts not set
+      next if script_path.nil?
+      if !File.exists?(script_path)
+        @logger.error("No such file (for #{scriptname.to_s}): #{script_path.inspect}")
+        script_errors	 << script_path
+      end
+      # Load the script into memory.
+      scripts[scriptname] = File.read(script_path)
+    end
+
+  setscript.call(:rpm_verifyscript)
+  setscript.call(:rpm_posttrans)
+  setscript.call(:rpm_pretrans)
   end # def converted
 
   def input(path)

@@ -362,9 +362,6 @@ class FPM::Command < Clamp::Command
     setscript.call(:after_install)
     setscript.call(:before_remove)
     setscript.call(:after_remove)
-    setscript.call(:rpm_verifyscript)
-    setscript.call(:rpm_posttrans)
-    setscript.call(:rpm_pretrans)
 
     # Bail if any setscript calls had errors. We don't need to log
     # anything because we've already logged the error(s) above.
