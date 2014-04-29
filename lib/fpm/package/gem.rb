@@ -207,7 +207,7 @@ class FPM::Package::Gem < FPM::Package
       ::Dir.rmdir(tmp)
       tmp = File.dirname(tmp)
     end
-    if attributes[:gem_version_bins?]
+    if attributes[:gem_version_bins?] and File.directory?(bin_path)
       (::Dir.entries(bin_path) - ['.','..']).each do |bin|
         FileUtils.mv("#{bin_path}/#{bin}", "#{bin_path}/#{bin}-#{self.version}")
       end
