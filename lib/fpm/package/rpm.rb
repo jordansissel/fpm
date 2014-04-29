@@ -112,6 +112,14 @@ class FPM::Package::RPM < FPM::Package
     next rpmbuild_filter_from_requires
   end
 
+  rpm_tags = []
+  option "--tag", "TAG",
+    "Adds a custom tag in the spec file as is. " \
+    "Example: --rpm-tag 'Requires(post): /usr/sbin/alternatives'" do |add_tag|
+      rpm_tags << add_tag
+    next rpm_tags
+  end
+
   option "--ignore-iteration-in-dependencies", :flag,
             "For '=' (equal) dependencies, allow iterations on the specified " \
             "version. Default is to be specific. This option allows the same " \
