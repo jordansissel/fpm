@@ -60,6 +60,17 @@ describe FPM::Package::RPM do
       # This is the default filename I see commonly output by rpmbuild
       insist { subject.to_s } == "name-123-100.noarch.rpm"
     end
+
+    it "should include the dist when specified" do
+      subject.name = "name"
+      subject.version = "123"
+      subject.architecture = "all"
+      subject.iteration = "100"
+      subject.dist = "el6"
+      subject.epoch = "5"
+
+      insist { subject.to_s } == "name-123-100.el6.noarch.rpm"
+    end
   end
 
 
@@ -327,6 +338,23 @@ describe FPM::Package::RPM do
         end
       end
     end # package attributes
+
+    context "dist" do
+      it "should have the dist in the release" do
+        subject.name = "example"
+        subject.attributes[:rpm_dist] = "el6"
+        subject.version = "1.0"
+        @target = Stud::Temporary.pathname
+
+        # Write RPM
+        subject.output(@target)
+
+        @rpm = ::RPM::File.new(@target)
+        insist { @rpm.tags[:release] } == "#{subject.iteration}.el6"
+
+        File.unlink(@target)
+      end
+    end # dist
   end # #output
 
   describe "regressions should not occur", :if => program_exists?("rpmbuild") do

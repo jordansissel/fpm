@@ -55,6 +55,8 @@ class FPM::Package::RPM < FPM::Package
     next rpmbuild_define
   end
 
+  option "--dist", "DIST-TAG", "Set the rpm distribution, like el5, el6, or fc20."
+
   option "--digest", DIGEST_ALGORITHM_MAP.keys.join("|"),
     "Select a digest algorithm. md5 works on the most platforms.",
     :default => "md5" do |value|
@@ -170,6 +172,10 @@ class FPM::Package::RPM < FPM::Package
   def iteration
     return @iteration ? @iteration : 1
   end # def iteration
+
+  def dist
+    @dist || attributes[:rpm_dist]
+  end
 
   # See FPM::Package#converted_from
   def converted_from(origin)
@@ -318,6 +324,9 @@ class FPM::Package::RPM < FPM::Package
       args += ["--target", rpm_target]
     end
 
+    # set the rpm dist tag
+    args += ["--define", "dist .#{dist}"] if dist
+
     args += [
       "--define", "buildroot #{build_path}/BUILD",
       "--define", "_topdir #{build_path}",
@@ -425,7 +434,10 @@ class FPM::Package::RPM < FPM::Package
   end # def epoch
 
   def to_s(format=nil)
-    return super("NAME-VERSION-ITERATION.ARCH.TYPE") if format.nil?
+    if format.nil?
+      return super("NAME-VERSION-ITERATION.DIST.ARCH.TYPE") if dist
+      return super("NAME-VERSION-ITERATION.ARCH.TYPE")
+    end
     return super(format)
   end # def to_s
 
@@ -438,6 +450,6 @@ class FPM::Package::RPM < FPM::Package
   end # def digest_algorithm
 
   public(:input, :output, :converted_from, :architecture, :to_s, :iteration,
-         :payload_compression, :digest_algorithm, :prefix, :build_sub_dir,
+         :dist, :payload_compression, :digest_algorithm, :prefix, :build_sub_dir,
          :epoch, :version, :prefixed_path)
 end # class FPM::Package::RPM
