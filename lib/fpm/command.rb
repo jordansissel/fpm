@@ -392,7 +392,15 @@ class FPM::Command < Clamp::Command
 
     # Write the output somewhere, package can be nil if no --package is specified, 
     # and that's OK.
-    package_file = output.to_s(package)
+    
+    # If the package output (-p flag) is a directory, write to the default file name
+    # but inside that directory.
+    if File.directory?(package)
+      package_file = File.join(package, output.to_s)
+    else
+      package_file = output.to_s(package)
+    end
+
     begin
       output.output(package_file)
     rescue FPM::Package::FileAlreadyExists => e
