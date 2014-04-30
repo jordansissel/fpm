@@ -54,6 +54,12 @@ class FPM::Package
   # to handle any default value that should be instead.
   attr_accessor :iteration
 
+  # The target distribution of this package. Used to scope the validity of a
+  # package to a specific distribution like el5 (RHEL 5) or el6 (RHEL 6).
+  # More information:
+  #   http://fedoraproject.org/wiki/Packaging:DistTag
+  attr_accessor :dist
+
   # Who maintains this package? This could be the upstream author
   # or the package maintainer. You pick.
   attr_accessor :maintainer
@@ -147,6 +153,7 @@ class FPM::Package
     @version = nil
     @epoch = nil
     @iteration = nil
+    @dist = nil
     @url = nil
     @category = "default"
     @license = "unknown"
@@ -196,7 +203,7 @@ class FPM::Package
     # copy other bits
     ivars = [
       :@architecture, :@category, :@config_files, :@conflicts,
-      :@dependencies, :@description, :@epoch, :@iteration, :@license, :@maintainer,
+      :@dependencies, :@description, :@epoch, :@iteration, :@dist, :@license, :@maintainer,
       :@name, :@provides, :@replaces, :@scripts, :@url, :@vendor, :@version,
       :@directories, :@staging_path
     ]
@@ -339,6 +346,7 @@ class FPM::Package
       .gsub("FULLVERSION", fullversion) \
       .gsub("VERSION", version.to_s) \
       .gsub("ITERATION", iteration.to_s) \
+      .gsub("DIST", dist.to_s) \
       .gsub("EPOCH", epoch.to_s) \
       .gsub("TYPE", type.to_s)
   end # def to_s
