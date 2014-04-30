@@ -150,6 +150,9 @@ describe FPM::Package::Deb do
       @original.attributes[:deb_field_given?] = true
       @original.attributes[:deb_field] = { "foo" => "bar" }
 
+      @original.attributes[:deb_meta_files] = [
+        File.expand_path("../../../fixtures/deb/meta_test", __FILE__)]
+
       @original.output(@target)
 
       @input = FPM::Package::Deb.new
@@ -160,6 +163,26 @@ describe FPM::Package::Deb do
       @original.cleanup
       @input.cleanup
     end # after
+
+    context "when the deb's control section is extracted" do
+      before :all do
+        tmp_control = Tempfile.new("fpm-test-deb-control")
+        @control_extracted = tmp_control.path
+        tmp_control.unlink
+        system("dpkg-deb -e '#{@target}' '#{@control_extracted}'") or \
+          raise "couldn't extract test deb"
+      end
+
+      it "should have the requested meta file in the control archive" do
+        File.open(File.join(@control_extracted, 'meta_test')) do |f|
+          insist { f.read.chomp } == "asdf"
+        end
+      end
+
+      after :all do
+        FileUtils.rm_rf @control_extracted
+      end
+    end
 
     context "package attributes" do
       it "should have the correct name" do

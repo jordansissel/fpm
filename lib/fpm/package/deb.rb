@@ -99,6 +99,12 @@ class FPM::Package::Deb < FPM::Package
     next @suggests
   end
 
+  option "--meta-file", "FILEPATH", "Add FILEPATH to DEBIAN directory" do |file|
+    @meta_files ||= []
+    @meta_files << File.expand_path(file)
+    next @meta_files
+  end
+
   option "--field", "'FIELD: VALUE'", "Add custom field to the control file" do |fv|
     @custom_fields ||= {}
     field, value = fv.split(/: */, 2)
@@ -506,6 +512,7 @@ class FPM::Package::Deb < FPM::Package
     write_scripts # write the maintainer scripts
     write_conffiles # write the conffiles
     write_debconf # write the debconf files
+    write_meta_files # write additional meta files
     write_md5sums # write the md5sums file
 
     # Make the control.tar.gz
@@ -623,6 +630,16 @@ class FPM::Package::Deb < FPM::Package
       File.chmod(0755, control_path("templates"))
     end
   end # def write_debconf
+
+  def write_meta_files
+    files = attributes[:deb_meta_files]
+    return unless files
+    files.each do |fn|
+      dest = control_path(File.basename(fn))
+      FileUtils.cp(fn, dest)
+      File.chmod(0644, dest)
+    end
+  end
 
   def write_md5sums
     md5_sums = {}
