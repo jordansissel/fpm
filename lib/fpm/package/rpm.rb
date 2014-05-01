@@ -3,7 +3,6 @@ require "backports"
 require "fileutils"
 require "find"
 require "arr-pm/file" # gem 'arr-pm'
-require_relative '../util'
 
 # RPM Package type.
 #
@@ -176,7 +175,6 @@ class FPM::Package::RPM < FPM::Package
   def converted_from(origin)
     if origin == FPM::Package::Gem
       fixed_deps = []
-      include Util
       self.dependencies.collect do |dep|
         # Gem dependency operator "~>" is not compatible with rpm. Translate any found.
         fixed_deps = fixed_deps + expand_pessimistic_constraints(dep)
