@@ -16,7 +16,32 @@ describe FPM::Package::Gem, :if => have_gem do
   after :each do
     subject.cleanup
   end
-  
+
+  context "when :gem_version_bins? is true" do
+    before :each do
+      subject.attributes[:gem_version_bins?] = true
+      subject.attributes[:gem_bin_path] = '/usr/bin'
+    end
+
+    it "it should append the version to binaries" do
+      subject.input(example_gem)
+      insist { ::Dir.entries(File.join(subject.staging_path, "/usr/bin")) }.include?("example-1.0.0")
+    end
+  end
+
+  context "when :gem_version_bins? is false" do
+    before :each do
+      subject.attributes[:gem_version_bins?] = false
+      subject.attributes[:gem_bin_path] = '/usr/bin'
+    end
+
+    it "it should not append the version to binaries" do
+      subject.input(example_gem)
+      insist { ::Dir.entries(File.join(subject.staging_path, "/usr/bin")) }.include?("example")
+    end
+
+  end
+
   context "when :gem_fix_name? is true" do
     before :each do
       subject.attributes[:gem_fix_name?] = true
