@@ -150,8 +150,12 @@ describe FPM::Package::Deb do
       @original.attributes[:deb_field_given?] = true
       @original.attributes[:deb_field] = { "foo" => "bar" }
 
-      @original.attributes[:deb_meta_files] = [
-        File.expand_path("../../../fixtures/deb/meta_test", __FILE__)]
+      @original.attributes[:deb_meta_files] = %w[meta_test triggers].map { |fn|
+        File.expand_path("../../../fixtures/deb/#{fn}", __FILE__)
+      }
+
+      @original.attributes[:deb_interest] = ['asdf', 'hjkl']
+      @original.attributes[:deb_activate] = ['qwer', 'uiop']
 
       @original.output(@target)
 
@@ -177,6 +181,18 @@ describe FPM::Package::Deb do
         File.open(File.join(@control_extracted, 'meta_test')) do |f|
           insist { f.read.chomp } == "asdf"
         end
+      end
+
+      it "should have the requested triggers in the triggers file" do
+        triggers = File.open(File.join(@control_extracted, 'triggers')) do |f|
+          f.read
+        end
+        reject { triggers =~ /^interest from-meta-file$/ }.nil?
+        reject { triggers =~ /^interest asdf$/ }.nil?
+        reject { triggers =~ /^interest hjkl$/ }.nil?
+        reject { triggers =~ /^activate qwer$/ }.nil?
+        reject { triggers =~ /^activate uiop$/ }.nil?
+        insist { triggers[-1] } == ?\n
       end
 
       after :all do
