@@ -130,6 +130,7 @@ describe FPM::Package::Python, :if => python_usable? do
 
   context "python_scripts_executable is set" do
     it "should have scripts with a custom hashbang line" do
+      subject.attributes[:python_install_bin] = '/usr/bin'
       subject.attributes[:python_scripts_executable] = "fancypants"
       subject.input("django")
 
