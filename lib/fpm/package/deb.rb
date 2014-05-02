@@ -553,6 +553,7 @@ class FPM::Package::Deb < FPM::Package
 
       @logger.debug("Writing control file", :path => control)
       File.write(control, control_data)
+      File.chmod(0644, control)
       edit_file(control) if attributes[:edit?]
     end
   end # def write_control
@@ -594,13 +595,16 @@ class FPM::Package::Deb < FPM::Package
     end
     allconfigs.sort!.uniq!
 
-    File.open(control_path("conffiles"), "w") do |out|
-      # 'config_files' comes from FPM::Package and is usually set with
-      # FPM::Command's --config-files flag
-      allconfigs.each do |cf|
-        # We need to put the leading / back. Stops lintian relative-conffile error.
-        out.puts("/" + cf)
+    with(control_path("conffiles")) do |conffiles|
+      File.open(conffiles, "w") do |out|
+        # 'config_files' comes from FPM::Package and is usually set with
+        # FPM::Command's --config-files flag
+        allconfigs.each do |cf|
+          # We need to put the leading / back. Stops lintian relative-conffile error.
+          out.puts("/" + cf)
+        end
       end
+      File.chmod(0644, conffiles)
     end
   end # def write_conffiles
 
