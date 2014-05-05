@@ -395,7 +395,7 @@ class FPM::Command < Clamp::Command
     
     # If the package output (-p flag) is a directory, write to the default file name
     # but inside that directory.
-    if File.directory?(package)
+    if ! package.nil? && File.directory?(package)
       package_file = File.join(package, output.to_s)
     else
       package_file = output.to_s(package)
