@@ -337,6 +337,7 @@ describe FPM::Package::Deb do
     context "when run against lintian", :if => have_lintian do
       lintian_errors_to_ignore = [
         "no-copyright-file",
+        "init.d-script-missing-lsb-section",
         "non-standard-file-permissions-for-etc-init.d-script"
       ]
 
