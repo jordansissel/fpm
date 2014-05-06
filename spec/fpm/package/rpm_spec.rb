@@ -226,12 +226,12 @@ describe FPM::Package::RPM do
 
       it "should have the correct 'pretrans' script" do
         insist { @rpm.tags[:pretrans] } == "example rpm_pretrans"
-        insist { @rpm.tags[:verifyprog] } == "/bin/sh"
+        insist { @rpm.tags[:pretransprog] } == "/bin/sh"
       end
 
       it "should have the correct 'posttrans' script" do
-        insist { @rpm.tags[:pretrans] } == "example rpm_posttrans"
-        insist { @rpm.tags[:verifyprog] } == "/bin/sh"
+        insist { @rpm.tags[:posttrans] } == "example rpm_posttrans"
+        insist { @rpm.tags[:posttransprog] } == "/bin/sh"
       end
 
       it "should have the correct 'prein' script" do
