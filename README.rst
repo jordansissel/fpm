@@ -82,5 +82,6 @@ Targets:
 * directories
 * Mac OS X `.pkg` files (`osxpkg`)
 * pacman (ArchLinux) packages
+* nuget
 
 .. include: docs/contributing
