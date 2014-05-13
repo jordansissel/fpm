@@ -115,6 +115,7 @@ Targets:
 * tar
 * directories
 * Mac OS X `.pkg` files (`osxpkg`)
+* nuget
 
 ## Need Help or Want to Contribute?
 
