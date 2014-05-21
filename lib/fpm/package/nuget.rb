@@ -42,4 +42,8 @@ class FPM::Package::Nuget < FPM::Package::Zip
     return super(format)
   end # def to_s
 
+  def fix_dependency(dep)
+    return "<dependency id=\"\" version=\"\" />"
+  end
+
 end
