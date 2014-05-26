@@ -359,8 +359,18 @@ class FPM::Package::Deb < FPM::Package
     attributes.fetch(:deb_init_list, []).each do |init|
       name = File.basename(init, ".init")
       dest_init = File.join(staging_path, "etc/init.d/#{name}")
-      FileUtils.mkdir_p(File.dirname(dest_init))
-      FileUtils.cp init, dest_init
+      if name.end_with?(".erb") and attributes[:deb_template_services?]
+        @logger.info("processing init template #{name}")
+        name = File.basename(name, ".erb")
+        dest_init = File.join(staging_path, "etc/init.d/#{name}")
+        FileUtils.mkdir_p(File.dirname(dest_init))
+        File.open(dest_init, 'w') do |file|
+          file.write template(init, nil).result(binding)
+        end
+      else
+        FileUtils.mkdir_p(File.dirname(dest_init))
+        FileUtils.cp(init, dest_init)
+      end
       File.chmod(0755, dest_init)
     end
 
@@ -381,11 +391,7 @@ class FPM::Package::Deb < FPM::Package
         dest_upstart = staging_path("etc/init/#{name}.conf")
         FileUtils.mkdir_p(File.dirname(dest_upstart))
         File.open(dest_upstart, 'w') do |file|
-          template_path = upstart
-          template_code = File.read(template_path)
-          erb = ERB.new(template_code, nil, "-")
-          erb.filename = template_path
-          file.write erb.result(binding)
+          file.write template(upstart, nil).result(binding)
         end
       else
         FileUtils.mkdir_p(File.dirname(dest_upstart))

@@ -321,8 +321,11 @@ class FPM::Package
     File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "templates"))
   end
 
-  def template(path)
-    template_path = File.join(template_dir, path)
+  def template(path, parent=template_dir)
+    template_path = path
+    unless parent.nil?
+      template_path = File.join(parent, path)
+    end
     template_code = File.read(template_path)
     @logger.info("Reading template", :path => template_path)
     erb = ERB.new(template_code, nil, "-")
