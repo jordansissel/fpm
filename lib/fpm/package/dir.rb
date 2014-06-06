@@ -99,9 +99,50 @@ class FPM::Package::Dir < FPM::Package
       @logger["method"] = "output"
       clone(".", output_path)
     end
+
+    output_fpmconfig(output_path)
   ensure
     @logger.remove("method")
   end # def output
+
+  def output_fpmconfig(output_path)
+    fd = File.new(File.join(output_path, ".fpm"), "w")
+
+    #require "pry"
+    #binding.pry
+    fd.puts("-s dir")
+    attributes.each do |key, value|
+      given_sym = "#{key}_given?".to_sym
+
+      # TODO(sissel): Janky artifacts from a world before the 'attributes' stuff
+      value = case key
+        when :name; name
+        else value
+      end
+ 
+      next unless attributes.include?(given_sym)
+      #next unless attributes[given_sym]
+      next if [:input_type, :output_type, :package, :dependencies].include?(key)
+      next if value.nil? || (value.respond_to?(:empty?) && value.empty?)
+
+      flag = "--#{key.to_s.gsub("_", "-")}"
+
+      case value
+      when Array
+        value.each do |v|
+          fd.puts("#{flag} #{Shellwords.shellescape(v)}")
+        end
+      else
+        fd.puts("#{flag} #{Shellwords.shellescape(value)}")
+      end
+    end
+
+    dependencies.each do |d|
+      fd.puts("-d #{Shellwords.shellescape(d)}")
+    end
+  ensure
+    fd.close
+  end
 
   private
   # Copy a file or directory to a destination
