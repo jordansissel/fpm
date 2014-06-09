@@ -346,6 +346,16 @@ class FPM::Command < Clamp::Command
     input.replaces += replaces
     input.config_files += config_files
     input.directories += directories
+
+    h = {}
+    attrs.each do | e |
+
+      s = e.split(':', 2)
+      h[s.last] = s.first
+    end
+
+    input.attrs = h
+
     
     script_errors = []
     setscript = proc do |scriptname|
