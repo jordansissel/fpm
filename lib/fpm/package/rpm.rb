@@ -309,12 +309,16 @@ class FPM::Package::RPM < FPM::Package
     args = ["rpmbuild", "-bb"]
 
     if %x{uname -m}.chomp != self.architecture
-      args += [ '--target', self.architecture ]
+      rpm_target = self.architecture
     end
 
     # issue #309
     if !attributes[:rpm_os].nil?
       rpm_target = "#{architecture}-unknown-#{attributes[:rpm_os]}"
+    end
+
+    # issue #707
+    if !rpm_target.nil?
       args += ["--target", rpm_target]
     end
 
