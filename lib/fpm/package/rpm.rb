@@ -113,6 +113,12 @@ class FPM::Package::RPM < FPM::Package
             "version. Default is to be specific. This option allows the same " \
             "version of a package but any iteration is permitted"
 
+  option "--verbatim-gem-dependencies", :flag,
+           "When converting from a gem, leave the old (fpm 0.4.x) style " \
+           "dependency names. This flag will use the old 'rubygem-foo' " \
+           "names in rpm requires instead of the redhat style " \
+           "rubygem(foo).", :default => false
+
   private
 
   # Fix path name
@@ -199,13 +205,15 @@ class FPM::Package::RPM < FPM::Package
           provides
         end
       end
-      self.dependencies = self.dependencies.collect do |dependency|
-        # Tries to match rubygem_prefix [1], gem_name [2] and version [3] if present
-        # and return it in rubygem_prefix(gem_name) form
-        if name=/^(#{attributes[:gem_package_name_prefix]})-([^\s]+)\s*(.*)$/.match(dependency)
-          "#{name[1]}(#{name[2]})#{name[3] ? " #{name[3]}" : ""}"
-        else
-          dependency
+      if !self.attributes[:rpm_verbatim_gem_dependencies?]
+        self.dependencies = self.dependencies.collect do |dependency|
+          # Tries to match rubygem_prefix [1], gem_name [2] and version [3] if present
+          # and return it in rubygem_prefix(gem_name) form
+          if name=/^(#{attributes[:gem_package_name_prefix]})-([^\s]+)\s*(.*)$/.match(dependency)
+            "#{name[1]}(#{name[2]})#{name[3] ? " #{name[3]}" : ""}"
+          else
+            dependency
+          end
         end
       end
     end
