@@ -72,7 +72,7 @@ class FPM::Package::CPAN < FPM::Package
       else; metadata["license"]
     end
 
-    if metadata.include?("distribution")
+    unless metadata["distribution"].nil?
       @logger.info("Setting package name from 'distribution'",
                    :distribution => metadata["distribution"])
       self.name = fix_name(metadata["distribution"])
@@ -83,7 +83,7 @@ class FPM::Package::CPAN < FPM::Package
     end
 
     # Not all things have 'author' listed.
-    self.vendor = metadata["author"].join(", ") if metadata.include?("author")
+    self.vendor = metadata["author"].join(", ") unless metadata["author"].nil?
     self.url = metadata["resources"]["homepage"] rescue "unknown"
 
     # TODO(sissel): figure out if this perl module compiles anything
@@ -102,7 +102,7 @@ class FPM::Package::CPAN < FPM::Package
     safesystem(attributes[:cpan_cpanm_bin], *cpanm_flags)
 
     if !attributes[:no_auto_depends?] 
-      if metadata.include?("requires") && !metadata["requires"].nil?
+      unless metadata["requires"].nil?
         metadata["requires"].each do |dep_name, version|
           # Special case for representing perl core as a version.
           if dep_name == "perl"
