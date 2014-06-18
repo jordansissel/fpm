@@ -119,6 +119,18 @@ class FPM::Package::RPM < FPM::Package
            "names in rpm requires instead of the redhat style " \
            "rubygem(foo).", :default => false
 
+  option "--verifyscript", "FILE",
+    "a script to be run on verification" do |val|
+    File.expand_path(val) # Get the full path to the script
+  end # --verifyscript
+  option "--pretrans", "FILE",
+    "pretrans script" do |val|
+    File.expand_path(val) # Get the full path to the script
+  end # --pretrans
+  option "--posttrans", "FILE",
+    "posttrans script" do |val|
+    File.expand_path(val) # Get the full path to the script
+  end # --posttrans
   private
 
   # Fix path name
@@ -246,6 +258,21 @@ class FPM::Package::RPM < FPM::Package
       end.flatten
     end
 
+  setscript = proc do |scriptname|
+      script_path = self.attributes[scriptname]
+      # Skip scripts not set
+      next if script_path.nil?
+      if !File.exists?(script_path)
+        @logger.error("No such file (for #{scriptname.to_s}): #{script_path.inspect}")
+        script_errors	 << script_path
+      end
+      # Load the script into memory.
+      scripts[scriptname] = File.read(script_path)
+    end
+
+  setscript.call(:rpm_verifyscript)
+  setscript.call(:rpm_posttrans)
+  setscript.call(:rpm_pretrans)
   end # def converted
 
   def input(path)
@@ -272,6 +299,9 @@ class FPM::Package::RPM < FPM::Package
     self.scripts[:after_install] = tags[:postin]
     self.scripts[:before_remove] = tags[:preun]
     self.scripts[:after_remove] = tags[:postun]
+    self.scripts[:rpm_verifyscript] = tags[:verifyscript]
+    self.scripts[:rpm_posttrans] = tags[:posttrans]
+    self.scripts[:rpm_pretrans] = tags[:pretrans]
     # TODO(sissel): prefix these scripts above with a shebang line if there isn't one?
     # Also taking into account the value of tags[preinprog] etc, something like:
     #    #!#{tags[:preinprog]}

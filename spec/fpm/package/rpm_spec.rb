@@ -150,6 +150,10 @@ describe FPM::Package::RPM do
         subject.scripts[:after_install] = "example after_install"
         subject.scripts[:before_remove] = "example before_remove"
         subject.scripts[:after_remove] = "example after_remove"
+        subject.scripts[:rpm_verifyscript] = "example rpm_verifyscript"
+        subject.scripts[:rpm_posttrans] = "example rpm_posttrans"
+        subject.scripts[:rpm_pretrans] = "example rpm_pretrans"
+
 
         # Write the rpm out
         subject.output(@target)
@@ -230,6 +234,21 @@ describe FPM::Package::RPM do
       it "should have the correct 'postun' script" do
         insist { @rpm.tags[:postun] } == "example after_remove"
         insist { @rpm.tags[:postunprog] } == "/bin/sh"
+      end
+
+      it "should have the correct 'verify' script" do
+        insist { @rpm.tags[:verifyscript] } == "example rpm_verifyscript"
+        insist { @rpm.tags[:verifyprog] } == "/bin/sh"
+      end
+
+      it "should have the correct 'pretrans' script" do
+        insist { @rpm.tags[:pretrans] } == "example rpm_pretrans"
+        insist { @rpm.tags[:pretransprog] } == "/bin/sh"
+      end
+
+      it "should have the correct 'posttrans' script" do
+        insist { @rpm.tags[:posttrans] } == "example rpm_posttrans"
+        insist { @rpm.tags[:posttransprog] } == "/bin/sh"
       end
 
       it "should have the correct 'prein' script" do
