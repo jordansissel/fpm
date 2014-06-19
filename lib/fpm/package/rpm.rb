@@ -358,6 +358,7 @@ class FPM::Package::RPM < FPM::Package
       "--define", "_topdir #{build_path}",
       "--define", "_sourcedir #{build_path}",
       "--define", "_rpmdir #{build_path}/RPMS",
+      "--define", "_tmppath #{attributes[:workdir]}"
     ]
 
     args += ["--sign"] if attributes[:rpm_sign?]
