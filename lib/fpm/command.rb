@@ -193,7 +193,9 @@ class FPM::Command < Clamp::Command
   option "--workdir", "WORKDIR",
     "The directory you want fpm to do its work in, where 'work' is any file" \
     "copying, downloading, etc. Roughly any scratch space fpm needs to build" \
-    "your package.", :default => Dir.tmpdir
+    "your package.", :default => Dir.tmpdir do |value|
+	value
+  end
 
   parameter "[ARGS] ...",
     "Inputs to the source package type. For the 'dir' type, this is the files" \
