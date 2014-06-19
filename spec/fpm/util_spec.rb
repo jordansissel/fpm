@@ -79,4 +79,54 @@ describe FPM::Util do
       end
     end
   end
+
+  describe "#expand_pessimistic_constraints" do
+    it 'convert 2 piece versions' do
+      constraint = 'bundle ~> 1.2'
+
+      expected_lower = 'bundle >= 1.2'
+      expected_upper =  'bundle < 2.0'
+
+      derived_constraint = subject.expand_pessimistic_constraints(constraint)
+
+      expect(derived_constraint).to include expected_lower
+      expect(derived_constraint).to include expected_upper
+    end
+
+    it 'convert 3 piece versions' do
+      constraint = 'zippy ~> 1.2.3'
+
+      expected_lower = 'zippy >= 1.2.3'
+      expected_upper =  'zippy < 1.3.0'
+
+      derived_constraint = subject.expand_pessimistic_constraints(constraint)
+
+      expect(derived_constraint).to include expected_lower
+      expect(derived_constraint).to include expected_upper
+    end
+
+    it 'does not convert where not needed when the operator is > ' do
+      constraint = 'zippy > 1.2.3'
+      derived_constraint = subject.expand_pessimistic_constraints(constraint)
+      expect(derived_constraint).to include constraint
+    end
+
+    it 'does not convert where not needed when when the operator is < ' do
+      constraint = 'zippy < 1.2.3'
+      derived_constraint = subject.expand_pessimistic_constraints(constraint)
+      expect(derived_constraint).to include constraint
+    end
+
+    it 'does not convert where not needed when when the operator is <= ' do
+      constraint = 'zippy <= 1.2.3'
+      derived_constraint = subject.expand_pessimistic_constraints(constraint)
+      expect(derived_constraint).to include constraint
+    end
+
+    it 'does not convert where not needed when when the operator is >= ' do
+      constraint = 'zippy >= 1.2.3'
+      derived_constraint = subject.expand_pessimistic_constraints(constraint)
+      expect(derived_constraint).to include constraint
+    end
+  end
 end

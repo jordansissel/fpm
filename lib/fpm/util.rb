@@ -191,4 +191,36 @@ module FPM::Util
     # is already populated. even though this is anew round of copying.
     return @copied_entries ||= {}
   end # def copied_entries
+
+  def expand_pessimistic_constraints(constraint)
+    name, op, version = constraint.split(/\s+/)
+
+    if op == '~>'
+
+      new_lower_constraint = "#{name} >= #{version}"
+
+      version_components = version.split('.').collect { |v| v.to_i }
+
+      version_prefix = version_components[0..-3].join('.')
+      portion_to_work_with = version_components.last(2)
+
+      prefix = ''
+      unless version_prefix.empty?
+        prefix = version_prefix + '.'
+      end
+
+      one_to_increment = portion_to_work_with[0].to_i
+      incremented = one_to_increment + 1
+
+      new_version = ''+ incremented.to_s + '.0'
+
+      upper_version = prefix + new_version
+
+      new_upper_constraint = "#{name} < #{upper_version}"
+
+      return [new_lower_constraint,new_upper_constraint]
+    else
+      return [constraint]
+    end
+  end #def expand_pesimistic_constraints
 end # module FPM::Util

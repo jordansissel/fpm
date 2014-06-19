@@ -192,17 +192,10 @@ class FPM::Package::RPM < FPM::Package
   # See FPM::Package#converted_from
   def converted_from(origin)
     if origin == FPM::Package::Gem
-      # Gem dependency operator "~>" is not compatible with rpm. Translate any found.
       fixed_deps = []
       self.dependencies.collect do |dep|
-        name, op, version = dep.split(/\s+/)
-        if op == "~>"
-          # ~> x.y means: > x.y and < (x+1).0
-          fixed_deps << "#{name} >= #{version}"
-          fixed_deps << "#{name} < #{version.to_i + 1}.0.0"
-        else
-          fixed_deps << dep
-        end
+        # Gem dependency operator "~>" is not compatible with rpm. Translate any found.
+        fixed_deps = fixed_deps + expand_pessimistic_constraints(dep)
       end
       self.dependencies = fixed_deps
 
