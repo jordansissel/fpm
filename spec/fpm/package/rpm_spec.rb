@@ -81,7 +81,7 @@ describe FPM::Package::RPM do
       end
 
       it "should set the user and group of each file in the RPM" do
-        subject.rpmspec.should include('%defattr(-,root,root,-')
+        expect(subject.rpmspec).to include('%defattr(-,root,root,-')
       end
     end # context
 
@@ -105,7 +105,7 @@ describe FPM::Package::RPM do
       end
 
       it "should set the user and group of each file in the RPM" do
-        subject.rpmspec.should include('%defattr(-,some_user,some_group,-')
+        expect(subject.rpmspec).to include('%defattr(-,some_user,some_group,-')
       end
     end # context
   end
