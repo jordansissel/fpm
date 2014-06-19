@@ -80,7 +80,7 @@ describe FPM::Util do
     end
   end
 
-  describe "#expand_pesimistic_constraints" do
+  describe "#expand_pessimistic_constraints" do
     it 'convert 2 piece versions' do
       constraint = 'bundle ~> 1.2'
 
