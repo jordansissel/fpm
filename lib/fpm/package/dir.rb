@@ -71,7 +71,7 @@ class FPM::Package::Dir < FPM::Package
           clone(source, destination)
         rescue Errno::ENOENT => e
           raise FPM::InvalidPackageConfiguration,
-            "Cannot package the path '#{source}', does it exist?"
+            "Cannot package the path '#{File.join(chdir, source)}', does it exist?"
         end
       end
     rescue Errno::ENOENT => e
