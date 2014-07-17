@@ -69,6 +69,8 @@ You will need the ruby-dev packages for your system. These can be installed with
     
     yum install ruby-devel
 
+Additional packages will be required depending on the source and target package types (rpmbuild for rpm, etc.). FPM will show the commands that are required which you must map to your distribution's package names.
+
 ## Get with the download
 
 You can install fpm with gem:
