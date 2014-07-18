@@ -63,11 +63,11 @@ The goal of FPM is to be able to easily build platform-native packages.
 * Stripping pre/post/maintainer scripts from packages
 
 ## System packages
-You will need the ruby-dev packages for your system. These can be installed with the below
+You will need the ruby-dev and gcc packages for your system. These can be installed with the below
 
-    apt-get install ruby-dev
+    apt-get install ruby-dev gcc
     
-    yum install ruby-devel
+    yum install ruby-devel gcc
 
 Additional packages will be required depending on the source and target package types (rpmbuild for rpm, etc.). FPM will show the commands that are required which you must map to your distribution's package names.
 
