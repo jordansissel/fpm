@@ -95,6 +95,10 @@ class FPM::Package::RPM < FPM::Package
   option "--autoreq", :flag, "Enable RPM's AutoReq option"
   option "--autoprov", :flag, "Enable RPM's AutoProv option"
 
+  option "--attr", "ATTRFILE",
+    "Set the attribute for a file (%attr).",
+    :multivalued => true, :attribute_name => :attrs
+
   rpmbuild_filter_from_provides = []
   option "--filter-from-provides", "REGEX",
     "Set %filter_from_provides to the supplied REGEX." do |filter_from_provides|
@@ -149,7 +153,17 @@ class FPM::Package::RPM < FPM::Package
   def rpm_file_entry(file)
     original_file = file
     file = rpm_fix_name(file)
-    return file unless attributes[:rpm_use_file_permissions?]
+
+    if !attributes[:rpm_use_file_permissions?]
+
+      if attrs[file].nil?
+        return file
+      else
+        return sprintf("%%attr(%s) %s\n", attrs[file], file)
+      end
+    end
+
+    return sprintf("%%attr(%s) %s\n", attrs[file], file) unless attrs[file].nil?
 
     # Stat the original filename in the relative staging path
     ::Dir.chdir(staging_path) do
