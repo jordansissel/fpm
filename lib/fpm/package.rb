@@ -111,6 +111,8 @@ class FPM::Package
   # This is where you'd put rpm, deb, or other specific attributes.
   attr_accessor :attributes
 
+  attr_accessor :attrs
+
   private
 
   def initialize
@@ -172,6 +174,7 @@ class FPM::Package
     @scripts = {}
     @config_files = []
     @directories = []
+    @attrs = {}
 
     staging_path
     build_path
@@ -198,7 +201,7 @@ class FPM::Package
       :@architecture, :@category, :@config_files, :@conflicts,
       :@dependencies, :@description, :@epoch, :@iteration, :@license, :@maintainer,
       :@name, :@provides, :@replaces, :@scripts, :@url, :@vendor, :@version,
-      :@directories, :@staging_path
+      :@directories, :@staging_path, :@attrs
     ]
     ivars.each do |ivar|
       #@logger.debug("Copying ivar", :ivar => ivar, :value => instance_variable_get(ivar),
