@@ -150,6 +150,13 @@ describe FPM::Package::Deb do
       @original.attributes[:deb_field_given?] = true
       @original.attributes[:deb_field] = { "foo" => "bar" }
 
+      @original.attributes[:deb_meta_files] = %w[meta_test triggers].map { |fn|
+        File.expand_path("../../../fixtures/deb/#{fn}", __FILE__)
+      }
+
+      @original.attributes[:deb_interest] = ['asdf', 'hjkl']
+      @original.attributes[:deb_activate] = ['qwer', 'uiop']
+
       @original.output(@target)
 
       @input = FPM::Package::Deb.new
@@ -160,6 +167,38 @@ describe FPM::Package::Deb do
       @original.cleanup
       @input.cleanup
     end # after
+
+    context "when the deb's control section is extracted" do
+      before :all do
+        tmp_control = Tempfile.new("fpm-test-deb-control")
+        @control_extracted = tmp_control.path
+        tmp_control.unlink
+        system("dpkg-deb -e '#{@target}' '#{@control_extracted}'") or \
+          raise "couldn't extract test deb"
+      end
+
+      it "should have the requested meta file in the control archive" do
+        File.open(File.join(@control_extracted, 'meta_test')) do |f|
+          insist { f.read.chomp } == "asdf"
+        end
+      end
+
+      it "should have the requested triggers in the triggers file" do
+        triggers = File.open(File.join(@control_extracted, 'triggers')) do |f|
+          f.read
+        end
+        reject { triggers =~ /^interest from-meta-file$/ }.nil?
+        reject { triggers =~ /^interest asdf$/ }.nil?
+        reject { triggers =~ /^interest hjkl$/ }.nil?
+        reject { triggers =~ /^activate qwer$/ }.nil?
+        reject { triggers =~ /^activate uiop$/ }.nil?
+        insist { triggers[-1] } == ?\n
+      end
+
+      after :all do
+        FileUtils.rm_rf @control_extracted
+      end
+    end
 
     context "package attributes" do
       it "should have the correct name" do
