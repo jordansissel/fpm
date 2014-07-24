@@ -6,7 +6,7 @@ RUBY_PACKAGE=ruby
 # and the executable that comes from it
 RUBY_BIN=/usr/bin/ruby
 # the version we name the deb
-VERSION=1.0.2
+VERSION=1.1.0
 # where to get the sauce
 GIT_URL=https://github.com/jordansissel/fpm.git
 # the tag we checkout to build from
@@ -32,7 +32,7 @@ clean:
 $(CHECKOUT_DIR):
 	rm -rf $(CHECKOUT_DIR)
 	git clone $(GIT_URL) $(CHECKOUT_DIR) --depth 1
-	cd $(CHECKOUT_DIR) && git checkout $(TAG_SPEC)
+	cd $(CHECKOUT_DIR) && git fetch && git checkout $(TAG_SPEC)
 
 $(BUNDLE_BIN):
 	$(GEM_CMD) install bundler --install-dir=$(GEM_PATH) --no-ri --no-rdoc
