@@ -99,6 +99,24 @@ class FPM::Package::Deb < FPM::Package
     next @suggests
   end
 
+  option "--meta-file", "FILEPATH", "Add FILEPATH to DEBIAN directory" do |file|
+    @meta_files ||= []
+    @meta_files << File.expand_path(file)
+    next @meta_files
+  end
+
+  option "--interest", "EVENT", "Package is interested in EVENT trigger" do |event|
+    @interested_triggers ||= []
+    @interested_triggers << event
+    next @interested_triggers
+  end
+
+  option "--activate", "EVENT", "Package activates EVENT trigger" do |event|
+    @activated_triggers ||= []
+    @activated_triggers << event
+    next @activated_triggers
+  end
+
   option "--field", "'FIELD: VALUE'", "Add custom field to the control file" do |fv|
     @custom_fields ||= {}
     field, value = fv.split(/: */, 2)
@@ -506,6 +524,8 @@ class FPM::Package::Deb < FPM::Package
     write_scripts # write the maintainer scripts
     write_conffiles # write the conffiles
     write_debconf # write the debconf files
+    write_meta_files # write additional meta files
+    write_triggers # write trigger config to 'triggers' file
     write_md5sums # write the md5sums file
 
     # Make the control.tar.gz
@@ -627,6 +647,30 @@ class FPM::Package::Deb < FPM::Package
       File.chmod(0755, control_path("templates"))
     end
   end # def write_debconf
+
+  def write_meta_files
+    files = attributes[:deb_meta_files]
+    return unless files
+    files.each do |fn|
+      dest = control_path(File.basename(fn))
+      FileUtils.cp(fn, dest)
+      File.chmod(0644, dest)
+    end
+  end
+
+  def write_triggers
+    lines = [['interest', :deb_interest],
+             ['activate', :deb_activate]].map { |label, attr|
+      (attributes[attr] || []).map { |e| "#{label} #{e}\n" }
+    }.flatten.join('')
+
+    if lines.size > 0
+      File.open(control_path("triggers"), 'a') do |f|
+        f.write "\n" if f.size > 0
+        f.write lines
+      end
+    end
+  end
 
   def write_md5sums
     md5_sums = {}
