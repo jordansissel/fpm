@@ -16,11 +16,21 @@ include FPM::Util
 if $DEBUG or ENV["DEBUG"]
   Cabin::Channel.get.level = :debug
   Cabin::Channel.get.subscribe(STDOUT)
+else
+  class << Cabin::Channel.get
+    alias_method :subscribe_, :subscribe
+    def subscribe(io)
+      return if io == STDOUT
+      subscribe_(io)
+      #puts caller.join("\n")
+    end
+  end
 end
 
+Cabin::Channel.get.level = :error
 spec_logger = Cabin::Channel.get("rspec")
 spec_logger.subscribe(STDOUT)
-spec_logger.level = :warn
+spec_logger.level = :error
 
 # Quiet the output of all system() calls
 module Kernel
