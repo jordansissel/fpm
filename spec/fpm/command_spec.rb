@@ -41,14 +41,11 @@ describe FPM::Command do
     context "when not set" do
       it "should write the package to the current directory." do
         Stud::Temporary.directory do |path|
-          puts "PATH: #{path}"
-          puts "WD: #{Dir.getwd}"
           Dir.chdir(path) do
             cmd = FPM::Command.new("fpm")
             cmd.run(["-s", "empty", "-t", "deb", "-n", "example"])
           end
           files = Dir.new(path).to_a - ['.', '..']
-          puts files.inspect
           insist { files.size } == 1
           insist { files[0] } =~ /example_/
         end
