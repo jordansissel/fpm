@@ -1,3 +1,25 @@
+1.2.0 (July 25, 2014)
+  - rpm: Add --rpm-verifyscript for adding a custom rpm verify script to
+    your package. (Remi Hakim)
+  - Allow the -p flag to target a directory for writing the output package
+    (#656, Jordan Sissel)
+  - Add --debug-workspace which skips any workspace cleanup to let users debug things
+    if they break. (#720, #734; Jordan Sissel)
+  - rpm: Add --rpm-attr for controlling attribute settings per file. This setting
+    will likely be removed in the future once rpmbuild is no longer needed.
+    (#719)
+  - deb: Add --deb-meta-file to add arbitrary files to the control dir (#599, Dan Brown)
+  - deb: Add --deb-interest and --deb-activate for adding package triggers (#595, Dan Brown)
+  - cpan: Fix small bug in handling empty metadata fields (#712, Mathias Lafeldt)
+  - rpm: Fix bug when specifying both --architecture and --rpm-os (#707, #716; Alan Ivey)
+  - gem: Fix bug where --gem-version-bins is given but package has no bins (#688, Jan Vansteenkiste)
+  - deb: Set permissions correct on the package's internals. Makes lintian happier. (Jan Vansteenkiste)
+  - rpm: rpmbuild's _tmppath now respects --workdir (#714, Jordan Sissel)
+  - gem/rpm: Add --rpm-verbatim-gem-dependencies to use old-style (fpm 0.4.x)
+    rpm gem dependencies (#724, Jordan Sissel)
+  - gem/rpm: Fix bug for gem pessimistic constraints when converting to rpm (Tom Duckering)
+  - python: Fix small bug with pip invocations (#727, Dane Knecht)
+
 1.1.0 (April 23, 2014)
   - New package type: zip, for converting to and from zip files (Jordan Sissel)
   - New package type: sh, a self-extracting package installation shell archive. (#651, Chris Gerber)
