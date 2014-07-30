@@ -82,8 +82,15 @@ class FPM::Package::CPAN < FPM::Package
       self.name = fix_name(metadata["name"])
     end
 
-    # Not all things have 'author' listed.
-    self.vendor = metadata["author"].join(", ") unless metadata["author"].nil?
+    # author is not always set or it may be a string instead of an array
+    unless metadata["author"].nil?
+      if metadata["author"].respond_to?(:to_str)
+        self.vendor = metadata["author"]
+      elsif metadata["author"].respond_to?(:to_ary)
+        self.vendor = metadata["author"].join(", ")
+      end
+    end
+
     self.url = metadata["resources"]["homepage"] rescue "unknown"
 
     # TODO(sissel): figure out if this perl module compiles anything
