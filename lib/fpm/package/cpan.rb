@@ -83,13 +83,12 @@ class FPM::Package::CPAN < FPM::Package
     end
 
     # author is not always set or it may be a string instead of an array
-    unless metadata["author"].nil?
-      if metadata["author"].respond_to?(:to_str)
-        self.vendor = metadata["author"]
-      elsif metadata["author"].respond_to?(:to_ary)
-        self.vendor = metadata["author"].join(", ")
-      end
-    end
+    self.vendor = case metadata["author"]
+      when String; metadata["author"]
+      when Array; metadata["author"].join(", ")
+      else
+        raise FPM::InvalidPackageConfiguration, "Unexpected CPAN 'author' field type: #{metadata["author"].class}. This is a bug."
+    end if metadata.include?("author")
 
     self.url = metadata["resources"]["homepage"] rescue "unknown"
 
