@@ -186,6 +186,18 @@ If you think your changes are ready to be merged back to the main fpm repo, you
 can generate a pull request on the github website for your repo and send it in
 for review.
 
+
+##Problems running bundle install?
+
+If you are installing on Mac OS 10.9 (Mavericks) you will need to make sure that 
+you have the standalone command line tools seperate from Xcode:
+
+    $ xcode-select --install
+
+Finally, click the install button on the prompt that appears.
+
+
+
 ## More Documentation
 
 [See the wiki for more docs](https://github.com/jordansissel/fpm/wiki)
