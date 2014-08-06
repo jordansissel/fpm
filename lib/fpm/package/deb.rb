@@ -201,6 +201,12 @@ class FPM::Package::Deb < FPM::Package
       @name = @name.gsub(/[_]/, "-")
     end
 
+    if @name.include?(" ")
+      @logger.info("Debian package names cannot include spaces; " \
+                   "automatically converting to dashes", :name => @name)
+      @name = @name.gsub(/[ ]/, "-")
+    end
+
     return @name
   end # def name
   
