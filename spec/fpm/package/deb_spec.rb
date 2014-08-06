@@ -113,7 +113,10 @@ describe FPM::Package::Deb do
     it "should replace underscores with dashes in the package name" do
       reject { subject.name }.include?("_")
     end
-  end
+
+    it "should replace spaces with dashes in the package name" do
+      reject { subject.name }.include?(" ")
+    end
 
   describe "#output" do
     before :all do
