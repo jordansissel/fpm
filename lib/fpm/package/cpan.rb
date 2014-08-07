@@ -27,6 +27,9 @@ class FPM::Package::CPAN < FPM::Package
   option "--perl-lib-path", "PERL_LIB_PATH",
     "Path of target Perl Libraries"
 
+  option "--sandbox-non-core", :flag,
+    "Sandbox all non-core modules, even if they're already installed", :default => true
+
   private
   def input(package)
     #if RUBY_VERSION =~ /^1\.8/
@@ -100,8 +103,12 @@ class FPM::Package::CPAN < FPM::Package
     # We'll install to a temporary directory.
     @logger.info("Installing any build or configure dependencies")
 
-    cpanm_flags = ["-L", build_path("cpan"), moduledir]
-    cpanm_flags += ["-n"] if attributes[:cpan_test?]
+    if attributes[:cpan_sandbox_non_core?]
+      cpanm_flags = ["-L", build_path("cpan"), moduledir]
+    else
+      cpanm_flags = ["-l", build_path("cpan"), moduledir]
+    end
+
     cpanm_flags += ["--mirror", "#{attributes[:cpan_mirror]}"] if !attributes[:cpan_mirror].nil?
     cpanm_flags += ["--mirror-only"] if attributes[:cpan_mirror_only?] && !attributes[:cpan_mirror].nil?
 
