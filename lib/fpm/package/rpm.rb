@@ -98,6 +98,11 @@ class FPM::Package::RPM < FPM::Package
   option "--attr", "ATTRFILE",
     "Set the attribute for a file (%attr).",
     :multivalued => true, :attribute_name => :attrs
+  
+  option "--init", "FILEPATH", "Add FILEPATH as an init script",
+	:multivalued => true do |file|
+    next File.expand_path(file)
+  end
 
   rpmbuild_filter_from_provides = []
   option "--filter-from-provides", "REGEX",
@@ -151,6 +156,14 @@ class FPM::Package::RPM < FPM::Package
    end
  
   private
+    
+  attributes.fetch(:rpm_init_list, []).each do |init|
+    name = File.basename(init, ".init")
+    dest_init = File.join(staging_path, "etc/init.d/#{name}")
+    FileUtils.mkdir_p(File.dirname(dest_init))
+    FileUtils.cp init, dest_init
+    File.chmod(0755, dest_init)
+  end
 
   # Fix path name
   # Replace [ with [\[] to make rpm not use globs
