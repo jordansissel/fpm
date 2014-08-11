@@ -157,14 +157,6 @@ class FPM::Package::RPM < FPM::Package
  
   private
     
-  attributes.fetch(:rpm_init_list, []).each do |init|
-    name = File.basename(init, ".init")
-    dest_init = File.join(staging_path, "etc/init.d/#{name}")
-    FileUtils.mkdir_p(File.dirname(dest_init))
-    FileUtils.cp init, dest_init
-    File.chmod(0755, dest_init)
-  end
-
   # Fix path name
   # Replace [ with [\[] to make rpm not use globs
   # Replace * with [*] to make rpm not use globs
@@ -467,6 +459,15 @@ class FPM::Package::RPM < FPM::Package
     allconfigs.sort!.uniq!
 
     self.config_files = allconfigs.map { |x| File.join("/", x) }
+
+    # add init script if present
+    (attributes[:rpm_init_list] or []).each do |init|
+      name = File.basename(init, ".init")
+      dest_init = File.join(staging_path, "etc/init.d/#{name}")
+      FileUtils.mkdir_p(File.dirname(dest_init))
+      FileUtils.cp init, dest_init
+      File.chmod(0755, dest_init)
+    end
 
     (attributes[:rpm_rpmbuild_define] or []).each do |define|
       args += ["--define", define]
