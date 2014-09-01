@@ -227,22 +227,14 @@ end # module FPM::Util
 
 class Hash
   # Convert a nested hash into a flat hash.
-  #
-  # See <http://stackoverflow.com/q/12064648/>.
-  #
-  # @param [String] string separator to join keys with
-  # @return [Hash] the flattened hash
-  def unnest(separator = '_')
-    # Prefix all keys in the hash.
-    def prefix_keys(prefix)
-      Hash[map { |k, v| ["#{prefix}#{k}".to_sym, v] }].unnest
-    end
+  def unnest(prefix = nil, separator = '_')
     new_hash = {}
     each do |k, v|
+      new_key = prefix ? "#{prefix}#{separator}#{k}" : k
       if v.is_a?(Hash)
-        new_hash.merge!(v.prefix_keys("#{k}#{separator}"))
+        new_hash.merge!(v.unnest(new_key, separator))
       else
-        new_hash[k.to_sym] = v
+        new_hash[new_key.to_sym] = v
       end
     end
     new_hash
