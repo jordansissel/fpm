@@ -224,3 +224,27 @@ module FPM::Util
     end
   end #def expand_pesimistic_constraints
 end # module FPM::Util
+
+class Hash
+  # Convert a nested hash into a flat hash.
+  #
+  # See <http://stackoverflow.com/q/12064648/>.
+  #
+  # @param [String] string separator to join keys with
+  # @return [Hash] the flattened hash
+  def unnest(separator = '_')
+    # Prefix all keys in the hash.
+    def prefix_keys(prefix)
+      Hash[map { |k, v| ["#{prefix}#{k}".to_sym, v] }].unnest
+    end
+    new_hash = {}
+    each do |k, v|
+      if v.is_a?(Hash)
+        new_hash.merge!(v.prefix_keys("#{k}#{separator}"))
+      else
+        new_hash[k.to_sym] = v
+      end
+    end
+    new_hash
+  end # def unnest
+end # class Hash
