@@ -207,7 +207,8 @@ class FPM::Package::CPAN < FPM::Package
       # across packages.
       # https://github.com/jordansissel/fpm/issues/443
       # https://github.com/jordansissel/fpm/issues/510
-      ::Dir.glob(File.join(staging_path, prefix, "**/perllocal.pod")).each do |path|
+      glob_prefix = attributes[:cpan_perl_lib_path] || prefix
+      ::Dir.glob(File.join(staging_path, glob_prefix, "**/perllocal.pod")).each do |path|
         @logger.debug("Removing useless file.",
                       :path => path.gsub(staging_path, ""))
         File.unlink(path)
