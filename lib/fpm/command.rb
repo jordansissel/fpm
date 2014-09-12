@@ -86,7 +86,7 @@ class FPM::Command < Clamp::Command
     "package automatically", :default => false
 
   option "--provides", "PROVIDES",
-    "What this package provides (usually a name). This flag can be "\
+    "What this package provides (usually a name). This flag can be " \
     "specified multiple times.", :multivalued => true,
     :attribute_name => :provides
   option "--conflicts", "CONFLICTS",
@@ -94,7 +94,7 @@ class FPM::Command < Clamp::Command
     "specified multiple times.", :multivalued => true,
     :attribute_name => :conflicts
   option "--replaces", "REPLACES",
-    "Other packages/versions this package replaces. This flag can be "\
+    "Other packages/versions this package replaces. This flag can be " \
     "specified multiple times.", :multivalued => true,
     :attribute_name => :replaces
 
@@ -165,7 +165,7 @@ class FPM::Command < Clamp::Command
   option "--before-install", "FILE",
     "a script to be run before package installation" do |val|
     File.expand_path(val) # Get the full path to the script
-  end # --pre-install
+  end # --before-install
   option "--after-remove", "FILE",
     "a script to be run after package removal" do |val|
     File.expand_path(val) # Get the full path to the script
@@ -174,6 +174,21 @@ class FPM::Command < Clamp::Command
     "a script to be run before package removal" do |val|
     File.expand_path(val) # Get the full path to the script
   end # --before-remove
+  option "--after-upgrade", "FILE",
+    "a script to be run after package upgrade. If not specified," \
+        " --before-install, --after-install, --before-remove, and --after-remove" \
+        " wil behave in a backwards-compatible manner" \
+        " (they will not be upgrade-case aware)." do |val|
+    File.expand_path(val) # Get the full path to the script
+  end # --after-upgrade
+  option "--before-upgrade", "FILE",
+    "a script to be run after package upgrade. If not specified," \
+        " --before-install, --after-install, --before-remove, and --after-remove" \
+        " wil behave in a backwards-compatible manner" \
+        " (they will not be upgrade-case aware)." do |val|
+    File.expand_path(val) # Get the full path to the script
+  end # --before-upgrade
+
   option "--template-scripts", :flag,
     "Allow scripts to be templated. This lets you use ERB to template your " \
     "packaging scripts (for --after-install, etc). For example, you can do " \
@@ -361,6 +376,8 @@ class FPM::Command < Clamp::Command
     setscript.call(:after_install)
     setscript.call(:before_remove)
     setscript.call(:after_remove)
+    setscript.call(:before_upgrade)
+    setscript.call(:after_upgrade)
 
     # Bail if any setscript calls had errors. We don't need to log
     # anything because we've already logged the error(s) above.
