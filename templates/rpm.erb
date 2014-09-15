@@ -110,22 +110,79 @@ Obsoletes: <%= repl %>
 # noop
 
 <%# This next section puts any %pre, %post, %preun, or %postun scripts %>
-<% 
-  scriptmap = {
-    :before_install => "pre",
-    :after_install => "post",
-    :before_remove => "preun",
-    :after_remove => "postun",
-  }
-  scriptmap.each do |name, rpmname| 
+<% if script?(:before_upgrade) or script?(:after_upgrade) -%>
+<%   if script?(:before_upgrade) or script?(:before_install) -%>
+%pre
+upgrade() {
+<%     if script?(:before_upgrade) -%>
+<%=      script(:before_upgrade) %>
+<%     end -%>
+}
+install() {
+<%     if script?(:before_install) -%>
+<%=      script(:before_install) %>
+<%     end -%>
+}
+if [ "${1}" -eq 1 ]
+then
+    install
+    # "before install" goes here
+elif [ "${1}" -gt 1 ]
+then
+    upgrade
+fi
+<%   end -%>
+<%   if script?(:after_upgrade) or script?(:after_install) -%>
+%pre
+upgrade() {
+<%     if script?(:after_upgrade) -%>
+<%=      script(:after_upgrade) %>
+<%     end -%>
+}
+install() {
+<%     if script?(:after_install) -%>
+<%=      script(:after_install) %>
+<%     end -%>
+}
+if [ "${1}" -eq 1 ]
+then
+    install
+    # "before install" goes here
+elif [ "${1}" -gt 1 ]
+then
+    upgrade
+fi
+<%   end -%>
+<%   if script?(:before_remove) -%>
+%preun
+if [ "${1}" -eq 0 ]
+then
+<%=    script(:before_remove) %>
+fi
+<%   end -%>
+<%   if script?(:after_remove) -%>
+%postun
+if [ "${1}" -eq 0 ]
+then
+<%=    script(:after_remove) %>
+fi
+<%   end -%>
+<% else -%>
+<%
+     scriptmap = {
+       :before_install => "pre",
+       :after_install => "post",
+       :before_remove => "preun",
+       :after_remove => "postun",
+     }
+     scriptmap.each do |name, rpmname|
 -%>
-<%   if script?(name) -%>
-%<%= rpmname %>
-<%= script(name) %>
-
+<%     if script?(name) -%>
+%<%=     rpmname %>
+<%=      script(name) %>
+<%     end -%>
 <%   end -%>
 <% end -%>
-
 %files
 %defattr(<%= attributes[:rpm_defattrfile] %>,<%= attributes[:rpm_user] %>,<%= attributes[:rpm_group] %>,<%= attributes[:rpm_defattrdir] %>)
 <%# Output config files and then regular files. -%>
