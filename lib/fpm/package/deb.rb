@@ -305,7 +305,7 @@ class FPM::Package::Deb < FPM::Package
 
     # If we are given --deb-shlibs but no --after-install script, we
     # should implicitly create a before/after scripts that run ldconfig
-    if attributes[:deb_shlibs] 
+    if attributes[:deb_shlibs]
       if !script?(:after_install)
         @logger.info("You gave --deb-shlibs but no --after-install, so " \
                      "I am adding an after-install script that runs " \
@@ -317,6 +317,21 @@ class FPM::Package::Deb < FPM::Package
                      "I am adding an after-remove script that runs " \
                      "ldconfig to update the system library cache")
         scripts[:after_remove] = template("deb/ldconfig.sh.erb").result(binding)
+      end
+    end
+
+    if script?(:before_upgrade) or script?(:after_upgrade)
+      if script?(:before_install) or script?(:before_upgrade)
+        scripts[:before_install] = template("deb/preinst_upgrade.sh.erb").result(binding)
+      end
+      if script?(:before_remove)
+        scripts[:before_remove] = template("deb/prerm_upgrade.sh.erb").result(binding)
+      end
+      if script?(:after_install) or script?(:after_upgrade)
+        scripts[:after_install] = template("deb/postinst_upgrade.sh.erb").result(binding)
+      end
+      if script?(:after_remove)
+        scripts[:after_remove] = template("deb/postrm_upgrade.sh.erb").result(binding)
       end
     end
 
