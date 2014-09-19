@@ -1,9 +1,10 @@
 require "spec_setup"
 require "fpm" # local
 require "fpm/package/python" # local
+require "find" # stdlib
 
 def python_usable?
-  return program_in_path?("python") && program_in_path?("easy_install")
+  return program_exists?("python") && program_exists?("easy_install")
 end
 
 if !python_usable?
@@ -124,6 +125,26 @@ describe FPM::Package::Python, :if => python_usable? do
         subject.input(example_dir)
         insist { subject.dependencies.sort } == ["rtxt-dep1 > 0.1", "rtxt-dep2 = 0.1"]
       end
+    end
+  end
+
+  context "python_scripts_executable is set" do
+    it "should have scripts with a custom hashbang line" do
+      subject.attributes[:python_install_bin] = '/usr/bin'
+      subject.attributes[:python_scripts_executable] = "fancypants"
+      subject.input("django")
+
+      # Get the default scripts install directory and use it to find django-admin.py from Django
+      # Then let's make sure the scripts executable setting worked!
+      python_bindir = %x{python -c 'from distutils.sysconfig import get_config_var; print(get_config_var("BINDIR"))'}.chomp
+      path = subject.staging_path(File.join(python_bindir, "django-admin.py"))
+
+      # Read the first line (the hashbang line) of the django-admin.py script
+      fd = File.new(path, "r")
+      topline = fd.readline
+      fd.close
+
+      insist { topline.chomp } == "#!fancypants"
     end
   end
 end # describe FPM::Package::Python

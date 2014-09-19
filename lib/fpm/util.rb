@@ -7,11 +7,13 @@ module FPM::Util
   extend FFI::Library
   ffi_lib FFI::Library::LIBC
 
-  # mknod is __xmknod in glibc
+  # mknod is __xmknod in glibc a wrapper around mknod to handle
+  # various stat struct formats. See bits/stat.h in glibc source
   begin
-    attach_function :mknod, :mknod, [:string, :uint32, :ulong], :int
+    attach_function :mknod, :mknod, [:string, :uint, :ulong], :int
   rescue FFI::NotFoundError
-    attach_function :mknod, :__xmknod, [:string, :uint32, :ulong], :int
+    # glibc/io/xmknod.c int __xmknod (int vers, const char *path, mode_t mode, dev_t *dev)
+    attach_function :xmknod, :__xmknod, [:int, :string, :uint, :pointer], :int
   end
 
   # Raised if safesystem cannot find the program to run.
@@ -28,18 +30,29 @@ module FPM::Util
     return envpath.select { |p| File.executable?(File.join(p, program)) }.any?
   end # def program_in_path
 
+  def program_exists?(program)
+    # Scan path to find the executable
+    # Do this to help the user get a better error message.
+    return program_in_path?(program) if !program.include?("/") 
+    return File.executable?(program)
+  end # def program_exists?
+
+  def default_shell
+    shell = ENV["SHELL"] 
+    return "/bin/sh" if shell.nil? || shell.empty?
+    return shell
+  end
+
   # Run a command safely in a way that gets reports useful errors.
   def safesystem(*args)
     # ChildProcess isn't smart enough to run a $SHELL if there's
     # spaces in the first arg and there's only 1 arg.
     if args.size == 1
-      args = [ ENV["SHELL"], "-c", args[0] ]
+      args = [ default_shell, "-c", args[0] ]
     end
     program = args[0]
 
-    # Scan path to find the executable
-    # Do this to help the user get a better error message.
-    if !program.include?("/") and !program_in_path?(program)
+    if !program_exists?(program)
       raise ExecutableNotFound.new(program)
     end
 
@@ -71,7 +84,7 @@ module FPM::Util
     return success
   end # def safesystem
 
-# Run a command safely in a way that captures output and status.
+  # Run a command safely in a way that captures output and status.
   def safesystemout(*args)
     if args.size == 1
       args = [ ENV["SHELL"], "-c", args[0] ]
@@ -115,7 +128,11 @@ module FPM::Util
     when "SunOS"
       return "gtar"
     when "Darwin"
-      return "gnutar"
+      # Try running gnutar, it was renamed(??) in homebrew to 'gtar' at some point, I guess? I don't know.
+      ["gnutar", "gtar"].each do |tar|
+        system("#{tar} > /dev/null 2> /dev/null")
+        return tar unless $?.exitstatus == 127
+      end
     else
       return "tar"
     end
@@ -127,17 +144,83 @@ module FPM::Util
     block.call(value)
   end # def with
 
+  # wrapper around mknod ffi calls
+  def mknod_w(path, mode, dev)
+    rc = -1
+    case %x{uname -s}.chomp
+    when 'Linux'
+      # bits/stat.h #define _MKNOD_VER_LINUX  0
+      rc = xmknod(0, path, mode, FFI::MemoryPointer.new(dev))
+    else
+      rc = mknod(path, mode, dev)
+    end
+    rc
+  end
+
   def copy_entry(src, dst)
     case File.ftype(src)
-    when 'fifo'
-    when 'characterSpecial'
-    when 'blockSpecial'
-    when 'socket'
+    when 'fifo', 'characterSpecial', 'blockSpecial', 'socket'
       st = File.stat(src)
-      rc = mknod(dst, st.mode, st.dev)
+      rc = mknod_w(dst, st.mode, st.dev)
       raise SystemCallError.new("mknod error", FFI.errno) if rc == -1
+    when 'directory'
+      FileUtils.mkdir(dst) unless File.exists? dst
     else
-      FileUtils.copy_entry(src, dst)
+      # if the file with the same dev and inode has been copied already -
+      # hard link it's copy to `dst`, otherwise make an actual copy
+      st = File.lstat(src)
+      known_entry = copied_entries[[st.dev, st.ino]]
+      if known_entry
+        FileUtils.ln(known_entry, dst)
+      else
+        FileUtils.copy_entry(src, dst)
+        copied_entries[[st.dev, st.ino]] = dst
+      end
+    end # else...
+  end # def copy_entry
+
+  def copied_entries
+    # TODO(sissel): I wonder that this entry-copy knowledge needs to be put
+    # into a separate class/module. As is, calling copy_entry the same way
+    # in slightly different contexts will result in weird or bad behavior.
+    # What I mean is if we do:
+    #   pkg = FPM::Package::Dir...
+    #   pkg.output()...
+    #   pkg.output()...
+    # The 2nd output call will fail or behave weirdly because @copied_entries
+    # is already populated. even though this is anew round of copying.
+    return @copied_entries ||= {}
+  end # def copied_entries
+
+  def expand_pessimistic_constraints(constraint)
+    name, op, version = constraint.split(/\s+/)
+
+    if op == '~>'
+
+      new_lower_constraint = "#{name} >= #{version}"
+
+      version_components = version.split('.').collect { |v| v.to_i }
+
+      version_prefix = version_components[0..-3].join('.')
+      portion_to_work_with = version_components.last(2)
+
+      prefix = ''
+      unless version_prefix.empty?
+        prefix = version_prefix + '.'
+      end
+
+      one_to_increment = portion_to_work_with[0].to_i
+      incremented = one_to_increment + 1
+
+      new_version = ''+ incremented.to_s + '.0'
+
+      upper_version = prefix + new_version
+
+      new_upper_constraint = "#{name} < #{upper_version}"
+
+      return [new_lower_constraint,new_upper_constraint]
+    else
+      return [constraint]
     end
-  end
+  end #def expand_pesimistic_constraints
 end # module FPM::Util

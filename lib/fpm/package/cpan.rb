@@ -40,9 +40,13 @@ class FPM::Package::CPAN < FPM::Package
     require "net/http"
     require "json"
 
-    result = search(package)
-    tarball = download(result, version)
-    moduledir = unpack(tarball)
+    if (attributes[:cpan_local_module?])
+      moduledir = package
+    else
+      result = search(package)
+      tarball = download(result, version)
+      moduledir = unpack(tarball)
+    end
 
     # Read package metadata (name, version, etc)
     if File.exists?(File.join(moduledir, "META.json"))
@@ -50,6 +54,11 @@ class FPM::Package::CPAN < FPM::Package
     elsif File.exists?(File.join(moduledir, ("META.yml")))
       require "yaml"
       metadata = YAML.load_file(File.join(moduledir, ("META.yml")))
+    elsif File.exists?(File.join(moduledir, "MYMETA.json"))
+      metadata = JSON.parse(File.read(File.join(moduledir, ("MYMETA.json"))))
+    elsif File.exists?(File.join(moduledir, ("MYMETA.yml")))
+      require "yaml"
+      metadata = YAML.load_file(File.join(moduledir, ("MYMETA.yml")))
     else
       raise FPM::InvalidPackageConfiguration, 
         "Could not find package metadata. Checked for META.json and META.yml"
@@ -63,7 +72,7 @@ class FPM::Package::CPAN < FPM::Package
       else; metadata["license"]
     end
 
-    if metadata.include?("distribution")
+    unless metadata["distribution"].nil?
       @logger.info("Setting package name from 'distribution'",
                    :distribution => metadata["distribution"])
       self.name = fix_name(metadata["distribution"])
@@ -73,8 +82,14 @@ class FPM::Package::CPAN < FPM::Package
       self.name = fix_name(metadata["name"])
     end
 
-    # Not all things have 'author' listed.
-    self.vendor = metadata["author"].join(", ") if metadata.include?("author")
+    # author is not always set or it may be a string instead of an array
+    self.vendor = case metadata["author"]
+      when String; metadata["author"]
+      when Array; metadata["author"].join(", ")
+      else
+        raise FPM::InvalidPackageConfiguration, "Unexpected CPAN 'author' field type: #{metadata["author"].class}. This is a bug."
+    end if metadata.include?("author")
+
     self.url = metadata["resources"]["homepage"] rescue "unknown"
 
     # TODO(sissel): figure out if this perl module compiles anything
@@ -93,7 +108,7 @@ class FPM::Package::CPAN < FPM::Package
     safesystem(attributes[:cpan_cpanm_bin], *cpanm_flags)
 
     if !attributes[:no_auto_depends?] 
-      if metadata.include?("requires") && !metadata["requires"].nil?
+      unless metadata["requires"].nil?
         metadata["requires"].each do |dep_name, version|
           # Special case for representing perl core as a version.
           if dep_name == "perl"
@@ -233,6 +248,7 @@ class FPM::Package::CPAN < FPM::Package
   def download(metadata, cpan_version=nil)
     distribution = metadata["distribution"]
     author = metadata["author"]
+
     @logger.info("Downloading perl module",
                  :distribution => distribution,
                  :version => cpan_version)
@@ -248,9 +264,27 @@ class FPM::Package::CPAN < FPM::Package
       end
     end
 
-    tarball = "#{distribution}-#{self.version}.tar.gz"
+    metacpan_release_url = "http://api.metacpan.org/v0/release/#{author}/#{distribution}-#{self.version}"
+    begin
+      release_response = httpfetch(metacpan_release_url)
+    rescue Net::HTTPServerException => e
+      @logger.error("metacpan release query failed.", :error => e.message,
+                    :module => package, :url => metacpan_release_url)
+      raise FPM::InvalidPackageConfiguration, "metacpan release query failed"
+    end
+
+    data = release_response.body
+    release_metadata = JSON.parse(data)
+    archive = release_metadata["archive"]
+
+    # should probably be basepathed from the url 
+    tarball = File.basename(archive)
+
+    url_base = "http://www.cpan.org/"
+    url_base = "#{attributes[:cpan_mirror]}" if !attributes[:cpan_mirror].nil?
+
     #url = "http://www.cpan.org/CPAN/authors/id/#{author[0,1]}/#{author[0,2]}/#{author}/#{tarball}"
-    url = "http://www.cpan.org/authors/id/#{author[0,1]}/#{author[0,2]}/#{author}/#{tarball}"
+    url = "#{url_base}/authors/id/#{author[0,1]}/#{author[0,2]}/#{author}/#{archive}"
     @logger.debug("Fetching perl module", :url => url)
     
     begin
