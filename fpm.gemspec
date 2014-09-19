@@ -31,10 +31,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency("backports", ">= 2.6.2") # license: MIT
 
   # For reading and writing rpms
-  spec.add_dependency("arr-pm", "~> 0.0.8") # license: Apache 2
-
-  # For http stuff
-  spec.add_dependency("ftw", "~> 0.0.30") # license: Apache 2
+  spec.add_dependency("arr-pm", "~> 0.0.9") # license: Apache 2
 
   # For command-line flag support
   # https://github.com/mdub/clamp/blob/master/README.markdown
@@ -46,9 +43,8 @@ Gem::Specification.new do |spec|
   # For calling functions in dynamic libraries
   spec.add_dependency("ffi") # license: GPL3/LGPL3
 
-  spec.add_development_dependency("rspec") # license: MIT (according to wikipedia)
+  spec.add_development_dependency("rspec", "~> 3.0.0") # license: MIT (according to wikipedia)
   spec.add_development_dependency("insist", "~> 0.0.5") # license: ???
-  spec.add_development_dependency("minitest")
   spec.add_development_dependency("pry")
   spec.add_development_dependency("stud")
 

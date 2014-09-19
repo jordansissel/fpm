@@ -1,4 +1,4 @@
-# Effing Package Management.
+# Effing Package Management
 
 ## Preface
 
@@ -62,6 +62,15 @@ The goal of FPM is to be able to easily build platform-native packages.
 * Tweaking existing packages (removing files, changing metadata/dependencies)
 * Stripping pre/post/maintainer scripts from packages
 
+## System packages
+You will need the ruby-dev and gcc packages for your system. These can be installed with the below
+
+    apt-get install ruby-dev gcc
+    
+    yum install ruby-devel gcc
+
+Additional packages will be required depending on the source and target package types (rpmbuild for rpm, etc.). FPM will show the commands that are required which you must map to your distribution's package names.
+
 ## Get with the download
 
 You can install fpm with gem:
@@ -95,6 +104,7 @@ Sources:
 * python modules (autodownload for you)
 * pear (also downloads for you)
 * directories
+* tar(.gz) archives
 * rpm
 * deb
 * node packages (npm)
@@ -135,6 +145,58 @@ That said, some basic guidelines, which you are free to ignore :)
 * Want to lurk about and see what others are doing? IRC (#fpm on
   irc.freenode.org) is a good place for this as is the 
   [mailing list](http://groups.google.com/group/fpm-users)
+
+### Contributing by forking from GitHub
+
+First, create a github account if you do not already have one.  Log in to
+github and go to [the main fpm github page](https://github.com/jordansissel/fpm).
+
+At the top right, click on the button labeled "Fork".  This will put a forked
+copy of the main fpm repo into your account.  Next, clone your account's github
+repo of fpm.  For example:
+
+    $ git clone git@github.com:yourusername/fpm.git
+
+If you don't already have the bundler gem installed, install it now:
+
+    $ gem install bundler
+
+Now change to the root of the fpm repo and run:
+
+    $ bundle install
+
+This will install all of the dependencies required for running fpm from source.
+Most importantly, you should see the following output from the bundle command
+when it lists the fpm gem:
+
+    ...
+    Using json (1.8.1) 
+    Using fpm (0.4.42) from source at .
+    Using hitimes (1.2.1) 
+    ...
+
+Next, run make in root of the fpm repo.  If there are any problems (such as
+missing dependencies) you should receive an error
+
+At this point, the fpm command should run directly from the code in your cloned
+repo.  Now simply make whatever changes you want, commit the code, and push
+your commit back to master.
+
+If you think your changes are ready to be merged back to the main fpm repo, you
+can generate a pull request on the github website for your repo and send it in
+for review.
+
+
+##Problems running bundle install?
+
+If you are installing on Mac OS 10.9 (Mavericks) you will need to make sure that 
+you have the standalone command line tools seperate from Xcode:
+
+    $ xcode-select --install
+
+Finally, click the install button on the prompt that appears.
+
+
 
 ## More Documentation
 

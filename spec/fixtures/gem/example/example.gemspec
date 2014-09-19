@@ -8,7 +8,9 @@ Gem::Specification.new do |spec|
   spec.add_dependency("dependency2")
 
   #spec.files = ["hello.txt"]
-  spec.files = []
+  spec.files = [ "bin/example" ]
+  spec.executables = "example"
+  spec.bindir = "bin"
   #spec.require_paths << "lib"
 
   spec.author = "sample author"

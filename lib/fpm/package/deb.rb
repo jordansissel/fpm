@@ -41,7 +41,7 @@ class FPM::Package::Deb < FPM::Package
   end
 
   option "--compression", "COMPRESSION", "The compression type to use, must " \
-    "be one of #{COMPRESSION_TYPES.join(", ")}.", :default => "gzip" do |value|
+    "be one of #{COMPRESSION_TYPES.join(", ")}.", :default => "gz" do |value|
     if !COMPRESSION_TYPES.include?(value)
       raise ArgumentError, "deb compression value of '#{value}' is invalid. " \
         "Must be one of #{COMPRESSION_TYPES.join(", ")}"
@@ -76,6 +76,9 @@ class FPM::Package::Deb < FPM::Package
   option "--priority", "PRIORITY", 
     "The debian package 'priority' value.", :default => "extra"
 
+  option "--use-file-permissions", :flag, 
+    "Use existing file permissions when defining ownership and modes"
+
   option "--user", "USER", "The owner of files in this package", :default => 'root'
 
   option "--group", "GROUP", "The group owner of files in this package", :default => 'root'
@@ -94,6 +97,24 @@ class FPM::Package::Deb < FPM::Package
     @suggests ||= []
     @suggests << pkg
     next @suggests
+  end
+
+  option "--meta-file", "FILEPATH", "Add FILEPATH to DEBIAN directory" do |file|
+    @meta_files ||= []
+    @meta_files << File.expand_path(file)
+    next @meta_files
+  end
+
+  option "--interest", "EVENT", "Package is interested in EVENT trigger" do |event|
+    @interested_triggers ||= []
+    @interested_triggers << event
+    next @interested_triggers
+  end
+
+  option "--activate", "EVENT", "Package activates EVENT trigger" do |event|
+    @activated_triggers ||= []
+    @activated_triggers << event
+    next @activated_triggers
   end
 
   option "--field", "'FIELD: VALUE'", "Add custom field to the control file" do |fv|
@@ -225,7 +246,10 @@ class FPM::Package::Deb < FPM::Package
       self.name = parse.call("Package")
       self.url = parse.call("Homepage")
       self.vendor = parse.call("Vendor") || self.vendor
-      self.provides = parse.call("Provides") || self.provides
+      with(parse.call("Provides")) do |provides_str|
+        next if provides_str.nil?
+        self.provides = provides_str.split(/\s*,\s*/)
+      end
 
       # The description field is a special flower, parse it that way.
       # The description is the first line as a normal Description field, but also continues
@@ -297,6 +321,7 @@ class FPM::Package::Deb < FPM::Package
   end # def extract_files
 
   def output(output_path)
+    self.provides = self.provides.collect { |p| fix_provides(p) }
     output_check(output_path)
     # Abort if the target path already exists.
 
@@ -339,7 +364,7 @@ class FPM::Package::Deb < FPM::Package
 
     # Tar up the staging_path into data.tar.{compression type}
     case self.attributes[:deb_compression]
-      when "gzip", nil
+      when "gz", nil
         datatar = build_path("data.tar.gz")
         compression = "-z"
       when "bzip2" 
@@ -351,23 +376,6 @@ class FPM::Package::Deb < FPM::Package
       else
         raise FPM::InvalidPackageConfiguration,
           "Unknown compression type '#{self.attributes[:deb_compression]}'"
-    end
-
-    tar_flags = []
-    if !attributes[:deb_user].nil?
-      if attributes[:deb_user] == 'root'
-        tar_flags += [ "--numeric-owner", "--owner", "0" ]
-      else
-        tar_flags += [ "--owner", attributes[:deb_user] ]
-      end
-    end
-
-    if !attributes[:deb_group].nil?
-      if attributes[:deb_group] == 'root'
-        tar_flags += [ "--numeric-owner", "--group", "0" ]
-      else
-        tar_flags += [ "--group", attributes[:deb_group] ]
-      end
     end
 
     if attributes[:deb_changelog]
@@ -407,7 +415,7 @@ class FPM::Package::Deb < FPM::Package
       FileUtils.ln_s("/lib/init/upstart-job", dest_init)
     end
 
-    args = [ tar_cmd, "-C", staging_path, compression ] + tar_flags + [ "-cf", datatar, "." ]
+    args = [ tar_cmd, "-C", staging_path, compression ] + data_tar_flags + [ "-cf", datatar, "." ]
     safesystem(*args)
 
     # pack up the .deb, which is just an 'ar' archive with 3 files
@@ -417,13 +425,16 @@ class FPM::Package::Deb < FPM::Package
         safesystem("ar", "-qc", output_path, "debian-binary", "control.tar.gz", datatar)
       end
     end
-    @logger.log("Created deb package", :path => output_path)
   end # def output
 
   def converted_from(origin)
     self.dependencies = self.dependencies.collect do |dep|
       fix_dependency(dep)
     end.flatten
+    self.provides = self.provides.collect do |provides|
+      fix_provides(provides)
+    end.flatten
+      
   end # def converted_from
 
   def debianize_op(op)
@@ -455,7 +466,7 @@ class FPM::Package::Deb < FPM::Package
     end
 
     if dep.include?("_")
-      @logger.warn("Replacing underscores with dashes in '#{dep}' because " \
+      @logger.warn("Replacing dependency underscores with dashes in '#{dep}' because " \
                    "debs don't like underscores")
       dep = dep.gsub("_", "-")
     end
@@ -493,6 +504,23 @@ class FPM::Package::Deb < FPM::Package
     end
   end # def fix_dependency
 
+  def fix_provides(provides)
+    name_re = /^[^ \(]+/
+    name = provides[name_re]
+    if name =~ /[A-Z]/
+      @logger.warn("Downcasing provides '#{name}' because deb packages " \
+                   " don't work so good with uppercase names")
+      provides = provides.gsub(name_re) { |n| n.downcase }
+    end
+
+    if provides.include?("_")
+      @logger.warn("Replacing 'provides' underscores with dashes in '#{provides}' because " \
+                   "debs don't like underscores")
+      provides = provides.gsub("_", "-")
+    end
+    return provides.rstrip
+  end
+
   def control_path(path=nil)
     @control_path ||= build_path("control")
     FileUtils.mkdir(@control_path) if !File.directory?(@control_path)
@@ -511,6 +539,8 @@ class FPM::Package::Deb < FPM::Package
     write_scripts # write the maintainer scripts
     write_conffiles # write the conffiles
     write_debconf # write the debconf files
+    write_meta_files # write additional meta files
+    write_triggers # write trigger config to 'triggers' file
     write_md5sums # write the md5sums file
 
     # Make the control.tar.gz
@@ -558,6 +588,7 @@ class FPM::Package::Deb < FPM::Package
 
       @logger.debug("Writing control file", :path => control)
       File.write(control, control_data)
+      File.chmod(0644, control)
       edit_file(control) if attributes[:edit?]
     end
   end # def write_control
@@ -585,6 +616,8 @@ class FPM::Package::Deb < FPM::Package
     # scan all conf file paths for files and add them
     allconfigs = []
     config_files.each do |path|
+      # Strip leading /
+      path = path[1..-1] if path[0,1] == "/"
       cfg_path = File.expand_path(path, staging_path)
       begin
         Find.find(cfg_path) do |p|
@@ -597,10 +630,16 @@ class FPM::Package::Deb < FPM::Package
     end
     allconfigs.sort!.uniq!
 
-    File.open(control_path("conffiles"), "w") do |out|
-      # 'config_files' comes from FPM::Package and is usually set with
-      # FPM::Command's --config-files flag
-      allconfigs.each { |cf| out.puts(cf) }
+    with(control_path("conffiles")) do |conffiles|
+      File.open(conffiles, "w") do |out|
+        # 'config_files' comes from FPM::Package and is usually set with
+        # FPM::Command's --config-files flag
+        allconfigs.each do |cf|
+          # We need to put the leading / back. Stops lintian relative-conffile error.
+          out.puts("/" + cf)
+        end
+      end
+      File.chmod(0644, conffiles)
     end
   end # def write_conffiles
 
@@ -624,6 +663,30 @@ class FPM::Package::Deb < FPM::Package
     end
   end # def write_debconf
 
+  def write_meta_files
+    files = attributes[:deb_meta_files]
+    return unless files
+    files.each do |fn|
+      dest = control_path(File.basename(fn))
+      FileUtils.cp(fn, dest)
+      File.chmod(0644, dest)
+    end
+  end
+
+  def write_triggers
+    lines = [['interest', :deb_interest],
+             ['activate', :deb_activate]].map { |label, attr|
+      (attributes[attr] || []).map { |e| "#{label} #{e}\n" }
+    }.flatten.join('')
+
+    if lines.size > 0
+      File.open(control_path("triggers"), 'a') do |f|
+        f.write "\n" if f.size > 0
+        f.write lines
+      end
+    end
+  end
+
   def write_md5sums
     md5_sums = {}
 
@@ -641,6 +704,7 @@ class FPM::Package::Deb < FPM::Package
           out.puts "#{md5} #{path}"
         end
       end
+      File.chmod(0644, control_path("md5sums"))
     end
   end # def write_md5sums
 
@@ -651,5 +715,27 @@ class FPM::Package::Deb < FPM::Package
     return super(format)
   end # def to_s
 
-  public(:input, :output, :architecture, :name, :prefix, :converted_from, :to_s)
+  def data_tar_flags
+    data_tar_flags = []
+    if attributes[:deb_use_file_permissions?].nil?
+      if !attributes[:deb_user].nil?
+        if attributes[:deb_user] == 'root'
+          data_tar_flags += [ "--numeric-owner", "--owner", "0" ]
+        else
+          data_tar_flags += [ "--owner", attributes[:deb_user] ]
+        end
+      end
+
+      if !attributes[:deb_group].nil?
+        if attributes[:deb_group] == 'root'
+          data_tar_flags += [ "--numeric-owner", "--group", "0" ]
+        else
+          data_tar_flags += [ "--group", attributes[:deb_group] ]
+        end
+      end
+    end
+    return data_tar_flags
+  end # def data_tar_flags
+
+  public(:input, :output, :architecture, :name, :prefix, :converted_from, :to_s, :data_tar_flags)
 end # class FPM::Target::Deb

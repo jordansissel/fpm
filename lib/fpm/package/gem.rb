@@ -38,6 +38,11 @@ class FPM::Package::Gem < FPM::Package
     "shebang rewritten to use env?", :default => true
 
   option "--prerelease", :flag, "Allow prerelease versions of a gem", :default => false
+  option "--disable-dependency", "gem_name",
+    "The gem name to remove from dependency list",
+    :multivalued => true, :attribute_name => :gem_disable_dependencies
+
+  option "--version-bins", :flag, "Append the version to the bins", :default => false
 
   def input(gem)
     # 'arg'  is the name of the rubygem we should unpack.
@@ -147,6 +152,10 @@ class FPM::Package::Gem < FPM::Package
 
         # Some reqs can be ">= a, < b" versions, let's handle that.
         reqs.to_s.split(/, */).each do |req|
+          if attributes[:gem_disable_dependencies]
+            next if attributes[:gem_disable_dependencies].include?(dep.name)
+          end
+
           if attributes[:gem_fix_dependencies?]
             name = fix_name(dep.name)
           else
@@ -186,6 +195,23 @@ class FPM::Package::Gem < FPM::Package
     ::FileUtils.mkdir_p(bin_path)
     args << gem_path
     safesystem(*args)
+
+    # Delete bin_path if it's empty, and any empty parents (#612)
+    # Above, we mkdir_p bin_path because rubygems aborts if the parent
+    # directory doesn't exist, for example:
+    #   ERROR:  While executing gem ... (Errno::ENOENT)
+    #       No such file or directory - /tmp/something/weird/bin
+    tmp = bin_path
+    while ::Dir.entries(tmp).size == 2 || tmp == "/"  # just [ "..", "." ] is an empty directory
+      @logger.info("Deleting empty bin_path", :path => tmp)
+      ::Dir.rmdir(tmp)
+      tmp = File.dirname(tmp)
+    end
+    if attributes[:gem_version_bins?] and File.directory?(bin_path)
+      (::Dir.entries(bin_path) - ['.','..']).each do |bin|
+        FileUtils.mv("#{bin_path}/#{bin}", "#{bin_path}/#{bin}-#{self.version}")
+      end
+    end
   end # def install_to_staging
   
   # Sanitize package name.

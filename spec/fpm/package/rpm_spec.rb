@@ -3,8 +3,9 @@ require "fpm" # local
 require "fpm/package/rpm" # local
 require "fpm/package/dir" # local
 require "arr-pm/file" # gem 'arr-pm'
+require "stud/temporary" # gem 'stud'
 
-if !program_in_path?("rpmbuild")
+if !program_exists?("rpmbuild")
   Cabin::Channel.get("rspec") \
     .warn("Skipping RPM#output tests because 'rpmbuild' isn't in your PATH")
 end
@@ -80,7 +81,7 @@ describe FPM::Package::RPM do
       end
 
       it "should set the user and group of each file in the RPM" do
-        subject.rpmspec.should include('%defattr(-,root,root,-')
+        expect(subject.rpmspec).to include('%defattr(-,root,root,-')
       end
     end # context
 
@@ -104,16 +105,32 @@ describe FPM::Package::RPM do
       end
 
       it "should set the user and group of each file in the RPM" do
-        subject.rpmspec.should include('%defattr(-,some_user,some_group,-')
+        expect(subject.rpmspec).to include('%defattr(-,some_user,some_group,-')
       end
     end # context
   end
 
-  describe "#output", :if => program_in_path?("rpmbuild") do
+  describe "#output", :if => program_exists?("rpmbuild") do
+    context "architecture" do
+      it "can be basically anything" do
+        subject.name = "example"
+        subject.architecture = "fancypants"
+        subject.version = "1.0"
+        target = Stud::Temporary.pathname
+
+        # Should not fail.
+        subject.output(target)
+
+        # Verify the arch tag.
+        rpm = ::RPM::File.new(target)
+        insist { rpm.tags[:arch] } == subject.architecture
+
+        File.unlink(target)
+      end
+    end
     context "package attributes" do
       before :each do
-        @target = Tempfile.new("fpm-test-rpm").path
-        File.delete(@target)
+        @target = Stud::Temporary.pathname
         subject.name = "name"
         subject.version = "123"
         subject.architecture = "all"
@@ -133,6 +150,10 @@ describe FPM::Package::RPM do
         subject.scripts[:after_install] = "example after_install"
         subject.scripts[:before_remove] = "example before_remove"
         subject.scripts[:after_remove] = "example after_remove"
+        subject.scripts[:rpm_verifyscript] = "example rpm_verifyscript"
+        subject.scripts[:rpm_posttrans] = "example rpm_posttrans"
+        subject.scripts[:rpm_pretrans] = "example rpm_pretrans"
+
 
         # Write the rpm out
         subject.output(@target)
@@ -215,6 +236,21 @@ describe FPM::Package::RPM do
         insist { @rpm.tags[:postunprog] } == "/bin/sh"
       end
 
+      it "should have the correct 'verify' script" do
+        insist { @rpm.tags[:verifyscript] } == "example rpm_verifyscript"
+        insist { @rpm.tags[:verifyscriptprog] } == "/bin/sh"
+      end
+
+      it "should have the correct 'pretrans' script" do
+        insist { @rpm.tags[:pretrans] } == "example rpm_pretrans"
+        insist { @rpm.tags[:pretransprog] } == "/bin/sh"
+      end
+
+      it "should have the correct 'posttrans' script" do
+        insist { @rpm.tags[:posttrans] } == "example rpm_posttrans"
+        insist { @rpm.tags[:posttransprog] } == "/bin/sh"
+      end
+
       it "should have the correct 'prein' script" do
         insist { @rpm.tags[:prein] } == "example before_install"
         insist { @rpm.tags[:preinprog] } == "/bin/sh"
@@ -242,8 +278,7 @@ describe FPM::Package::RPM do
 
     context "package default attributes" do
       before :each do
-        @target = Tempfile.new("fpm-test-rpm").path
-        File.delete(@target)
+        @target = Stud::Temporary.pathname
         subject.name = "name"
         subject.version = "123"
         # Write the rpm out
@@ -313,10 +348,10 @@ describe FPM::Package::RPM do
     end # package attributes
   end # #output
 
-  describe "regressions should not occur", :if => program_in_path?("rpmbuild") do
+  describe "regressions should not occur", :if => program_exists?("rpmbuild") do
     before :each do
-      @target = Tempfile.new("fpm-test-rpm").path
-      File.delete(@target)
+      @tempfile_handle = 
+      @target = Stud::Temporary.pathname
       subject.name = "name"
       subject.version = "1.23"
     end
@@ -393,11 +428,44 @@ describe FPM::Package::RPM do
     end
   end # regression stuff
 
-  describe "#output with digest and compression settings", :if => program_in_path?("rpmbuild") do
+  describe "rpm_use_file_permissions" do
+    let(:target) { Stud::Temporary.pathname }
+    let(:rpm) { ::RPM::File.new(target) }
+    let(:path) { "hello.txt" }
+    let(:path_stat) { File.lstat(subject.staging_path(path)) }
+
+    before :each do
+      File.write(subject.staging_path(path), "Hello world")
+      subject.name = "example"
+      subject.version = "1.0"
+    end
+
+    after :each do
+      subject.cleanup
+      File.delete(target) rescue nil
+    end
+
+    it "should respect file user and group ownership", :if => program_exists?("rpmbuild") do
+      subject.attributes[:rpm_use_file_permissions?] = true
+      subject.output(target)
+      insist { rpm.tags[:fileusername].first } == Etc.getpwuid(path_stat.uid).name
+      insist { rpm.tags[:filegroupname].first } == Etc.getgrgid(path_stat.gid).name
+    end
+
+    it "rpm_group should override rpm_use_file_permissions-derived owner", :if => program_exists?("rpmbuild") do
+      subject.attributes[:rpm_use_file_permissions?] = true
+      subject.attributes[:rpm_user] = "hello"
+      subject.attributes[:rpm_group] = "world"
+      subject.output(target)
+      insist { rpm.tags[:fileusername].first } == subject.attributes[:rpm_user]
+      insist { rpm.tags[:filegroupname].first } == subject.attributes[:rpm_group]
+    end
+  end
+
+  describe "#output with digest and compression settings", :if => program_exists?("rpmbuild") do
     context "bzip2/sha1" do
       before :each do
-        @target = Tempfile.new("fpm-test-rpm").path
-        File.delete(@target)
+        @target = Stud::Temporary.pathname
         subject.name = "name"
         subject.version = "123"
         subject.architecture = "all"

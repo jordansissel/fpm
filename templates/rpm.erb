@@ -41,7 +41,6 @@ Epoch: <%= epoch %>
 Release: <%= iteration or 1 %>
 <%# use the first line of the description as the summary -%>
 Summary: <%= description.split("\n").first.empty? ? "_" :  description.split("\n").first %>
-BuildArch: <%= architecture %>
 <% if !attributes[:rpm_autoreqprov?] -%>
 AutoReqProv: no
 <% else -%>
@@ -109,7 +108,7 @@ Obsoletes: <%= repl %>
 %clean
 # noop
 
-<%# This next section puts any %pre, %post, %preun, or %postun scripts %>
+<%# This next section puts any %pre, %post, %preun, %postun, %verifyscript, %pretrans or %posttrans scripts %>
 <% if script?(:before_upgrade) or script?(:after_upgrade) -%>
 <%   if script?(:before_upgrade) or script?(:before_install) -%>
 %pre
@@ -167,15 +166,31 @@ then
 <%=    script(:after_remove) %>
 fi
 <%   end -%>
+<%
+  scriptmap = {
+    :rpm_verifyscript => "verifyscript",
+    :rpm_posttrans => "posttrans",
+    :rpm_pretrans => "pretrans"
+  }
+  scriptmap.each do |name, rpmname| 
+-%>
+<%     if script?(name) -%>
+%<%=     rpmname %>
+<%=      script(name) %>
+<%     end -%>
+<%   end -%>
 <% else -%>
 <%
-     scriptmap = {
-       :before_install => "pre",
-       :after_install => "post",
-       :before_remove => "preun",
-       :after_remove => "postun",
-     }
-     scriptmap.each do |name, rpmname|
+  scriptmap = {
+    :before_install => "pre",
+    :after_install => "post",
+    :before_remove => "preun",
+    :after_remove => "postun",
+    :rpm_verifyscript => "verifyscript",
+    :rpm_posttrans => "posttrans",
+    :rpm_pretrans => "pretrans"
+  }
+  scriptmap.each do |name, rpmname| 
 -%>
 <%     if script?(name) -%>
 %<%=     rpmname %>
@@ -183,8 +198,9 @@ fi
 <%     end -%>
 <%   end -%>
 <% end -%>
+
 %files
-%defattr(<%= attributes[:rpm_defattrfile] %>,<%= attributes[:rpm_user] %>,<%= attributes[:rpm_group] %>,<%= attributes[:rpm_defattrdir] %>)
+%defattr(<%= attributes[:rpm_defattrfile] %>,<%= attributes[:rpm_user] || "root" %>,<%= attributes[:rpm_group] || "root" %>,<%= attributes[:rpm_defattrdir] %>)
 <%# Output config files and then regular files. -%>
 <% config_files.each do |path| -%>
 %config(noreplace) <%= rpm_file_entry(path) %>
