@@ -109,6 +109,13 @@ Obsoletes: <%= repl %>
 # noop
 
 <%# This next section puts any %pre, %post, %preun, %postun, %verifyscript, %pretrans or %posttrans scripts %>
+<%
+  scriptmap = {
+    :rpm_verifyscript => "verifyscript",
+    :rpm_posttrans => "posttrans",
+    :rpm_pretrans => "pretrans"
+  }
+-%>
 <% if script?(:before_upgrade) or script?(:after_upgrade) -%>
 <%   if script?(:before_upgrade) or script?(:before_install) -%>
 %pre
@@ -166,36 +173,21 @@ then
 <%=    script(:after_remove) %>
 fi
 <%   end -%>
-<%
-  scriptmap = {
-    :rpm_verifyscript => "verifyscript",
-    :rpm_posttrans => "posttrans",
-    :rpm_pretrans => "pretrans"
-  }
-  scriptmap.each do |name, rpmname| 
--%>
-<%     if script?(name) -%>
-%<%=     rpmname %>
-<%=      script(name) %>
-<%     end -%>
-<%   end -%>
 <% else -%>
 <%
-  scriptmap = {
+  other_scriptmap = {
     :before_install => "pre",
     :after_install => "post",
     :before_remove => "preun",
     :after_remove => "postun",
-    :rpm_verifyscript => "verifyscript",
-    :rpm_posttrans => "posttrans",
-    :rpm_pretrans => "pretrans"
-  }
-  scriptmap.each do |name, rpmname| 
+}
+  scriptmap.merge!(other_scriptmap)
 -%>
-<%     if script?(name) -%>
-%<%=     rpmname %>
-<%=      script(name) %>
-<%     end -%>
+<% end -%>
+<% scriptmap.each do |name, rpmname| 
+<%   if script?(name) -%>
+%<%=   rpmname %>
+<%=    script(name) %>
 <%   end -%>
 <% end -%>
 
