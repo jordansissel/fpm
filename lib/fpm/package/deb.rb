@@ -445,9 +445,10 @@ class FPM::Package::Deb < FPM::Package
     name_re = /^[^ \(]+/
     name = dep[name_re]
     if name =~ /[A-Z]/
-      @logger.warn("Downcasing dependency '#{name}' because deb packages " \
+      # We used to downcase strange dependency by default but now just emit a warning:
+      # some valid dependencies like 'libMagick++5' really like their special casing!
+      @logger.warn("Consider downcasing dependency '#{name}' because deb packages " \
                    " don't work so good with uppercase names")
-      dep = dep.gsub(name_re) { |n| n.downcase }
     end
 
     if dep.include?("_")
