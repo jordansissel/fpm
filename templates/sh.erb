@@ -21,31 +21,57 @@ set -e
 function main() {
     set_install_dir
 
-    create_pid
+    if ! slug_already_current ; then
 
-    wait_for_others
+      create_pid
+      wait_for_others
+      kill_others
+      set_owner
+      unpack_payload
 
-    kill_others
+      if [ "$UNPACK_ONLY" == "1" ] ; then
+          echo "Unpacking complete, not moving symlinks or restarting because unpack only was specified."
+      else
+          create_symlinks
 
-    set_owner
+          set +e # don't exit on errors to allow us to clean up
+          if ! run_post_install ; then
+              revert_symlinks
+              log "Installation failed."
+              exit 1
+          else
+              clean_out_old_releases
+              log "Installation complete."
+          fi
+      fi
 
-    unpack_payload
-
-    if [ "$UNPACK_ONLY" == "1" ] ; then
-        echo "Unpacking complete, not moving symlinks or restarting because unpack only was specified."
     else
-        create_symlinks
+        echo "This slug is already installed in 'current'. Specify -f to force reinstall. Exiting."
+    fi
+}
 
-        set +e # don't exit on errors to allow us to clean up
-        if ! run_post_install ; then
-            revert_symlinks
-            log "Installation failed."
-            exit 1
+# check if this slug is already running and exit unless `force` specified
+# Note: this only works with RELEASE_ID is used
+function slug_already_current(){
+    local this_slug=$(basename $0 .slug)
+    local current=$(basename "$(readlink ${INSTALL_ROOT}/current)")
+    log "'current' symlink points to slug: ${current}"
+
+    if [ "$this_slug" == "$current" ] ; then
+        if [ "$FORCE" == "1" ] ; then
+        log "Force was specified. Proceeding with install after renaming live directory to allow running service to shutdown correctly."
+            local real_dir=$(readlink ${INSTALL_ROOT}/current)
+            if [ -f ${real_dir}.old ] ; then
+                # remove that .old directory, if needed
+                rm -rf ${real_dir}.old
+            fi
+            mv ${real_dir} ${real_dir}.old
+            mkdir -p ${real_dir}
         else
-            clean_out_old_releases
-            log "Installation complete."
+            return 0;
         fi
     fi
+    return 1;
 }
 
 # deletes the PID file for this installation
@@ -108,8 +134,8 @@ function save_environment(){
     echo -n "" > ${METADATA} # empty file
 
     # just piping env to a file doesn't quote the variables. This does
-    # filter out multiline junk and _. _ is a readonly variable
-    env | egrep "^[^ ]+=.*" | grep -v "^_=" | while read ENVVAR ; do
+    # filter out multiline junk, _, and functions. _ is a readonly variable.
+    env | grep -v "^_=" | grep -v "^[^=(]*()=" | egrep "^[^ ]+=" | while read ENVVAR ; do
         local NAME=${ENVVAR%%=*}
         # sed is to preserve variable values with dollars (for escaped variables or $() style command replacement),
         # and command replacement backticks
