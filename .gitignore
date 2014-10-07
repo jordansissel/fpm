@@ -22,6 +22,7 @@ Gemfile.lock
 
 # OS X
 .DS_Store
+Rakefile.rb
 
 .rbx
 .vagrant
