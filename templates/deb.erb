@@ -1,7 +1,9 @@
 Package: <%= name %>
 Version: <%= "#{epoch}:" if epoch %><%= version %><%= "-" + iteration.to_s if iteration %>
 License: <%= license %>
+<% if !vendor.nil? and !vendor.empty? -%>
 Vendor: <%= vendor %>
+<% end -%>
 Architecture: <%= architecture %>
 Maintainer: <%= maintainer  %>
 Installed-Size: <%= attributes[:deb_installed_size] %>
