@@ -2,6 +2,7 @@ require "spec_setup"
 require "stud/temporary"
 require "fpm" # local
 require "fpm/command" # local
+require "fixtures/mockpackage"
 
 describe FPM::Command do
   describe "--prefix"
@@ -49,6 +50,32 @@ describe FPM::Command do
           insist { files.size } == 1
           insist { files[0] } =~ /example_/
         end
+      end
+    end
+  end
+
+  describe "--log" do
+    subject { FPM::Command.new("fpm") }
+    let (:args) { [ "-s", "mock", "-t", "mock" ] }
+
+    context "when not given" do
+      it "should not raise an exception" do
+        subject.parse([*args])
+      end
+    end
+    context "when given a valid log level" do
+      it "should not raise an exception" do
+        subject.parse([*args, "--log", "error"])
+        subject.parse([*args, "--log", "warn"])
+        subject.parse([*args, "--log", "info"])
+        subject.parse([*args, "--log", "debug"])
+      end
+    end
+    context "when given an invalid log level" do
+      it "should raise an exception" do
+        insist { subject.parse([*args, "--log", ""]) }.raises FPM::Package::InvalidArgument
+        insist { subject.parse([*args, "--log", "whatever"]) }.raises FPM::Package::InvalidArgument
+        insist { subject.parse([*args, "--log", "fatal"]) }.raises FPM::Package::InvalidArgument
       end
     end
   end

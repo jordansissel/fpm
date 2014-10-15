@@ -58,6 +58,16 @@ class FPM::Command < Clamp::Command
   option ["-f", "--force"], :flag, "Force output even if it will overwrite an " \
     "existing file", :default => false
   option ["-n", "--name"], "NAME", "The name to give to the package"
+
+  loglevels = %w(error warn info debug)
+  option "--log", "LEVEL", "Set the log level. Values: #{loglevels.join(", ")}.",
+    :attribute_name => :log_level do |val|
+    val.downcase.tap do |v|
+      if !loglevels.include?(v)
+        raise FPM::Package::InvalidArgument, "Invalid log level, #{v.inspect}. Must be one of: #{loglevels.join(", ")}"
+      end
+    end
+  end # --log
   option "--verbose", :flag, "Enable verbose output"
   option "--debug", :flag, "Enable debug output"
   option "--debug-workspace", :flag, "Keep any file workspaces around for " \
@@ -228,6 +238,12 @@ class FPM::Command < Clamp::Command
     end
 
     @logger.level = :warn
+    @logger.level = :info if verbose? # --verbose
+    @logger.level = :debug if debug? # --debug
+    if log_level
+      @logger.level = log_level.to_sym
+    end
+
 
     if (stray_flags = args.grep(/^-/); stray_flags.any?)
       @logger.warn("All flags should be before the first argument " \
@@ -257,9 +273,6 @@ class FPM::Command < Clamp::Command
     end
     input_class = FPM::Package.types[input_type]
     output_class = FPM::Package.types[output_type]
-
-    @logger.level = :info if verbose? # --verbose
-    @logger.level = :debug if debug? # --debug
 
     input = input_class.new
 
@@ -432,9 +445,6 @@ class FPM::Command < Clamp::Command
   rescue FPM::InvalidPackageConfiguration => e
     @logger.error("Invalid package configuration: #{e}")
     return 1
-  rescue FPM::Package::InvalidArgument => e
-    @logger.error("Invalid package argument: #{e}")
-    return 1
   rescue FPM::Util::ProcessFailed => e
     @logger.error("Process failed: #{e}")
     return 1
@@ -480,6 +490,9 @@ class FPM::Command < Clamp::Command
     end
 
     super(*args)
+  rescue FPM::Package::InvalidArgument => e
+    @logger.error("Invalid package argument: #{e}")
+    return 1
   end # def run
 
   # A simple flag validator
