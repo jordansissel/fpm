@@ -99,7 +99,7 @@ class FPM::Command < Clamp::Command
     "package automatically", :default => false
 
   option "--provides", "PROVIDES",
-    "What this package provides (usually a name). This flag can be "\
+    "What this package provides (usually a name). This flag can be " \
     "specified multiple times.", :multivalued => true,
     :attribute_name => :provides
   option "--conflicts", "CONFLICTS",
@@ -107,7 +107,7 @@ class FPM::Command < Clamp::Command
     "specified multiple times.", :multivalued => true,
     :attribute_name => :conflicts
   option "--replaces", "REPLACES",
-    "Other packages/versions this package replaces. This flag can be "\
+    "Other packages/versions this package replaces. This flag can be " \
     "specified multiple times.", :multivalued => true,
     :attribute_name => :replaces
 
@@ -152,42 +152,59 @@ class FPM::Command < Clamp::Command
     "files and dirs to use as input."
 
   option "--post-install", "FILE",
-    "(DEPRECATED, use --after-install) a script to be run after " \
+    "(DEPRECATED, use --after-install) A script to be run after " \
     "package installation" do |val|
     @after_install = File.expand_path(val) # Get the full path to the script
   end # --post-install (DEPRECATED)
   option "--pre-install", "FILE",
-    "(DEPRECATED, use --before-install) a script to be run before " \
+    "(DEPRECATED, use --before-install) A script to be run before " \
     "package installation" do |val|
     @before_install = File.expand_path(val) # Get the full path to the script
   end # --pre-install (DEPRECATED)
   option "--post-uninstall", "FILE",
-      "(DEPRECATED, use --after-remove) a script to be run after " \
+      "(DEPRECATED, use --after-remove) A script to be run after " \
       "package removal" do |val|
     @after_remove = File.expand_path(val) # Get the full path to the script
   end # --post-uninstall (DEPRECATED)
   option "--pre-uninstall", "FILE",
-    "(DEPRECATED, use --before-remove) a script to be run before " \
+    "(DEPRECATED, use --before-remove) A script to be run before " \
     "package removal"  do |val|
     @before_remove = File.expand_path(val) # Get the full path to the script
   end # --pre-uninstall (DEPRECATED)
 
   option "--after-install", "FILE",
-    "a script to be run after package installation" do |val|
+    "A script to be run after package installation" do |val|
     File.expand_path(val) # Get the full path to the script
   end # --after-install
   option "--before-install", "FILE",
-    "a script to be run before package installation" do |val|
+    "A script to be run before package installation" do |val|
     File.expand_path(val) # Get the full path to the script
-  end # --pre-install
+  end # --before-install
   option "--after-remove", "FILE",
-    "a script to be run after package removal" do |val|
+    "A script to be run after package removal" do |val|
     File.expand_path(val) # Get the full path to the script
   end # --after-remove
   option "--before-remove", "FILE",
-    "a script to be run before package removal" do |val|
+    "A script to be run before package removal" do |val|
     File.expand_path(val) # Get the full path to the script
   end # --before-remove
+  option "--after-upgrade", "FILE",
+    "A script to be run after package upgrade. If not specified,\n" \
+        "--before-install, --after-install, --before-remove, and \n" \
+        "--after-remove wil behave in a backwards-compatible manner\n" \
+        "(they will not be upgrade-case aware).\n" \
+        "Currently only supports deb and rpm packages." do |val|
+    File.expand_path(val) # Get the full path to the script
+  end # --after-upgrade
+  option "--before-upgrade", "FILE",
+    "A script to be run before package upgrade. If not specified,\n" \
+        "--before-install, --after-install, --before-remove, and \n" \
+        "--after-remove wil behave in a backwards-compatible manner\n" \
+        "(they will not be upgrade-case aware).\n" \
+        "Currently only supports deb and rpm packages." do |val|
+    File.expand_path(val) # Get the full path to the script
+  end # --before-upgrade
+
   option "--template-scripts", :flag,
     "Allow scripts to be templated. This lets you use ERB to template your " \
     "packaging scripts (for --after-install, etc). For example, you can do " \
@@ -394,6 +411,8 @@ class FPM::Command < Clamp::Command
     setscript.call(:after_install)
     setscript.call(:before_remove)
     setscript.call(:after_remove)
+    setscript.call(:before_upgrade)
+    setscript.call(:after_upgrade)
 
     # Bail if any setscript calls had errors. We don't need to log
     # anything because we've already logged the error(s) above.
