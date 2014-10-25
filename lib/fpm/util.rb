@@ -228,3 +228,19 @@ module FPM::Util
     @logger ||= Cabin::Channel.get
   end # def logger
 end # module FPM::Util
+
+class Hash
+  # Convert a nested hash into a flat hash.
+  def unnest(prefix = nil, separator = '_')
+    new_hash = {}
+    each do |k, v|
+      new_key = prefix ? "#{prefix}#{separator}#{k}" : k
+      if v.is_a?(Hash)
+        new_hash.merge!(v.unnest(new_key, separator))
+      else
+        new_hash[new_key.to_sym] = v
+      end
+    end
+    new_hash
+  end # def unnest
+end # class Hash

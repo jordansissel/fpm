@@ -6,6 +6,7 @@ require "clamp"
 require "ostruct"
 require "fpm"
 require "tmpdir" # for Dir.tmpdir
+require "yaml"
 
 if $DEBUG
   Cabin::Channel.get(Kernel).subscribe($stdout)
@@ -225,6 +226,9 @@ class FPM::Command < Clamp::Command
     "copying, downloading, etc. Roughly any scratch space fpm needs to build " \
     "your package.", :default => Dir.tmpdir
 
+  option "--settings", "FILE",
+    "Load configuration from a YAML document."
+
   parameter "[ARGS] ...",
     "Inputs to the source package type. For the 'dir' type, this is the files" \
     " and directories you want to include in the package. For others, like " \
@@ -252,6 +256,18 @@ class FPM::Command < Clamp::Command
     if ARGV == [ "--version" ]
       puts FPM::VERSION
       return 0
+    end
+
+    # Parse options from YAML document.
+    if settings
+      @logger.debug("Loading configuration from YAML document: #{settings}")
+      yaml_loader = YAMLLoader.new(self)
+      begin
+        yaml_config = yaml_loader.load(settings)
+      rescue Errno::ENOENT
+        @logger.warn("Cannot find YAML document: #{settings}. Using default settings.")
+      end
+      @logger.info("Loaded configuration from YAML document: #{settings}")
     end
 
     @logger.level = :warn
@@ -300,6 +316,18 @@ class FPM::Command < Clamp::Command
     # They are stored in 'settings' as :gem_foo_bar.
     input.attributes ||= {}
 
+    # Before merging command-line options into FPM::Package attributes,
+    # override package defaults with values from the YAML configuration.
+    #
+    # Setting the instance variables directly ensures the values are passed to
+    # the output properly (FPM::Package#convert).
+    if yaml_config
+      # Merge general package instance variables.
+      yaml_config.each do |k, v|
+        input.instance_variable_set("@#{k}", v) if input.respond_to?(k)
+      end
+    end
+
     # Iterate over all the options and set their values in the package's
     # attribute hash.
     #
@@ -307,6 +335,14 @@ class FPM::Command < Clamp::Command
     self.class.declared_options.each do |option|
       with(option.attribute_name) do |attr|
         next if attr == "help"
+
+        # Override package-specific defaults from the YAML configuration, if
+        # applicable. These are in turn overridden by command-line options.
+        if yaml_config.key?(attr.to_sym)
+          option.instance_variable_set("@default_value",
+                                       yaml_config[attr.to_sym])
+        end
+
         # clamp makes option attributes available as accessor methods
         # --foo-bar is available as 'foo_bar'. Put these in the package
         # attributes hash. (See FPM::Package#attributes)
@@ -596,4 +632,38 @@ class FPM::Command < Clamp::Command
 
     public(:initialize, :ok?, :messages)
   end # class Validator
+
+  # Load configuration options from a YAML document.
+  #
+  # Let Validator handle validation.
+  class YAMLLoader
+
+    def initialize(command)
+      @command = command
+    end # def initialize
+
+    # Load the configuration. Will raise Errno:ENOENT if the file does not
+    # exist.
+    def load(filename)
+      config = YAML.load_file(filename)
+      # Hash#unnest is defined in lib/fpm/util.rb.
+      config = config.unnest
+      unless @command.instance_variable_defined?("@input_type")
+        @command.input_type = config.delete(:source)
+      end
+      unless @command.instance_variable_defined?("@output_type")
+        @command.output_type = config.delete(:target)
+      end
+      unless @command.instance_variable_defined?("@args")
+        inputs = config.delete(:input)
+        if inputs
+          inputs = [inputs] if inputs.is_a?(String)
+          @command.args = inputs
+        end
+      end
+      return config
+    end # def load
+
+  end # class YAMLLoader
+
 end # class FPM::Program
