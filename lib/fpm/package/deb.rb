@@ -186,7 +186,7 @@ class FPM::Package::Deb < FPM::Package
   # characters.
   def name
     if @name =~ /[A-Z]/
-      @logger.warn("Debian tools (dpkg/apt) don't do well with packages " \
+      logger.warn("Debian tools (dpkg/apt) don't do well with packages " \
         "that use capital letters in the name. In some cases it will " \
         "automatically downcase them, in others it will not. It is confusing." \
         " Best to not use any capital letters at all. I have downcased the " \
@@ -196,13 +196,13 @@ class FPM::Package::Deb < FPM::Package
     end
 
     if @name.include?("_")
-      @logger.info("Debian package names cannot include underscores; " \
+      logger.info("Debian package names cannot include underscores; " \
                    "automatically converting to dashes", :name => @name)
       @name = @name.gsub(/[_]/, "-")
     end
 
     if @name.include?(" ")
-      @logger.info("Debian package names cannot include spaces; " \
+      logger.info("Debian package names cannot include spaces; " \
                    "automatically converting to dashes", :name => @name)
       @name = @name.gsub(/[ ]/, "-")
     end
@@ -232,7 +232,7 @@ class FPM::Package::Deb < FPM::Package
         if value.nil?
           return nil
         else
-          @logger.info("deb field", field => value.split(": ", 2).last)
+          logger.info("deb field", field => value.split(": ", 2).last)
           return value.split(": ",2).last
         end
       end
@@ -338,13 +338,13 @@ class FPM::Package::Deb < FPM::Package
     # should implicitly create a before/after scripts that run ldconfig
     if attributes[:deb_shlibs]
       if !script?(:after_install)
-        @logger.info("You gave --deb-shlibs but no --after-install, so " \
+        logger.info("You gave --deb-shlibs but no --after-install, so " \
                      "I am adding an after-install script that runs " \
                      "ldconfig to update the system library cache")
         scripts[:after_install] = template("deb/ldconfig.sh.erb").result(binding)
       end
       if !script?(:after_remove)
-        @logger.info("You gave --deb-shlibs but no --after-remove, so " \
+        logger.info("You gave --deb-shlibs but no --after-remove, so " \
                      "I am adding an after-remove script that runs " \
                      "ldconfig to update the system library cache")
         scripts[:after_remove] = template("deb/ldconfig.sh.erb").result(binding)
@@ -390,14 +390,14 @@ class FPM::Package::Deb < FPM::Package
     File.new(dest_changelog, "wb", 0644).tap do |changelog|
       Zlib::GzipWriter.new(changelog, Zlib::BEST_COMPRESSION).tap do |changelog_gz|
         if attributes[:deb_changelog]
-          @logger.info("Writing user-specified changelog", :source => attributes[:deb_changelog])
+          logger.info("Writing user-specified changelog", :source => attributes[:deb_changelog])
           File.new(attributes[:deb_changelog]).tap do |fd|
             chunk = nil
             # Ruby 1.8.7 doesn't have IO#copy_stream
             changelog_gz.write(chunk) while chunk = fd.read(16384)
           end.close
         else
-          @logger.info("Creating boilerplate changelog file")
+          logger.info("Creating boilerplate changelog file")
           changelog_gz.write(template("deb/changelog.erb").result(binding))
         end
       end.close
@@ -477,13 +477,13 @@ class FPM::Package::Deb < FPM::Package
     name_re = /^[^ \(]+/
     name = dep[name_re]
     if name =~ /[A-Z]/
-      @logger.warn("Downcasing dependency '#{name}' because deb packages " \
+      logger.warn("Downcasing dependency '#{name}' because deb packages " \
                    " don't work so good with uppercase names")
       dep = dep.gsub(name_re) { |n| n.downcase }
     end
 
     if dep.include?("_")
-      @logger.warn("Replacing dependency underscores with dashes in '#{dep}' because " \
+      logger.warn("Replacing dependency underscores with dashes in '#{dep}' because " \
                    "debs don't like underscores")
       dep = dep.gsub("_", "-")
     end
@@ -525,13 +525,13 @@ class FPM::Package::Deb < FPM::Package
     name_re = /^[^ \(]+/
     name = provides[name_re]
     if name =~ /[A-Z]/
-      @logger.warn("Downcasing provides '#{name}' because deb packages " \
+      logger.warn("Downcasing provides '#{name}' because deb packages " \
                    " don't work so good with uppercase names")
       provides = provides.gsub(name_re) { |n| n.downcase }
     end
 
     if provides.include?("_")
-      @logger.warn("Replacing 'provides' underscores with dashes in '#{provides}' because " \
+      logger.warn("Replacing 'provides' underscores with dashes in '#{provides}' because " \
                    "debs don't like underscores")
       provides = provides.gsub("_", "-")
     end
@@ -562,25 +562,25 @@ class FPM::Package::Deb < FPM::Package
 
     # Make the control.tar.gz
     with(build_path("control.tar.gz")) do |controltar|
-      @logger.info("Creating", :path => controltar, :from => control_path)
+      logger.info("Creating", :path => controltar, :from => control_path)
 
       args = [ tar_cmd, "-C", control_path, "-zcf", controltar, 
         "--owner=0", "--group=0", "--numeric-owner", "." ]
       safesystem(*args)
     end
 
-    @logger.debug("Removing no longer needed control dir", :path => control_path)
+    logger.debug("Removing no longer needed control dir", :path => control_path)
   ensure
     FileUtils.rm_r(control_path)
   end # def write_control_tarball
 
   def write_control
     # warn user if epoch is set
-    @logger.warn("epoch in Version is set", :epoch => self.epoch) if self.epoch
+    logger.warn("epoch in Version is set", :epoch => self.epoch) if self.epoch
 
     # calculate installed-size if necessary:
     if attributes[:deb_installed_size].nil?
-      @logger.info("No deb_installed_size set, calculating now.")
+      logger.info("No deb_installed_size set, calculating now.")
       total = 0
       Find.find(staging_path) do |path|
         stat = File.lstat(path)
@@ -596,14 +596,14 @@ class FPM::Package::Deb < FPM::Package
     # Write the control file
     with(control_path("control")) do |control|
       if attributes[:deb_custom_control]
-        @logger.debug("Using '#{attributes[:deb_custom_control]}' template for the control file")
+        logger.debug("Using '#{attributes[:deb_custom_control]}' template for the control file")
         control_data = File.read(attributes[:deb_custom_control])
       else
-        @logger.debug("Using 'deb.erb' template for the control file")
+        logger.debug("Using 'deb.erb' template for the control file")
         control_data = template("deb.erb").result(binding)
       end
 
-      @logger.debug("Writing control file", :path => control)
+      logger.debug("Writing control file", :path => control)
       File.write(control, control_data)
       File.chmod(0644, control)
       edit_file(control) if attributes[:edit?]
@@ -619,7 +619,7 @@ class FPM::Package::Deb < FPM::Package
       next unless script?(scriptname)
 
       with(control_path(filename)) do |controlscript|
-        @logger.debug("Writing control script", :source => filename, :target => controlscript)
+        logger.debug("Writing control script", :source => filename, :target => controlscript)
         File.write(controlscript, script(scriptname))
         # deb maintainer scripts are required to be executable
         File.chmod(0755, controlscript)
@@ -662,7 +662,7 @@ class FPM::Package::Deb < FPM::Package
 
   def write_shlibs
     return unless attributes[:deb_shlibs]
-    @logger.info("Adding shlibs", :content => attributes[:deb_shlibs])
+    logger.info("Adding shlibs", :content => attributes[:deb_shlibs])
     File.open(control_path("shlibs"), "w") do |out|
       out.write(attributes[:deb_shlibs])
     end

@@ -62,13 +62,13 @@ class FPM::Package::Gem < FPM::Package
       path = download(gem, gem_version)
     end
 
-    @logger.info("Using gem file", :path => path)
+    logger.info("Using gem file", :path => path)
     return path
   end # def download_if_necessary
 
   def download(gem_name, gem_version=nil)
 
-    @logger.info("Trying to download", :gem => gem_name, :version => gem_version)
+    logger.info("Trying to download", :gem => gem_name, :version => gem_version)
 
     gem_fetch = [ "#{attributes[:gem_gem]}", "fetch", gem_name]
 
@@ -79,7 +79,7 @@ class FPM::Package::Gem < FPM::Package
     FileUtils.mkdir(download_dir) unless File.directory?(download_dir)
 
     ::Dir.chdir(download_dir) do |dir|
-      @logger.debug("Downloading in directory #{dir}")
+      logger.debug("Downloading in directory #{dir}")
       safesystem(*gem_fetch)
     end
 
@@ -203,7 +203,7 @@ class FPM::Package::Gem < FPM::Package
     #       No such file or directory - /tmp/something/weird/bin
     tmp = bin_path
     while ::Dir.entries(tmp).size == 2 || tmp == "/"  # just [ "..", "." ] is an empty directory
-      @logger.info("Deleting empty bin_path", :path => tmp)
+      logger.info("Deleting empty bin_path", :path => tmp)
       ::Dir.rmdir(tmp)
       tmp = File.dirname(tmp)
     end
