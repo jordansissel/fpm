@@ -116,8 +116,6 @@ class FPM::Package
   private
 
   def initialize
-    @logger = Cabin::Channel.get
-
     # Attributes for this specific package 
     @attributes = {}
 
@@ -189,7 +187,7 @@ class FPM::Package
 
   # Convert this package to a new package type
   def convert(klass)
-    @logger.info("Converting #{self.type} to #{klass.type}")
+    logger.info("Converting #{self.type} to #{klass.type}")
 
     exclude
 
@@ -204,7 +202,7 @@ class FPM::Package
       :@directories, :@staging_path, :@attrs
     ]
     ivars.each do |ivar|
-      #@logger.debug("Copying ivar", :ivar => ivar, :value => instance_variable_get(ivar),
+      #logger.debug("Copying ivar", :ivar => ivar, :value => instance_variable_get(ivar),
                     #:from => self.type, :to => pkg.type)
       pkg.instance_variable_set(ivar, instance_variable_get(ivar))
     end
@@ -272,20 +270,20 @@ class FPM::Package
 
   # Clean up any temporary storage used by this class.
   def cleanup
-    cleanup_staging unless @logger.level == :debug
-    cleanup_build unless @logger.level == :debug
+    cleanup_staging unless logger.level == :debug
+    cleanup_build unless logger.level == :debug
   end # def cleanup
 
   def cleanup_staging
     if File.directory?(staging_path)
-      @logger.debug("Cleaning up staging path", :path => staging_path)
+      logger.debug("Cleaning up staging path", :path => staging_path)
       FileUtils.rm_r(staging_path) 
     end
   end # def cleanup_staging
 
   def cleanup_build
     if File.directory?(build_path)
-      @logger.debug("Cleaning up build path", :path => build_path)
+      logger.debug("Cleaning up build path", :path => build_path)
       FileUtils.rm_r(build_path) 
     end
   end # def cleanup_build
@@ -327,7 +325,7 @@ class FPM::Package
   def template(path)
     template_path = File.join(template_dir, path)
     template_code = File.read(template_path)
-    @logger.info("Reading template", :path => template_path)
+    logger.info("Reading template", :path => template_path)
     erb = ERB.new(template_code, nil, "-")
     erb.filename = template_path
     return erb
@@ -348,7 +346,7 @@ class FPM::Package
 
   def edit_file(path)
     editor = ENV['FPM_EDITOR'] || ENV['EDITOR'] || 'vi'
-    @logger.info("Launching editor", :file => path)
+    logger.info("Launching editor", :file => path)
     command = "#{editor} #{Shellwords.escape(path)}"
     system("#{editor} #{Shellwords.escape(path)}")
     if !$?.success?
@@ -377,10 +375,10 @@ class FPM::Package
       match_path = path.sub("#{installdir.chomp('/')}/", '')
 
       attributes[:excludes].each do |wildcard|
-        @logger.debug("Checking path against wildcard", :path => match_path, :wildcard => wildcard)
+        logger.debug("Checking path against wildcard", :path => match_path, :wildcard => wildcard)
 
         if File.fnmatch(wildcard, match_path)
-          @logger.info("Removing excluded path", :path => match_path, :matches => wildcard)
+          logger.info("Removing excluded path", :path => match_path, :matches => wildcard)
           FileUtils.remove_entry_secure(path)
           Find.prune
           break
@@ -500,7 +498,7 @@ class FPM::Package
     end
     if File.file?(output_path)
       if attributes[:force?]
-        @logger.warn("Force flag given. Overwriting package at #{output_path}")
+        logger.warn("Force flag given. Overwriting package at #{output_path}")
         File.delete(output_path)
       else
         raise FileAlreadyExists.new(output_path)

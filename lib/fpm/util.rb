@@ -56,7 +56,7 @@ module FPM::Util
       raise ExecutableNotFound.new(program)
     end
 
-    @logger.debug("Running command", :args => args)
+    logger.debug("Running command", :args => args)
 
     # Create a pair of pipes to connect the
     # invoked process to the cabin logger
@@ -69,10 +69,10 @@ module FPM::Util
 
     process.start
     stdout_w.close; stderr_w.close
-    @logger.debug('Process is running', :pid => process.pid)
+    logger.debug('Process is running', :pid => process.pid)
     # Log both stdout and stderr as 'info' because nobody uses stderr for
     # actually reporting errors and as a result 'stderr' is a misnomer.
-    @logger.pipe(stdout_r => :info, stderr_r => :info)
+    logger.pipe(stdout_r => :info, stderr_r => :info)
 
     process.wait
     success = (process.exit_code == 0)
@@ -95,7 +95,7 @@ module FPM::Util
       raise ExecutableNotFound.new(program)
     end
 
-    @logger.debug("Running command", :args => args)
+    logger.debug("Running command", :args => args)
 
     stdout_r, stdout_w = IO.pipe
     stderr_r, stderr_w = IO.pipe
@@ -108,7 +108,7 @@ module FPM::Util
     stdout_w.close; stderr_w.close
     stdout_r_str = stdout_r.read
     stdout_r.close; stderr_r.close
-    @logger.debug("Process is running", :pid => process.pid)
+    logger.debug("Process is running", :pid => process.pid)
 
     process.wait
     success = (process.exit_code == 0)
@@ -223,4 +223,8 @@ module FPM::Util
       return [constraint]
     end
   end #def expand_pesimistic_constraints
+
+  def logger
+    @logger ||= Cabin::Channel.get
+  end # def logger
 end # module FPM::Util
