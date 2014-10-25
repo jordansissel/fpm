@@ -190,6 +190,21 @@ fi
 <%   end -%>
 <% end -%>
 
+<%# This section adds any triggers, as ordered in the command line -%>
+<%
+  triggermap = {
+    :before_install => "prein",
+    :after_install => "in",
+    :before_uninstall => "un",
+    :after_target_uninstall => "postun"
+  } 
+  triggermap.each do |name, rpmtype|
+    (attributes["rpm_trigger_#{name}".to_sym] or []).each do |trigger_name, trigger_script, trigger_scriptprog| -%>
+%trigger<%= rpmtype -%> <%= trigger_scriptprog -%> -- <%= trigger_name %>
+<%= trigger_script %>
+<%   end -%>
+<% end -%>
+
 %files
 %defattr(<%= attributes[:rpm_defattrfile] %>,<%= attributes[:rpm_user] || "root" %>,<%= attributes[:rpm_group] || "root" %>,<%= attributes[:rpm_defattrdir] %>)
 <%# Output config files and then regular files. -%>

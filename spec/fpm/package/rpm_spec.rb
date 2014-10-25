@@ -155,6 +155,12 @@ describe FPM::Package::RPM do
         subject.scripts[:rpm_pretrans] = "example rpm_pretrans"
 
 
+        # Test for triggers #626
+        subject.attributes[:rpm_trigger_before_install] = [["test","#!/bin/sh\necho before_install trigger executed\n"]]
+        subject.attributes[:rpm_trigger_after_install] = [["test","#!/bin/sh\necho after_install trigger executed\n"]]
+        subject.attributes[:rpm_trigger_before_uninstall] = [["test","#!/bin/sh\necho before_uninstall trigger executed\n"]]
+        subject.attributes[:rpm_trigger_after_target_uninstall] = [["test","#!/bin/sh\necho after_target_uninstall trigger executed\n"]]
+
         # Write the rpm out
         subject.output(@target)
 
@@ -259,6 +265,42 @@ describe FPM::Package::RPM do
       it "should have the correct 'postin' script" do
         insist { @rpm.tags[:postin] } == "example after_install"
         insist { @rpm.tags[:postinprog] } == "/bin/sh"
+      end
+ 
+      it "should have the correct 'before_install' trigger script" do
+        insist { @rpm.tags[:triggername][0] } == "test"
+        insist { @rpm.tags[:triggerversion][0] } == ""
+        insist { @rpm.tags[:triggerflags][0] & (1 << 25)} == ( 1 << 25) # See FPM::Package::RPM#rpm_get_trigger_type
+        insist { @rpm.tags[:triggerindex][0] } == 0
+        insist { @rpm.tags[:triggerscriptprog][0] } == "/bin/sh"
+        insist { @rpm.tags[:triggerscripts][0] } == "#!/bin/sh\necho before_install trigger executed"
+      end
+
+      it "should have the correct 'after_install' trigger script" do
+        insist { @rpm.tags[:triggername][1] } == "test"
+        insist { @rpm.tags[:triggerversion][1] } == ""
+        insist { @rpm.tags[:triggerflags][1] & (1 << 16)} == ( 1 << 16) # See FPM::Package::RPM#rpm_get_trigger_type
+        insist { @rpm.tags[:triggerindex][1] } == 1
+        insist { @rpm.tags[:triggerscriptprog][1] } == "/bin/sh"
+        insist { @rpm.tags[:triggerscripts][1] } == "#!/bin/sh\necho after_install trigger executed"
+      end
+
+      it "should have the correct 'before_uninstall' trigger script" do
+        insist { @rpm.tags[:triggername][2] } == "test"
+        insist { @rpm.tags[:triggerversion][2] } == ""
+        insist { @rpm.tags[:triggerflags][2] & (1 << 17)} == ( 1 << 17) # See FPM::Package::RPM#rpm_get_trigger_type
+        insist { @rpm.tags[:triggerindex][2] } == 2
+        insist { @rpm.tags[:triggerscriptprog][2] } == "/bin/sh"
+        insist { @rpm.tags[:triggerscripts][2] } == "#!/bin/sh\necho before_uninstall trigger executed"
+      end
+
+      it "should have the correct 'after_target_uninstall' trigger script" do
+        insist { @rpm.tags[:triggername][3] } == "test"
+        insist { @rpm.tags[:triggerversion][3] } == ""
+        insist { @rpm.tags[:triggerflags][3] & (1 << 18)} == ( 1 << 18) # See FPM::Package::RPM#rpm_get_trigger_type
+        insist { @rpm.tags[:triggerindex][3] } == 3
+        insist { @rpm.tags[:triggerscriptprog][3] } == "/bin/sh"
+        insist { @rpm.tags[:triggerscripts][3] } == "#!/bin/sh\necho after_target_uninstall trigger executed"
       end
 
       it "should use md5/gzip by default" do
