@@ -378,13 +378,24 @@ class FPM::Package::Deb < FPM::Package
           "Unknown compression type '#{self.attributes[:deb_compression]}'"
     end
 
-    if attributes[:deb_changelog]
-      dest_changelog = File.join(staging_path, "usr/share/doc/#{name}/changelog.Debian")
-      FileUtils.mkdir_p(File.dirname(dest_changelog))
-      FileUtils.cp attributes[:deb_changelog], dest_changelog
-      File.chmod(0644, dest_changelog)
-      safesystem("gzip", dest_changelog)
-    end
+    # Write the changelog file
+    dest_changelog = File.join(staging_path, "usr/share/doc/#{name}/changelog.Debian.gz")
+    FileUtils.mkdir_p(File.dirname(dest_changelog))
+    File.new(dest_changelog, "wb", 0644).tap do |changelog|
+      Zlib::GzipWriter.new(changelog, Zlib::BEST_COMPRESSION).tap do |changelog_gz|
+        if attributes[:deb_changelog]
+          @logger.info("Writing user-specified changelog", :source => attributes[:deb_changelog])
+          File.new(attributes[:deb_changelog]).tap do |fd|
+            chunk = nil
+            # Ruby 1.8.7 doesn't have IO#copy_stream
+            changelog_gz.write(chunk) while chunk = fd.read(16384)
+          end.close
+        else
+          @logger.info("Creating boilerplate changelog file")
+          changelog_gz.write(template("deb/changelog.erb").result(binding))
+        end
+      end.close
+    end # No need to close, GzipWriter#close will close it.
 
     attributes.fetch(:deb_init_list, []).each do |init|
       name = File.basename(init, ".init")
