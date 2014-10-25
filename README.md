@@ -118,7 +118,7 @@ Targets:
 * directories
 * Mac OS X `.pkg` files (`osxpkg`)
 
-## Need Help or Want to Contribute?
+## Need Help or Want to Contribute? [![Inline docs](http://inch-ci.org/github/jordansissel/fpm.svg?branch=master)](http://inch-ci.org/github/jordansissel/fpm)
 
 All contributions are welcome: ideas, patches, documentation, bug reports,
 complaints, and even something you drew up on a napkin.
