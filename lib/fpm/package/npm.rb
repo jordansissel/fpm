@@ -24,25 +24,17 @@ class FPM::Package::NPM < FPM::Package
       "global" => "true"
     }
 
-    if attributes.include?(:npm_registry) && !attributes[:npm_registry].nil?
-      settings["registry"] = attributes[:npm_registry]
-    end
+    settings["registry"] = attributes[:npm_registry] if attributes[:npm_registry_given?]
+    set_default_prefix unless attributes[:prefix_given?]
 
-    if attributes.include?(:prefix) && !attributes[:prefix].nil?
-      settings["prefix"] = staging_path(attributes[:prefix])
-    else
-      @logger.info("Setting default npm install prefix",
-                   :prefix => "/usr/local")
-      settings["prefix"] = staging_path("/usr/local")
-    end
-
+    settings["prefix"] = staging_path(attributes[:prefix])
     FileUtils.mkdir_p(settings["prefix"])
 
     npm_flags = []
     settings.each do |key, value|
       # npm lets you specify settings in a .npmrc but the same key=value settings
       # are valid as '--key value' command arguments to npm. Woo!
-      @logger.debug("Configuring npm", key => value)
+      logger.debug("Configuring npm", key => value)
       npm_flags += [ "--#{key}", value ]
     end
 
@@ -103,6 +95,22 @@ class FPM::Package::NPM < FPM::Package
     #
     # It's possible someone will want to decouple that in the future,
     # but I will wait for that feature request.
+  end
+
+  def set_default_prefix
+    attributes[:prefix] = self.class.default_prefix
+    attributes[:prefix_given?] = true
+  end
+
+  def self.default_prefix
+    npm_prefix = safesystemout("npm", "prefix", "-g").chomp
+    if npm_prefix.count("\n") > 0
+      raise FPM::InvalidPackageConfiguration, "`npm prefix -g` returned unexpected output."
+    elsif !File.directory?(npm_prefix)
+      raise FPM::InvalidPackageConfiguration, "`npm prefix -g` returned a non-existent directory"
+    end
+    logger.info("Setting default npm install prefix", :prefix => npm_prefix)
+    npm_prefix
   end
 
   public(:input)
