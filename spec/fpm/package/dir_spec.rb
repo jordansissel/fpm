@@ -127,4 +127,18 @@ describe FPM::Package::Dir do
       insist { File }.exist?(File.join(output, "foo", "a", "a=b"))
     end
   end
+
+  context "SYMLINKS." do
+    let(:path) { Stud::Temporary.pathname }
+    let(:broken_target) { File.join("no", "such", "path", "here", rand(1000).to_s, rand(1000).to_s) }
+    before do
+      File.symlink(broken_target, path)
+    end
+    after do
+      File.unlink(path)
+    end
+    it "should copy a broken symlink because it shouldn't be following symlinks to begin with" do
+      subject.input(path)
+    end
+  end
 end # describe FPM::Package::Dir
