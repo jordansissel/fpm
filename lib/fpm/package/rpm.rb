@@ -167,7 +167,7 @@ class FPM::Package::RPM < FPM::Package
 
     # Stat the original filename in the relative staging path
     ::Dir.chdir(staging_path) do
-      stat = File.stat(original_file.gsub(/\"/, '').sub(/^\//,''))
+      stat = File.lstat(original_file.gsub(/\"/, '').sub(/^\//,''))
 
       # rpm_user and rpm_group attribute should override file ownership
       # otherwise use the current file user/group by name.
