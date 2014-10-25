@@ -1,3 +1,25 @@
+1.3.0 (????)
+  - Fixed a bunch of Ruby 1.8.7-related bugs. (Jordan Sissel)
+  - cpan: Fix bug in author handling (#744, Leon Weidauer)
+  - cpan: Better removal of perllocal.pod (#763, #443, #510, Mathias Lafeldt)
+  - rpm: Use lstat calls instead of stat, so we don't follow symlinks (#765, Shrijeet Paliwal)
+  - rpm and deb: Now supports script actions on upgrades. This adds two new flags:
+    --before-upgrade and --after-upgrade. (#772, #661; Daniel Haskin)
+  - rpm: Package triggers are now supported. New flags: --rpm-trigger-before-install,
+    --rpm-trigger-after-install, --rpm-trigger-before-uninstall, 
+    --rpm-trigger-after-target-uninstall. (#626, Maxime Caumartin)
+  - rpm: Add --rpm-init flag; similar to --deb-init. (Josh Dolitsky)
+  - sh: Skip installation if already installed for the given version. If forced,
+    the old installation is renamed. (#776, Chris Gerber)
+  - deb: Allow Vendor field to be omitted now by specifying `--vendor ""` (#778, Nate Brown)
+  - general: Add --log=level flag for setting log level. Levels are error, warn, info, debug. (Jordan SIssel)
+  - cpan: Check for Build.PL first before Makefile.PL (#787, Daniel Jay Haskin)
+  - dir: Don't follow symlinks when copying files (#658, Jordan Sissel)
+  - deb: Automatically provide a 'changes' file in debs because lintian
+    complains if they are missing. (#784, Jordan Sissel)
+  - deb: Fix and warn for package names that have spaces (#779, Grantlyk)
+  - npm: Automatically set the prefix to `npm prefix -g` (#758, Brady Wetherington and Jordan Sissel)
+
 1.2.0 (July 25, 2014)
   - rpm: Add --rpm-verifyscript for adding a custom rpm verify script to
     your package. (Remi Hakim)
