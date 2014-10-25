@@ -132,12 +132,15 @@ class FPM::Package::Dir < FPM::Package
     end
 
     # For single file copies, permit file destinations
-    if File.file?(source) && !File.directory?(destination) 
+    fileinfo = File.lstat(source)
+    if fileinfo.file? && !File.directory?(destination) 
       if destination[-1,1] == "/"
         copy(source, File.join(destination, source))
       else
         copy(source, destination)
       end
+    elsif fileinfo.symlink?
+      copy(source, destination)
     else
       # Copy all files from 'path' into staging_path
       Find.find(source) do |path|
