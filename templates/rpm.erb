@@ -173,18 +173,17 @@ then
 <%=    script(:after_remove) %>
 fi
 <%   end -%>
-<% else -%>
-<%
-  other_scriptmap = {
-    :before_install => "pre",
-    :after_install => "post",
-    :before_remove => "preun",
-    :after_remove => "postun",
-}
-  scriptmap.merge!(other_scriptmap)
+<% else
+     other_scriptmap = {
+       :before_install => "pre",
+       :after_install => "post",
+       :before_remove => "preun",
+       :after_remove => "postun"
+     }
+     scriptmap.merge!(other_scriptmap)
+   end
 -%>
-<% end -%>
-<% scriptmap.each do |name, rpmname| 
+<% scriptmap.each do |name, rpmname| -%>
 <%   if script?(name) -%>
 %<%=   rpmname %>
 <%=    script(name) %>
