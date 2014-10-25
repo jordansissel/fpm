@@ -64,7 +64,7 @@ class FPM::Package::Dir < FPM::Package
 
     destination = File.join(staging_path, destination)
 
-    @logger["method"] = "input"
+    logger["method"] = "input"
     begin
       ::Dir.chdir(chdir) do
         begin
@@ -87,7 +87,7 @@ class FPM::Package::Dir < FPM::Package
     self.vendor = [ENV["USER"], Socket.gethostname].join("@")
   ensure
     # Clean up any logger context we added.
-    @logger.remove("method")
+    logger.remove("method")
   end # def input
 
   # Output this package to the given directory.
@@ -96,11 +96,11 @@ class FPM::Package::Dir < FPM::Package
 
     output_path = File.expand_path(output_path)
     ::Dir.chdir(staging_path) do
-      @logger["method"] = "output"
+      logger["method"] = "output"
       clone(".", output_path)
     end
   ensure
-    @logger.remove("method")
+    logger.remove("method")
   end # def output
 
   private
@@ -116,7 +116,7 @@ class FPM::Package::Dir < FPM::Package
   # The above will copy, recursively, /tmp/hello/world into
   # /tmp/example/hello/world
   def clone(source, destination)
-    @logger.debug("Cloning path", :source => source, :destination => destination)
+    logger.debug("Cloning path", :source => source, :destination => destination)
     # Edge case check; abort if the temporary directory is the source.
     # If the temporary dir is the same path as the source, it causes
     # fpm to recursively (and forever) copy the staging directory by
@@ -155,7 +155,7 @@ class FPM::Package::Dir < FPM::Package
   # Files will be hardlinked if possible, but copied otherwise.
   # Symlinks should be copied as symlinks.
   def copy(source, destination)
-    @logger.debug("Copying path", :source => source, :destination => destination)
+    logger.debug("Copying path", :source => source, :destination => destination)
     directory = File.dirname(destination)
     if !File.directory?(directory)
       FileUtils.mkdir_p(directory)
@@ -164,7 +164,7 @@ class FPM::Package::Dir < FPM::Package
     if File.directory?(source)
       if !File.symlink?(source)
         # Create a directory if this path is a directory
-        @logger.debug("Creating", :directory => destination)
+        logger.debug("Creating", :directory => destination)
         if !File.directory?(destination)
           FileUtils.mkdir(destination)
         end
@@ -172,22 +172,22 @@ class FPM::Package::Dir < FPM::Package
         # Linking symlinked directories causes a hardlink to be created, which
         # results in the source directory being wiped out during cleanup,
         # so copy the symlink.
-        @logger.debug("Copying symlinked directory", :source => source,
+        logger.debug("Copying symlinked directory", :source => source,
                       :destination => destination)
         FileUtils.copy_entry(source, destination)
       end
     else
       # Otherwise try copying the file.
       begin
-        @logger.debug("Linking", :source => source, :destination => destination)
+        logger.debug("Linking", :source => source, :destination => destination)
         File.link(source, destination)
       rescue Errno::ENOENT, Errno::EXDEV, Errno::EPERM
         # Hardlink attempt failed, copy it instead
-        @logger.debug("Copying", :source => source, :destination => destination)
+        logger.debug("Copying", :source => source, :destination => destination)
         copy_entry(source, destination)
       rescue Errno::EEXIST
         sane_path = destination.gsub(staging_path, "")
-        @logger.error("Cannot copy file, the destination path is probably a directory and I attempted to write a file.", :path => sane_path, :staging => staging_path)
+        logger.error("Cannot copy file, the destination path is probably a directory and I attempted to write a file.", :path => sane_path, :staging => staging_path)
       end
     end
 

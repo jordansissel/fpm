@@ -254,16 +254,16 @@ class FPM::Command < Clamp::Command
       return 0
     end
 
-    @logger.level = :warn
-    @logger.level = :info if verbose? # --verbose
-    @logger.level = :debug if debug? # --debug
+    logger.level = :warn
+    logger.level = :info if verbose? # --verbose
+    logger.level = :debug if debug? # --debug
     if log_level
-      @logger.level = log_level.to_sym
+      logger.level = log_level.to_sym
     end
 
 
     if (stray_flags = args.grep(/^-/); stray_flags.any?)
-      @logger.warn("All flags should be before the first argument " \
+      logger.warn("All flags should be before the first argument " \
                    "(stray flags found: #{stray_flags}")
     end
 
@@ -272,20 +272,20 @@ class FPM::Command < Clamp::Command
     # fpm would assume you meant to add '.' to the end of the commandline.
     # Let's hack that. https://github.com/jordansissel/fpm/issues/187
     if input_type == "dir" and args.empty? and !chdir.nil?
-      @logger.info("No args, but -s dir and -C are given, assuming '.' as input") 
+      logger.info("No args, but -s dir and -C are given, assuming '.' as input") 
       args << "."
     end
 
-    @logger.info("Setting workdir", :workdir => workdir)
+    logger.info("Setting workdir", :workdir => workdir)
     ENV["TMP"] = workdir
 
     validator = Validator.new(self)
     if !validator.ok?
       validator.messages.each do |message|
-        @logger.warn(message)
+        logger.warn(message)
       end
 
-      @logger.fatal("Fix the above problems, and you'll be rolling packages in no time!")
+      logger.fatal("Fix the above problems, and you'll be rolling packages in no time!")
       return 1
     end
     input_class = FPM::Package.types[input_type]
@@ -320,7 +320,7 @@ class FPM::Command < Clamp::Command
         input.attributes["#{attr}_given?".to_sym] = flag_given
         attr = "#{attr}?" if !respond_to?(attr) # handle boolean :flag cases
         input.attributes[attr.to_sym] = send(attr) if respond_to?(attr)
-        @logger.debug("Setting attribute", attr.to_sym => send(attr))
+        logger.debug("Setting attribute", attr.to_sym => send(attr))
       end
     end
 
@@ -335,7 +335,7 @@ class FPM::Command < Clamp::Command
     # If --inputs was specified, read it as a file.
     if !inputs.nil?
       if !File.exists?(inputs)
-        @logger.fatal("File given for --inputs does not exist (#{inputs})")
+        logger.fatal("File given for --inputs does not exist (#{inputs})")
         return 1
       end
 
@@ -356,7 +356,7 @@ class FPM::Command < Clamp::Command
       # if the package's attribute is currently nil *or* the flag setting for this
       # attribute is non-default, use the value.
       if object.send(attribute).nil? || send(attribute) != send("default_#{attribute}")
-        @logger.info("Setting from flags: #{attribute}=#{send(attribute)}")
+        logger.info("Setting from flags: #{attribute}=#{send(attribute)}")
         object.send("#{attribute}=", send(attribute))
       end
     end
@@ -399,7 +399,7 @@ class FPM::Command < Clamp::Command
       next if path.nil?
 
       if !File.exists?(path)
-        @logger.error("No such file (for #{scriptname.to_s}): #{path.inspect}")
+        logger.error("No such file (for #{scriptname.to_s}): #{path.inspect}")
         script_errors << path
       end
 
@@ -420,7 +420,7 @@ class FPM::Command < Clamp::Command
 
     # Validate the package
     if input.name.nil? or input.name.empty?
-      @logger.fatal("No name given for this package (set name with, " \
+      logger.fatal("No name given for this package (set name with, " \
                     "for example, '-n packagename')")
       return 1
     end
@@ -449,23 +449,23 @@ class FPM::Command < Clamp::Command
     begin
       output.output(package_file)
     rescue FPM::Package::FileAlreadyExists => e
-      @logger.fatal(e.message)
+      logger.fatal(e.message)
       return 1
     rescue FPM::Package::ParentDirectoryMissing => e
-      @logger.fatal(e.message)
+      logger.fatal(e.message)
       return 1
     end
 
-    @logger.log("Created package", :path => package_file)
+    logger.log("Created package", :path => package_file)
     return 0
   rescue FPM::Util::ExecutableNotFound => e
-    @logger.error("Need executable '#{e}' to convert #{input_type} to #{output_type}")
+    logger.error("Need executable '#{e}' to convert #{input_type} to #{output_type}")
     return 1
   rescue FPM::InvalidPackageConfiguration => e
-    @logger.error("Invalid package configuration: #{e}")
+    logger.error("Invalid package configuration: #{e}")
     return 1
   rescue FPM::Util::ProcessFailed => e
-    @logger.error("Process failed: #{e}")
+    logger.error("Process failed: #{e}")
     return 1
   ensure
     if debug_workspace?
@@ -475,7 +475,7 @@ class FPM::Command < Clamp::Command
         [:staging_path, :build_path].each do |pathtype|
           path = plugin.send(pathtype)
           next unless Dir.open(path).to_a.size > 2
-          @logger.log("plugin directory", :plugin => plugin.type, :pathtype => pathtype, :path => path)
+          logger.log("plugin directory", :plugin => plugin.type, :pathtype => pathtype, :path => path)
         end
       end
     else
@@ -485,8 +485,7 @@ class FPM::Command < Clamp::Command
   end # def execute
 
   def run(*args)
-    @logger = Cabin::Channel.get
-    @logger.subscribe(STDOUT)
+    logger.subscribe(STDOUT)
 
     # fpm initialization files, note the order of the following array is
     # important, try .fpm in users home directory first and then the current
@@ -496,7 +495,7 @@ class FPM::Command < Clamp::Command
 
     rc_files.each do |rc_file|
       if File.readable? rc_file
-        @logger.warn("Loading flags from rc file #{rc_file}")
+        logger.warn("Loading flags from rc file #{rc_file}")
         File.readlines(rc_file).each do |line|
           # reverse becasue 'unshift' pushes onto the left side of the array.
           Shellwords.shellsplit(line).reverse.each do |arg|
@@ -510,7 +509,7 @@ class FPM::Command < Clamp::Command
 
     super(*args)
   rescue FPM::Package::InvalidArgument => e
-    @logger.error("Invalid package argument: #{e}")
+    logger.error("Invalid package argument: #{e}")
     return 1
   end # def run
 

@@ -257,7 +257,7 @@ class FPM::Package::RPM < FPM::Package
           nextversion = version.split('.').collect { |v| v.to_i }
           nextversion[-1] += 1
           nextversion = nextversion.join(".")
-          @logger.warn("Converting dependency #{dep} to #{name} >= #{version}, #{name} < #{nextversion}")
+          logger.warn("Converting dependency #{dep} to #{name} >= #{version}, #{name} < #{nextversion}")
           ["#{name} >= #{version}", "#{name} < #{nextversion}"]
         else
           dep
@@ -270,7 +270,7 @@ class FPM::Package::RPM < FPM::Package
       # Skip scripts not set
       next if script_path.nil?
       if !File.exists?(script_path)
-        @logger.error("No such file (for #{scriptname.to_s}): #{script_path.inspect}")
+        logger.error("No such file (for #{scriptname.to_s}): #{script_path.inspect}")
         script_errors	 << script_path
       end
       # Load the script into memory.
@@ -434,7 +434,7 @@ class FPM::Package::RPM < FPM::Package
 
     args << specfile
 
-    @logger.info("Running rpmbuild", :args => args)
+    logger.info("Running rpmbuild", :args => args)
     safesystem(*args)
 
     ::Dir["#{build_path}/RPMS/**/*.rpm"].each do |rpmpath|
@@ -454,7 +454,7 @@ class FPM::Package::RPM < FPM::Package
 
   def version
     if @version.kind_of?(String) and @version.include?("-")
-      @logger.warn("Package version '#{@version}' includes dashes, converting" \
+      logger.warn("Package version '#{@version}' includes dashes, converting" \
                    " to underscores")
       @version = @version.gsub(/-/, "_")
     end
@@ -467,7 +467,7 @@ class FPM::Package::RPM < FPM::Package
     return @epoch if @epoch.is_a?(Numeric)
 
     if @epoch.nil? or @epoch.empty?
-      @logger.warn("no value for epoch is set, defaulting to nil")
+      logger.warn("no value for epoch is set, defaulting to nil")
       return nil
     end
 

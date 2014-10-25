@@ -73,11 +73,11 @@ class FPM::Package::CPAN < FPM::Package
     end
 
     unless metadata["distribution"].nil?
-      @logger.info("Setting package name from 'distribution'",
+      logger.info("Setting package name from 'distribution'",
                    :distribution => metadata["distribution"])
       self.name = fix_name(metadata["distribution"])
     else
-      @logger.info("Setting package name from 'name'",
+      logger.info("Setting package name from 'name'",
                    :name => metadata["name"])
       self.name = fix_name(metadata["name"])
     end
@@ -98,7 +98,7 @@ class FPM::Package::CPAN < FPM::Package
 
     # Install any build/configure dependencies with cpanm.
     # We'll install to a temporary directory.
-    @logger.info("Installing any build or configure dependencies")
+    logger.info("Installing any build or configure dependencies")
 
     cpanm_flags = ["-L", build_path("cpan"), moduledir]
     cpanm_flags += ["-n"] if attributes[:cpan_test?]
@@ -217,7 +217,7 @@ class FPM::Package::CPAN < FPM::Package
       # https://github.com/jordansissel/fpm/issues/510
       glob_prefix = attributes[:cpan_perl_lib_path] || prefix
       ::Dir.glob(File.join(staging_path, glob_prefix, "**/perllocal.pod")).each do |path|
-        @logger.debug("Removing useless file.",
+        logger.debug("Removing useless file.",
                       :path => path.gsub(staging_path, ""))
         File.unlink(path)
       end
@@ -232,7 +232,7 @@ class FPM::Package::CPAN < FPM::Package
     # native if found; otherwise keep the 'all' default.
     Find.find(staging_path) do |path|
       if path =~ /\.so$/  
-        @logger.info("Found shared library, setting architecture=native",
+        logger.info("Found shared library, setting architecture=native",
                      :path => path)
         self.architecture = "native" 
       end
@@ -252,7 +252,7 @@ class FPM::Package::CPAN < FPM::Package
     distribution = metadata["distribution"]
     author = metadata["author"]
 
-    @logger.info("Downloading perl module",
+    logger.info("Downloading perl module",
                  :distribution => distribution,
                  :version => cpan_version)
 
@@ -271,7 +271,7 @@ class FPM::Package::CPAN < FPM::Package
     begin
       release_response = httpfetch(metacpan_release_url)
     rescue Net::HTTPServerException => e
-      @logger.error("metacpan release query failed.", :error => e.message,
+      logger.error("metacpan release query failed.", :error => e.message,
                     :module => package, :url => metacpan_release_url)
       raise FPM::InvalidPackageConfiguration, "metacpan release query failed"
     end
@@ -288,14 +288,14 @@ class FPM::Package::CPAN < FPM::Package
 
     #url = "http://www.cpan.org/CPAN/authors/id/#{author[0,1]}/#{author[0,2]}/#{author}/#{tarball}"
     url = "#{url_base}/authors/id/#{author[0,1]}/#{author[0,2]}/#{author}/#{archive}"
-    @logger.debug("Fetching perl module", :url => url)
+    logger.debug("Fetching perl module", :url => url)
     
     begin
       response = httpfetch(url)
     rescue Net::HTTPServerException => e
-      #@logger.error("Download failed", :error => response.status_line,
+      #logger.error("Download failed", :error => response.status_line,
                     #:url => url)
-      @logger.error("Download failed", :error => e, :url => url)
+      logger.error("Download failed", :error => e, :url => url)
       raise FPM::InvalidPackageConfiguration, "metacpan query failed"
     end
 
@@ -307,14 +307,14 @@ class FPM::Package::CPAN < FPM::Package
   end # def download
 
   def search(package)
-    @logger.info("Asking metacpan about a module", :module => package)
+    logger.info("Asking metacpan about a module", :module => package)
     metacpan_url = "http://api.metacpan.org/v0/module/" + package
     begin
       response = httpfetch(metacpan_url)
     rescue Net::HTTPServerException => e
-      #@logger.error("metacpan query failed.", :error => response.status_line,
+      #logger.error("metacpan query failed.", :error => response.status_line,
                     #:module => package, :url => metacpan_url)
-      @logger.error("metacpan query failed.", :error => e.message,
+      logger.error("metacpan query failed.", :error => e.message,
                     :module => package, :url => metacpan_url)
       raise FPM::InvalidPackageConfiguration, "metacpan query failed"
     end

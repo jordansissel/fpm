@@ -8,9 +8,6 @@ describe FPM::Util do
   subject do
     Class.new do
       include FPM::Util
-      def initialize
-        @logger = Cabin::Channel.new
-      end
     end.new
   end
 

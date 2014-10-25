@@ -46,7 +46,7 @@ class FPM::Package::Sh < FPM::Package
   # Returns the path to the tar file containing the packed up staging directory
   def payload
     payload_tar = build_path("payload.tar")
-    @logger.info("Creating payload tar ", :path => payload_tar)
+    logger.info("Creating payload tar ", :path => payload_tar)
 
     args = [ tar_cmd,
              "-C",

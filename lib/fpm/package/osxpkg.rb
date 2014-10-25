@@ -82,7 +82,7 @@ class FPM::Package::OSXpkg < FPM::Package
       next unless script?(scriptname)
 
       with(scripts_path(filename)) do |pkgscript|
-        @logger.info("Writing pkg script", :source => filename, :target => pkgscript)
+        logger.info("Writing pkg script", :source => filename, :target => pkgscript)
         File.write(pkgscript, script(scriptname))
         # scripts are required to be executable
         File.chmod(0755, pkgscript)
@@ -110,7 +110,7 @@ class FPM::Package::OSXpkg < FPM::Package
       self.version = pkginfo_elem.attribute("version").value
       # set name to the last dot element of the identifier
       self.name = identifier.split(".").last
-      @logger.info("inferring name #{self.name} from pkg-id #{identifier}")
+      logger.info("inferring name #{self.name} from pkg-id #{identifier}")
     end
   end # def extract_info
 

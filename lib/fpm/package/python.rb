@@ -32,7 +32,7 @@ class FPM::Package::Python < FPM::Package
   option "--package-prefix", "NAMEPREFIX",
     "(DEPRECATED, use --package-name-prefix) Name to prefix the package " \
     "name with." do |value|
-    @logger.warn("Using deprecated flag: --package-prefix. Please use " \
+    logger.warn("Using deprecated flag: --package-prefix. Please use " \
                  "--package-name-prefix")
     value
   end
@@ -89,7 +89,7 @@ class FPM::Package::Python < FPM::Package
     end
 
     if !File.exists?(setup_py)
-      @logger.error("Could not find 'setup.py'", :path => setup_py)
+      logger.error("Could not find 'setup.py'", :path => setup_py)
       raise "Unable to find python package; tried #{setup_py}"
     end
 
@@ -108,7 +108,7 @@ class FPM::Package::Python < FPM::Package
       return path
     end
 
-    @logger.info("Trying to download", :package => package)
+    logger.info("Trying to download", :package => package)
 
     if version.nil?
       want_pkg = "#{package}"
@@ -121,12 +121,12 @@ class FPM::Package::Python < FPM::Package
 
     if attributes[:python_pip].nil?
       # no pip, use easy_install
-      @logger.debug("no pip, defaulting to easy_install", :easy_install => attributes[:python_easyinstall])
+      logger.debug("no pip, defaulting to easy_install", :easy_install => attributes[:python_easyinstall])
       safesystem(attributes[:python_easyinstall], "-i",
                  attributes[:python_pypi], "--editable", "-U",
                  "--build-directory", target, want_pkg)
     else
-      @logger.debug("using pip", :pip => attributes[:python_pip])
+      logger.debug("using pip", :pip => attributes[:python_pip])
       safesystem(attributes[:python_pip], "install", "--no-deps", "--no-install", "-i", attributes[:python_pypi], "-U", "--build", target, want_pkg)
     end
 
@@ -154,14 +154,14 @@ class FPM::Package::Python < FPM::Package
       ].join("\n")
       safesystem("#{attributes[:python_bin]} -c '#{json_test_code}'")
     rescue FPM::Util::ProcessFailed => e
-      @logger.error("Your python environment is missing json support (either json or simplejson python module). I cannot continue without this.", :python => attributes[:python_bin], :error => e)
+      logger.error("Your python environment is missing json support (either json or simplejson python module). I cannot continue without this.", :python => attributes[:python_bin], :error => e)
       raise FPM::Util::ProcessFailed, "Python (#{attributes[:python_bin]}) is missing simplejson or json modules."
     end
 
     begin
       safesystem("#{attributes[:python_bin]} -c 'import pkg_resources'")
     rescue FPM::Util::ProcessFailed => e
-      @logger.error("Your python environment is missing a working setuptools module. I tried to find the 'pkg_resources' module but failed.", :python => attributes[:python_bin], :error => e)
+      logger.error("Your python environment is missing a working setuptools module. I tried to find the 'pkg_resources' module but failed.", :python => attributes[:python_bin], :error => e)
       raise FPM::Util::ProcessFailed, "Python (#{attributes[:python_bin]}) is missing pkg_resources module."
     end
 
@@ -184,20 +184,20 @@ class FPM::Package::Python < FPM::Package
       # Capture the output, which will be JSON metadata describing this python
       # package. See fpm/lib/fpm/package/pyfpm/get_metadata.py for more
       # details.
-      @logger.info("fetching package metadata", :setup_cmd => setup_cmd)
+      logger.info("fetching package metadata", :setup_cmd => setup_cmd)
 
       success = safesystem(setup_cmd)
       #%x{#{setup_cmd}}
       if !success
-        @logger.error("setup.py get_metadata failed", :command => setup_cmd,
+        logger.error("setup.py get_metadata failed", :command => setup_cmd,
                       :exitcode => $?.exitstatus)
         raise "An unexpected error occurred while processing the setup.py file"
       end
       File.read(tmp)
     end
-    @logger.debug("result from `setup.py get_metadata`", :data => output)
+    logger.debug("result from `setup.py get_metadata`", :data => output)
     metadata = JSON.parse(output)
-    @logger.info("object output of get_metadata", :json => metadata)
+    logger.info("object output of get_metadata", :json => metadata)
 
     self.architecture = metadata["architecture"]
     self.description = metadata["description"]
@@ -223,14 +223,14 @@ class FPM::Package::Python < FPM::Package
         dep_re = /^([^<>!= ]+)\s*(?:([<>!=]{1,2})\s*(.*))?$/
         match = dep_re.match(dep)
         if match.nil?
-          @logger.error("Unable to parse dependency", :dependency => dep)
+          logger.error("Unable to parse dependency", :dependency => dep)
           raise FPM::InvalidPackageConfiguration, "Invalid dependency '#{dep}'"
         end
         name, cmp, version = match.captures
 
         # convert == to =
         if cmp == "=="
-          @logger.info("Converting == dependency requirement to =", :dependency => dep )
+          logger.info("Converting == dependency requirement to =", :dependency => dep )
           cmp = "="
         end
 

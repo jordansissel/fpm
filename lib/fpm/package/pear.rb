@@ -41,73 +41,73 @@ class FPM::Package::PEAR < FPM::Package
     end
 
     # Create a temporary config file
-    @logger.debug("Creating pear config file")
+    logger.debug("Creating pear config file")
     config = File.expand_path(build_path("pear.config"))
     installroot = attributes[:prefix] || "/usr/share"
     safesystem("pear", "config-create", staging_path(installroot), config)
 
     if attributes[:pear_php_dir]
-      @logger.info("Setting php_dir", :php_dir => attributes[:pear_php_dir])
+      logger.info("Setting php_dir", :php_dir => attributes[:pear_php_dir])
       safesystem("pear", "-c", config, "config-set", "php_dir", "#{staging_path(installroot)}/#{attributes[:pear_php_dir]}")
     end
 
     if attributes[:pear_data_dir]
-      @logger.info("Setting data_dir", :data_dir => attributes[:pear_data_dir])
+      logger.info("Setting data_dir", :data_dir => attributes[:pear_data_dir])
       safesystem("pear", "-c", config, "config-set", "data_dir", "#{staging_path(installroot)}/#{attributes[:pear_data_dir]}")
     end
 
     bin_dir = attributes[:pear_bin_dir] || "usr/bin"
-    @logger.info("Setting bin_dir", :bin_dir => bin_dir)
+    logger.info("Setting bin_dir", :bin_dir => bin_dir)
     safesystem("pear", "-c", config, "config-set", "bin_dir", bin_dir)
 
     php_bin = attributes[:pear_php_bin] || "/usr/bin/php"
-    @logger.info("Setting php_bin", :php_bin => php_bin)
+    logger.info("Setting php_bin", :php_bin => php_bin)
     safesystem("pear", "-c", config, "config-set", "php_bin", php_bin)
 
     # do channel-discover if required
     if !attributes[:pear_channel].nil?
-      @logger.info("Custom channel specified", :channel => attributes[:pear_channel])
+      logger.info("Custom channel specified", :channel => attributes[:pear_channel])
       channel_list = safesystemout("pear", "-c", config, "list-channels")
       if channel_list !~ /#{Regexp.quote(attributes[:pear_channel])}/
-        @logger.info("Discovering new channel", :channel => attributes[:pear_channel])
+        logger.info("Discovering new channel", :channel => attributes[:pear_channel])
         safesystem("pear", "-c", config, "channel-discover", attributes[:pear_channel])
       end
       input_package = "#{attributes[:pear_channel]}/#{input_package}"
-      @logger.info("Prefixing package name with channel", :package => input_package)
+      logger.info("Prefixing package name with channel", :package => input_package)
     end
 
     # do channel-update if requested
     if attributes[:pear_channel_update?]
       channel = attributes[:pear_channel] || "pear"
-      @logger.info("Updating the channel", :channel => channel)
+      logger.info("Updating the channel", :channel => channel)
       safesystem("pear", "-c", config, "channel-update", channel)
     end
 
-    @logger.info("Installing pear package", :package => input_package,
+    logger.info("Installing pear package", :package => input_package,
                   :directory => staging_path)
     ::Dir.chdir(staging_path) do
       safesystem("pear", "-c", config, "install", "-n", "-f", input_package)
     end
 
     pear_cmd = "pear -c #{config} remote-info #{input_package}"
-    @logger.info("Fetching package information", :package => input_package, :command => pear_cmd)
+    logger.info("Fetching package information", :package => input_package, :command => pear_cmd)
     name = %x{#{pear_cmd} | sed -ne '/^Package\s*/s/^Package\s*//p'}.chomp
     self.name = "#{attributes[:pear_package_name_prefix]}-#{name}"
     self.version = %x{#{pear_cmd} | sed -ne '/^Installed\s*/s/^Installed\s*//p'}.chomp
     self.description  = %x{#{pear_cmd} | sed -ne '/^Summary\s*/s/^Summary\s*//p'}.chomp
-    @logger.debug("Package info", :name => self.name, :version => self.version,
+    logger.debug("Package info", :name => self.name, :version => self.version,
                   :description => self.description)
 
     # Remove the stuff we don't want
     delete_these = [".depdb", ".depdblock", ".filemap", ".lock", ".channel", "cache", "temp", "download", ".channels", ".registry"]
     Find.find(staging_path) do |path|
       if File.file?(path)
-        @logger.info("replacing staging_path in file", :replace_in => path, :staging_path => staging_path)
+        logger.info("replacing staging_path in file", :replace_in => path, :staging_path => staging_path)
         begin
           content = File.read(path).gsub(/#{Regexp.escape(staging_path)}/, "")
           File.write(path, content)
         rescue ArgumentError => e
-          @logger.warn("error replacing staging_path in file", :replace_in => path, :error => e)
+          logger.warn("error replacing staging_path in file", :replace_in => path, :error => e)
         end
       end
       FileUtils.rm_r(path) if delete_these.include?(File.basename(path))
