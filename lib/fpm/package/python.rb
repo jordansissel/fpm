@@ -88,7 +88,7 @@ class FPM::Package::Python < FPM::Package
       setup_py = path_to_package
     end
 
-    if !File.exists?(setup_py)
+    if !File.exist?(setup_py)
       logger.error("Could not find 'setup.py'", :path => setup_py)
       raise "Unable to find python package; tried #{setup_py}"
     end
@@ -104,7 +104,7 @@ class FPM::Package::Python < FPM::Package
     # part should go elsewhere.
     path = package
     # If it's a path, assume local build.
-    if File.directory?(path) or (File.exists?(path) and File.basename(path) == "setup.py")
+    if File.directory?(path) or (File.exist?(path) and File.basename(path) == "setup.py")
       return path
     end
 

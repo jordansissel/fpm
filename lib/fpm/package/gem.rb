@@ -58,7 +58,7 @@ class FPM::Package::Gem < FPM::Package
 
   def download_if_necessary(gem, gem_version)
     path = gem
-    if !File.exists?(path)
+    if !File.exist?(path)
       path = download(gem, gem_version)
     end
 

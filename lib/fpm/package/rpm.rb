@@ -149,7 +149,7 @@ class FPM::Package::RPM < FPM::Package
        match = trigger.match(/^(\[.*\]|)(.*): (.*)$/)
        @logger.fatal("Trigger '#{trigger_type}' definition can't be parsed ('#{trigger}')") unless match
        opt, pkg, file = match.captures
-       @logger.fatal("File given for --trigger-#{trigger_type} does not exist (#{file})") unless File.exists?(file)
+       @logger.fatal("File given for --trigger-#{trigger_type} does not exist (#{file})") unless File.exist?(file)
        rpm_trigger << [pkg, File.read(file), opt.tr('[]','')]
        next rpm_trigger
      end
@@ -289,7 +289,7 @@ class FPM::Package::RPM < FPM::Package
       script_path = self.attributes[scriptname]
       # Skip scripts not set
       next if script_path.nil?
-      if !File.exists?(script_path)
+      if !File.exist?(script_path)
         logger.error("No such file (for #{scriptname.to_s}): #{script_path.inspect}")
         script_errors	 << script_path
       end
