@@ -52,7 +52,7 @@ class FPM::Package::Python < FPM::Package
     "should be installed to."
   option "--install-lib", "LIB_PATH", "The path to where python libs " \
     "should be installed to (default depends on your python installation). " \
-    "Want to what your target platform is using? Run this: " \
+    "Want to find out what your target platform is using? Run this: " \
     "python -c 'from distutils.sysconfig import get_python_lib; " \
     "print get_python_lib()'"
   option "--install-data", "DATA_PATH", "The path to where data should be " \
