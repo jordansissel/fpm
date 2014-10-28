@@ -49,14 +49,14 @@ class FPM::Package::CPAN < FPM::Package
     end
 
     # Read package metadata (name, version, etc)
-    if File.exists?(File.join(moduledir, "META.json"))
+    if File.exist?(File.join(moduledir, "META.json"))
       metadata = JSON.parse(File.read(File.join(moduledir, ("META.json"))))
-    elsif File.exists?(File.join(moduledir, ("META.yml")))
+    elsif File.exist?(File.join(moduledir, ("META.yml")))
       require "yaml"
       metadata = YAML.load_file(File.join(moduledir, ("META.yml")))
-    elsif File.exists?(File.join(moduledir, "MYMETA.json"))
+    elsif File.exist?(File.join(moduledir, "MYMETA.json"))
       metadata = JSON.parse(File.read(File.join(moduledir, ("MYMETA.json"))))
-    elsif File.exists?(File.join(moduledir, ("MYMETA.yml")))
+    elsif File.exist?(File.join(moduledir, ("MYMETA.yml")))
       require "yaml"
       metadata = YAML.load_file(File.join(moduledir, ("MYMETA.yml")))
     else
@@ -160,7 +160,7 @@ class FPM::Package::CPAN < FPM::Package
 
       # Try Makefile.PL, Build.PL
       #
-      if File.exists?("Build.PL")
+      if File.exist?("Build.PL")
         # Module::Build is in use here; different actions required.
         safesystem(attributes[:cpan_perl_bin],
                    "-Mlocal::lib=#{build_path("cpan")}",
@@ -184,7 +184,7 @@ class FPM::Package::CPAN < FPM::Package
                      # Empty install_base to avoid local::lib being used.
                      "--install_base", "")
         end
-      elsif File.exists?("Makefile.PL")
+      elsif File.exist?("Makefile.PL")
         if attributes[:cpan_perl_lib_path]
           perl_lib_path = attributes[:cpan_perl_lib_path]
           safesystem(attributes[:cpan_perl_bin],
