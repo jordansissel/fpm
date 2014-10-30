@@ -24,7 +24,7 @@ class FPM::Package::RPM < FPM::Package
 
   COMPRESSION_MAP = {
     "none" => "w0.gzdio",
-    "xz" => "w2.xzdio",
+    "xz" => "w9.xzdio",
     "gzip" => "w9.gzdio",
     "bzip2" => "w9.bzdio"
   } unless defined?(COMPRESSION_MAP)
