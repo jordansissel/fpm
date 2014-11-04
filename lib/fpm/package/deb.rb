@@ -718,7 +718,7 @@ class FPM::Package::Deb < FPM::Package
     if not md5_sums.empty?
       File.open(control_path("md5sums"), "w") do |out|
         md5_sums.each do |path, md5|
-          out.puts "#{md5} #{path}"
+          out.puts "#{md5}  #{path}"
         end
       end
       File.chmod(0644, control_path("md5sums"))
