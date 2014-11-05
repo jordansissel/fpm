@@ -1,3 +1,7 @@
+1.3.2 (November 4, 2014)
+  - deb: conversion from another deb will automatically use any changelog found in 
+    the source deb (Jordan Sissel)
+
 1.3.1 (November 4, 2014)
   - deb: fix md5sums generation such that `dpkg -V` now works (#799, Matteo Panella)
   - rpm: Use maximum compression when choosing xz (#797, Ashish Kulkarni)
