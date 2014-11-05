@@ -451,7 +451,20 @@ class FPM::Package::Deb < FPM::Package
     self.provides = self.provides.collect do |provides|
       fix_provides(provides)
     end.flatten
-      
+
+    if origin == FPM::Package::Deb
+      changelog_path = staging_path("usr/share/doc/#{name}/changelog.Debian.gz")
+      if File.exists?(changelog_path)
+        logger.debug("Found a deb changelog file, using it.", :path => changelog_path)
+        attributes[:deb_changelog] = build_path("deb_changelog")
+        File.open(attributes[:deb_changelog], "w") do |deb_changelog|
+          Zlib::GzipReader.open(changelog_path) do |gz|
+            IO::copy_stream(gz, deb_changelog)
+          end
+        end
+        File.unlink(changelog_path)
+      end
+    end
   end # def converted_from
 
   def debianize_op(op)
