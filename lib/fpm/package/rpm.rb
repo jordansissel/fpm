@@ -349,15 +349,17 @@ class FPM::Package::RPM < FPM::Package
     #    #!#{tags[:preinprog]}
     #    #{tags[prein]}
 
-    val = tags[:triggerindex].zip(tags[:triggername],tags[:triggerflags],tags[:triggerversion]).group_by{ |x| x[0]}
-    val = val.collect do |order,data|
-      new_data = data.collect { |x| [ x[1], rpm.operator(x[2]), x[3]].join(" ").strip}.join(", ")
-      [order, rpm_get_trigger_type(data[0][2]), new_data]
-    end
-    val.each do |order, attr,data|
-      self.attributes[attr] = [] if self.attributes[attr].nil?
-      scriptprog = (tags[:triggerscriptprog][order] == '/bin/sh') ? "" : "-p #{tags[:triggerscriptprog][order]}"
-      self.attributes[attr] << [data,tags[:triggerscripts][order],scriptprog]
+    if !tags[:triggerindex].nil?
+      val = tags[:triggerindex].zip(tags[:triggername],tags[:triggerflags],tags[:triggerversion]).group_by{ |x| x[0]}
+      val = val.collect do |order,data|
+        new_data = data.collect { |x| [ x[1], rpm.operator(x[2]), x[3]].join(" ").strip}.join(", ")
+        [order, rpm_get_trigger_type(data[0][2]), new_data]
+      end
+      val.each do |order, attr,data|
+        self.attributes[attr] = [] if self.attributes[attr].nil?
+        scriptprog = (tags[:triggerscriptprog][order] == '/bin/sh') ? "" : "-p #{tags[:triggerscriptprog][order]}"
+        self.attributes[attr] << [data,tags[:triggerscripts][order],scriptprog]
+      end
     end
 
     if !attributes[:no_auto_depends?]
