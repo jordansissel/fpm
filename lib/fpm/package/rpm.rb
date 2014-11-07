@@ -303,7 +303,6 @@ class FPM::Package::RPM < FPM::Package
   end # def converted
 
   def rpm_get_trigger_type(flag)
-    puts "#{flag.to_s(2)}"
     if (flag & (1 << 25)) == (1 << 25)
        :rpm_trigger_before_install
     elsif (flag & (1 << 16)) == (1 << 16)
