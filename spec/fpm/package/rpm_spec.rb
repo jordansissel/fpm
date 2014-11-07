@@ -470,6 +470,112 @@ describe FPM::Package::RPM do
     end
   end # regression stuff
 
+  describe "input validation stuff", :if => program_exists?("rpmbuild") do
+    before :each do
+      @tempfile_handle =
+      @target = Stud::Temporary.pathname
+      @generator = FPM::Package::RPM.new
+
+      @generator.name = "name"
+      @generator.version = "1.23"
+    end
+
+    after :each do
+      subject.cleanup
+      @generator.cleanup
+      #File.delete(@target) rescue nil
+    end # after
+
+    it "should not cause errors when reading basic rpm in input (#802)" do
+      # Write the rpm out
+      @generator.output(@target)
+      
+      # Load generated rpm
+      subject.input(@target)
+      
+      # Value sanity check
+      insist { subject.name } == "name"
+      insist { subject.version } == "1.23"
+    end 
+
+    it "should not cause errors when reading more complete rpm in input (#802)" do
+      @generator.architecture = "all"
+      @generator.iteration = "100"
+      @generator.epoch = "5"
+      @generator.dependencies << "something > 10"
+      @generator.dependencies << "hello >= 20"
+      @generator.conflicts << "bad < 2"
+      @generator.license = "this\nis\nan\example"
+      @generator.provides << "bacon = 1.0"
+
+      # Write the rpm out
+      @generator.output(@target)
+
+      # Load generated rpm
+      subject.input(@target)
+
+      # Value sanity check
+      insist { subject.name } == "name"
+      insist { subject.version } == "1.23"
+      insist { subject.architecture } == "noarch" # see #architecture
+      insist { subject.iteration } == "100"
+      insist { subject.epoch } == 5
+      insist { subject.dependencies[0] }  == "something > 10"
+      insist { subject.dependencies[1] } == "hello >= 20"
+      insist { subject.conflicts[0] } == "bad < 2"
+      insist { subject.license } == @generator.license.split("\n").join(" ") # See issue #252
+      insist { subject.provides[0] } == "bacon = 1.0"
+      
+    end
+    it "should not cause errors when reading rpm with script in input (#802)" do
+      @generator.scripts[:before_install] = "example before_install"
+      @generator.scripts[:after_install] = "example after_install"
+      @generator.scripts[:before_remove] = "example before_remove"
+      @generator.scripts[:after_remove] = "example after_remove"
+      @generator.scripts[:rpm_verifyscript] = "example rpm_verifyscript"
+      @generator.scripts[:rpm_posttrans] = "example rpm_posttrans"
+      @generator.scripts[:rpm_pretrans] = "example rpm_pretrans"
+
+      # Write the rpm out
+      @generator.output(@target)
+
+      # Load generated rpm
+      subject.input(@target)
+
+      # Value sanity check
+      insist { subject.name } == "name"
+      insist { subject.version } == "1.23"
+      insist { subject.scripts[:before_install] } == "example before_install"
+      insist { subject.scripts[:after_install] } == "example after_install"
+      insist { subject.scripts[:before_remove] } == "example before_remove"
+      insist { subject.scripts[:after_remove] } == "example after_remove"
+      insist { subject.scripts[:rpm_verifyscript] } == "example rpm_verifyscript"
+      insist { subject.scripts[:rpm_posttrans] } == "example rpm_posttrans"
+      insist { subject.scripts[:rpm_pretrans] } == "example rpm_pretrans"
+    end
+
+    it "should not cause errors when reading rpm with triggers in input (#802)" do
+      @generator.attributes[:rpm_trigger_before_install] = [["test","#!/bin/sh\necho before_install trigger executed\n"]]
+      @generator.attributes[:rpm_trigger_after_install] = [["test","#!/bin/sh\necho after_install trigger executed\n"]]
+      @generator.attributes[:rpm_trigger_before_uninstall] = [["test","#!/bin/sh\necho before_uninstall trigger executed\n"]]
+      @generator.attributes[:rpm_trigger_after_target_uninstall] = [["test","#!/bin/sh\necho after_target_uninstall trigger executed\n"]]
+
+      # Write the rpm out
+      @generator.output(@target)
+
+      # Load generated rpm
+      subject.input(@target)
+
+      # Value sanity check
+      insist { subject.name } == "name"
+      insist { subject.version } == "1.23"
+      insist { subject.attributes[:rpm_trigger_before_install] } == [["test","#!/bin/sh\necho before_install trigger executed", ""]]
+      insist { subject.attributes[:rpm_trigger_after_install] } == [["test","#!/bin/sh\necho after_install trigger executed", ""]]
+      insist { subject.attributes[:rpm_trigger_before_uninstall] } == [["test","#!/bin/sh\necho before_uninstall trigger executed", ""]]
+      insist { subject.attributes[:rpm_trigger_after_target_uninstall] } == [["test","#!/bin/sh\necho after_target_uninstall trigger executed", ""]]
+    end
+  end # input validation stuff
+
   describe "rpm_use_file_permissions" do
     let(:target) { Stud::Temporary.pathname }
     let(:rpm) { ::RPM::File.new(target) }
