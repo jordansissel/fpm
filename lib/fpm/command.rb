@@ -420,7 +420,7 @@ class FPM::Command < Clamp::Command
 
     # Validate the package
     if input.name.nil? or input.name.empty?
-      logger.fatal("No name given for this package (set name with, " \
+      logger.fatal("No name given for this package (set name with '-n', " \
                     "for example, '-n packagename')")
       return 1
     end
