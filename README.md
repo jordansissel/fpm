@@ -63,13 +63,17 @@ The goal of FPM is to be able to easily build platform-native packages.
 * Stripping pre/post/maintainer scripts from packages
 
 ## System packages
-You will need the ruby-dev and gcc packages for your system. These can be installed with the below
+
+Many Linux distros do not ship ruby C headers or a compiler by default, and
+you'll need that to install fpm.
 
     apt-get install ruby-dev gcc
     
     yum install ruby-devel gcc
 
-Additional packages will be required depending on the source and target package types (rpmbuild for rpm, etc.). FPM will show the commands that are required which you must map to your distribution's package names.
+Additional packages will be required depending on the source and target package
+types (rpmbuild for rpm, etc.). FPM will show the commands that are required
+which you must map to your distribution's package names.
 
 ## Get with the download
 
@@ -81,7 +85,8 @@ Building a package named "awesome" might look something like this:
 
     fpm -s <source type> -t <target type> [list of sources]...
 
-"Source type" is what your package is coming from; a directory (dir), a rubygem (gem), an rpm (rpm), a python package (python), a php pear module (pear), etc.
+"Source type" is what your package is coming from; a directory (dir), a rubygem
+(gem), an rpm (rpm), a python package (python), a php pear module (pear), etc.
 
 "Target type" is what your output package form should be. Most common are "rpm"
 and "deb" but others exist (solaris, etc)
