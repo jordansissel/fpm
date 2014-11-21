@@ -153,6 +153,10 @@ That said, some basic guidelines, which you are free to ignore :)
 
 ### Contributing by forking from GitHub
 
+Please note that this project is released with a Contributor Code of Conduct.
+By participating in this project you agree to abide by its terms. See
+the [CODE\_OF\_CONDUCT.md](CODE_OF_CONDUCT.md).
+
 First, create a github account if you do not already have one.  Log in to
 github and go to [the main fpm github page](https://github.com/jordansissel/fpm).
 
@@ -190,7 +194,6 @@ your commit back to master.
 If you think your changes are ready to be merged back to the main fpm repo, you
 can generate a pull request on the github website for your repo and send it in
 for review.
-
 
 ##Problems running bundle install?
 
