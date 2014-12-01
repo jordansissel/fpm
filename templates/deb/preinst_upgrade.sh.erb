@@ -1,12 +1,16 @@
 before_upgrade() {
 <% if script?(:before_upgrade) -%>
-<%=  script(:before_upgrade) %>
+<%= script(:before_upgrade) %>
+<% else -%>
+true
 <% end -%>
 }
 
 before_install() {
 <% if script?(:before_install) -%>
-<%=  script(:before_install) %>
+<%= script(:before_install) %>
+<% else -%>
+true
 <% end -%>
 }
 
