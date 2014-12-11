@@ -4,6 +4,9 @@ require "fpm/util"
 require "fileutils"
 
 class FPM::Package::NPM < FPM::Package
+  class << self
+    include FPM::Util
+  end
   # Flags '--foo' will be accessable  as attributes[:npm_foo]
   option "--bin", "NPM_EXECUTABLE",
     "The path to the npm executable you wish to run.", :default => "npm"
