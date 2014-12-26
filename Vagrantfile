@@ -1,6 +1,11 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+$arch_install_puppet_script = <<EOF
+yaourt --sucre
+yaourt -S --noconfirm --needed puppet
+EOF
+
 Vagrant.configure("2") do |config|
   # All Vagrant configuration is done here. The most common configuration
   # options are documented and commented below. For a complete reference,
@@ -26,9 +31,14 @@ Vagrant.configure("2") do |config|
     smartos.vm.box_url = "http://dlc-int.openindiana.org/aszeszo/vagrant/smartos-base1310-64-virtualbox-20130806.box"
   end
 
+  config.vm.define "arch" do |arch|
+    arch.vm.box = "arch64"
+    arch.vm.box_url = "http://cloud.terry.im/vagrant/archlinux-x86_64.box"
+    arch.vm.provision "shell", inline: $arch_install_puppet_script
+  end
+
   config.vm.provision :puppet do |puppet|
     puppet.manifests_path = "test"
     puppet.manifest_file = "vagrant.pp"
   end
-
 end
