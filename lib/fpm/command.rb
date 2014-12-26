@@ -193,7 +193,7 @@ class FPM::Command < Clamp::Command
         "--before-install, --after-install, --before-remove, and \n" \
         "--after-remove wil behave in a backwards-compatible manner\n" \
         "(they will not be upgrade-case aware).\n" \
-        "Currently only supports deb and rpm packages." do |val|
+        "Currently only supports deb, rpm and pacman packages." do |val|
     File.expand_path(val) # Get the full path to the script
   end # --after-upgrade
   option "--before-upgrade", "FILE",
@@ -201,7 +201,7 @@ class FPM::Command < Clamp::Command
         "--before-install, --after-install, --before-remove, and \n" \
         "--after-remove wil behave in a backwards-compatible manner\n" \
         "(they will not be upgrade-case aware).\n" \
-        "Currently only supports deb and rpm packages." do |val|
+        "Currently only supports deb, rpm and pacman packages." do |val|
     File.expand_path(val) # Get the full path to the script
   end # --before-upgrade
 
@@ -215,7 +215,7 @@ class FPM::Command < Clamp::Command
   option "--template-value", "KEY=VALUE",
     "Make 'key' available in script templates, so <%= key %> given will be " \
     "the provided value. Implies --template-scripts",
-    :multivalued => true do |kv| 
+    :multivalued => true do |kv|
     @template_scripts = true
     next kv.split("=", 2)
   end
@@ -293,7 +293,7 @@ class FPM::Command < Clamp::Command
 
     input = input_class.new
 
-    # Merge in package settings. 
+    # Merge in package settings.
     # The 'settings' stuff comes in from #apply_options, which goes through
     # all the options defined in known packages and puts them into our command.
     # Flags in packages defined as "--foo-bar" become named "--<packagetype>-foo-bar"
@@ -310,10 +310,10 @@ class FPM::Command < Clamp::Command
         # clamp makes option attributes available as accessor methods
         # --foo-bar is available as 'foo_bar'. Put these in the package
         # attributes hash. (See FPM::Package#attributes)
-        # 
+        #
         # In the case of 'flag' options, the accessor is actually 'foo_bar?'
         # instead of just 'foo_bar'
-       
+
         # If the instance variable @{attr} is defined, then
         # it means the flag was given on the command line.
         flag_given = instance_variable_defined?("@#{attr}")
@@ -389,7 +389,6 @@ class FPM::Command < Clamp::Command
 
     input.attrs = h
 
-    
     script_errors = []
     setscript = proc do |scriptname|
       # 'self.send(scriptname) == self.before_install == --before-install

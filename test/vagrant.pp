@@ -1,14 +1,18 @@
 case $operatingsystem {
   centos, redhat, fedora: {
     $pkgupdate = "yum clean all"
-    $devsuffix = "devel"
+    $ruby_devel_pkg = "ruby-devel"
   }
   debian, ubuntu: {
     $pkgupdate = "apt-get update"
-    $devsuffix = "dev"
+    $ruby_devel_pkg = "ruby-dev"
     package {
       "lintian": ensure => latest
     }
+  }
+  arch: {
+    $pkgupdate = "yaourt --sucre"
+    $ruby_devel_pkg = "ruby"
   }
 }
 
@@ -21,7 +25,7 @@ exec {
 package {
   "git": ensure => latest;
   "bundler": provider => "gem", ensure => latest;
-  "ruby-$devsuffix": ensure => latest;
+  $ruby_devel_pkg: ensure => latest;
 }
 
 Exec["update-packages"] -> Package <| |>
