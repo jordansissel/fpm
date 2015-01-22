@@ -8,6 +8,8 @@ before_upgrade() {
 before_install() {
 <% if script?(:before_install) -%>
 <%=  script(:before_install) %>
+<% else -%>
+  :
 <% end -%>
 }
 

@@ -8,6 +8,8 @@ after_upgrade() {
 after_install() {
 <% if script?(:after_install) -%>
 <%=  script(:after_install) %>
+<% else -%>
+  :
 <% end -%>
 }
 
