@@ -11,7 +11,7 @@ require "digest"
 #
 # This class only supports output of packages.
 #
-# The sh package is a single sh file with a bzipped tar payload concatenated to the end.
+# The sh package is a single sh file with a tar payload concatenated to the end.
 # The script can unpack the tarball to install it and call optional post install scripts.
 class FPM::Package::Sh < FPM::Package
 
