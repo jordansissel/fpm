@@ -80,6 +80,8 @@ which you must map to your distribution's package names.
 You can install fpm with gem:
 
     gem install fpm
+    
+(On OS X, you may also need gnutar: `brew install gnu-tar`.)
 
 Building a package named "awesome" might look something like this:
 
