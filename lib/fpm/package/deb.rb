@@ -83,6 +83,9 @@ class FPM::Package::Deb < FPM::Package
 
   option "--group", "GROUP", "The group owner of files in this package", :default => 'root'
 
+  option "--mode", "MODE", "The mode modification to make to the files in this " \
+    "package. Use the same format as passing the mode tag into tar"
+
   option "--changelog", "FILEPATH", "Add FILEPATH as debian changelog" do |file|
     File.expand_path(file)
   end
@@ -762,6 +765,9 @@ class FPM::Package::Deb < FPM::Package
         else
           data_tar_flags += [ "--group", attributes[:deb_group] ]
         end
+      end
+      if !attributes[:deb_mode].nil?
+        data_tar_flags += [ "--mode" , attributes[:deb_mode] ]
       end
     end
     return data_tar_flags
