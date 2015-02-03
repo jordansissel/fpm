@@ -69,6 +69,10 @@ class FPM::Package::Python < FPM::Package
     "current python interpreter (sys.executable). This option is equivalent " \
     "to appending 'build_scripts --executable PYTHON_EXECUTABLE' arguments " \
     "to 'setup.py install' command."
+  option "--disable-dependency", "python_package_name",
+    "The python package name to remove from dependency list",
+    :multivalued => true, :attribute_name => :python_disable_dependencies,
+    :default => []
 
   private
 
@@ -219,7 +223,7 @@ class FPM::Package::Python < FPM::Package
     self.name = self.name.downcase if attributes[:python_downcase_name?]
 
     if !attributes[:no_auto_depends?] and attributes[:python_dependencies?]
-      self.dependencies = metadata["dependencies"].collect do |dep|
+      metadata["dependencies"].each do |dep|
         dep_re = /^([^<>!= ]+)\s*(?:([<>!=]{1,2})\s*(.*))?$/
         match = dep_re.match(dep)
         if match.nil?
@@ -227,6 +231,8 @@ class FPM::Package::Python < FPM::Package
           raise FPM::InvalidPackageConfiguration, "Invalid dependency '#{dep}'"
         end
         name, cmp, version = match.captures
+
+        next if attributes[:python_disable_dependencies].include?(name)
 
         # convert == to =
         if cmp == "=="
@@ -241,7 +247,8 @@ class FPM::Package::Python < FPM::Package
 
         # convert dependencies from python-Foo to python-foo
         name = name.downcase if attributes[:python_downcase_dependencies?]
-        "#{name} #{cmp} #{version}"
+
+        self.dependencies << "#{name} #{cmp} #{version}"
       end
     end # if attributes[:python_dependencies?]
   end # def load_package_info
