@@ -43,6 +43,12 @@ Gem::Specification.new do |spec|
   # For calling functions in dynamic libraries
   spec.add_dependency("ffi") # license: GPL3/LGPL3
 
+  # For creating tar archives (many packages are just tar archives)
+  spec.add_dependency("archive-tar-minitar") # license: GPL2+
+
+  # For creating FreeBSD package archives (xz-compressed tars)
+  spec.add_dependency("ruby-xz") # license: MIT
+
   spec.add_development_dependency("rspec", "~> 3.0.0") # license: MIT (according to wikipedia)
   spec.add_development_dependency("insist", "~> 0.0.5") # license: ???
   spec.add_development_dependency("pry")
