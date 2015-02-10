@@ -50,28 +50,19 @@ class FPM::Package::CPAN < FPM::Package
 
     # Read package metadata (name, version, etc)
     if File.exists?(File.join(moduledir, "META.json"))
-      local_metadata = JSON.parse(File.read(File.join(moduledir, ("META.json"))))
+      metadata = JSON.parse(File.read(File.join(moduledir, ("META.json"))))
     elsif File.exists?(File.join(moduledir, ("META.yml")))
       require "yaml"
-      local_metadata = YAML.load_file(File.join(moduledir, ("META.yml")))
+      metadata = YAML.load_file(File.join(moduledir, ("META.yml")))
     elsif File.exists?(File.join(moduledir, "MYMETA.json"))
-      local_metadata = JSON.parse(File.read(File.join(moduledir, ("MYMETA.json"))))
+      metadata = JSON.parse(File.read(File.join(moduledir, ("MYMETA.json"))))
     elsif File.exists?(File.join(moduledir, ("MYMETA.yml")))
       require "yaml"
-      local_metadata = YAML.load_file(File.join(moduledir, ("MYMETA.yml")))
+      metadata = YAML.load_file(File.join(moduledir, ("MYMETA.yml")))
+    else
+      raise FPM::InvalidPackageConfiguration, 
+        "Could not find package metadata. Checked for META.json and META.yml"
     end
-
-    # Merge the MetaCPAN query result and the metadata pulled from the local
-    # META file(s).  The local data overwrites the query data for all keys the
-    # two hashes have in common.  Merge with an empty hash if there was no
-    # local META file.
-    metadata = result.merge(local_metadata || {})
-
-    if metadata.empty?
-      raise FPM::InvalidPackageConfiguration,
-        "Could not find package metadata. Checked for META.json, META.yml, and MetaCPAN API data"
-    end
-
     self.version = metadata["version"]
     self.description = metadata["abstract"]
 
@@ -116,7 +107,7 @@ class FPM::Package::CPAN < FPM::Package
 
     safesystem(attributes[:cpan_cpanm_bin], *cpanm_flags)
 
-    if !attributes[:no_auto_depends?]
+    if !attributes[:no_auto_depends?] 
       unless metadata["requires"].nil?
         metadata["requires"].each do |dep_name, version|
           # Special case for representing perl core as a version.
@@ -125,7 +116,7 @@ class FPM::Package::CPAN < FPM::Package
             next
           end
           dep = search(dep_name)
-
+          
           if dep.include?("distribution")
             name = fix_name(dep["distribution"])
           else
@@ -215,7 +206,7 @@ class FPM::Package::CPAN < FPM::Package
 
 
       else
-        raise FPM::InvalidPackageConfiguration,
+        raise FPM::InvalidPackageConfiguration, 
           "I don't know how to build #{name}. No Makefile.PL nor " \
           "Build.PL found"
       end
@@ -240,10 +231,10 @@ class FPM::Package::CPAN < FPM::Package
     # Find any shared objects in the staging directory to set architecture as
     # native if found; otherwise keep the 'all' default.
     Find.find(staging_path) do |path|
-      if path =~ /\.so$/
+      if path =~ /\.so$/  
         logger.info("Found shared library, setting architecture=native",
                      :path => path)
-        self.architecture = "native"
+        self.architecture = "native" 
       end
     end
   end
@@ -289,7 +280,7 @@ class FPM::Package::CPAN < FPM::Package
     release_metadata = JSON.parse(data)
     archive = release_metadata["archive"]
 
-    # should probably be basepathed from the url
+    # should probably be basepathed from the url 
     tarball = File.basename(archive)
 
     url_base = "http://www.cpan.org/"
@@ -298,7 +289,7 @@ class FPM::Package::CPAN < FPM::Package
     #url = "http://www.cpan.org/CPAN/authors/id/#{author[0,1]}/#{author[0,2]}/#{author}/#{tarball}"
     url = "#{url_base}/authors/id/#{author[0,1]}/#{author[0,2]}/#{author}/#{archive}"
     logger.debug("Fetching perl module", :url => url)
-
+    
     begin
       response = httpfetch(url)
     rescue Net::HTTPServerException => e
@@ -345,7 +336,7 @@ class FPM::Package::CPAN < FPM::Package
   def httpfetch(url)
     uri = URI.parse(url)
     if ENV['http_proxy']
-      proxy = URI.parse(ENV['http_proxy'])
+      proxy = URI.parse(ENV['http_proxy'])  
       http = Net::HTTP.Proxy(proxy.host,proxy.port,proxy.user,proxy.password).new(uri.host, uri.port)
     else
       http = Net::HTTP.new(uri.host, uri.port)
