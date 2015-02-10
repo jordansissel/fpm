@@ -205,6 +205,11 @@ class FPM::Package::CPAN < FPM::Package
       prefix = attributes[:prefix] || "/usr/local"
       # TODO(sissel): Set default INSTALL path?
 
+      # Some modules will prompt for input during the build process, hanging
+      # fpm.  These options will override most such occurrences.
+      ENV["PERL_MM_USE_DEFAULT"] = "1"
+      ENV["AUTOMATED_TESTING"] = "1"
+
       # Try Makefile.PL, Build.PL
       #
       if File.exist?("Build.PL")
