@@ -53,19 +53,30 @@ class FPM::Package::CPAN < FPM::Package
 
     # Read package metadata (name, version, etc)
     if File.exist?(File.join(moduledir, "META.json"))
-      metadata = JSON.parse(File.read(File.join(moduledir, ("META.json"))))
+      local_metadata = JSON.parse(File.read(File.join(moduledir, ("META.json"))))
     elsif File.exist?(File.join(moduledir, ("META.yml")))
       require "yaml"
-      metadata = YAML.load_file(File.join(moduledir, ("META.yml")))
+      local_metadata = YAML.load_file(File.join(moduledir, ("META.yml")))
     elsif File.exist?(File.join(moduledir, "MYMETA.json"))
-      metadata = JSON.parse(File.read(File.join(moduledir, ("MYMETA.json"))))
+      local_metadata = JSON.parse(File.read(File.join(moduledir, ("MYMETA.json"))))
     elsif File.exist?(File.join(moduledir, ("MYMETA.yml")))
       require "yaml"
-      metadata = YAML.load_file(File.join(moduledir, ("MYMETA.yml")))
-    else
-      raise FPM::InvalidPackageConfiguration,
-        "Could not find package metadata. Checked for META.json and META.yml"
+      local_metadata = YAML.load_file(File.join(moduledir, ("MYMETA.yml")))
     end
+
+    # Merge the MetaCPAN query result and the metadata pulled from the local
+    # META file(s).  The local data overwrites the query data for all keys the
+    # two hashes have in common.  Merge with an empty hash if there was no
+    # local META file.
+    metadata = result.merge(local_metadata || {})
+
+    puts metadata.inspect
+
+    if metadata.empty?
+      raise FPM::InvalidPackageConfiguration,
+        "Could not find package metadata. Checked for META.json, META.yml, and MetaCPAN API data"
+    end
+
     self.version = metadata["version"]
     self.description = metadata["abstract"]
 
