@@ -109,8 +109,6 @@ class FPM::Package::CPAN < FPM::Package
     cpanm_flags += ["--mirror", "#{attributes[:cpan_mirror]}"] if !attributes[:cpan_mirror].nil?
     cpanm_flags += ["--mirror-only"] if attributes[:cpan_mirror_only?] && !attributes[:cpan_mirror].nil?
 
-require 'pp'
-PP.pp cpanm_flags
     safesystem(attributes[:cpan_cpanm_bin], *cpanm_flags)
 
     if !attributes[:no_auto_depends?]
