@@ -196,6 +196,7 @@ function unpack_payload(){
 function run_post_install(){
     local AFTER_INSTALL=$INSTALL_DIR/.fpm/after_install
     if [ -r $AFTER_INSTALL ] ; then
+        set_post_install_vars
         chmod +x $AFTER_INSTALL
         log "Running post install script"
         output=$($AFTER_INSTALL 2>&1)
@@ -204,6 +205,15 @@ function run_post_install(){
         return $errorlevel
     fi
     return 0
+}
+
+function set_post_install_vars(){
+    <% if respond_to?(:package_metadata)%>
+      <% package_metadata_hash = JSON.parse(package_metadata)%>
+      <% package_metadata_hash.each do |k,v| %>
+        <%= "export #{k.upcase}='#{v}'; "%>
+      <% end %>
+    <% end %>
 }
 
 function create_symlinks(){
