@@ -449,6 +449,15 @@ class FPM::Package::RPM < FPM::Package
       self.directories = alldirs
     end
 
+    # include external config files
+    (attributes[:config_files] or []).each do |conf|
+      path = conf
+      dest_conf = File.join(staging_path, path)
+      FileUtils.mkdir_p(File.dirname(dest_conf))
+      FileUtils.cp_r conf, dest_conf
+      File.chmod(0755, dest_conf)
+    end
+
     # scan all conf file paths for files and add them
     allconfigs = []
     self.config_files.each do |path|

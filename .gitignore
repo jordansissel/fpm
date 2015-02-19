@@ -25,3 +25,6 @@ Gemfile.lock
 
 .rbx
 .vagrant
+
+# RubyMine
+.idea/
