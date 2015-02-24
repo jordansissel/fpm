@@ -104,6 +104,11 @@ class FPM::Package::RPM < FPM::Package
     next File.expand_path(file)
   end
 
+  option "--service", "FILEPATH", "Add FILEPATH as a systemd service",
+       :multivalued => true do |file|
+    next File.expand_path(file)
+  end
+
   rpmbuild_filter_from_provides = []
   option "--filter-from-provides", "REGEX",
     "Set %filter_from_provides to the supplied REGEX." do |filter_from_provides|
@@ -469,6 +474,14 @@ class FPM::Package::RPM < FPM::Package
       FileUtils.mkdir_p(File.dirname(dest_init))
       FileUtils.cp init, dest_init
       File.chmod(0755, dest_init)
+    end
+
+    # add service script if present
+    (attributes[:rpm_service_list] or []).each do |service|
+      name = File.basename(service)
+      dest_service = File.join(staging_path, "usr/lib/systemd/system/#{name}")
+      FileUtils.mkdir_p(File.dirname(dest_service))
+      FileUtils.cp service, dest_service
     end
 
     (attributes[:rpm_rpmbuild_define] or []).each do |define|
