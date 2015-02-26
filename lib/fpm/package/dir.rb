@@ -157,8 +157,17 @@ class FPM::Package::Dir < FPM::Package
   def copy(source, destination)
     logger.debug("Copying path", :source => source, :destination => destination)
     directory = File.dirname(destination)
-    if !File.directory?(directory)
+    # lstat to follow symlinks
+    dstat = File.stat(directory) rescue nil
+    if dstat.nil?
       FileUtils.mkdir_p(directory)
+    elsif dstat.directory?
+      # do nothing, it's already a directory!
+    else
+      # It exists and is not a directory. This is probably a user error or a bug.
+      readable_path = directory.gsub(staging_path, "")
+      logger.error("You wanted to copy a file into a directory, but that's not a directory, it's a file!", :path => readable_path, :stat => dstat)
+      raise FPM::InvalidPackageConfiguration, "Tried to treat #{readable_path} like a directory, but it's a file!"
     end
 
     if File.directory?(source)
