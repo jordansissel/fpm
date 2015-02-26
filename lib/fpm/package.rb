@@ -270,8 +270,8 @@ class FPM::Package
 
   # Clean up any temporary storage used by this class.
   def cleanup
-    cleanup_staging unless logger.level == :debug
-    cleanup_build unless logger.level == :debug
+    cleanup_staging
+    cleanup_build
   end # def cleanup
 
   def cleanup_staging
