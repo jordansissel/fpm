@@ -1,10 +1,13 @@
 after_remove() {
 <% if script?(:after_remove) -%>
-<%=  script(:after_remove) %>
+<%= script(:after_remove) %>
+<% else -%>
+true
 <% end -%>
 }
 
 dummy() {
+true
 }
 
 
