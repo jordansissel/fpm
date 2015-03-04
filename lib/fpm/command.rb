@@ -271,9 +271,11 @@ class FPM::Command < Clamp::Command
     #   'fpm -s dir -t ... -C somepath'
     # fpm would assume you meant to add '.' to the end of the commandline.
     # Let's hack that. https://github.com/jordansissel/fpm/issues/187
+    args_assumed = false
     if input_type == "dir" and args.empty? and !chdir.nil?
       logger.info("No args, but -s dir and -C are given, assuming '.' as input") 
       args << "."
+      args_assumed = true
     end
 
     logger.info("Setting workdir", :workdir => workdir)
@@ -324,14 +326,6 @@ class FPM::Command < Clamp::Command
       end
     end
 
-    # Each remaining command line parameter is used as an 'input' argument.
-    # For directories, this means paths. For things like gem and python, this
-    # means package name or paths to the packages (rails, foo-1.0.gem, django,
-    # bar/setup.py, etc)
-    args.each do |arg| 
-      input.input(arg) 
-    end
-
     # If --inputs was specified, read it as a file.
     if !inputs.nil?
       if !File.exists?(inputs)
@@ -339,11 +333,22 @@ class FPM::Command < Clamp::Command
         return 1
       end
 
+      # ignore implicitly-assumed "." if --inputs was given
+      args.shift if args_assumed
+
       # Read each line as a path
       File.new(inputs, "r").each_line do |line| 
         # Handle each line as if it were an argument
         input.input(line.strip)
       end
+    end
+
+    # Each remaining command line parameter is used as an 'input' argument.
+    # For directories, this means paths. For things like gem and python, this
+    # means package name or paths to the packages (rails, foo-1.0.gem, django,
+    # bar/setup.py, etc)
+    args.each do |arg|
+      input.input(arg)
     end
 
     # Override package settings if they are not the default flag values
