@@ -1,3 +1,4 @@
+#!/bin/sh
 after_upgrade() {
 <% if script?(:after_upgrade) -%>
 <%=  script(:after_upgrade) %>
@@ -7,6 +8,8 @@ after_upgrade() {
 after_install() {
 <% if script?(:after_install) -%>
 <%=  script(:after_install) %>
+<% else -%>
+  :
 <% end -%>
 }
 
