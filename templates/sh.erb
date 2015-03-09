@@ -62,7 +62,7 @@ function slug_already_current(){
         if [ "$FORCE" == "1" ] ; then
         log "Force was specified. Proceeding with install after renaming live directory to allow running service to shutdown correctly."
             local real_dir=$(readlink ${INSTALL_ROOT}/current)
-            if [ -f ${real_dir}.old ] ; then
+            if [ -f ${real_dir}.old ]; then
                 # remove that .old directory, if needed
                 rm -rf ${real_dir}.old
             fi
@@ -220,7 +220,8 @@ function create_symlinks(){
     [ -n "$USE_FLAT_RELEASE_DIRECTORY" ] && return
 
     export CURRENT_DIR="$INSTALL_ROOT/current"
-    if [ -e "$CURRENT_DIR" ] ; then
+    if [ -e "$CURRENT_DIR" ] || [ -h "$CURRENT_DIR" ] ; then
+        log "Removing current symlink"
         OLD_CURRENT_TARGET=$(readlink $CURRENT_DIR)
         rm "$CURRENT_DIR"
     fi
