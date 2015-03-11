@@ -62,8 +62,9 @@ function slug_already_current(){
         if [ "$FORCE" == "1" ] ; then
         log "Force was specified. Proceeding with install after renaming live directory to allow running service to shutdown correctly."
             local real_dir=$(readlink ${INSTALL_ROOT}/current)
-            if [ -f ${real_dir}.old ]; then
+            if [ -e ${real_dir}.old ] ; then
                 # remove that .old directory, if needed
+                log "removing existing .old version of release"
                 rm -rf ${real_dir}.old
             fi
             mv ${real_dir} ${real_dir}.old
