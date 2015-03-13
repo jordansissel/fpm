@@ -140,7 +140,6 @@ class FPM::Command < Clamp::Command
     next excludes
   end # -x / --exclude
 
-  # jal 2015.03.13
   option "--exclude-file", "EXLCUDE_PATH",
     "The path to a file containing a newline-sparated list of "\
     "patterns to exclude from input."
@@ -352,7 +351,6 @@ class FPM::Command < Clamp::Command
       end
     end
 
-    # jal
     # If --exclude-file was specified, read it as a file and append to
     # the exclude pattern list.
     if !exclude-file.nil?
