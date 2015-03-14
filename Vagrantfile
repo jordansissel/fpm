@@ -11,6 +11,7 @@ Vagrant.configure("2") do |config|
   # options are documented and commented below. For a complete reference,
   # please see the online documentation at vagrantup.com.
 
+
   config.vm.define "centos6" do |centos6|
     centos6.vm.box = "centos6"
     centos6.vm.box_url = "http://puppet-vagrant-boxes.puppetlabs.com/centos-65-x64-virtualbox-puppet.box"
@@ -24,6 +25,10 @@ Vagrant.configure("2") do |config|
   config.vm.define "debian7" do |debian7|
     debian7.vm.box = "debian7"
     debian7.vm.box_url = "http://puppet-vagrant-boxes.puppetlabs.com/debian-73-x64-virtualbox-puppet.box"
+  end
+
+  config.vm.define "arch" do |arch|
+    arch.vm.box = "jfredett/arch-puppet"
   end
 
   config.vm.define :smartos do |smartos|
