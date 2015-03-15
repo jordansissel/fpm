@@ -71,7 +71,7 @@ class FPM::Package::Python < FPM::Package
     "to 'setup.py install' command."
   option "--disable-dependency", "python_package_name",
     "The python package name to remove from dependency list",
-    :multivalued => true, :attribute_name => :python_disable_dependencies,
+    :multivalued => true, :attribute_name => :python_disable_dependency,
     :default => []
 
   private
@@ -232,7 +232,7 @@ class FPM::Package::Python < FPM::Package
         end
         name, cmp, version = match.captures
 
-        next if attributes[:python_disable_dependencies].include?(name)
+        next if attributes[:python_disable_dependency].include?(name)
 
         # convert == to =
         if cmp == "=="
