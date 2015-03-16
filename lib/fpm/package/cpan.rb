@@ -39,8 +39,13 @@ class FPM::Package::CPAN < FPM::Package
     require "net/http"
     require "json"
 
+    user, repo = fromGithub(package)
+
     if (attributes[:cpan_local_module?])
       moduledir = package
+    elsif user && repo
+      tarball = octopus(user, repo)
+      moduledir = unpack(tarball)
     else
       result = search(package)
       tarball = download(result, version)
@@ -236,16 +241,47 @@ class FPM::Package::CPAN < FPM::Package
         self.architecture = "native"
       end
     end
-  end
+  end # def input
+
+  def fromGithub(package)
+    if package =~ %r{^Github:([\w_.-]+)/([\w_.-]+)$}
+      return $1, $2
+    elsif package =~ %r{^git@github\.com:([\w_.-]+)/([\w_.-]+).git$}
+      return $1, $2
+    elsif package =~ %r{^\w+://github\.com/([\w_.-]+)/([\w_.-]+)\.git$}
+      return $1, $2
+    else
+      return false, false
+    end
+  end # def fromGithub
 
   def unpack(tarball)
     directory = build_path("module")
     ::Dir.mkdir(directory)
-    args = [ "-C", directory, "-zxf", tarball,
-      "--strip-components", "1" ]
+    args = [ "-C", directory, "-zxf", tarball, "--strip-components", "1" ]
     safesystem("tar", *args)
     return directory
-  end
+  end # def unpack
+
+  def octopus(user, repo)
+    github_dl_url = "http://github.com/#{user}/#{repo}/archive/master.tar.gz"
+
+    logger.info("Downloading module from Github:#{user}/#{repo}")
+    logger.debug("Fetching module", :url => github_dl_url)
+
+    begin
+      response = httpfetch(github_dl_url)
+    rescue Net::HTTPServerException => e
+      logger.error("Download failed", :error => e, :url => github_dl_url)
+      raise FPM::InvalidPackageConfiguration, "Github download failed"
+    end
+
+    File.open(build_path("master.tar.gz"), "w") do |fd|
+      fd.write(response.body)
+    end
+
+    return build_path("master.tar.gz")
+  end # def octopus
 
   def download(metadata, cpan_version=nil)
     distribution = metadata["distribution"]
@@ -340,13 +376,14 @@ class FPM::Package::CPAN < FPM::Package
     else
       http = Net::HTTP.new(uri.host, uri.port)
     end
+    http.use_ssl = (uri.scheme == "https")
     response = http.request(Net::HTTP::Get.new(uri.request_uri))
     case response
       when Net::HTTPSuccess; return response
       when Net::HTTPRedirection; return httpfetch(response["location"])
       else; response.error!
     end
-  end
+  end # def httpfetch
 
   public(:input)
 end # class FPM::Package::NPM
