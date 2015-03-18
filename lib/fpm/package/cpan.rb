@@ -39,12 +39,12 @@ class FPM::Package::CPAN < FPM::Package
     require "net/http"
     require "json"
 
-    user, repo = fromGithub(package)
+    user, repo, branch = fromGithub(package)
 
     if (attributes[:cpan_local_module?])
       moduledir = package
     elsif user && repo
-      tarball = octopus(user, repo)
+      tarball = octopus(user, repo, branch)
       moduledir = unpack(tarball)
     else
       result = search(package)
@@ -244,14 +244,17 @@ class FPM::Package::CPAN < FPM::Package
   end # def input
 
   def fromGithub(package)
-    if package =~ %r{^Github:([\w_.-]+)/([\w_.-]+)$}
-      return $1, $2
-    elsif package =~ %r{^git@github\.com:([\w_.-]+)/([\w_.-]+).git$}
-      return $1, $2
-    elsif package =~ %r{^\w+://github\.com/([\w_.-]+)/([\w_.-]+)\.git$}
-      return $1, $2
+    if package =~ %r{^Github:([\w_.-]+)/([\w_.-]+)(?:@(.*))?$}
+      # Github:user/repo[@branch]
+      return $1, $2, $3
+    elsif package =~ %r{^git@github\.com:([\w_.-]+)/([\w_.-]+).git(?:@(.*))?$}
+      # git@github.com:user/repo.git[@branch]
+      return $1, $2, $3
+    elsif package =~ %r{^\w+://github\.com/([\w_.-]+)/([\w_.-]+)\.git(?:@(.*))?$}
+      # https://github.com/user/repo.git[@branch]
+      return $1, $2, $3
     else
-      return false, false
+      return false, false, false
     end
   end # def fromGithub
 
@@ -263,24 +266,26 @@ class FPM::Package::CPAN < FPM::Package
     return directory
   end # def unpack
 
-  def octopus(user, repo)
-    github_dl_url = "http://github.com/#{user}/#{repo}/archive/master.tar.gz"
+  def octopus(user, repo, branch)
+    branch ||= "master"
+    filename = File.basename("#{branch}.tar.gz")
+    download_url = "https://github.com/#{user}/#{repo}/archive/#{branch}.tar.gz"
 
-    logger.info("Downloading module from Github:#{user}/#{repo}")
-    logger.debug("Fetching module", :url => github_dl_url)
+    logger.info("Downloading module from Github:#{user}/#{repo}@#{branch}")
+    logger.debug("Fetching module", :url => download_url)
 
     begin
-      response = httpfetch(github_dl_url)
+      response = httpfetch(download_url)
     rescue Net::HTTPServerException => e
-      logger.error("Download failed", :error => e, :url => github_dl_url)
+      logger.error("Download failed", :error => e, :url => download_url)
       raise FPM::InvalidPackageConfiguration, "Github download failed"
     end
 
-    File.open(build_path("master.tar.gz"), "w") do |fd|
+    File.open(build_path(filename), "w") do |fd|
       fd.write(response.body)
     end
 
-    return build_path("master.tar.gz")
+    return build_path(filename)
   end # def octopus
 
   def download(metadata, cpan_version=nil)
