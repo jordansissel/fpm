@@ -17,7 +17,7 @@ class FPM::Package
 
   # This class is raised if there's something wrong with a setting in the package.
   class InvalidArgument < StandardError; end
- 
+
   # This class is raised when a file already exists when trying to write.
   class FileAlreadyExists < StandardError
     # Get a human-readable error message
@@ -116,7 +116,7 @@ class FPM::Package
   private
 
   def initialize
-    # Attributes for this specific package 
+    # Attributes for this specific package
     @attributes = {}
 
     # Reference
@@ -216,7 +216,7 @@ class FPM::Package
     return pkg
   end # def convert
 
-  # This method is invoked on a package when it has been covered to a new
+  # This method is invoked on a package when it has been converted to a new
   # package format. The purpose of this method is to do any extra conversion
   # steps, like translating dependency conditions, etc.
   def converted_from(origin)
@@ -227,7 +227,7 @@ class FPM::Package
   # Add a new source to this package.
   # The exact behavior depends on the kind of package being managed.
   #
-  # For instance: 
+  # For instance:
   #
   # * for FPM::Package::Dir, << expects a path to a directory or files.
   # * for FPM::Package::RPM, << expects a path to an rpm.
