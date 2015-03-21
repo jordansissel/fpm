@@ -1,5 +1,8 @@
 # vim
 .*.sw[a-z]
+# emacs
+*~
+[#]*[#]
 
 # build byproducts
 build-*/*
