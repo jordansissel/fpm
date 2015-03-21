@@ -270,8 +270,8 @@ class FPM::Package
 
   # Clean up any temporary storage used by this class.
   def cleanup
-    cleanup_staging unless logger.level == :debug
-    cleanup_build unless logger.level == :debug
+    cleanup_staging
+    cleanup_build
   end # def cleanup
 
   def cleanup_staging
@@ -441,7 +441,7 @@ class FPM::Package
 
     def default_attributes(&block)
       return if @options.nil?
-      @options.each do |flag, param, help, options, block|
+      @options.each do |flag, param, help, options, _block|
         attr = flag.first.gsub(/^-+/, "").gsub(/-/, "_").gsub("[no_]", "")
         attr += "?" if param == :flag
         yield attr.to_sym, options[:default]

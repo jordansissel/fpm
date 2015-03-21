@@ -1,3 +1,4 @@
+#!/bin/sh
 after_remove() {
 <% if script?(:after_remove) -%>
 <%=  script(:after_remove) %>
@@ -5,6 +6,7 @@ after_remove() {
 }
 
 dummy() {
+    :
 }
 
 

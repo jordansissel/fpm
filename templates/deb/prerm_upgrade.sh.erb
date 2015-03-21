@@ -1,3 +1,4 @@
+#!/bin/sh
 before_remove() {
 <% if script?(:before_remove) -%>
 <%=  script(:before_remove) %>
@@ -5,6 +6,7 @@ before_remove() {
 }
 
 dummy() {
+    :
 }
 
 if [ "${1}" = "remove" -a -z "${2}" ]

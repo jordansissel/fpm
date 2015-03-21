@@ -28,7 +28,7 @@ class FPM::Package::Python < FPM::Package
     "is used instead", :default => nil
   option "--pypi", "PYPI_URL",
     "PyPi Server uri for retrieving packages.",
-    :default => "http://pypi.python.org/simple"
+    :default => "https://pypi.python.org/simple"
   option "--package-prefix", "NAMEPREFIX",
     "(DEPRECATED, use --package-name-prefix) Name to prefix the package " \
     "name with." do |value|
