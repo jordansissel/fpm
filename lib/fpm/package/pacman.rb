@@ -3,26 +3,25 @@ require "backports"
 require "fileutils"
 require "find"
 
-
 class FPM::Package::Pacman < FPM::Package
 
-  DIGEST_ALGORITHM_SET = {
+  DIGEST_ALGORITHMS = [
     "md5",
     "sha1",
     "sha224",
     "sha256",
     "sha384",
     "sha512"
-  } unless defined?(DIGEST_ALGORITHM_SET)
+  ] unless defined?(DIGEST_ALGORITHMS)
 
   option "--user", "USER", "Set the user to USER in the %files section. Overrides the user when used with use-file-permissions setting."
 
   option "--group", "GROUP", "Set the group to GROUP in the %files section. Overrides the group when used with use-file-permissions setting."
 
-  option "--digest", DIGEST_ALGORITHM_SET.join("|"),
+  option "--digest", DIGEST_ALGORITHMS.join("|"),
     "Select a digest algorithm. The algorithm 'sha256' is recommended.",
     :default => "sha256" do |value|
-    if !DIGEST_ALGORITHM_MAP.include?(value.downcase)
+    if !DIGEST_ALGORITHMS.include?(value.downcase)
       raise "Unknown digest algorithm '#{value}'. Valid options " \
         "include: #{DIGEST_ALGORITHM_MAP.keys.join(", ")}"
     end
