@@ -50,6 +50,45 @@ class FPM::Package::Pacman < FPM::Package
     # See the RPM package class for an example.
   #end # def converted_from
 
+  def parse_info(info)
+    info_map = {}
+    last_match_key = nil
+    info.each_line do |line|
+      match = /^([[:alpha:]]+(?: [[:alpha:]]+)*) +: +(.*)$/.match(line)
+      if not match.nil?
+        info_map[match[1]] = match[2]
+        last_match_key = match[1]
+      else
+        info_map[last_match_key] = info_map[last_match_key] + " " + line.chomp()
+      end
+    end
+    return info_map
+  end
+
+  def extract_info(pacman_pkg_path)
+    info = safesystemout("/usr/bin/pacman", "-Qpi", pacman_pkg_path)
+    fields = parse_info(info)
+    # Parse 'epoch:version-iteration' in the version string
+    version_re = /^(?:([0-9]+):)?(.+?)(?:-(.*))?$/
+    m = version_re.match(parse.call("Version"))
+    if !m
+      raise "Unsupported version string '#{parse.call("Version")}'"
+    end
+    self.epoch, self.version, self.iteration = m.captures
+    self.architecture = fields["Architecture"]
+    self.category = nil
+    # TODO: Licenses could include more than one.
+    # How to handle this?
+    self.license = fields["Licenses"] || self.license
+    self.maintainer = fields["Packager"]
+    self.name = fields["Name"]
+    self.url = fields["URL"]
+    # `vendor' tag makes no sense. It's ARCH
+    # TODO: What if the `provides` field doesn't exist?
+    self.provides = fields["Provides"].split()
+    self.description = fields["Description"]
+    self.dependencies = fields["Dependencies"].split()
+  end
   # Add a new source to this package.
   # The exact behavior depends on the kind of package being managed.
   #
@@ -63,13 +102,43 @@ class FPM::Package::Pacman < FPM::Package
   #
   # Implementations are expected to put files relevant to the 'input' in the
   # staging_path
-  def input(thing_to_input)
-    raise NotImplementedError.new("#{self.class.name} does not yet support " \
-                                  "reading #{self.type} packages")
+  def input(pacman_pkg_path)
+    extract_info(pacman_pkg_path)
+    extract_files(pacman_pkg_path)
+    
+#    Name           : bash
+#Version        : 4.3.033-1
+#Description    : The GNU Bourne Again shell
+#Architecture   : x86_64
+#URL            : http://www.gnu.org/software/bash/bash.html
+#Licenses       : GPL
+#Groups         : base
+#Provides       : sh
+#Depends On     : readline>=6.3  glibc
+#Optional Deps  : bash-completion: for tab completion
+#Required By    : autoconf  automake  bison  ca-certificates-utils  db  dhcpcd  diffutils  e2fsprogs
+#                 fakeroot  findutils  flex  freetype2  gawk  gdbm  gettext  gmp  gzip  iptables  keyutils
+#                 libgpg-error  libksba  libpng  libtool  lvm2  m4  make  man-db  mkinitcpio  nano
+#                 ncurses  openresolv  pacman  pcre  sed  shadow  systemd  texinfo  which  xorg-mkfontdir
+#                 xz
+#Optional For   : None
+#Conflicts With : None
+#Replaces       : None
+#Installed Size :   6.18 MiB
+#Packager       : Bart
+#Build Date     : Tue Dec 30 22:08:56 2014
+#Install Date   : Sat Mar 14 04:28:54 2015
+#Install Reason : Explicitly installed
+#Install Script : Yes
+#Validated By   : Signature
+
+
+    
   end # def input
 
   # Output this package to the given path.
   def output(path)
+    
     raise NotImplementedError.new("#{self.class.name} does not yet support " \
                                   "creating #{self.type} packages")
   end # def output
