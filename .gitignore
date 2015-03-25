@@ -28,3 +28,4 @@ Gemfile.lock
 
 .rbx
 .vagrant
+/.project
