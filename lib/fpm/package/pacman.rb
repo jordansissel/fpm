@@ -34,7 +34,6 @@ class FPM::Package::Pacman < FPM::Package
 
   option "--sign", :flag, "Pass --sign to makepkg"
 
-
   option "--check-script", "FILE",
     "A script to be sourced when running the check() verification" do |val|
     File.expand_path(val) # Get the full path to the script
@@ -55,7 +54,7 @@ class FPM::Package::Pacman < FPM::Package
     last_match_key = nil
     info.each_line do |line|
       match = /^([[:alpha:]]+(?: [[:alpha:]]+)*) +: +(.*)$/.match(line)
-      if not match.nil?
+      if not match.nil? and match[2] !~ /^[[:space:]]*[Nn]one[[:space:]]*$/
         info_map[match[1]] = match[2]
         last_match_key = match[1]
       else
@@ -68,26 +67,69 @@ class FPM::Package::Pacman < FPM::Package
   def extract_info(pacman_pkg_path)
     info = safesystemout("/usr/bin/pacman", "-Qpi", pacman_pkg_path)
     fields = parse_info(info)
+
+    self.name = fields["Name"]
+
     # Parse 'epoch:version-iteration' in the version string
     version_re = /^(?:([0-9]+):)?(.+?)(?:-(.*))?$/
-    m = version_re.match(parse.call("Version"))
+    m = version_re.match(fields["Version"])
     if !m
       raise "Unsupported version string '#{parse.call("Version")}'"
     end
+
     self.epoch, self.version, self.iteration = m.captures
-    self.architecture = fields["Architecture"]
-    self.category = nil
-    # TODO: Licenses could include more than one.
-    # How to handle this?
-    self.license = fields["Licenses"] || self.license
-    self.maintainer = fields["Packager"]
-    self.name = fields["Name"]
-    self.url = fields["URL"]
+
+    if fields.has_key?("Packager")
+        self.maintainer = fields["Packager"]
+    end
+
     # `vendor' tag makes no sense. It's ARCH
-    # TODO: What if the `provides` field doesn't exist?
-    self.provides = fields["Provides"].split()
-    self.description = fields["Description"]
-    self.dependencies = fields["Dependencies"].split()
+
+    if fields.has_key?("URL")
+        self.url = fields["URL"]
+    end
+
+    # Groups could include more than one.
+    # Speaking of just taking the first entry of the field:
+    # A crude thing to do, but I suppose it's better than nothing.
+    # -- Daniel Haskin, 3/24/2015
+    if fields.has_key?("Groups")
+        groups = fields["Groups"].split()
+        self.category = groups[0]
+    end
+
+    # Licenses could include more than one.
+    # Speaking of just taking the first entry of the field:
+    # A crude thing to do, but I suppose it's better than nothing.
+    # -- Daniel Haskin, 3/24/2015
+    if fields.has_key?("Licenses")
+        licenses = fields["Licenses"].split()
+        self.license = licenses[0]
+    end
+
+    self.architecture = fields["Architecture"]
+
+    if fields.has_key?("Depends On")
+        self.dependencies = fields["Depends On"].split()
+    end
+
+    if fields.has_key?("Provides")
+        self.provides = fields["Provides"].split()
+    end
+
+    # TODO: scripts, config_files, directories, attributes (optional for).
+
+    if fields.has_key?("Conflicts With")
+        self.conflicts = fields["Conflicts With"].split(()
+    end
+
+    if fields.has_key?("Replaces")
+        self.replaces = fields["Replaces"].split()
+    end
+
+    if fields.has_key?("Description")
+        self.description = fields["Description"]
+    end
   end
   # Add a new source to this package.
   # The exact behavior depends on the kind of package being managed.
@@ -105,16 +147,7 @@ class FPM::Package::Pacman < FPM::Package
   def input(pacman_pkg_path)
     extract_info(pacman_pkg_path)
     extract_files(pacman_pkg_path)
-    
-#    Name           : bash
-#Version        : 4.3.033-1
-#Description    : The GNU Bourne Again shell
-#Architecture   : x86_64
-#URL            : http://www.gnu.org/software/bash/bash.html
-#Licenses       : GPL
-#Groups         : base
-#Provides       : sh
-#Depends On     : readline>=6.3  glibc
+
 #Optional Deps  : bash-completion: for tab completion
 #Required By    : autoconf  automake  bison  ca-certificates-utils  db  dhcpcd  diffutils  e2fsprogs
 #                 fakeroot  findutils  flex  freetype2  gawk  gdbm  gettext  gmp  gzip  iptables  keyutils
@@ -133,12 +166,12 @@ class FPM::Package::Pacman < FPM::Package
 #Validated By   : Signature
 
 
-    
+
   end # def input
 
   # Output this package to the given path.
   def output(path)
-    
+
     raise NotImplementedError.new("#{self.class.name} does not yet support " \
                                   "creating #{self.type} packages")
   end # def output
