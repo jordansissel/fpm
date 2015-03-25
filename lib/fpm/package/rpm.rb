@@ -104,6 +104,11 @@ class FPM::Package::RPM < FPM::Package
     next File.expand_path(file)
   end
 
+  option "--unit", "FILEPATH", "Add FILEPATH as a systemd unit file",
+	:multivalued => true do |file|
+    next File.expand_path(file)
+  end
+
   rpmbuild_filter_from_provides = []
   option "--filter-from-provides", "REGEX",
     "Set %filter_from_provides to the supplied REGEX." do |filter_from_provides|
@@ -469,6 +474,15 @@ class FPM::Package::RPM < FPM::Package
       FileUtils.mkdir_p(File.dirname(dest_init))
       FileUtils.cp init, dest_init
       File.chmod(0755, dest_init)
+    end
+
+    # add systemd unit file if present
+    (attributes[:rpm_unit_list] or []).each do |unit|
+      name = File.basename(unit)
+      dest_unit = File.join(staging_path, "etc/systemd/system/#{name}")
+      FileUtils.mkdir_p(File.dirname(dest_unit))
+      FileUtils.cp unit, dest_unit
+      File.chmod(0644, dest_unit)
     end
 
     (attributes[:rpm_rpmbuild_define] or []).each do |define|
