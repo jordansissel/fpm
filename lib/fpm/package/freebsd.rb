@@ -27,9 +27,14 @@ class FPM::Package::FreeBSD < FPM::Package
     output_check(output_path)
 
     # Build the packaging metadata files.
-    files = {}
+    checksums = {}
     self.files.each do |f|
-      files[f] = Digest::SHA1.file(File.join(staging_path, f)).hexdigest
+      path = staging_path(f)
+      if File.symlink?(path)
+        checksums[f] = "-"
+      elsif File.file?(path)
+        checksums[f] = Digest::SHA1.file(path).hexdigest
+      end
     end
 
     pkg_origin = attributes[:freebsd_origin]
@@ -51,17 +56,17 @@ class FPM::Package::FreeBSD < FPM::Package
     }
 
     # Write +COMPACT_MANIFEST, without the "files" section.
-    File.open(File.join(staging_path, "+COMPACT_MANIFEST"), "w+") do |file|
+    File.open(staging_path("+COMPACT_MANIFEST"), "w+") do |file|
       file.write(pkgdata.to_json + "\n")
     end
 
     # Populate files + checksums, then write +MANIFEST.
     pkgdata["files"] = {}
-    files.each do |f, shasum|
+    checksums.each do |f, shasum|
       pkgdata["files"]["/" + f] = shasum
     end
 
-    File.open(File.join(staging_path, "+MANIFEST"), "w+") do |file|
+    File.open(staging_path("+MANIFEST"), "w+") do |file|
       file.write(pkgdata.to_json + "\n")
     end
 
@@ -71,12 +76,12 @@ class FPM::Package::FreeBSD < FPM::Package
 
       # The manifests must come first for pkg.
       add_path(tar, "+COMPACT_MANIFEST",
-              File.join(staging_path, "+COMPACT_MANIFEST"))
+              staging_path("+COMPACT_MANIFEST"))
       add_path(tar, "+MANIFEST",
-              File.join(staging_path, "+MANIFEST"))
+              staging_path("+MANIFEST"))
 
-      files.keys.each do |path|
-        add_path(tar, "/" + path, File.join(staging_path, path))
+      checksums.keys.each do |path|
+        add_path(tar, "/" + path, staging_path(path))
       end
     end
   end # def output
