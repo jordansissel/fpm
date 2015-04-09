@@ -10,9 +10,12 @@ dummy() {
 }
 
 
-if [ "${1}" = "remove" ]
+if [ "${1}" = "remove" -o "${1}" = "abort-install" ]
 then
     # "after remove" goes here
+    # "abort-install" happens when the pre-installation script failed.
+    #   In that case, this script, which should be idemptoent, is run
+    #   to ensure a clean roll-back of the installation.
     after_remove
 elif [ "${1}" = "purge" -a -z "${2}" ]
 then
