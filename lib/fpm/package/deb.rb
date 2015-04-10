@@ -267,6 +267,22 @@ class FPM::Package::Deb < FPM::Package
       #self.config_files = config_files
 
       self.dependencies += parse_depends(parse.call("Depends")) if !attributes[:no_auto_depends?]
+
+      if File.file?(File.join(path, "preinst"))
+        self.scripts[:before_install] = File.read(File.join(path, "preinst"))
+      end
+      if File.file?(File.join(path, "postinst"))
+        self.scripts[:after_install] = File.read(File.join(path, "postinst"))
+      end
+      if File.file?(File.join(path, "prerm"))
+        self.scripts[:before_remove] = File.read(File.join(path, "prerm"))
+      end
+      if File.file?(File.join(path, "postrm"))
+        self.scripts[:after_remove] = File.read(File.join(path, "postrm"))
+      end
+      if File.file?(File.join(path, "conffiles"))
+        self.config_files = File.read(File.join(path, "conffiles")).split("\n")
+      end
     end
   end # def extract_info
 
@@ -289,7 +305,7 @@ class FPM::Package::Deb < FPM::Package
       m = dep_re.match(dep)
       if m
         name, op, version = m.captures
-        # deb uses ">>" and "<<" for greater and less than respectively. 
+        # deb uses ">>" and "<<" for greater and less than respectively.
         # fpm wants just ">" and "<"
         op = "<" if op == "<<"
         op = ">" if op == ">>"
@@ -309,7 +325,7 @@ class FPM::Package::Deb < FPM::Package
       when "gz"
         datatar = "data.tar.gz"
         compression = "-z"
-      when "bzip2" 
+      when "bz2" 
         datatar = "data.tar.bz2"
         compression = "-j"
       when "xz" 
