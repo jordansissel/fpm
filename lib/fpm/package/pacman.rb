@@ -74,19 +74,20 @@ class FPM::Package::Pacman < FPM::Package
     version_re = /^(?:([0-9]+):)?(.+?)(?:-(.*))?$/
     m = version_re.match(fields["Version"])
     if !m
-      raise "Unsupported version string '#{parse.call("Version")}'"
+      raise "Unsupported version string '#{fields["Version"]}'"
     end
 
     self.epoch, self.version, self.iteration = m.captures
 
     if fields.has_key?("Packager")
-        self.maintainer = fields["Packager"]
+      self.maintainer = fields["Packager"]
     end
 
-    # `vendor' tag makes no sense. It's ARCH
+    # `vendor' tag simply isn't supported by arch
+    self.vendor = nil
 
     if fields.has_key?("URL")
-        self.url = fields["URL"]
+      self.url = fields["URL"]
     end
 
     # Groups could include more than one.
@@ -94,8 +95,10 @@ class FPM::Package::Pacman < FPM::Package
     # A crude thing to do, but I suppose it's better than nothing.
     # -- Daniel Haskin, 3/24/2015
     if fields.has_key?("Groups")
-        groups = fields["Groups"].split()
+      groups = fields["Groups"].split()
+      if groups.length > 0
         self.category = groups[0]
+      end
     end
 
     # Licenses could include more than one.
@@ -103,32 +106,41 @@ class FPM::Package::Pacman < FPM::Package
     # A crude thing to do, but I suppose it's better than nothing.
     # -- Daniel Haskin, 3/24/2015
     if fields.has_key?("Licenses")
-        licenses = fields["Licenses"].split()
+      licenses = fields["Licenses"].split()
+      if licenses.length > 0
         self.license = licenses[0]
+      end
     end
 
     self.architecture = fields["Architecture"]
 
     if fields.has_key?("Depends On")
-        self.dependencies = fields["Depends On"].split()
+      self.dependencies = fields["Depends On"].split()
     end
 
     if fields.has_key?("Provides")
-        self.provides = fields["Provides"].split()
+      provides = fields["Provides"]
+      self.provides = fields["Provides"].split()
     end
 
     # TODO: scripts, config_files, directories, attributes (optional for).
 
     if fields.has_key?("Conflicts With")
-        self.conflicts = fields["Conflicts With"].split(()
+      conflicts = fields["Conflicts With"].split()
+      if conflics != "None"
+        self.conflicts = conflicts
+      end
     end
 
     if fields.has_key?("Replaces")
-        self.replaces = fields["Replaces"].split()
+      replaces = fields["Replaces"].split()
+      if replaces != "None"
+        self.replaces = replaces
+      end
     end
 
     if fields.has_key?("Description")
-        self.description = fields["Description"]
+      self.description = fields["Description"]
     end
   end
   # Add a new source to this package.
@@ -147,14 +159,7 @@ class FPM::Package::Pacman < FPM::Package
   def input(pacman_pkg_path)
     extract_info(pacman_pkg_path)
     extract_files(pacman_pkg_path)
-
 #Optional Deps  : bash-completion: for tab completion
-#Required By    : autoconf  automake  bison  ca-certificates-utils  db  dhcpcd  diffutils  e2fsprogs
-#                 fakeroot  findutils  flex  freetype2  gawk  gdbm  gettext  gmp  gzip  iptables  keyutils
-#                 libgpg-error  libksba  libpng  libtool  lvm2  m4  make  man-db  mkinitcpio  nano
-#                 ncurses  openresolv  pacman  pcre  sed  shadow  systemd  texinfo  which  xorg-mkfontdir
-#                 xz
-#Optional For   : None
 #Conflicts With : None
 #Replaces       : None
 #Installed Size :   6.18 MiB
@@ -165,13 +170,10 @@ class FPM::Package::Pacman < FPM::Package
 #Install Script : Yes
 #Validated By   : Signature
 
-
-
   end # def input
 
   # Output this package to the given path.
   def output(path)
-
     raise NotImplementedError.new("#{self.class.name} does not yet support " \
                                   "creating #{self.type} packages")
   end # def output
