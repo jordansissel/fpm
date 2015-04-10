@@ -101,7 +101,11 @@ class FPM::Package::CPAN < FPM::Package
     logger.info("Installing any build or configure dependencies")
 
     cpanm_flags = ["-L", build_path("cpan"), moduledir]
-    cpanm_flags += ["-n"] if attributes[:cpan_test?]
+    # This flag causes cpanm to ONLY download dependencies, skipping the target
+    # module itself.  This is fine, because the target module has already been
+    # downloaded, and there's no need to download twice, test twice, etc.
+    cpanm_flags += ["--installdeps"]
+    cpanm_flags += ["-n"] if !attributes[:cpan_test?]
     cpanm_flags += ["--mirror", "#{attributes[:cpan_mirror]}"] if !attributes[:cpan_mirror].nil?
     cpanm_flags += ["--mirror-only"] if attributes[:cpan_mirror_only?] && !attributes[:cpan_mirror].nil?
 
