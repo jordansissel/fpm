@@ -1,0 +1,63 @@
+# Let's not argue over this...
+StringLiterals:
+  Enabled: false
+
+# I can't find a reason for raise vs fail.
+SignalException:
+  Enabled: false
+
+# I can't find a reason to prefer 'map' when 'collect' is what I mean.
+# I'm collecting things from a list. Maybe someone can help me understand the
+# semantics here.
+CollectionMethods:
+  Enabled: false
+
+# Why do you even *SEE* trailing whitespace? Because your editor was
+# misconfigured to highlight trailing whitespace, right? Maybe turn that off?
+# ;)
+TrailingWhitespace:
+  Enabled: false
+
+# Line length is another weird problem that somehow in the past 40 years of
+# computing we don't seem to have solved. It's a display problem :(
+LineLength:
+  Max: 9000
+
+# %w() vs [ "x", "y", ... ]
+# The complaint is on lib/pleaserun/detector.rb's map of OS=>Runner,
+# i'll ignore it.
+WordArray:
+  MinSize: 5
+
+# A 20-line method isn't too bad.
+MethodLength:
+  Max: 20
+
+# Hash rockets (=>) forever. Why? Not all of my hash keys are static symbols.
+HashSyntax:
+  EnforcedStyle: hash_rockets
+
+# I prefer explicit return. It makes it clear in the code that the
+# code author intended to return a value from a method.
+RedundantReturn:
+  Enabled: false
+
+# My view on a readable case statement seems to disagree with 
+# what rubocop wants and it doesn't let me configure it other than
+# enable/disable.
+CaseIndentation:
+  Enabled: false
+
+# module This::Module::Definition is good.
+Style/ClassAndModuleChildren:
+  Enabled: true
+  EnforcedStyle: compact
+
+# "in interpolation #{use.some("double quotes is ok")}"
+Style/StringLiteralsInInterpolation:
+  Enabled: true
+  EnforcedStyle: double_quotes
+
+# Long-block `if !something ... end` are more readable to me than `unless something ... end`
+Style/NegatedIf:
+  Enabled: false
