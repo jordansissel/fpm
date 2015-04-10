@@ -2,134 +2,128 @@ require "spec_setup"
 require "fpm" # local
 
 describe FPM::Package do
-  before :each do
-    subject { FPM::Package.new }
-  end # before
-
-  after :each do
+  after do
     subject.cleanup
   end # after
 
-  describe "#name" do
-    it "should have no default name" do
-      insist { subject.name }.nil?
+  shared_examples_for :Default do |item, default|
+    context "default value" do
+      it "should be #{default}" do
+        if default.nil?
+          expect(subject.send(item)).to(be_nil)
+        else
+          expect(subject.send(item)).to(be == default)
+        end
+      end
     end
+  end
 
-    it "should allow setting the package name" do
-      name = "my-package"
-      subject.name = name
-      insist { subject.name } == name
+  shared_examples_for :Mutator do |item|
+    context "when set" do
+      let(:value) { "whatever" }
+      it "should return the set value" do
+        expect(subject.send("#{item}=", value)).to(be == value)
+      end
+
+      context "the getter" do
+        before do
+          subject.send("#{item}=", value)
+        end
+        it "returns the value set previously" do
+          expect(subject.send(item)).to(be == value)
+        end
+      end
     end
+  end
+
+  describe "#name" do
+    it_behaves_like :Default, description.gsub(/^#/, "").to_sym, nil
+    it_behaves_like :Mutator, description.gsub(/^#/, "").to_sym
   end
 
   describe "#version" do
-    it "should default to nil" do
-      insist { subject.version }.nil?
-    end
-
-    it "should allow setting the package name" do
-      version = "hello"
-      subject.version = version
-      insist { subject.version } == version
-    end
+    it_behaves_like :Default, description.gsub(/^#/, "").to_sym, nil
+    it_behaves_like :Mutator, description.gsub(/^#/, "").to_sym
   end
 
   describe "#architecture" do
-    it "should default to native" do
-      insist { subject.architecture } == "native"
-    end
+    it_behaves_like :Default, description.gsub(/^#/, "").to_sym, "native"
+    it_behaves_like :Mutator, description.gsub(/^#/, "").to_sym
   end
 
   describe "#attributes" do
-    it "should be empty by default" do
-      insist { subject.attributes }.empty?
-    end
+    it_behaves_like :Default, description.gsub(/^#/, "").to_sym, {}
+    it_behaves_like :Mutator, description.gsub(/^#/, "").to_sym
   end
 
   describe "#category" do
-    it "should be 'default' by default" do
-      insist { subject.category } == "default"
-    end
+    it_behaves_like :Default, description.gsub(/^#/, "").to_sym, "default"
+    it_behaves_like :Mutator, description.gsub(/^#/, "").to_sym
   end
 
   describe "#config_files" do
-    it "should be empty by default" do
-      insist { subject.config_files }.empty?
-    end
+    it_behaves_like :Default, description.gsub(/^#/, "").to_sym, []
+    it_behaves_like :Mutator, description.gsub(/^#/, "").to_sym
   end
 
   describe "#conflicts" do
-    it "should be empty by default" do
-      insist { subject.conflicts }.empty?
-    end
+    it_behaves_like :Default, description.gsub(/^#/, "").to_sym, []
+    it_behaves_like :Mutator, description.gsub(/^#/, "").to_sym
   end
 
   describe "#dependencies" do
-    it "should be empty by default" do
-      insist { subject.dependencies }.empty?
-    end
+    it_behaves_like :Default, description.gsub(/^#/, "").to_sym, []
+    it_behaves_like :Mutator, description.gsub(/^#/, "").to_sym
   end
 
   describe "#description" do
-    it "should be 'no description given' by default" do
-      insist { subject.description } == "no description given"
-    end
+    it_behaves_like :Default, description.gsub(/^#/, "").to_sym, "no description given"
+    it_behaves_like :Mutator, description.gsub(/^#/, "").to_sym
   end
 
   describe "#epoch" do
-    it "should be nil by default" do
-      insist { subject.epoch }.nil?
-    end
+    it_behaves_like :Default, description.gsub(/^#/, "").to_sym, nil
+    it_behaves_like :Mutator, description.gsub(/^#/, "").to_sym
   end
 
   describe "#iteration" do
-    it "should be nil by default" do
-      insist { subject.iteration }.nil?
-    end
+    it_behaves_like :Default, description.gsub(/^#/, "").to_sym, nil
+    it_behaves_like :Mutator, description.gsub(/^#/, "").to_sym
   end
 
   describe "#license" do
-    it "should be 'unknown' by default" do
-      insist { subject.license } == "unknown"
-    end
+    it_behaves_like :Default, description.gsub(/^#/, "").to_sym, "unknown"
+    it_behaves_like :Mutator, description.gsub(/^#/, "").to_sym
   end
 
   describe "#maintainer" do
-    it "should use user@host by default" do
-      require "socket"
-      insist { subject.maintainer } == "<#{ENV["USER"]}@#{Socket.gethostname}>"
-    end
+    require "socket"
+    default_maintainer = "<#{ENV["USER"]}@#{Socket.gethostname}>"
+    it_behaves_like :Default, description.gsub(/^#/, "").to_sym, default_maintainer
+    it_behaves_like :Mutator, description.gsub(/^#/, "").to_sym
   end
 
   describe "#provides" do
-    it "should be empty by default" do
-      insist { subject.provides }.empty?
-    end
+    it_behaves_like :Default, description.gsub(/^#/, "").to_sym, []
   end
 
   describe "#replaces" do
-    it "should be empty by default" do
-      insist { subject.provides }.empty?
-    end
+    it_behaves_like :Default, description.gsub(/^#/, "").to_sym, []
+    it_behaves_like :Mutator, description.gsub(/^#/, "").to_sym
   end
 
   describe "#scripts" do
-    # This api for 'scripts' kind of sucks.
-    it "should default to an empty hash" do
-      insist { subject.scripts } == {}
-    end
+    it_behaves_like :Default, description.gsub(/^#/, "").to_sym, {}
   end
 
   describe "#url" do 
-    it "should be nil by default" do
-      insist { subject.url }.nil?
-    end
+    it_behaves_like :Default, description.gsub(/^#/, "").to_sym, nil
+    it_behaves_like :Mutator, description.gsub(/^#/, "").to_sym
   end
 
   describe "#vendor" do
-    it "should be 'none' by default" do
-      insist { subject.vendor } == "none"
-    end
+    it_behaves_like :Default, description.gsub(/^#/, "").to_sym, "none"
+    it_behaves_like :Mutator, description.gsub(/^#/, "").to_sym
   end
 
   describe "#exclude (internal method)" do
@@ -146,9 +140,9 @@ describe FPM::Package do
       Dir.mkdir(subject.staging_path("example/foo"))
       File.write(subject.staging_path("example/foo/delete_me"), "Hello!")
       File.write(subject.staging_path("keeper"), "Hello!")
-      subject.attributes[:excludes] = [ "example" ]
+      subject.attributes[:excludes] = ["example"]
       subject.instance_eval { exclude }
-      insist { subject.files } == [ "keeper" ]
+      insist { subject.files } == ["keeper"]
     end
 
     it "should obey attributes[:excludes] for child directories" do
@@ -156,41 +150,47 @@ describe FPM::Package do
       Dir.mkdir(subject.staging_path("example/foo"))
       File.write(subject.staging_path("example/foo/delete_me"), "Hello!")
       File.write(subject.staging_path("keeper"), "Hello!")
-      subject.attributes[:excludes] = [ "example/foo" ]
+      subject.attributes[:excludes] = ["example/foo"]
       subject.instance_eval { exclude }
-      insist { subject.files.sort } == [ "example", "keeper" ]
+      insist { subject.files.sort } == ["example", "keeper"]
     end
   end
 
-  context "#script (internal method)" do
-    it "should template when :template_scripts? is true" do
-      subject.scripts[:after_install] = "<%= name %>"
-      subject.scripts[:before_install] = "<%= name %>"
-      subject.scripts[:after_remove] = "<%= name %>"
-      subject.scripts[:before_remove] = "<%= name %>"
-      subject.attributes[:template_scripts?] = true
+  describe "#script (internal method)" do
+    scripts = [:after_install, :before_install, :after_remove, :before_remove]
+    before do
+      scripts.each do |script|
+        subject.scripts[script] = "<%= name %>"
+      end
       subject.name = "Example"
-      insist { subject.script(:after_install) } == subject.name
-      insist { subject.script(:before_install) } == subject.name
-      insist { subject.script(:after_remove) } == subject.name
-      insist { subject.script(:before_remove) } == subject.name
     end
 
-    it "should not template when :template_scripts? is false" do
-      subject.scripts[:after_install] = "<%= name %>"
-      subject.scripts[:before_install] = "<%= name %>"
-      subject.scripts[:after_remove] = "<%= name %>"
-      subject.scripts[:after_install] = "<%= name %>"
-      subject.attributes[:template_scripts?] = false
-      insist { subject.script(:after_install) } == subject.scripts[:after_install]
-      insist { subject.script(:before_install) } == subject.scripts[:before_install]
-      insist { subject.script(:after_remove) } == subject.scripts[:after_remove]
-      insist { subject.script(:before_remove) } == subject.scripts[:before_remove]
+    context "when :template_scripts? is true" do
+      before do
+        subject.attributes[:template_scripts?] = true
+      end
+
+      scripts.each do |script|
+        it "should evaluate #{script} as a template" do
+          expect(subject.script(script)).to(be == subject.name)
+        end
+      end
+    end
+
+    context "when :template_scripts? is false" do
+      before do
+        subject.attributes[:template_scripts?] = false
+      end
+
+      scripts.each do |script|
+        it "should not process #{script} as a template" do
+          expect(subject.script(script)).to(be == subject.scripts[script])
+        end
+      end
     end
 
     it "should not template by default" do
-      subject.scripts[:after_install] = "<%= name %>"
-      insist { subject.script(:after_install) } == subject.scripts[:after_install]
+      expect(subject.attributes[:template_scripts?]).to(be_falsey)
     end
   end
 end # describe FPM::Package
