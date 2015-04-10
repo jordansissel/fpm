@@ -3,6 +3,7 @@ require 'fileutils'
 require "fpm" # local
 require "fpm/package/deb" # local
 require "fpm/package/dir" # local
+require "stud/temporary"
 
 describe FPM::Package::Deb do
   # dpkg-deb lets us query deb package files.
@@ -173,22 +174,20 @@ describe FPM::Package::Deb do
     end # after
 
     context "when the deb's control section is extracted" do
-      before :all do
-        tmp_control = Tempfile.new("fpm-test-deb-control")
-        @control_extracted = tmp_control.path
-        tmp_control.unlink
-        system("dpkg-deb -e '#{@target}' '#{@control_extracted}'") or \
-          raise "couldn't extract test deb"
+      let(:control_dir) { Stud::Temporary.directory }
+      before do
+        system("ar p '#{@target}' control.tar.gz | tar -zx -C '#{control_dir}'") 
+        raise "couldn't extract test deb" unless $?.success?
       end
 
       it "should have the requested meta file in the control archive" do
-        File.open(File.join(@control_extracted, 'meta_test')) do |f|
+        File.open(File.join(control_dir, 'meta_test')) do |f|
           insist { f.read.chomp } == "asdf"
         end
       end
 
       it "should have the requested triggers in the triggers file" do
-        triggers = File.open(File.join(@control_extracted, 'triggers')) do |f|
+        triggers = File.open(File.join(control_dir, 'triggers')) do |f|
           f.read
         end
         reject { triggers =~ /^interest from-meta-file$/ }.nil?
@@ -199,8 +198,8 @@ describe FPM::Package::Deb do
         insist { triggers[-1] } == ?\n
       end
 
-      after :all do
-        FileUtils.rm_rf @control_extracted
+      after do
+        #FileUtils.rm_rf(control_dir)
       end
     end
 
