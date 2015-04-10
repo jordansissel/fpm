@@ -1,15 +1,21 @@
 #!/bin/sh
 before_upgrade() {
+<%# Making sure that at least one command is in the function -%>
+<%# avoids a lot of potential errors, including the case that -%>
+<%# the script is non-empty, but just whitespace and/or comments -%>
+    :
 <% if script?(:before_upgrade) -%>
 <%=  script(:before_upgrade) %>
 <% end -%>
 }
 
 before_install() {
+<%# Making sure that at least one command is in the function -%>
+<%# avoids a lot of potential errors, including the case that -%>
+<%# the script is non-empty, but just whitespace and/or comments -%>
+    :
 <% if script?(:before_install) -%>
 <%=  script(:before_install) %>
-<% else -%>
-  :
 <% end -%>
 }
 
@@ -19,7 +25,7 @@ then
 elif [ "${1}" = "upgrade" -a -n "${2}" ]
 then
     upgradeFromVersion="${2}"
-    before_upgrade "${2}"
+    before_upgrade "${upgradeFromVersion}"
 elif [ "${1}" = "install" -a -n "${2}" ]
 then
     upgradeFromVersion="${2}"
@@ -27,7 +33,7 @@ then
     # and a new version is installed.
     # Looks a _lot_ like an upgrade case, I say we just execute the
     # same "before upgrade" script as in the previous case
-    before_upgrade "${2}"
+    before_upgrade "${upgradeFromVersion}"
 elif echo "${1}" | grep -E -q '(fail|abort)'
 then
     echo "Failed to install before the pre-installation script was run." >&2
