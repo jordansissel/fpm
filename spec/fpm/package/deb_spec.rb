@@ -3,6 +3,8 @@ require 'fileutils'
 require "fpm" # local
 require "fpm/package/deb" # local
 require "fpm/package/dir" # local
+require "stud/temporary"
+require "English" # for $CHILD_STATUS
 
 describe FPM::Package::Deb do
   # dpkg-deb lets us query deb package files.
@@ -19,176 +21,171 @@ describe FPM::Package::Deb do
       .warn("Skipping some deb tests because 'lintian' isn't in your PATH")
   end
 
-  after :each do
+  let(:target) { Stud::Temporary.pathname }
+  after do
     subject.cleanup
+    File.unlink(target) if File.exist?(target)
   end
 
   describe "#architecture" do
     it "should convert x86_64 to amd64" do
       subject.architecture = "x86_64"
-      insist { subject.architecture } == "amd64"
+      expect(subject.architecture).to(be == "amd64")
     end
 
     it "should convert noarch to all" do
       subject.architecture = "noarch"
-      insist { subject.architecture } == "all"
+      expect(subject.architecture).to(be == "all")
+    end
+
+    let(:native) do
+      if program_exists?("dpkg")
+        `dpkg --print-architecture`.chomp
+      else
+        `uname -m`.chomp
+      end
     end
 
     it "should default to native" do
-      expected = ""
-      if program_exists?("dpkg")
-        expected = %x{dpkg --print-architecture}.chomp
-      end
-
-      if expected.empty?
-        # dpkg was missing, failed, or emitted nothing.
-        expected = %x{uname -m}.chomp
-      end
-
       # Convert kernel name to debian name
-      expected = "amd64" if expected == "x86_64"
-      insist { subject.architecture } == expected
+      expected = native == "x86_64" ? "amd64" : native
+      expect(subject.architecture).to(be == expected)
     end
   end
 
   describe "#iteration" do
     it "should default to nil" do
-      insist { subject.iteration }.nil?
+      expect(subject.iteration).to(be_nil)
     end
   end
 
   describe "#epoch" do
     it "should default to nil" do
-      insist { subject.epoch }.nil?
+      expect(subject.epoch).to(be_nil)
     end
   end
 
   describe "priority" do
     it "should default to 'extra'" do
-      insist { subject.attributes[:deb_priority] } == "extra"
+      expect(subject.attributes[:deb_priority]).to(be == "extra")
     end
   end
 
   describe "use-file-permissions" do
     it "should be nil by default" do
-      insist { subject.attributes[:deb_use_file_permissions?] }.nil?
+      expect(subject.attributes[:deb_use_file_permissions?]).to(be_nil)
     end
   end
 
   describe "#to_s" do
-    it "should have a default output usable as a filename" do
+    before do
       subject.name = "name"
       subject.version = "123"
       subject.architecture = "all"
       subject.iteration = "100"
       subject.epoch = "5"
+    end
 
+    it "should have a default output usable as a filename" do
       # This is the default filename I see commonly produced by debuild
       insist { subject.to_s } == "name_123-100_all.deb"
     end
 
-    it "should not include iteration if it is nil" do
-      subject.name = "name"
-      subject.version = "123"
-      subject.architecture = "all"
-      subject.iteration = nil
-      subject.epoch = "5"
+    context "when iteration is nil" do
+      before do
+        subject.iteration = nil
+      end
 
-      # This is the default filename I see commonly produced by debuild
-      insist { subject.to_s } == "name_123_all.deb"
+      it "should not include iteration if it is nil" do
+        # This is the default filename I see commonly produced by debuild
+        expect(subject.to_s).to(be == "name_123_all.deb")
+      end
     end
   end
 
   context "supporting debian policy hacks" do
-    subject do
-      package = FPM::Package::Deb.new
-      package.name = "Capitalized_Name_With_Underscores"
-      package
+    before do
+      subject.name = "Capitalized_Name_With_Underscores"
     end
 
     it "should lowercase the package name" do
-      insist { subject.name } == subject.name.downcase
+      expect(subject.name).to(be == subject.name.downcase)
     end
 
     it "should replace underscores with dashes in the package name" do
-      reject { subject.name }.include?("_")
+      expect(subject.name).not_to(be_include("_"))
     end
 
     it "should replace spaces with dashes in the package name" do
-      reject { subject.name }.include?(" ")
+      expect(subject.name).not_to(be_include(" "))
     end
   end
 
   describe "#output" do
-    before :all do
+    let(:original) { FPM::Package::Deb.new }
+    let(:input) { FPM::Package::Deb.new }
+
+    before do
       # output a package, use it as the input, set the subject to that input
       # package. This helps ensure that we can write and read packages
       # properly.
-      tmpfile = Tempfile.new("fpm-test-deb")
-      @target = tmpfile.path
       # The target file must not exist.
-      tmpfile.unlink
 
-      @original = FPM::Package::Deb.new
-      @original.name = "name"
-      @original.version = "123"
-      @original.iteration = "100"
-      @original.epoch = "5"
-      @original.architecture = "all"
-      @original.dependencies << "something > 10"
-      @original.dependencies << "hello >= 20"
-      @original.provides << "#{@original.name} = #{@original.version}"
+      original.name = "name"
+      original.version = "123"
+      original.iteration = "100"
+      original.epoch = "5"
+      original.architecture = "all"
+      original.dependencies << "something > 10"
+      original.dependencies << "hello >= 20"
+      original.provides << "#{original.name} = #{original.version}"
 
       # Test to cover PR#591 (fix provides names)
-      @original.provides << "Some-SILLY_name"
+      original.provides << "Some-SILLY_name"
 
-      @original.conflicts = ["foo < 123"]
-      @original.attributes[:deb_breaks] = ["baz < 123"]
+      original.conflicts = ["foo < 123"]
+      original.attributes[:deb_breaks] = ["baz < 123"]
 
-      @original.attributes[:deb_build_depends_given?] = true
-      @original.attributes[:deb_build_depends] ||= []
-      @original.attributes[:deb_build_depends] << 'something-else > 0.0.0'
-      @original.attributes[:deb_build_depends] << 'something-else < 1.0.0'
+      original.attributes[:deb_build_depends_given?] = true
+      original.attributes[:deb_build_depends] ||= []
+      original.attributes[:deb_build_depends] << 'something-else > 0.0.0'
+      original.attributes[:deb_build_depends] << 'something-else < 1.0.0'
 
-      @original.attributes[:deb_priority] = "fizzle"
-      @original.attributes[:deb_field_given?] = true
-      @original.attributes[:deb_field] = { "foo" => "bar" }
+      original.attributes[:deb_priority] = "fizzle"
+      original.attributes[:deb_field_given?] = true
+      original.attributes[:deb_field] = { "foo" => "bar" }
 
-      @original.attributes[:deb_meta_files] = %w[meta_test triggers].map { |fn|
+      original.attributes[:deb_meta_files] = %w(meta_test triggers).map do |fn|
         File.expand_path("../../../fixtures/deb/#{fn}", __FILE__)
-      }
+      end
 
-      @original.attributes[:deb_interest] = ['asdf', 'hjkl']
-      @original.attributes[:deb_activate] = ['qwer', 'uiop']
+      original.attributes[:deb_interest] = ['asdf', 'hjkl']
+      original.attributes[:deb_activate] = ['qwer', 'uiop']
 
-      @original.output(@target)
-
-      @input = FPM::Package::Deb.new
-      @input.input(@target)
+      original.output(target)
+      input.input(target)
     end
 
-    after :all do
-      @original.cleanup
-      @input.cleanup
+    after do
+      original.cleanup
+      input.cleanup
     end # after
 
     context "when the deb's control section is extracted" do
-      before :all do
-        tmp_control = Tempfile.new("fpm-test-deb-control")
-        @control_extracted = tmp_control.path
-        tmp_control.unlink
-        system("dpkg-deb -e '#{@target}' '#{@control_extracted}'") or \
-          raise "couldn't extract test deb"
+      let(:control_dir) { Stud::Temporary.directory }
+      before do
+        system("ar p '#{target}' control.tar.gz | tar -zx -C '#{control_dir}'") 
+        raise "couldn't extract test deb" unless $CHILD_STATUS.success?
       end
 
       it "should have the requested meta file in the control archive" do
-        File.open(File.join(@control_extracted, 'meta_test')) do |f|
+        File.open(File.join(control_dir, 'meta_test')) do |f|
           insist { f.read.chomp } == "asdf"
         end
       end
 
       it "should have the requested triggers in the triggers file" do
-        triggers = File.open(File.join(@control_extracted, 'triggers')) do |f|
+        triggers = File.open(File.join(control_dir, 'triggers')) do |f|
           f.read
         end
         reject { triggers =~ /^interest from-meta-file$/ }.nil?
@@ -196,63 +193,63 @@ describe FPM::Package::Deb do
         reject { triggers =~ /^interest hjkl$/ }.nil?
         reject { triggers =~ /^activate qwer$/ }.nil?
         reject { triggers =~ /^activate uiop$/ }.nil?
-        insist { triggers[-1] } == ?\n
+        insist { triggers[-1] } == "\n"
       end
 
-      after :all do
-        FileUtils.rm_rf @control_extracted
+      after do
+        FileUtils.rm_rf(control_dir)
       end
     end
 
     context "package attributes" do
       it "should have the correct name" do
-        insist { @input.name } == @original.name
+        insist { input.name } == original.name
       end
 
       it "should have the correct version" do
-        insist { @input.version } == @original.version
+        insist { input.version } == original.version
       end
 
       it "should have the correct iteration" do
-        insist { @input.iteration } == @original.iteration
+        insist { input.iteration } == original.iteration
       end
 
       it "should have the correct epoch" do
-        insist { @input.epoch } == @original.epoch
+        insist { input.epoch } == original.epoch
       end
 
       it "should have the correct dependencies" do
-        @original.dependencies.each do |dep|
-          insist { @input.dependencies }.include?(dep)
+        original.dependencies.each do |dep|
+          insist { input.dependencies }.include?(dep)
         end
       end
 
       it "should ignore versions and conditions in 'provides' (#280)" do
         # Provides is an array because rpm supports multiple 'provides'
-        insist { @input.provides }.include?(@original.name)
+        insist { input.provides }.include?(original.name)
       end
 
       it "should fix capitalization and underscores-to-dashes (#591)" do
-        insist { @input.provides }.include?("some-silly-name")
+        insist { input.provides }.include?("some-silly-name")
       end
     end # package attributes
 
     # This section mainly just verifies that 'dpkg-deb' can parse the package.
     context "when read with dpkg", :if => have_dpkg_deb do
       def dpkg_field(field)
-        return %x{dpkg-deb -f #{@target} #{field}}.chomp
+        return `dpkg-deb -f #{target} #{field}`.chomp
       end # def dpkg_field
 
       it "should have the correct name" do
-        insist { dpkg_field("Package") } == @original.name
+        insist { dpkg_field("Package") } == original.name
       end
 
       it "should have the correct 'epoch:version-iteration'" do
-        insist { dpkg_field("Version") } == @original.to_s("EPOCH:VERSION-ITERATION")
+        insist { dpkg_field("Version") } == original.to_s("EPOCH:VERSION-ITERATION")
       end
 
       it "should have the correct priority" do
-        insist { dpkg_field("Priority") } == @original.attributes[:deb_priority]
+        insist { dpkg_field("Priority") } == original.attributes[:deb_priority]
       end
 
       it "should have the correct dependency list" do
@@ -279,102 +276,88 @@ describe FPM::Package::Deb do
   end # #output
 
   describe "#output with no depends" do
-    before :all do
+    let(:original) { FPM::Package::Deb.new }
+    let(:input) { FPM::Package::Deb.new }
+
+    before do
       # output a package, use it as the input, set the subject to that input
       # package. This helps ensure that we can write and read packages
       # properly.
-      tmpfile = Tempfile.new("fpm-test-deb")
-      @target = tmpfile.path
-      # The target file must not exist.
-      tmpfile.unlink
 
-      @original = FPM::Package::Deb.new
-      @original.name = "name"
-      @original.version = "123"
-      @original.iteration = "100"
-      @original.epoch = "5"
-      @original.architecture = "all"
-      @original.dependencies << "something > 10"
-      @original.dependencies << "hello >= 20"
-      @original.attributes[:no_depends?] = true
-      @original.output(@target)
-
-      @input = FPM::Package::Deb.new
-      @input.input(@target)
+      original.name = "name"
+      original.version = "123"
+      original.iteration = "100"
+      original.epoch = "5"
+      original.architecture = "all"
+      original.dependencies << "something > 10"
+      original.dependencies << "hello >= 20"
+      original.attributes[:no_depends?] = true
+      original.output(target)
+      input.input(target)
     end
 
-    after :all do
-      @original.cleanup
-      @input.cleanup
+    after do
+      original.cleanup
+      input.cleanup
     end # after
 
     it "should have no dependencies" do
-      insist { @input.dependencies }.empty?
+      insist { input.dependencies }.empty?
     end
   end # #output with no dependencies
 
   describe "#tar_flags" do
+    let(:package) { FPM::Package::Deb.new }
+
     before :each do
-      tmpfile = Tempfile.new("fpm-test-deb")
-      @target = tmpfile.path
-      # The target file must not exist.
-      tmpfile.unlink
-      @package = FPM::Package::Deb.new
-      @package.name = "name"
+      package.name = "name"
     end
 
     after :each do
-      @package.cleanup
+      package.cleanup
     end # after
 
     it "should set the user for the package's data files" do
-      @package.attributes[:deb_user] = "nobody"
+      package.attributes[:deb_user] = "nobody"
       # output a package so that @data_tar_flags is computed
-      insist { @package.data_tar_flags } == ["--owner", "nobody", "--numeric-owner", "--group", "0"]
+      expect(package.data_tar_flags).to(be == ["--owner", "nobody", "--numeric-owner", "--group", "0"])
     end
 
     it "should set the group for the package's data files" do
-      @package.attributes[:deb_group] = "nogroup"
+      package.attributes[:deb_group] = "nogroup"
       # output a package so that @data_tar_flags is computed
-      insist { @package.data_tar_flags } == ["--numeric-owner", "--owner", "0", "--group", "nogroup"]
+      expect(package.data_tar_flags).to(be == ["--numeric-owner", "--owner", "0", "--group", "nogroup"])
     end
 
     it "should not set the user or group for the package's data files if :deb_use_file_permissions? is not nil" do
-      @package.attributes[:deb_use_file_permissions?] = true
+      package.attributes[:deb_use_file_permissions?] = true
       # output a package so that @data_tar_flags is computed
-      @package.output(@target)
-      insist { @package.data_tar_flags } == []
+      package.output(target)
+      expect(package.data_tar_flags).to(be == [])
     end
   end # #tar_flags
 
   describe "#output with lintian" do
-    before :all do
-      @staging_path = Dir.mktmpdir
-      tmpfile = Tempfile.new(["fpm-test-deb", ".deb"])
-      @target = tmpfile.path
+    let(:staging_path) { Stud::Temporary.directory }
+    before do
+      # TODO(sissel): Refactor this to use factory pattern instead of fixture?
+      FileUtils.cp_r(Dir['spec/fixtures/deb/staging/*'], staging_path)
 
-      # The target file must not exist.
-      tmpfile.unlink
+      subject.name = "name"
+      subject.version = "0.0.1"
+      subject.maintainer = "Jordan Sissel <jls@semicomplete.com>"
+      subject.description = "Test package\nExtended description."
+      subject.attributes[:deb_user] = "root"
+      subject.attributes[:deb_group] = "root"
 
-      FileUtils.cp_r(Dir['spec/fixtures/deb/staging/*'], @staging_path)
+      subject.instance_variable_set(:@config_files, ["/etc/init.d/test"])
+      subject.instance_variable_set(:staging_path, staging_path)
 
-      @deb = FPM::Package::Deb.new
-      @deb.name = "name"
-      @deb.version = "0.0.1"
-      @deb.maintainer = "Jordan Sissel <jls@semicomplete.com>"
-      @deb.description = "Test package\nExtended description."
-      @deb.attributes[:deb_user] = "root"
-      @deb.attributes[:deb_group] = "root"
-
-      @deb.instance_variable_set(:@config_files, ["/etc/init.d/test"])
-      @deb.instance_variable_set(:@staging_path, @staging_path)
-
-      @deb.output(@target)
+      subject.output(target)
     end
 
     after :all do
-      @deb.cleanup
-      FileUtils.rm_r @staging_path if File.exists? @staging_path
+      FileUtils.rm_r staging_path if File.exist? staging_path
     end # after
 
     context "when run against lintian", :if => have_lintian do
@@ -385,8 +368,8 @@ describe FPM::Package::Deb do
       ]
 
       it "should return no errors" do
-        lintian_output = %x{lintian #{@target} --suppress-tags #{lintian_errors_to_ignore.join(",")}}
-        expect($?).to eq(0), lintian_output
+        lintian_output = `lintian #{target} --suppress-tags #{lintian_errors_to_ignore.join(",")}`
+        expect($CHILD_STATUS).to eq(0), lintian_output
       end
     end
   end
