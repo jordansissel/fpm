@@ -21,7 +21,7 @@ describe FPM::Package::Deb do
       .warn("Skipping some deb tests because 'lintian' isn't in your PATH")
   end
 
-  let(:target) { Stud::Temporary.pathname }
+  let(:target) { Stud::Temporary.pathname + ".deb" }
   after do
     subject.cleanup
     File.unlink(target) if File.exist?(target)
@@ -351,12 +351,12 @@ describe FPM::Package::Deb do
       subject.attributes[:deb_group] = "root"
 
       subject.instance_variable_set(:@config_files, ["/etc/init.d/test"])
-      subject.instance_variable_set(:staging_path, staging_path)
+      subject.instance_variable_set(:@staging_path, staging_path)
 
       subject.output(target)
     end
 
-    after :all do
+    after do
       FileUtils.rm_r staging_path if File.exist? staging_path
     end # after
 
