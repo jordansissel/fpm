@@ -54,63 +54,71 @@ class FPM::Package::P5P < FPM::Package
       @category = 'Applications/System Utilities'
     end
 
+    # Manifest Filename
+    manifest_fn = build_path("#{name}.p5m")
+
     # Generate a package manifest.
     pkg_generate = safesystemout("pkgsend", "generate", "#{staging_path}")
-    File.open("#{build_path}/#{name}.p5m.1", "w") do |manifest|
-      manifest.puts pkg_generate
-    end
-    safesystem("cp", "#{build_path}/#{name}.p5m.1", "#{build_path}/#{name}.p5m")
+    File.write(build_path("#{name}.p5m.1"), pkg_generate)
 
     # Add necessary metadata to the generated manifest.
     metadata_template = template("p5p_metadata.erb").result(binding)
-    File.open("#{build_path}/#{name}.mog", "w") do |manifest|
-      manifest.puts metadata_template
+    File.write(build_path("#{name}.mog"), metadata_template)
+
+    # Combine template and filelist; allow user to edit before proceeding
+    File.open(manifest_fn, "w") do |manifest|
+      manifest.write metadata_template
+      manifest.write pkg_generate
     end
-    pkg_mogrify = safesystemout("pkgmogrify", "#{build_path}/#{name}.p5m", "#{build_path}/#{name}.mog")
-    File.open("#{build_path}/#{name}.p5m.2", "w") do |manifest|
-      manifest.puts pkg_mogrify
-    end
-    safesystem("cp", "#{build_path}/#{name}.p5m.2", "#{build_path}/#{name}.p5m")
+    edit_file(manifest_fn) if attributes[:edit?]
+
+    # Execute the transmogrification on the manifest
+    pkg_mogrify = safesystemout("pkgmogrify", manifest_fn)
+    File.write(build_path("#{name}.p5m.2"), pkg_mogrify)
+    safesystem("cp", build_path("#{name}.p5m.2"), manifest_fn)
 
     # Evaluate dependencies.
     if !attributes[:no_auto_depends?]
-	    pkgdepend_gen = safesystemout("pkgdepend", "generate",  "-md", "#{staging_path}",  "#{build_path}/#{name}.p5m")
-	    File.open("#{build_path}/#{name}.p5m.3", "w") do |manifest|
-	      manifest.puts pkgdepend_gen
-	    end
-	    safesystem("pkgdepend", "resolve",  "-m", "#{build_path}/#{name}.p5m.3")
-	    safesystem("cp", "#{build_path}/#{name}.p5m.3.res", "#{build_path}/#{name}.p5m")
+	    pkgdepend_gen = safesystemout("pkgdepend", "generate",  "-md", "#{staging_path}",  manifest_fn)
+      File.write(build_path("#{name}.p5m.3"), pkgdepend_gen)
+
+      # Allow user to review added dependencies
+      edit_file(build_path("#{name}.p5m.3")) if attributes[:edit?]
+
+	    safesystem("pkgdepend", "resolve",  "-m", build_path("#{name}.p5m.3"))
+      safesystem("cp", build_path("#{name}.p5m.3.res"), manifest_fn)
     end
 
     # Final format of manifest
-    safesystem("pkgfmt", "#{build_path}/#{name}.p5m")
+    safesystem("pkgfmt", manifest_fn)
 
-    edit_file("#{build_path}/#{name}.p5m") if attributes[:edit?]
+    # Final edit for lint check and packaging
+    edit_file(manifest_fn) if attributes[:edit?]
 
     # Add any facets or actuators that are needed.
     # TODO(jcraig): add manpage actuator to enable install wo/ man pages
 
     # Verify the package.
     if attributes[:p5p_lint] then
-      safesystem("pkglint", "#{build_path}/#{name}.p5m")
+      safesystem("pkglint", manifest_fn)
     end
 
     # Publish the package.
-    safesystem("pkgrepo", "create", "#{build_path}/#{name}_repo")
-    safesystem("pkgrepo", "set", "-s", "#{build_path}/#{name}_repo",
-      "publisher/prefix=#{attributes[:p5p_publisher]}")
-    safesystem("pkgsend", "-s", "#{build_path}/#{name}_repo",
+    repo_path = build_path("#{name}_repo")
+    safesystem("pkgrepo", "create", repo_path)
+    safesystem("pkgrepo", "set", "-s", repo_path, "publisher/prefix=#{attributes[:p5p_publisher]}")
+    safesystem("pkgsend", "-s", repo_path,
       "publish", "-d", "#{staging_path}", "#{build_path}/#{name}.p5m")
-    safesystem("pkgrecv", "-s", "#{build_path}/#{name}_repo", "-a",
-      "-d", "#{build_path}/#{name}.p5p", "#{name}")
+    safesystem("pkgrecv", "-s", repo_path, "-a",
+      "-d", build_path("#{name}.p5p"), name)
 
     # Test the package
     if attributes[:p5p_validate] then
-      safesystem("pkg", "install",  "-nvg", "#{build_path}/#{name}.p5p", "#{name}")
+      safesystem("pkg", "install",  "-nvg", build_path("#{name}.p5p"), name)
     end
 
     # Cleanup
-    safesystem("mv", "#{build_path}/#{name}.p5p", output_path)
+    safesystem("mv", build_path("#{name}.p5p"), output_path)
 
   end # def output
 end # class FPM::Package::IPS
