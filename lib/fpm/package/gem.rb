@@ -114,7 +114,7 @@ class FPM::Package::Gem < FPM::Package
     # where missing 'build' number prevents correct dependency resolution by target
     # package manager. Ie. for dpkg 1.1 != 1.1.0
     m = spec.version.to_s.scan(/(\d+)\.?/)
-    self.version = m.flatten.fill('0', m.length..2).join('.') 
+    self.version = m.flatten.fill('0', m.length..2).join('.')
 
     self.vendor = spec.author
     self.url = spec.homepage
@@ -132,7 +132,7 @@ class FPM::Package::Gem < FPM::Package
     self.description = description_options.find { |d| !(d.nil? or d.strip.empty?) }
 
     # Upstream rpms seem to do this, might as well share.
-    # TODO(sissel): Figure out how to hint this only to rpm? 
+    # TODO(sissel): Figure out how to hint this only to rpm?
     # maybe something like attributes[:rpm_provides] for rpm specific stuff?
     # Or just ignore it all together.
     #self.provides << "rubygem(#{self.name})"
@@ -213,7 +213,7 @@ class FPM::Package::Gem < FPM::Package
       end
     end
   end # def install_to_staging
-  
+
   # Sanitize package name.
   # This prefixes the package name with 'rubygem' (but depends on the attribute
   # :gem_package_name_prefix

@@ -29,7 +29,7 @@ class FPM::Package::RPM < FPM::Package
     "bzip2" => "w9.bzdio"
   } unless defined?(COMPRESSION_MAP)
 
-  option "--use-file-permissions", :flag, 
+  option "--use-file-permissions", :flag,
       "Use existing file permissions when defining ownership and modes."
 
   option "--user", "USER", "Set the user to USER in the %files section. Overrides the user when used with use-file-permissions setting."
@@ -98,7 +98,7 @@ class FPM::Package::RPM < FPM::Package
   option "--attr", "ATTRFILE",
     "Set the attribute for a file (%attr).",
     :multivalued => true, :attribute_name => :attrs
-  
+
   option "--init", "FILEPATH", "Add FILEPATH as an init script",
 	:multivalued => true do |file|
     next File.expand_path(file)
@@ -154,9 +154,9 @@ class FPM::Package::RPM < FPM::Package
        next rpm_trigger
      end
    end
- 
+
   private
-    
+
   # Fix path name
   # Replace [ with [\[] to make rpm not use globs
   # Replace * with [*] to make rpm not use globs
@@ -375,13 +375,13 @@ class FPM::Package::RPM < FPM::Package
       [name, operator, version].join(" ")
     end
     #input.replaces += replaces
-    
+
     self.config_files += rpm.config_files
 
     # rpms support '%dir' things for specifying empty directories to package,
     # but the rpm header itself doesn't actually record this information.
     # so there's no 'directories' to copy, so don't try to merge in the
-    # 'directories' feature. 
+    # 'directories' feature.
     # TODO(sissel): If you want this feature, we'll have to find scan
     # the extracted rpm for empty directories. I'll wait until someone asks for
     # this feature

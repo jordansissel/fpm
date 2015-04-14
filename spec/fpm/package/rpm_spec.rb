@@ -48,7 +48,7 @@ describe FPM::Package::RPM do
       insist { subject.epoch.to_s } == "0"
     end
   end
-  
+
   describe "#to_s" do
     it "should have a default output usable as a filename" do
       subject.name = "name"
@@ -266,7 +266,7 @@ describe FPM::Package::RPM do
         insist { @rpm.tags[:postin] } == "example after_install"
         insist { @rpm.tags[:postinprog] } == "/bin/sh"
       end
- 
+
       it "should have the correct 'before_install' trigger script" do
         insist { @rpm.tags[:triggername][0] } == "test"
         insist { @rpm.tags[:triggerversion][0] } == ""
@@ -308,7 +308,7 @@ describe FPM::Package::RPM do
 
         # For whatever reason, the 'filedigestalgo' tag is an array of numbers.
         # I only ever see one element in this array, so just do value.first
-        # 
+        #
         # Even though you can specify a file digest algorithm of md5, not
         # specifying one at all is also valid in the RPM file itself,
         # and not having one at all means md5. So accept 'nil' or the digest
@@ -392,7 +392,7 @@ describe FPM::Package::RPM do
 
   describe "regressions should not occur", :if => program_exists?("rpmbuild") do
     before :each do
-      @tempfile_handle = 
+      @tempfile_handle =
       @target = Stud::Temporary.pathname
       subject.name = "name"
       subject.version = "1.23"

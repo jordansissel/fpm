@@ -174,7 +174,7 @@ describe FPM::Package::Deb do
     context "when the deb's control section is extracted" do
       let(:control_dir) { Stud::Temporary.directory }
       before do
-        system("ar p '#{target}' control.tar.gz | tar -zx -C '#{control_dir}'") 
+        system("ar p '#{target}' control.tar.gz | tar -zx -C '#{control_dir}'")
         raise "couldn't extract test deb" unless $CHILD_STATUS.success?
       end
 
