@@ -35,12 +35,12 @@ module FPM::Util
   def program_exists?(program)
     # Scan path to find the executable
     # Do this to help the user get a better error message.
-    return program_in_path?(program) if !program.include?("/") 
+    return program_in_path?(program) if !program.include?("/")
     return File.executable?(program)
   end # def program_exists?
 
   def default_shell
-    shell = ENV["SHELL"] 
+    shell = ENV["SHELL"]
     return "/bin/sh" if shell.nil? || shell.empty?
     return shell
   end
@@ -141,7 +141,7 @@ module FPM::Util
   end # def tar_cmd
 
   # Run a block with a value.
-  # Useful in lieu of assigning variables 
+  # Useful in lieu of assigning variables
   def with(value, &block)
     block.call(value)
   end # def with

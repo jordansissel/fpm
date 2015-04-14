@@ -7,7 +7,7 @@ require "fileutils"
 require "tmpdir"
 require "json"
 
-# Support for python packages. 
+# Support for python packages.
 #
 # This supports input, but not output.
 #
@@ -145,7 +145,7 @@ class FPM::Package::Python < FPM::Package
       attributes[:python_package_name_prefix] = attributes[:python_package_prefix]
     end
 
-    begin 
+    begin
       json_test_code = [
         "try:",
         "  import json",
@@ -267,7 +267,7 @@ class FPM::Package::Python < FPM::Package
 
     prefix = "/"
     prefix = attributes[:prefix] unless attributes[:prefix].nil?
-    
+
     # Some setup.py's assume $PWD == current directory of setup.py, so let's
     # chdir first.
     ::Dir.chdir(project_dir) do

@@ -56,7 +56,7 @@ describe FPM::Util do
         subject.safesystem("true")
       end
     end
-    context "with $SHELL set to an empty string" do 
+    context "with $SHELL set to an empty string" do
       before do
         @orig_shell = ENV["SHELL"]
         ENV["SHELL"] = ""

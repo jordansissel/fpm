@@ -116,7 +116,7 @@ describe FPM::Package do
     it_behaves_like :Default, description.gsub(/^#/, "").to_sym, {}
   end
 
-  describe "#url" do 
+  describe "#url" do
     it_behaves_like :Default, description.gsub(/^#/, "").to_sym, nil
     it_behaves_like :Mutator, description.gsub(/^#/, "").to_sym
   end

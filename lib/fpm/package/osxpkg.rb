@@ -21,7 +21,7 @@ class FPM::Package::OSXpkg < FPM::Package
   POSTINSTALL_ACTIONS = [ "logout", "restart", "shutdown" ]
   OWNERSHIP_OPTIONS = ["recommended", "preserve", "preserve-other"]
 
-  option "--identifier-prefix", "IDENTIFIER_PREFIX", 
+  option "--identifier-prefix", "IDENTIFIER_PREFIX",
     "Reverse domain prefix prepended to package identifier, " \
     "ie. 'org.great.my'. If this is omitted, the identifer " \
     "will be the package name."
@@ -87,12 +87,12 @@ class FPM::Package::OSXpkg < FPM::Package
         # scripts are required to be executable
         File.chmod(0755, pkgscript)
       end
-    end 
+    end
   end # def write_scripts
 
   # Returns path of a processed template PackageInfo given to 'pkgbuild --info'
   # note: '--info' is undocumented:
-  # http://managingosx.wordpress.com/2012/07/05/stupid-tricks-with-pkgbuild 
+  # http://managingosx.wordpress.com/2012/07/05/stupid-tricks-with-pkgbuild
   def pkginfo_template_path
     pkginfo_template = Tempfile.open("fpm-PackageInfo")
     pkginfo_data = template("osxpkg.erb").result(binding)
