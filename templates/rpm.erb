@@ -17,8 +17,11 @@
 # Disable checking for unpackaged files ?
 #%undefine __check_files
 
-# Use <%= attributes[:rpm_digest] %> file digest method
+# Use <%= attributes[:rpm_digest] %> file digest method. 
+# The first macro is the one used in RPM v4.9.1.1
 %define _binary_filedigest_algorithm <%= digest_algorithm %>
+# This is the macro I find on OSX when Homebrew provides rpmbuild (rpm v5.4.14)
+%define _build_binary_file_digest_algo <%= digest_algorithm %>
 
 # Use <%= attributes[:rpm_compression] %> payload compression
 %define _binary_payload <%= payload_compression %> 
