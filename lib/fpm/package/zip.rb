@@ -36,28 +36,16 @@ class FPM::Package::Zip < FPM::Package
     dir.cleanup_build
   end # def input
 
-  # Output a tarball.
-  #
-  # If the output path ends predictably (like in .tar.gz) it will try to obey
-  # the compression type.
+  # Output a zip file.
   def output(output_path)
     output_check(output_path)
-    
-    files = Find.find(staging_path).to_a
-    safesystem("zip", output_path, *files)
+
+    with(File.expand_path(output_path)) do |output_path|
+      ::Dir.chdir(staging_path) do
+        files = Find.find('.').to_a
+        safesystem("zip", output_path, *files)
+      end
+    end
   end # def output
 
-  # Generate the proper tar flags based on the path name.
-  def tar_compression_flag(path)
-    case path
-      when /\.tar\.bz2$/
-        return "-j"
-      when /\.tar\.gz$|\.tgz$/
-        return "-z"
-      when /\.tar\.xz$/
-        return "-J"
-      else
-        return nil
-    end
-  end # def tar_compression_flag
-end # class FPM::Package::Tar
+end # class FPM::Package::Zip
