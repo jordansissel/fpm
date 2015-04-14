@@ -144,7 +144,7 @@ That said, some basic guidelines, which you are free to ignore :)
   [mailing list](http://groups.google.com/group/fpm-users), or email
   me personally (jls@semicomplete.com) if that is more comfortable.
 * If you think you found a bug, it probably is a bug. File it on
-  [jira](https://github.com/jordansissel/fpm/issues) or send details to
+  [github](https://github.com/jordansissel/fpm/issues) or send details to
   the [mailing list](http://groups.google.com/group/fpm-users).
 * If you want to send patches, best way is to fork this repo and send me a pull
   request. If you don't know git, I also accept diff(1) formatted patches -
