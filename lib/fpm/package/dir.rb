@@ -75,7 +75,7 @@ class FPM::Package::Dir < FPM::Package
         end
       end
     rescue Errno::ENOENT => e
-      raise FPM::InvalidPackageConfiguration, 
+      raise FPM::InvalidPackageConfiguration,
         "Cannot chdir to '#{chdir}'. Does it exist?"
     end
 
@@ -133,7 +133,7 @@ class FPM::Package::Dir < FPM::Package
 
     # For single file copies, permit file destinations
     fileinfo = File.lstat(source)
-    if fileinfo.file? && !File.directory?(destination) 
+    if fileinfo.file? && !File.directory?(destination)
       if destination[-1,1] == "/"
         copy(source, File.join(destination, source))
       else

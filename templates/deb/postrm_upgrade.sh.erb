@@ -1,5 +1,9 @@
 #!/bin/sh
 after_remove() {
+<%# Making sure that at least one command is in the function -%>
+<%# avoids a lot of potential errors, including the case that -%>
+<%# the script is non-empty, but just whitespace and/or comments -%>
+    :
 <% if script?(:after_remove) -%>
 <%=  script(:after_remove) %>
 <% end -%>
