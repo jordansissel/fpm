@@ -1,15 +1,21 @@
 #!/bin/sh
 after_upgrade() {
+<%# Making sure that at least one command is in the function -%>
+<%# avoids a lot of potential errors, including the case that -%>
+<%# the script is non-empty, but just whitespace and/or comments -%>
+    :
 <% if script?(:after_upgrade) -%>
 <%=  script(:after_upgrade) %>
 <% end -%>
 }
 
 after_install() {
+<%# Making sure that at least one command is in the function -%>
+<%# avoids a lot of potential errors, including the case that -%>
+<%# the script is non-empty, but just whitespace and/or comments -%>
+    :
 <% if script?(:after_install) -%>
 <%=  script(:after_install) %>
-<% else -%>
-  :
 <% end -%>
 }
 
@@ -35,4 +41,3 @@ then
     echo "Failed to install before the post-installation script was run." >&2
     exit 1
 fi
-

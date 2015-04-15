@@ -75,7 +75,7 @@ class FPM::Package::Solaris < FPM::Package
       # Should create a package directory named by the package name.
       safesystem("pkgmk", "-o", "-f", "#{build_path}/Prototype", "-d", build_path)
     end
-    
+
 
     # Convert the 'package directory' built above to a real solaris package.
     safesystem("pkgtrans", "-s", build_path, output_path, name)
