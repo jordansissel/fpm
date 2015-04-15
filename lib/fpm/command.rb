@@ -24,7 +24,7 @@ class FPM::Command < Clamp::Command
   include FPM::Util
 
   def help(*args)
-    return [
+    lines = [
       "Intro:",
       "",
       "  This is fpm version #{FPM::VERSION}",
@@ -35,10 +35,14 @@ class FPM::Command < Clamp::Command
       "  You can find support on irc (#fpm on freenode irc) or via email with",
       "  fpm-users@googlegroups.com",
       "",
-
-      # Lastly, include the default help output via Clamp.
-      super
-    ].join("\n")
+      "Loaded package types:",
+    ]
+    FPM::Package.types.each do |name, _|
+      lines.push("  - #{name}")
+    end
+    lines.push("")
+    lines.push(super)
+    return lines.join("\n")
   end # def help
 
   option "-t", "OUTPUT_TYPE",
