@@ -76,33 +76,7 @@ class FPM::Package::Pacman < FPM::Package
     FileUtils.rm(pkginfo)
     FileUtils.rm(mtree)
     FileUtils.rm(install)
-    # TODO: install script
-    # This is difficult. We have to extract the contents of
-    # bash functions.
-    #install_parts = { "global": [] }
-    #install_contents = File.read(install).split("\n")
-    #install_contents.each do |install_line|
-    #  m = /^\s*(\w+)\s*\(\s*\)\s*{\s*$/.match(install_line)
-    #  if m.nil?
-    #    install_parts["global"].push(install_line)
-    #  else
-    #    install_parts[m[1]]
-    #  end
-    #end
-    #parse_install = lambda do |field|
-    #pre_install — The script is run right before files are
-    #extracted. One argument is passed: new package version.
-    #post_install — The script is run right after files are
-    #extracted. One argument is passed: new package version.
-    #pre_upgrade — The script is run right before files are
-    #extracted. Two arguments are passed in the following order: new
-    #package version, old package version.  post_upgrade — The script
-    #is run right after files are extracted. Two arguments are passed
-    #in the following order: new package version, old package version.
-    #pre_remove — The script is run right before files are
-    #removed. One argument is passed: old package version.
-    #post_remove — The script is run right after files are
-    #removed. One argument is passed: old package version.
+
 
     control_lines = control_contents.split("\n")
     control_lines.each do |line|
@@ -168,12 +142,51 @@ class FPM::Package::Pacman < FPM::Package
     # - makepkgopt: See above
 
     # TODO: scripts, directories.
+    # For directories, see line 436 of rpm's output() to see what directories
+    #   are all about.
+    # TODO: install script
+    # This is difficult. We have to extract the contents of
+    # bash functions.
+    #install_parts = { "global": [] }
+    #install_contents = File.read(install).split("\n")
+    #install_contents.each do |install_line|
+    #  m = /^\s*(\w+)\s*\(\s*\)\s*{\s*$/.match(install_line)
+    #  if m.nil?
+    #    install_parts["global"].push(install_line)
+    #  else
+    #    install_parts[m[1]]
+    #  end
+    #end
+    #parse_install = lambda do |field|
+    #pre_install — The script is run right before files are
+    #extracted. One argument is passed: new package version.
+    #post_install — The script is run right after files are
+    #extracted. One argument is passed: new package version.
+    #pre_upgrade — The script is run right before files are
+    #extracted. Two arguments are passed in the following order: new
+    #package version, old package version.  post_upgrade — The script
+    #is run right after files are extracted. Two arguments are passed
+    #in the following order: new package version, old package version.
+    #pre_remove — The script is run right before files are
+    #removed. One argument is passed: old package version.
+    #post_remove — The script is run right after files are
+    #removed. One argument is passed: old package version.
 
+    
   end # def input
-  
+
   private
   # Output this package to the given path.
   def output(path)
+    output_check(path)
+    # write .PKGINFO (generate) to staging_path
+    # write .INSTALL (template) to staging_path
+    # write .MTREE (See below command) to staging_path
+    #   command to generate .MTREE
+    #     LANG=C bsdtar -czf .MTREE --format=mtree \
+    #     --options='!all,use-set,type,uid,gid,mode,time,size,md5,sha256,link' \
+    #     .INSTALL .PKGINFO *
+    # Tar up
     raise NotImplementedError.new("#{self.class.name} does not yet support " \
                                   "creating #{self.type} packages")
   end # def output
