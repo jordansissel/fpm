@@ -139,6 +139,11 @@ class FPM::Command < Clamp::Command
     excludes << val
     next excludes
   end # -x / --exclude
+
+  option "--exclude-file", "EXCLUDE_PATH",
+    "The path to a file containing a newline-sparated list of "\
+    "patterns to exclude from input."
+
   option "--description", "DESCRIPTION", "Add a description for this package." \
     " You can include '\n' sequences to indicate newline breaks.",
     :default => "no description" do |val|
@@ -343,6 +348,22 @@ class FPM::Command < Clamp::Command
       File.new(inputs, "r").each_line do |line|
         # Handle each line as if it were an argument
         input.input(line.strip)
+      end
+    end
+
+    # If --exclude-file was specified, read it as a file and append to
+    # the exclude pattern list.
+    if !exclude_file.nil?
+      if !File.exists?(exclude_file)
+        logger.fatal("File given for --exclude-file does not exist (#{exclude_file})")
+        return 1
+      end
+
+      # Read each line as a path
+      File.new(exclude-file, "r").each_line do |line| 
+        # Handle each line as if it were an argument
+        # 'excludes' is defined above near the -x option.
+        excludes << line.strip
       end
     end
 
