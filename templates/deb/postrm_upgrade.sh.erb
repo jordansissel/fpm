@@ -1,16 +1,25 @@
+#!/bin/sh
 after_remove() {
+<%# Making sure that at least one command is in the function -%>
+<%# avoids a lot of potential errors, including the case that -%>
+<%# the script is non-empty, but just whitespace and/or comments -%>
+    :
 <% if script?(:after_remove) -%>
 <%=  script(:after_remove) %>
 <% end -%>
 }
 
 dummy() {
+    :
 }
 
 
-if [ "${1}" = "remove" ]
+if [ "${1}" = "remove" -o "${1}" = "abort-install" ]
 then
     # "after remove" goes here
+    # "abort-install" happens when the pre-installation script failed.
+    #   In that case, this script, which should be idemptoent, is run
+    #   to ensure a clean roll-back of the installation.
     after_remove
 elif [ "${1}" = "purge" -a -z "${2}" ]
 then
