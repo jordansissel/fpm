@@ -23,7 +23,7 @@ class FPM::Package::Deb < FPM::Package
   # The list of supported compression types. Default is gz (gzip)
   COMPRESSION_TYPES = [ "gz", "bzip2", "xz" ]
 
-  option "--ignore-iteration-in-dependencies", :flag, 
+  option "--ignore-iteration-in-dependencies", :flag,
             "For '=' (equal) dependencies, allow iterations on the specified " \
             "version. Default is to be specific. This option allows the same " \
             "version of a package but any iteration is permitted"
@@ -73,10 +73,10 @@ class FPM::Package::Deb < FPM::Package
     value.to_i
   end
 
-  option "--priority", "PRIORITY", 
+  option "--priority", "PRIORITY",
     "The debian package 'priority' value.", :default => "extra"
 
-  option "--use-file-permissions", :flag, 
+  option "--use-file-permissions", :flag,
     "Use existing file permissions when defining ownership and modes"
 
   option "--user", "USER", "The owner of files in this package", :default => 'root'
@@ -162,7 +162,7 @@ class FPM::Package::Deb < FPM::Package
         @architecture = %x{dpkg --print-architecture 2> /dev/null}.chomp
         if $?.exitstatus != 0 or @architecture.empty?
           # if dpkg fails or emits nothing, revert back to uname -m
-          @architecture = %x{uname -m}.chomp 
+          @architecture = %x{uname -m}.chomp
         end
       else
         @architecture = %x{uname -m}.chomp
@@ -209,7 +209,7 @@ class FPM::Package::Deb < FPM::Package
 
     return @name
   end # def name
-  
+
   def prefix
     return (attributes[:prefix] or "/")
   end # def prefix
@@ -227,7 +227,7 @@ class FPM::Package::Deb < FPM::Package
 
       control = File.read(File.join(path, "control"))
 
-      parse = lambda do |field| 
+      parse = lambda do |field|
         value = control[/^#{field.capitalize}: .*/]
         if value.nil?
           return nil
@@ -289,7 +289,7 @@ class FPM::Package::Deb < FPM::Package
       m = dep_re.match(dep)
       if m
         name, op, version = m.captures
-        # deb uses ">>" and "<<" for greater and less than respectively. 
+        # deb uses ">>" and "<<" for greater and less than respectively.
         # fpm wants just ">" and "<"
         op = "<" if op == "<<"
         op = ">" if op == ">>"
@@ -309,10 +309,10 @@ class FPM::Package::Deb < FPM::Package
       when "gz"
         datatar = "data.tar.gz"
         compression = "-z"
-      when "bzip2" 
+      when "bzip2"
         datatar = "data.tar.bz2"
         compression = "-j"
-      when "xz" 
+      when "xz"
         datatar = "data.tar.xz"
         compression = "-J"
       else
@@ -373,7 +373,7 @@ class FPM::Package::Deb < FPM::Package
       when "gz", nil
         datatar = build_path("data.tar.gz")
         compression = "-z"
-      when "bzip2" 
+      when "bzip2"
         datatar = build_path("data.tar.bz2")
         compression = "-j"
       when "xz"
@@ -577,7 +577,7 @@ class FPM::Package::Deb < FPM::Package
     with(build_path("control.tar.gz")) do |controltar|
       logger.info("Creating", :path => controltar, :from => control_path)
 
-      args = [ tar_cmd, "-C", control_path, "-zcf", controltar, 
+      args = [ tar_cmd, "-C", control_path, "-zcf", controltar,
         "--owner=0", "--group=0", "--numeric-owner", "." ]
       safesystem(*args)
     end
@@ -637,7 +637,7 @@ class FPM::Package::Deb < FPM::Package
         # deb maintainer scripts are required to be executable
         File.chmod(0755, controlscript)
       end
-    end 
+    end
   end # def write_scripts
 
   def write_conffiles

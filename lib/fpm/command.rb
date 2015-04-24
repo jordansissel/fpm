@@ -215,7 +215,7 @@ class FPM::Command < Clamp::Command
   option "--template-value", "KEY=VALUE",
     "Make 'key' available in script templates, so <%= key %> given will be " \
     "the provided value. Implies --template-scripts",
-    :multivalued => true do |kv| 
+    :multivalued => true do |kv|
     @template_scripts = true
     next kv.split("=", 2)
   end
@@ -272,7 +272,7 @@ class FPM::Command < Clamp::Command
     # fpm would assume you meant to add '.' to the end of the commandline.
     # Let's hack that. https://github.com/jordansissel/fpm/issues/187
     if input_type == "dir" and args.empty? and !chdir.nil?
-      logger.info("No args, but -s dir and -C are given, assuming '.' as input") 
+      logger.info("No args, but -s dir and -C are given, assuming '.' as input")
       args << "."
     end
 
@@ -293,7 +293,7 @@ class FPM::Command < Clamp::Command
 
     input = input_class.new
 
-    # Merge in package settings. 
+    # Merge in package settings.
     # The 'settings' stuff comes in from #apply_options, which goes through
     # all the options defined in known packages and puts them into our command.
     # Flags in packages defined as "--foo-bar" become named "--<packagetype>-foo-bar"
@@ -310,10 +310,10 @@ class FPM::Command < Clamp::Command
         # clamp makes option attributes available as accessor methods
         # --foo-bar is available as 'foo_bar'. Put these in the package
         # attributes hash. (See FPM::Package#attributes)
-        # 
+        #
         # In the case of 'flag' options, the accessor is actually 'foo_bar?'
         # instead of just 'foo_bar'
-       
+
         # If the instance variable @{attr} is defined, then
         # it means the flag was given on the command line.
         flag_given = instance_variable_defined?("@#{attr}")
@@ -328,8 +328,8 @@ class FPM::Command < Clamp::Command
     # For directories, this means paths. For things like gem and python, this
     # means package name or paths to the packages (rails, foo-1.0.gem, django,
     # bar/setup.py, etc)
-    args.each do |arg| 
-      input.input(arg) 
+    args.each do |arg|
+      input.input(arg)
     end
 
     # If --inputs was specified, read it as a file.
@@ -340,7 +340,7 @@ class FPM::Command < Clamp::Command
       end
 
       # Read each line as a path
-      File.new(inputs, "r").each_line do |line| 
+      File.new(inputs, "r").each_line do |line|
         # Handle each line as if it were an argument
         input.input(line.strip)
       end
@@ -389,7 +389,7 @@ class FPM::Command < Clamp::Command
 
     input.attrs = h
 
-    
+
     script_errors = []
     setscript = proc do |scriptname|
       # 'self.send(scriptname) == self.before_install == --before-install
@@ -435,9 +435,9 @@ class FPM::Command < Clamp::Command
       end
     end
 
-    # Write the output somewhere, package can be nil if no --package is specified, 
+    # Write the output somewhere, package can be nil if no --package is specified,
     # and that's OK.
-    
+
     # If the package output (-p flag) is a directory, write to the default file name
     # but inside that directory.
     if ! package.nil? && File.directory?(package)

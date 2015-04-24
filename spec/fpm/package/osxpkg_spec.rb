@@ -34,7 +34,7 @@ describe FPM::Package::OSXpkg do
     end
   end
 
-  describe "#output", :if => platform_is_darwin do 
+  describe "#output", :if => platform_is_darwin do
     before :all do
       # output a package, use it as the input, set the subject to that input
       # package. This helps ensure that we can write and read packages

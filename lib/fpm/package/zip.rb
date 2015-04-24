@@ -42,7 +42,7 @@ class FPM::Package::Zip < FPM::Package
   # the compression type.
   def output(output_path)
     output_check(output_path)
-    
+
     files = Find.find(staging_path).to_a
     safesystem("zip", output_path, *files)
   end # def output

@@ -1,18 +1,31 @@
+#!/bin/sh
 after_upgrade() {
+<%# Making sure that at least one command is in the function -%>
+<%# avoids a lot of potential errors, including the case that -%>
+<%# the script is non-empty, but just whitespace and/or comments -%>
+    :
 <% if script?(:after_upgrade) -%>
 <%=  script(:after_upgrade) %>
 <% end -%>
 }
 
 after_install() {
+<%# Making sure that at least one command is in the function -%>
+<%# avoids a lot of potential errors, including the case that -%>
+<%# the script is non-empty, but just whitespace and/or comments -%>
+    :
 <% if script?(:after_install) -%>
 <%=  script(:after_install) %>
 <% end -%>
 }
 
-if [ "${1}" = "configure" -a -z "${2}" ]
+if [ "${1}" = "configure" -a -z "${2}" ] || \
+   [ "${1}" = "abort-remove" ]
 then
     # "after install" here
+    # "abort-remove" happens when the pre-removal script failed.
+    #   In that case, this script, which should be idemptoent, is run
+    #   to ensure a clean roll-back of the removal.
     after_install
 elif [ "${1}" = "configure" -a -n "${2}" ]
 then
@@ -28,4 +41,3 @@ then
     echo "Failed to install before the post-installation script was run." >&2
     exit 1
 fi
-
