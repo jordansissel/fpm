@@ -350,7 +350,6 @@ describe FPM::Package::Deb do
       subject.attributes[:deb_user] = "root"
       subject.attributes[:deb_group] = "root"
 
-      subject.instance_variable_set(:@config_files, ["/etc/init.d/test"])
       subject.instance_variable_set(:@staging_path, staging_path)
 
       subject.output(target)
