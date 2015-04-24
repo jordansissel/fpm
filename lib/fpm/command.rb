@@ -140,7 +140,7 @@ class FPM::Command < Clamp::Command
     next excludes
   end # -x / --exclude
 
-  option "--exclude-file", "EXLCUDE_PATH",
+  option "--exclude-file", "EXCLUDE_PATH",
     "The path to a file containing a newline-sparated list of "\
     "patterns to exclude from input."
 
@@ -353,9 +353,9 @@ class FPM::Command < Clamp::Command
 
     # If --exclude-file was specified, read it as a file and append to
     # the exclude pattern list.
-    if !exclude-file.nil?
-      if !File.exists?(exclude-file)
-        logger.fatal("File given for --exclude-file does not exist (#{exclude-file})")
+    if !exclude_file.nil?
+      if !File.exists?(exclude_file)
+        logger.fatal("File given for --exclude-file does not exist (#{exclude_file})")
         return 1
       end
 
