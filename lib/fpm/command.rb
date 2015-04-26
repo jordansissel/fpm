@@ -200,7 +200,7 @@ class FPM::Command < Clamp::Command
   option "--after-upgrade", "FILE",
     "A script to be run after package upgrade. If not specified,\n" \
         "--before-install, --after-install, --before-remove, and \n" \
-        "--after-remove wil behave in a backwards-compatible manner\n" \
+        "--after-remove will behave in a backwards-compatible manner\n" \
         "(they will not be upgrade-case aware).\n" \
         "Currently only supports deb and rpm packages." do |val|
     File.expand_path(val) # Get the full path to the script
@@ -208,7 +208,7 @@ class FPM::Command < Clamp::Command
   option "--before-upgrade", "FILE",
     "A script to be run before package upgrade. If not specified,\n" \
         "--before-install, --after-install, --before-remove, and \n" \
-        "--after-remove wil behave in a backwards-compatible manner\n" \
+        "--after-remove will behave in a backwards-compatible manner\n" \
         "(they will not be upgrade-case aware).\n" \
         "Currently only supports deb and rpm packages." do |val|
     File.expand_path(val) # Get the full path to the script
