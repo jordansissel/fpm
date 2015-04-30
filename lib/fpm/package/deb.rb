@@ -23,7 +23,7 @@ class FPM::Package::Deb < FPM::Package
   # The list of supported compression types. Default is gz (gzip)
   COMPRESSION_TYPES = [ "gz", "bzip2", "xz" ]
 
-  option "--ignore-iteration-in-dependencies", :flag, 
+  option "--ignore-iteration-in-dependencies", :flag,
             "For '=' (equal) dependencies, allow iterations on the specified " \
             "version. Default is to be specific. This option allows the same " \
             "version of a package but any iteration is permitted"
@@ -73,10 +73,10 @@ class FPM::Package::Deb < FPM::Package
     value.to_i
   end
 
-  option "--priority", "PRIORITY", 
+  option "--priority", "PRIORITY",
     "The debian package 'priority' value.", :default => "extra"
 
-  option "--use-file-permissions", :flag, 
+  option "--use-file-permissions", :flag,
     "Use existing file permissions when defining ownership and modes"
 
   option "--user", "USER", "The owner of files in this package", :default => 'root'
@@ -124,6 +124,10 @@ class FPM::Package::Deb < FPM::Package
     next @custom_fields
   end
 
+  option "--no-default-config-files", :flag,
+    "Do not add all files in /etc as configuration files by default for Debian packages.",
+    :default => false
+
   option "--shlibs", "SHLIBS", "Include control/shlibs content. This flag " \
     "expects a string that is used as the contents of the shlibs file. " \
     "See the following url for a description of this file and its format: " \
@@ -162,7 +166,7 @@ class FPM::Package::Deb < FPM::Package
         @architecture = %x{dpkg --print-architecture 2> /dev/null}.chomp
         if $?.exitstatus != 0 or @architecture.empty?
           # if dpkg fails or emits nothing, revert back to uname -m
-          @architecture = %x{uname -m}.chomp 
+          @architecture = %x{uname -m}.chomp
         end
       else
         @architecture = %x{uname -m}.chomp
@@ -209,7 +213,7 @@ class FPM::Package::Deb < FPM::Package
 
     return @name
   end # def name
-  
+
   def prefix
     return (attributes[:prefix] or "/")
   end # def prefix
@@ -227,7 +231,7 @@ class FPM::Package::Deb < FPM::Package
 
       control = File.read(File.join(path, "control"))
 
-      parse = lambda do |field| 
+      parse = lambda do |field|
         value = control[/^#{field.capitalize}: .*/]
         if value.nil?
           return nil
@@ -267,6 +271,22 @@ class FPM::Package::Deb < FPM::Package
       #self.config_files = config_files
 
       self.dependencies += parse_depends(parse.call("Depends")) if !attributes[:no_auto_depends?]
+
+      if File.file?(File.join(path, "preinst"))
+        self.scripts[:before_install] = File.read(File.join(path, "preinst"))
+      end
+      if File.file?(File.join(path, "postinst"))
+        self.scripts[:after_install] = File.read(File.join(path, "postinst"))
+      end
+      if File.file?(File.join(path, "prerm"))
+        self.scripts[:before_remove] = File.read(File.join(path, "prerm"))
+      end
+      if File.file?(File.join(path, "postrm"))
+        self.scripts[:after_remove] = File.read(File.join(path, "postrm"))
+      end
+      if File.file?(File.join(path, "conffiles"))
+        self.config_files = File.read(File.join(path, "conffiles")).split("\n")
+      end
     end
   end # def extract_info
 
@@ -289,7 +309,7 @@ class FPM::Package::Deb < FPM::Package
       m = dep_re.match(dep)
       if m
         name, op, version = m.captures
-        # deb uses ">>" and "<<" for greater and less than respectively. 
+        # deb uses ">>" and "<<" for greater and less than respectively.
         # fpm wants just ">" and "<"
         op = "<" if op == "<<"
         op = ">" if op == ">>"
@@ -309,10 +329,10 @@ class FPM::Package::Deb < FPM::Package
       when "gz"
         datatar = "data.tar.gz"
         compression = "-z"
-      when "bzip2" 
+      when "bzip2"
         datatar = "data.tar.bz2"
         compression = "-j"
-      when "xz" 
+      when "xz"
         datatar = "data.tar.xz"
         compression = "-J"
       else
@@ -373,7 +393,7 @@ class FPM::Package::Deb < FPM::Package
       when "gz", nil
         datatar = build_path("data.tar.gz")
         compression = "-z"
-      when "bzip2" 
+      when "bzip2"
         datatar = build_path("data.tar.bz2")
         compression = "-j"
       when "xz"
@@ -577,7 +597,7 @@ class FPM::Package::Deb < FPM::Package
     with(build_path("control.tar.gz")) do |controltar|
       logger.info("Creating", :path => controltar, :from => control_path)
 
-      args = [ tar_cmd, "-C", control_path, "-zcf", controltar, 
+      args = [ tar_cmd, "-C", control_path, "-zcf", controltar,
         "--owner=0", "--group=0", "--numeric-owner", "." ]
       safesystem(*args)
     end
@@ -637,33 +657,48 @@ class FPM::Package::Deb < FPM::Package
         # deb maintainer scripts are required to be executable
         File.chmod(0755, controlscript)
       end
-    end 
+    end
   end # def write_scripts
 
   def write_conffiles
-    return unless config_files.any?
-
-    # scan all conf file paths for files and add them
     allconfigs = []
-    config_files.each do |path|
+
+    # expand recursively a given path to be put in allconfigs
+    def add_path(path, allconfigs)
       # Strip leading /
       path = path[1..-1] if path[0,1] == "/"
       cfg_path = File.expand_path(path, staging_path)
-      begin
-        Find.find(cfg_path) do |p|
-          allconfigs << p.gsub("#{staging_path}/", '') if File.file? p
-        end
-      rescue Errno::ENOENT => e
-        raise FPM::InvalidPackageConfiguration,
-          "Error trying to use '#{cfg_path}' as a config file in the package. Does it exist?"
+      Find.find(cfg_path).select { |p| File.file?(p) }.each do |p|
+        allconfigs << p.gsub("#{staging_path}/", '')
       end
     end
+
+    # scan all conf file paths for files and add them
+    config_files.each do |path|
+      begin
+        add_path(path, allconfigs)
+      rescue Errno::ENOENT
+        raise FPM::InvalidPackageConfiguration,
+          "Error trying to use '#{path}' as a config file in the package. Does it exist?"
+      end
+    end
+
+    # Also add everything in /etc
+    begin
+      if !attributes[:deb_no_default_config_files?]
+        logger.warn("Debian packaging tools generally labels all files in /etc as config files, " \
+                    "as mandated by policy, so fpm defaults to this behavior for deb packages. " \
+                    "You can disable this default behavior with --deb-no-default-config-files flag")
+        add_path("/etc", allconfigs)
+      end
+    rescue Errno::ENOENT
+    end
+
     allconfigs.sort!.uniq!
+    return unless allconfigs.any?
 
     with(control_path("conffiles")) do |conffiles|
       File.open(conffiles, "w") do |out|
-        # 'config_files' comes from FPM::Package and is usually set with
-        # FPM::Command's --config-files flag
         allconfigs.each do |cf|
           # We need to put the leading / back. Stops lintian relative-conffile error.
           out.puts("/" + cf)
