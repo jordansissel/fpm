@@ -40,8 +40,6 @@ class FPM::Package::Pacman < FPM::Package
     File.expand_path(val) # Get the full path to the script
   end # --check-script
 
-
-
   # This method is invoked on a package when it has been convertxed to a new
   # package format. The purpose of this method is to do any extra conversion
   # steps, like translating dependency conditions, etc.
@@ -49,6 +47,70 @@ class FPM::Package::Pacman < FPM::Package
     # nothing to do by default. Subclasses may implement this.
     # See the RPM package class for an example.
   #end # def converted_from
+
+  # KNOWN ISSUE:
+  # If an un-matched bracket is used in valid bash, as in
+  # `echo "{"`, this function will choke.
+  # However, to cover this case basically
+  # requires writing almost half a bash parser,
+  # and it is a very small corner case.
+  # Otherwise, this approach is very robust.
+  def gobble_function(cons,prod)
+    level = 1
+    while level > 0
+      line = cons.next
+      # Not the best, but pretty good
+      # short of writing an *actual* sh
+      # parser
+      level += line.count "{"
+      level -= line.count "}"
+      if level > 0
+        prod.push(line)
+      else
+        fine = line.sub(/\s*[}]\s*$/, "")
+        if !(fine =~ /^\s*$/)
+          prod.push(fine)
+        end
+      end
+    end
+  end
+
+  def parse_install_script(path)
+
+    global_lines = []
+    look_for = Set.new(["pre_install", "post_install",
+              "pre_upgrade", "post_upgrade",
+              "pre_remove", "post_remove"])
+    functions = {}
+    look_for.each do |fname|
+      functions[fname] = []
+    end
+
+    open(path, "r") do |iscript|
+      lines = iscript.each
+      begin
+        while true
+          line = lines.next
+          m = /^\s*(\w+)\s*\(\s*\)\s*\{\s*([^}]+?)?\s*(\})?\s*$/.match(
+            line)
+          if not m.nil? and look_for.include? m[1]
+            if not m[2].nil?
+              functions[m[1]].push(m[2])
+            end
+            gobble_function(lines, functions[m[1]])
+          else
+            global_lines.push(line)
+          end
+        end
+      rescue StopIteration
+      end
+    end
+    look_for.each do |name|
+      # Add global lines to each function to preserve global variables, etc.
+      functions[name] = global_lines + functions[name]
+    end
+    return functions
+  end
 
 
   # Add a new source to this package.
@@ -75,7 +137,6 @@ class FPM::Package::Pacman < FPM::Package
     control_contents = File.read(pkginfo)
     FileUtils.rm(pkginfo)
     FileUtils.rm(mtree)
-    FileUtils.rm(install)
 
 
     control_lines = control_contents.split("\n")
@@ -132,53 +193,51 @@ class FPM::Package::Pacman < FPM::Package
 
     self.dependencies = control["depend"] || self.dependencies
 
-    self.attributes["size"] = control["size"][0]
-    self.attributes["builddate"] = control["builddate"][0]
     self.attributes["optdepend"] = control["optdepend"] || nil
     # There are other available attributes, but I didn't include them because:
     # - makedepend: deps needed to make the arch package. But it's already
     #   made. It just needs to be converted at this point
     # - checkdepend: See above
     # - makepkgopt: See above
+    # - size: can be dynamically generated
+    # - builddate: Should be changed to time of package conversion in the new
+    #   package, so this value should be thrown away.
 
-    # TODO: scripts, directories.
-    # For directories, see line 436 of rpm's output() to see what directories
-    #   are all about.
-    # TODO: install script
-    # This is difficult. We have to extract the contents of
-    # bash functions.
-    #install_parts = { "global": [] }
-    #install_contents = File.read(install).split("\n")
-    #install_contents.each do |install_line|
-    #  m = /^\s*(\w+)\s*\(\s*\)\s*{\s*$/.match(install_line)
-    #  if m.nil?
-    #    install_parts["global"].push(install_line)
-    #  else
-    #    install_parts[m[1]]
-    #  end
-    #end
-    #parse_install = lambda do |field|
-    #pre_install — The script is run right before files are
-    #extracted. One argument is passed: new package version.
-    #post_install — The script is run right after files are
-    #extracted. One argument is passed: new package version.
-    #pre_upgrade — The script is run right before files are
-    #extracted. Two arguments are passed in the following order: new
-    #package version, old package version.  post_upgrade — The script
-    #is run right after files are extracted. Two arguments are passed
-    #in the following order: new package version, old package version.
-    #pre_remove — The script is run right before files are
-    #removed. One argument is passed: old package version.
-    #post_remove — The script is run right after files are
-    #removed. One argument is passed: old package version.
+    functions = parse_install_script(install)
+    if functions.include?("pre_install")
+      self.scripts[:before_install] = functions["pre_install"]
+    end
+    if functions.include?("post_install")
+      self.scripts[:after_install] = functions["post_install"]
+    end
+    if functions.include?("pre_upgrade")
+      self.scripts[:before_ugrade] = functions["pre_upgrade"]
+    end
+    if functions.include?("post_upgrade")
+      self.scripts[:after_upgrade] = functions["post_upgrade"]
+    end
+    if functions.include?("pre_remove")
+      self.scripts[:before_remove] = functions["pre_remove"]
+    end
+    if functions.include?("post_remove")
+      self.scripts[:after_remove] = functions["post_remove"]
+    end
+    FileUtils.rm(install)
 
-    
+    # Note: didn't use `self.directories`.
+    # Pacman doesn't really record that information, to my knowledge.
+
   end # def input
 
-  private
+
   # Output this package to the given path.
   def output(path)
-    output_check(path)
+    #output_check(path)
+    #generate_pkginfo()
+    #open('.PKGINFO', 'w') do |pkginfo|
+    #  pkginfo.puts "# Generated by fpm"
+    #  pkginfo.puts "pkgname = " + self.name
+    #end
     # write .PKGINFO (generate) to staging_path
     # write .INSTALL (template) to staging_path
     # write .MTREE (See below command) to staging_path
@@ -190,5 +249,7 @@ class FPM::Package::Pacman < FPM::Package
     raise NotImplementedError.new("#{self.class.name} does not yet support " \
                                   "creating #{self.type} packages")
   end # def output
+
+  private
 
 end # class FPM::Package::Pacman
