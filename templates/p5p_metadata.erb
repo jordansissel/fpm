@@ -1,0 +1,12 @@
+set name=pkg.fmri value="<%=@name%>@<%=@version%>"
+set name=pkg.summary value="<%=@description%>"
+set name=pkg.human-version value="<%=@version%>"
+set name=pkg.description value="<%=@description%>"
+set name=info.classification value="org.opensolaris.category.2008:<%=@category%>"
+set name=variant.opensolaris.zone <%= attributes[:p5p_zonetype] %>
+set name=variant.arch value=<%=@architecture%>
+<transform file dir -> set owner <%= attributes[:p5p_user] %>>
+<transform file dir -> set group <%= attributes[:p5p_group] %>>
+<transform dir path=opt$->drop>
+<transform dir path=etc$->drop>
+<transform dir path=usr(?:|/bin)$->drop>

@@ -72,7 +72,7 @@ class FPM::Package::NPM < FPM::Package
     end
 
     self.description = info["description"]
-    # Supposedly you can upload a package for npm with no author/author email 
+    # Supposedly you can upload a package for npm with no author/author email
     # so I'm being safer with this. Author can also be a hash or a string
     self.vendor = "Unknown <unknown@unknown.unknown>"
     if info.include?("author")
@@ -91,7 +91,7 @@ class FPM::Package::NPM < FPM::Package
     # 'npm install express' it installs dependencies (like 'connect')
     # to: node_modules/express/node_modules/connect/...
     #
-    # To that end, I don't think we necessarily need to include 
+    # To that end, I don't think we necessarily need to include
     # any automatic dependency information since every 'npm install'
     # is fully self-contained. That's why you don't see any bother, yet,
     # to include the package's dependencies in here.

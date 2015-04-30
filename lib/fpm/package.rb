@@ -151,7 +151,7 @@ class FPM::Package
     @category = "default"
     @license = "unknown"
     @vendor = "none"
-   
+
     # Iterate over all the options and set defaults
     if self.class.respond_to?(:declared_options)
       self.class.declared_options.each do |option|
@@ -277,14 +277,14 @@ class FPM::Package
   def cleanup_staging
     if File.directory?(staging_path)
       logger.debug("Cleaning up staging path", :path => staging_path)
-      FileUtils.rm_r(staging_path) 
+      FileUtils.rm_r(staging_path)
     end
   end # def cleanup_staging
 
   def cleanup_build
     if File.directory?(build_path)
       logger.debug("Cleaning up build path", :path => build_path)
-      FileUtils.rm_r(build_path) 
+      FileUtils.rm_r(build_path)
     end
   end # def cleanup_build
 
@@ -292,7 +292,7 @@ class FPM::Package
   #
   # The paths will all be relative to staging_path and will not include that
   # path.
-  # 
+  #
   # This method will emit 'leaf' paths. Files, symlinks, and other file-like
   # things are emitted. Intermediate directories are ignored, but
   # empty directories are emitted.
@@ -317,7 +317,7 @@ class FPM::Package
       .select { |path| is_leaf.call(path) } \
       .collect { |path| path[staging_path.length + 1.. -1] }
   end # def files
- 
+
   def template_dir
     File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "templates"))
   end
@@ -390,7 +390,7 @@ class FPM::Package
 
   class << self
     # This method is invoked when subclass occurs.
-    # 
+    #
     # Lets us track all known FPM::Package subclasses
     def inherited(klass)
       @subclasses ||= {}
@@ -509,7 +509,7 @@ class FPM::Package
   def provides=(value)
     if !value.is_a?(Array)
       @provides = [value]
-    else 
+    else
       @provides = value
     end
   end
