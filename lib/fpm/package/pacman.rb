@@ -3,6 +3,7 @@ require "fpm/package"
 require "backports"
 require "fileutils"
 require "find"
+require "English"
 
 class FPM::Package::Pacman < FPM::Package
 
@@ -48,69 +49,6 @@ class FPM::Package::Pacman < FPM::Package
     # See the RPM package class for an example.
   #end # def converted_from
 
-  # KNOWN ISSUE:
-  # If an un-matched bracket is used in valid bash, as in
-  # `echo "{"`, this function will choke.
-  # However, to cover this case basically
-  # requires writing almost half a bash parser,
-  # and it is a very small corner case.
-  # Otherwise, this approach is very robust.
-  def gobble_function(cons,prod)
-    level = 1
-    while level > 0
-      line = cons.next
-      # Not the best, but pretty good
-      # short of writing an *actual* sh
-      # parser
-      level += line.count "{"
-      level -= line.count "}"
-      if level > 0
-        prod.push(line)
-      else
-        fine = line.sub(/\s*[}]\s*$/, "")
-        if !(fine =~ /^\s*$/)
-          prod.push(fine)
-        end
-      end
-    end
-  end
-
-  def parse_install_script(path)
-
-    global_lines = []
-    look_for = Set.new(["pre_install", "post_install",
-              "pre_upgrade", "post_upgrade",
-              "pre_remove", "post_remove"])
-    functions = {}
-    look_for.each do |fname|
-      functions[fname] = []
-    end
-
-    open(path, "r") do |iscript|
-      lines = iscript.each
-      begin
-        while true
-          line = lines.next
-          m = /^\s*(\w+)\s*\(\s*\)\s*\{\s*([^}]+?)?\s*(\})?\s*$/.match(
-            line)
-          if not m.nil? and look_for.include? m[1]
-            if not m[2].nil?
-              functions[m[1]].push(m[2])
-            end
-            gobble_function(lines, functions[m[1]])
-          else
-            global_lines.push(line)
-          end
-        end
-      rescue StopIteration
-      end
-    end
-    look_for.each do |name|
-      # Add global lines to each function to preserve global variables, etc.
-      functions[name] = global_lines + functions[name]
-    end
-    return functions
-  end
 
 
   # Add a new source to this package.
@@ -177,7 +115,7 @@ class FPM::Package::Pacman < FPM::Package
     # -- Daniel Haskin, 3/24/2015
     self.license = control["license"][0] || self.license
 
-    self.architecture = ["arch"][0]
+    self.architecture = control["arch"][0]
 
     self.dependencies = control["depend"] || self.dependencies
 
@@ -193,7 +131,7 @@ class FPM::Package::Pacman < FPM::Package
 
     self.dependencies = control["depend"] || self.dependencies
 
-    self.attributes["optdepend"] = control["optdepend"] || nil
+    self.attributes[:optdepend] = control["optdepend"] || nil
     # There are other available attributes, but I didn't include them because:
     # - makedepend: deps needed to make the arch package. But it's already
     #   made. It just needs to be converted at this point
@@ -205,22 +143,22 @@ class FPM::Package::Pacman < FPM::Package
 
     functions = parse_install_script(install)
     if functions.include?("pre_install")
-      self.scripts[:before_install] = functions["pre_install"]
+      self.scripts[:before_install] = functions["pre_install"].join($RS)
     end
     if functions.include?("post_install")
-      self.scripts[:after_install] = functions["post_install"]
+      self.scripts[:after_install] = functions["post_install"].join($RS)
     end
     if functions.include?("pre_upgrade")
-      self.scripts[:before_ugrade] = functions["pre_upgrade"]
+      self.scripts[:before_ugrade] = functions["pre_upgrade"].join($RS)
     end
     if functions.include?("post_upgrade")
-      self.scripts[:after_upgrade] = functions["post_upgrade"]
+      self.scripts[:after_upgrade] = functions["post_upgrade"].join($RS)
     end
     if functions.include?("pre_remove")
-      self.scripts[:before_remove] = functions["pre_remove"]
+      self.scripts[:before_remove] = functions["pre_remove"].join($RS)
     end
     if functions.include?("post_remove")
-      self.scripts[:after_remove] = functions["post_remove"]
+      self.scripts[:after_remove] = functions["post_remove"].join($RS)
     end
     FileUtils.rm(install)
 
@@ -251,5 +189,70 @@ class FPM::Package::Pacman < FPM::Package
   end # def output
 
   private
+
+  # KNOWN ISSUE:
+  # If an un-matched bracket is used in valid bash, as in
+  # `echo "{"`, this function will choke.
+  # However, to cover this case basically
+  # requires writing almost half a bash parser,
+  # and it is a very small corner case.
+  # Otherwise, this approach is very robust.
+  def gobble_function(cons,prod)
+    level = 1
+    while level > 0
+      line = cons.next
+      # Not the best, but pretty good
+      # short of writing an *actual* sh
+      # parser
+      level += line.count "{"
+      level -= line.count "}"
+      if level > 0
+        prod.push(line)
+      else
+        fine = line.sub(/\s*[}]\s*$/, "")
+        if !(fine =~ /^\s*$/)
+          prod.push(fine)
+        end
+      end
+    end
+  end
+
+  def parse_install_script(path)
+
+    global_lines = []
+    look_for = Set.new(["pre_install", "post_install",
+              "pre_upgrade", "post_upgrade",
+              "pre_remove", "post_remove"])
+    functions = {}
+    look_for.each do |fname|
+      functions[fname] = []
+    end
+
+    open(path, "r") do |iscript|
+      lines = iscript.each
+      begin
+        while true
+          line = lines.next
+          m = /^\s*(\w+)\s*\(\s*\)\s*\{\s*([^}]+?)?\s*(\})?\s*$/.match(
+            line)
+          if not m.nil? and look_for.include? m[1]
+            if not m[2].nil?
+              functions[m[1]].push(m[2])
+            end
+            gobble_function(lines, functions[m[1]])
+          else
+            global_lines.push(line)
+          end
+        end
+      rescue StopIteration
+      end
+    end
+    look_for.each do |name|
+      # Add global lines to each function to preserve global variables, etc.
+      functions[name] = global_lines + functions[name]
+    end
+    return functions
+  end
+
 
 end # class FPM::Package::Pacman
