@@ -21,6 +21,10 @@ class FPM::Package::Pacman < FPM::Package
     end
   end # def architecture
 
+  def iteration
+    return @iteration ? @iteration : 1
+  end # def iteration
+
   # This method is invoked on a package when it has been convertxed to a new
   # package format. The purpose of this method is to do any extra conversion
   # steps, like translating dependency conditions, etc.
@@ -109,7 +113,7 @@ class FPM::Package::Pacman < FPM::Package
 
     self.dependencies = control["depend"] || self.dependencies
 
-    self.attributes[:optdepend] = control["optdepend"] || []
+    self.attributes[:pacman_optdepends] = control["optdepend"] || []
     # There are other available attributes, but I didn't include them because:
     # - makedepend: deps needed to make the arch package. But it's already
     #   made. It just needs to be converted at this point

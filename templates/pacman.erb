@@ -38,6 +38,6 @@ backup = <%= conf %>
 <% dependencies.each do |req| -%>
 depend = <%= req %>
 <% end -%>
-<% attributes.fetch(:optdepend, []).each do |opt| -%>
+<% attributes.fetch(:pacman_optdepends, []).each do |opt| -%>
 optdepend = <%= opt %>
 <% end -%>
