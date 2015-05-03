@@ -146,13 +146,13 @@ class FPM::Package::Pacman < FPM::Package
   end # def input
 
   # Output this package to the given path.
-  def output(path)
-    output_check(path)
+  def output(output_path)
+    output_check(output_path)
 
     # copy all files from staging to BUILD dir
     Find.find(staging_path) do |path|
       src = path.gsub(/^#{staging_path}/, '')
-      dst = File.join(build_path, build_sub_dir, src)
+      dst = File.join(build_path, src)
       copy_entry(path, dst)
     end
 
@@ -160,7 +160,7 @@ class FPM::Package::Pacman < FPM::Package
     size = safesystemout("du", "-sk", build_path).split(/\s+/)[0].to_i * 1024
     builddate = Time.new.to_i
 
-    pkginfo = template("pacman/PKGINFO.erb").result(binding)
+    pkginfo = template("pacman.erb").result(binding)
     pkginfo_file = build_path(".PKGINFO")
     File.write(pkginfo_file, pkginfo)
 
@@ -174,11 +174,11 @@ class FPM::Package::Pacman < FPM::Package
 
     generate_mtree
 
-    with(File.expand_path(output_path)) do |output_path|
+    with(File.expand_path(output_path)) do |path|
       ::Dir.chdir(build_path) do
-        safesystem("tar", "cJf",
-                   output_path,
-                   Dir.entries("."))
+        safesystem(*(["tar", "cJf",
+                   path] + \
+                   ::Dir.entries(".").reject{|entry| entry =~ /^\.{1,2}$/ }))
       end
     end
   end # def output
@@ -193,23 +193,22 @@ class FPM::Package::Pacman < FPM::Package
     end
   end # def default_output
 
-
   def to_s(format=nil)
     # Default format if nil
     # git_1.7.9.3-1_amd64.deb
-    return super("NAME_FULLVERSION_ARCH.pkg.tar.gz") if format.nil?
+    return super("NAME-FULLVERSION-ARCH.pkg.tar.xz") if format.nil?
     return super(format)
   end # def to_s
 
   private
 
   def generate_mtree
-
     ::Dir.chdir(build_path) do
       cmd = "LANG=C bsdtar "
+      cmd += "-czf .MTREE "
       cmd += "--format=mtree "
-      cmd += "--options='!all,use-set,type,uid,gid,mode,time,size,md5,sha256,link'"
-      cmd += Dir.entries(".").join(" ")
+      cmd += "--options='!all,use-set,type,uid,gid,mode,time,size,md5,sha256,link' "
+      cmd += ::Dir.entries(".").reject{|entry| entry =~ /^\.{1,2}$/ }.join(" ")
       safesystem(cmd)
     end
   end # def generate_mtree
@@ -276,5 +275,4 @@ class FPM::Package::Pacman < FPM::Package
     end
     return functions
   end # def parse_install_script
-
 end # class FPM::Package::Pacman
