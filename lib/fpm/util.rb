@@ -159,7 +159,7 @@ module FPM::Util
     rc
   end
 
-  def copy_entry(src, dst)
+  def copy_entry(src, dst, preserve=false, remove_destination=false)
     case File.ftype(src)
     when 'fifo', 'characterSpecial', 'blockSpecial', 'socket'
       st = File.stat(src)
@@ -175,7 +175,8 @@ module FPM::Util
       if known_entry
         FileUtils.ln(known_entry, dst)
       else
-        FileUtils.copy_entry(src, dst)
+        FileUtils.copy_entry(src, dst, preserve=preserve,
+                             remove_destination=remove_destination)
         copied_entries[[st.dev, st.ino]] = dst
       end
     end # else...
