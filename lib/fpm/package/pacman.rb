@@ -6,6 +6,13 @@ require "find"
 
 class FPM::Package::Pacman < FPM::Package
 
+  opt_depends = []
+  option "--optdepends", "PACKAGE",
+    "Add an optional dependency to the pacman package." do |define|
+    opt_depends << define
+    next opt_depends
+  end
+  
   def architecture
     case @architecture
       when nil
@@ -25,6 +32,10 @@ class FPM::Package::Pacman < FPM::Package
     return @iteration ? @iteration : 1
   end # def iteration
 
+  def config_files
+    return @config_files || []
+  end # def config_files
+  
   # This method is invoked on a package when it has been convertxed to a new
   # package format. The purpose of this method is to do any extra conversion
   # steps, like translating dependency conditions, etc.
@@ -109,11 +120,11 @@ class FPM::Package::Pacman < FPM::Package
 
     self.description = control["pkgdesc"][0]
 
-    self.config_files = control["backup"].map{|file| "/" + file}
+    self.config_files = control["backup"].map{|file| "/" + file} || []
 
     self.dependencies = control["depend"] || self.dependencies
 
-    self.attributes[:pacman_optdepends] = control["optdepend"] || []
+    self.attributes[:pacman_opt_depends] = control["optdepend"] || []
     # There are other available attributes, but I didn't include them because:
     # - makedepend: deps needed to make the arch package. But it's already
     #   made. It just needs to be converted at this point
