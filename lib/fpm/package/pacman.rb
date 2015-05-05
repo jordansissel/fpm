@@ -12,7 +12,23 @@ class FPM::Package::Pacman < FPM::Package
     opt_depends << define
     next opt_depends
   end
-  
+
+  option "--use-file-permissions", :flag,
+    "Use existing file permissions when defining ownership and modes"
+
+  option "--user", "USER", "The owner of files in this package", :default => 'root'
+
+  option "--group", "GROUP", "The group owner of files in this package", :default => 'root'
+
+  option "--changelog", "FILEPATH", "Add FILEPATH as debian changelog" do |file|
+    File.expand_path(file)
+  end
+
+  def initialize(*args)
+    super(*args)
+    attributes[:pacman_opt_depends] = []
+  end # def initialize
+
   def architecture
     case @architecture
       when nil
@@ -35,7 +51,7 @@ class FPM::Package::Pacman < FPM::Package
   def config_files
     return @config_files || []
   end # def config_files
-  
+
   # This method is invoked on a package when it has been convertxed to a new
   # package format. The purpose of this method is to do any extra conversion
   # steps, like translating dependency conditions, etc.
@@ -120,7 +136,11 @@ class FPM::Package::Pacman < FPM::Package
 
     self.description = control["pkgdesc"][0]
 
-    self.config_files = control["backup"].map{|file| "/" + file} || []
+    if control.include? "backup"
+      self.config_files = control["backup"].map{|file| "/" + file}
+    else
+      self.config_files = []
+    end
 
     self.dependencies = control["depend"] || self.dependencies
 
@@ -134,26 +154,28 @@ class FPM::Package::Pacman < FPM::Package
     # - builddate: Should be changed to time of package conversion in the new
     #   package, so this value should be thrown away.
 
-    functions = parse_install_script(install)
-    if functions.include?("pre_install")
-      self.scripts[:before_install] = functions["pre_install"].join("\n")
+    if File.exist?(install)
+      functions = parse_install_script(install)
+      if functions.include?("pre_install")
+        self.scripts[:before_install] = functions["pre_install"].join("\n")
+      end
+      if functions.include?("post_install")
+        self.scripts[:after_install] = functions["post_install"].join("\n")
+      end
+      if functions.include?("pre_upgrade")
+        self.scripts[:before_ugrade] = functions["pre_upgrade"].join("\n")
+      end
+      if functions.include?("post_upgrade")
+        self.scripts[:after_upgrade] = functions["post_upgrade"].join("\n")
+      end
+      if functions.include?("pre_remove")
+        self.scripts[:before_remove] = functions["pre_remove"].join("\n")
+      end
+      if functions.include?("post_remove")
+        self.scripts[:after_remove] = functions["post_remove"].join("\n")
+      end
+      FileUtils.rm(install)
     end
-    if functions.include?("post_install")
-      self.scripts[:after_install] = functions["post_install"].join("\n")
-    end
-    if functions.include?("pre_upgrade")
-      self.scripts[:before_ugrade] = functions["pre_upgrade"].join("\n")
-    end
-    if functions.include?("post_upgrade")
-      self.scripts[:after_upgrade] = functions["post_upgrade"].join("\n")
-    end
-    if functions.include?("pre_remove")
-      self.scripts[:before_remove] = functions["pre_remove"].join("\n")
-    end
-    if functions.include?("post_remove")
-      self.scripts[:after_remove] = functions["post_remove"].join("\n")
-    end
-    FileUtils.rm(install)
 
     # Note: didn't use `self.directories`.
     # Pacman doesn't really record that information, to my knowledge.
@@ -192,11 +214,33 @@ class FPM::Package::Pacman < FPM::Package
     with(File.expand_path(output_path)) do |path|
       ::Dir.chdir(build_path) do
         safesystem(*(["tar", "cJf",
-                   path] + \
+                   path] + data_tar_flags + \
                    ::Dir.entries(".").reject{|entry| entry =~ /^\.{1,2}$/ }))
       end
     end
   end # def output
+
+  def data_tar_flags
+    data_tar_flags = []
+    if attributes[:pacman_use_file_permissions?].nil?
+      if !attributes[:pacman_user].nil?
+        if attributes[:pacman_user] == 'root'
+          data_tar_flags += [ "--numeric-owner", "--owner", "0" ]
+        else
+          data_tar_flags += [ "--owner", attributes[:deb_user] ]
+        end
+      end
+
+      if !attributes[:pacman_group].nil?
+        if attributes[:pacman_group] == 'root'
+          data_tar_flags += [ "--numeric-owner", "--group", "0" ]
+        else
+          data_tar_flags += [ "--group", attributes[:deb_group] ]
+        end
+      end
+    end
+    return data_tar_flags
+  end # def data_tar_flags
 
   def default_output
     v = version

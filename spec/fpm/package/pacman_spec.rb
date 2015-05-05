@@ -10,8 +10,7 @@ describe FPM::Package::Pacman do
   let(:target) { Stud::Temporary.pathname + ".pkg.tar.xz" }
   after do
     subject.cleanup
-    File.unlink(target) if File.exist?(target)
-  end
+    File.unlink(target) if File.exist?(target) end
 
   describe "#architecture" do
     it "should convert amd64 to x86_64" do
@@ -44,9 +43,9 @@ describe FPM::Package::Pacman do
     end
   end
 
-  describe "optdepends" do
+  describe "#opt_depends" do
     it "should default to []" do
-      expect(subject.attributes[:optdepends]).to(be == [])
+      expect(subject.attributes[:pacman_opt_depends]).to(be == [])
     end
   end
 
@@ -96,7 +95,7 @@ describe FPM::Package::Pacman do
       original.provides << "#{original.name} = #{original.version}"
 
       original.conflicts = ["foo < 123"]
-      original.attributes[:pacman_optdepends] = ["bamb > 10"]
+      original.attributes[:pacman_opt_depends] = ["bamb > 10"]
 
       original.output(target)
       input.input(target)
@@ -133,5 +132,6 @@ describe FPM::Package::Pacman do
 
     end # package attributes
     # TODO: include a section that verifies that pacman can parse the package
+    # TODO: include a test that performs regression test on preserving file permissions
   end # #output
 end # describe FPM::Package::Pacman
