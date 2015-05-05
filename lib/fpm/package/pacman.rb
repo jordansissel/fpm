@@ -190,7 +190,7 @@ class FPM::Package::Pacman < FPM::Package
     Find.find(staging_path) do |path|
       src = path.gsub(/^#{staging_path}/, '')
       dst = File.join(build_path, src)
-      copy_entry(path, dst)
+      copy_entry(path, dst, preserve=true, remove_destination=true)
     end
 
     # This value is used later in the template for PKGINFO
