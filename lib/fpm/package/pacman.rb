@@ -52,7 +52,23 @@ class FPM::Package::Pacman < FPM::Package
     return @config_files || []
   end # def config_files
 
-  # This method is invoked on a package when it has been convertxed to a new
+  def dependencies
+    bogus_regex = /[^\sA-Za-z0-9><=-]/
+    # Actually modifies depencies if they are not right
+    bogus_dependencies = @dependencies.grep bogus_regex
+    if !bogus_dependencies.empty?
+      @dependencies.reject! { |a| a =~ bogus_regex }
+      logger.warn("Some of the dependencies looked like they weren't package " \
+                  "names. Such dependency entries only serve to confuse arch. " \
+                  "I am removing them.",
+                  :removed_dependencies => bogus_dependencies,
+                  :fixed_dependencies => @dependencies)
+    end
+    return @dependencies
+  end
+
+
+  # This method is invoked on a package when it has been converted to a new
   # package format. The purpose of this method is to do any extra conversion
   # steps, like translating dependency conditions, etc.
   #def converted_from(origin)
@@ -214,8 +230,8 @@ class FPM::Package::Pacman < FPM::Package
     with(File.expand_path(output_path)) do |path|
       ::Dir.chdir(build_path) do
         safesystem(*(["tar", "cJf",
-                   path] + data_tar_flags + \
-                   ::Dir.entries(".").reject{|entry| entry =~ /^\.{1,2}$/ }))
+                      path] + data_tar_flags + \
+                      ::Dir.entries(".").reject{|entry| entry =~ /^\.{1,2}$/ }))
       end
     end
   end # def output
@@ -302,8 +318,8 @@ class FPM::Package::Pacman < FPM::Package
   def parse_install_script(path)
     global_lines = []
     look_for = Set.new(["pre_install", "post_install",
-              "pre_upgrade", "post_upgrade",
-              "pre_remove", "post_remove"])
+                        "pre_upgrade", "post_upgrade",
+                        "pre_remove", "post_remove"])
     functions = {}
     look_for.each do |fname|
       functions[fname] = []

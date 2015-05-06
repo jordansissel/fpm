@@ -90,8 +90,10 @@ describe FPM::Package::Pacman do
       original.iteration = "100"
       original.epoch = "5"
       original.architecture = "all"
-      original.dependencies << "something > 10"
       original.dependencies << "hello >= 20"
+      original.dependencies << "something > 10"
+      original.dependencies << "rpmlib(bogus)"
+      original.dependencies << "/usr/bin/bad-dep"
       original.provides << "#{original.name} = #{original.version}"
 
       original.conflicts = ["foo < 123"]
@@ -105,7 +107,6 @@ describe FPM::Package::Pacman do
       original.cleanup
       input.cleanup
     end # after
-
 
     context "package attributes" do
       it "should have the correct name" do
@@ -124,12 +125,9 @@ describe FPM::Package::Pacman do
         insist { input.epoch } == original.epoch
       end
 
-      it "should have the correct dependencies" do
-        original.dependencies.each do |dep|
-          insist { input.dependencies }.include?(dep)
-        end
+      it "should not have bogus dependencies, just correct dependencies" do
+        expect(input.dependencies).to(be == ["hello >= 20", "something > 10"])
       end
-
     end # package attributes
     # TODO: include a section that verifies that pacman can parse the package
     # TODO: include a test that performs regression test on preserving file permissions
