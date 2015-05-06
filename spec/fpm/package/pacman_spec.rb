@@ -10,7 +10,8 @@ describe FPM::Package::Pacman do
   let(:target) { Stud::Temporary.pathname + ".pkg.tar.xz" }
   after do
     subject.cleanup
-    File.unlink(target) if File.exist?(target) end
+    File.unlink(target) if File.exist?(target)
+  end
 
   describe "#architecture" do
     it "should convert amd64 to x86_64" do
@@ -85,7 +86,7 @@ describe FPM::Package::Pacman do
       # properly.
       # The target file must not exist.
 
-      original.name = "name"
+      original.name = "foo"
       original.version = "123"
       original.iteration = "100"
       original.epoch = "5"
@@ -98,6 +99,42 @@ describe FPM::Package::Pacman do
 
       original.conflicts = ["foo < 123"]
       original.attributes[:pacman_opt_depends] = ["bamb > 10"]
+      original.directories << '/var/lib/foo'
+
+      ::Dir.chdir(original.staging_path) do
+        FileUtils::mkdir_p 'usr/bin'
+        File.open('usr/bin/foo', 'w') do |exe|
+          exe.write("Frankly, I think the odds are slightly in your favor " \
+                    "at hand fighting.")
+        end
+        File.chmod(0755, 'usr')
+        File.chmod(0755, 'usr/bin')
+        File.chmod(0755, 'usr/bin/foo')
+        FileUtils::mkdir_p 'usr/share/doc'
+        File.chmod(0755, 'usr/share')
+        File.chmod(0755, 'usr/share/doc')
+        File.open('usr/share/doc/foo.txt', 'w') do |doc|
+          doc.write("It's not my fault I'm the biggest or the strongest.")
+        end
+        File.chmod(0644, 'usr/share/doc/foo.txt')
+        FileUtils::mkdir_p 'usr/lib'
+        # incorrectly permissioned path (but that's what these tests are for)
+        File.chmod(0700, 'usr/lib')
+        File.open('usr/lib/libfoo.so', 'w') do |lib|
+          lib.write("I don't even excercise.")
+        end
+        File.chmod(0755, 'usr/lib/libfoo.so')
+        FileUtils::mkdir_p 'etc'
+        File.chmod(0755, 'etc')
+        File.open('etc/foo.conf', 'w') do |conf|
+          conf.write("You mean, you'll put down your rock and I'll put down " \
+                     "my sword, and we'll try and kill each other like " \
+                     "civilized people?")
+        end
+        File.chmod(0600, 'etc/foo.conf')
+        FileUtils::mkdir_p 'var/lib/foo'
+        File.chmod(0755, 'var/lib/foo')
+      end
 
       original.output(target)
       input.input(target)
@@ -107,6 +144,27 @@ describe FPM::Package::Pacman do
       original.cleanup
       input.cleanup
     end # after
+
+    context "file permissions" do
+      {"/usr" => 0755,
+       "/usr/bin" => 0755,
+       "/usr/bin/foo" => 0755,
+       "/usr/lib" => 0755,
+       "/usr/lib/libfoo.so" => 0755,
+       "/usr/share" => 0755,
+       "/usr/share/doc" => 0755,
+       "/usr/share/doc/foo.txt" => 0644,
+       "/etc" => 0755,
+       "/etc/foo.conf" => 0600,
+       "/var" => 0755,
+       "/var/lib" => 0755,
+       "/var/lib/foo" => 0755}.each do |dir, perm|
+         it "should preserve file permissions for #{dir}" do
+           insist { File.stat(File.join(input.staging_path,
+                                        dir)).mode & 07777 } == perm
+         end
+       end
+    end
 
     context "package attributes" do
       it "should have the correct name" do
