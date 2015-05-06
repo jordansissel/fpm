@@ -66,9 +66,10 @@ describe FPM::Package::RPM do
       subject.version = "123"
       subject.architecture = "all"
       subject.iteration = "100"
-      subject.dist = "el6"
       subject.epoch = "5"
 
+      insist { subject.to_s } == "name-123-100.noarch.rpm"
+      subject.attributes[:rpm_dist] = "el6"
       insist { subject.to_s } == "name-123-100.el6.noarch.rpm"
     end
   end
@@ -351,6 +352,21 @@ describe FPM::Package::RPM do
 
         @rpm = ::RPM::File.new(@target)
         insist { @rpm.tags[:release] } == "#{subject.iteration}.el6"
+
+        File.unlink(@target)
+      end
+
+      it "should accept the dist in the iteration" do
+        subject.name = "example"
+        subject.iteration = "1.el6"
+        subject.version = "1.0"
+        @target = Stud::Temporary.pathname
+
+        # Write RPM
+        subject.output(@target)
+
+        @rpm = ::RPM::File.new(@target)
+        insist { @rpm.tags[:release] } == "#{subject.iteration}"
 
         File.unlink(@target)
       end
