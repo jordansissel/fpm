@@ -45,6 +45,7 @@ class FPM::Command < Clamp::Command
     return lines.join("\n")
   end # def help
 
+  option "--recursive", :flag, "Convert all dependencies, when possible, to the same output format"
   option "-t", "OUTPUT_TYPE",
     "the type of package you want to create (deb, rpm, solaris, etc)",
     :attribute_name => :output_type
@@ -452,6 +453,17 @@ class FPM::Command < Clamp::Command
 
     # Convert to the output type
     output = input.convert(output_class)
+
+    if recursive? && input.dependencies.any?
+      depmap = input.dependencies.inject({}) { |m, d| d, v = d.split(" ", 2); (m[d.gsub(/^rubygem-/, "")] ||= []) << v; m }
+      depmap.each do |name, conditions|
+        dependency_fpm = self.class.new("fpm")
+        conditions = conditions.join(",") if !conditions.nil? && conditions.any?
+        logger.warn("Working on dependency", :name => name, :conditions => conditions)
+        dependency_fpm.parse(["-s", input_type, "-t", output_type, "--recursive", "-v", conditions, name])
+        dependency_fpm.execute
+      end
+    end
 
     # Provide any template values as methods on the package.
     if template_scripts?
