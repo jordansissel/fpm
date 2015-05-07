@@ -27,6 +27,7 @@ function main() {
       wait_for_others
       kill_others
       set_owner
+      pre_install
       unpack_payload
 
       if [ "$UNPACK_ONLY" == "1" ] ; then
@@ -171,6 +172,14 @@ function set_install_dir(){
 function set_owner(){
     export OWNER=${OWNER:-$USER}
     log "Installing as user $OWNER"
+}
+
+function pre_install(){
+    # for rationale on the `:`, see #871
+    :
+<% if script?(:before_install) -%>
+<%=    script(:before_install) %>
+<% end %>
 }
 
 function unpack_payload(){
