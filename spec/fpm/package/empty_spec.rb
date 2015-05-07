@@ -1,10 +1,5 @@
 require "spec_setup"
-require 'fileutils'
 require "fpm" # local
-require "fpm/package/deb" # local
-require "fpm/package/dir" # local
-require "stud/temporary"
-require "English" # for $CHILD_STATUS
 
 describe FPM::Package::Empty do
   describe "#to_s" do
