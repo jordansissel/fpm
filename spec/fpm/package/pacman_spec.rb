@@ -189,5 +189,6 @@ describe FPM::Package::Pacman do
     end # package attributes
     # TODO: include a section that verifies that pacman can parse the package
     # TODO: include a test that performs regression test on preserving file permissions
+    # TODO: include a test that checks that the script was slurped properly by input()
   end # #output
 end # describe FPM::Package::Pacman
