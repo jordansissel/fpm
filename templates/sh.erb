@@ -174,7 +174,7 @@ function set_owner(){
     log "Installing as user $OWNER"
 }
 
-function pre_install(){
+function pre_install() {
     # for rationale on the `:`, see #871
     :
 <% if script?(:before_install) -%>
