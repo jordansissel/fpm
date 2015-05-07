@@ -24,12 +24,6 @@ class FPM::Package::Sh < FPM::Package
   end
 
   def create_scripts
-    if script?(:before_install)
-      # the scripts are kept in the payload so what would before install be if we've already
-      # unpacked the payload?
-      raise "sh package does not support before install scripts."
-    end
-
     if script?(:after_install)
       File.write(File.join(fpm_meta_path, "after_install"), script(:after_install))
     end
