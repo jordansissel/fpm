@@ -23,9 +23,6 @@ class FPM::Package::Tar < FPM::Package
       args << flag unless flag.nil?
     end
 
-    # preserve permissions of files when extracting if possible
-    args << "-p"
-
     safesystem("tar", *args)
 
     # use dir to set stuff up properly, mainly so I don't have to reimplement
