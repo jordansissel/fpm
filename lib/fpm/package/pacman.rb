@@ -207,6 +207,7 @@ class FPM::Package::Pacman < FPM::Package
       src = path.gsub(/^#{staging_path}/, '')
       dst = File.join(build_path, src)
       copy_entry(path, dst, preserve=true, remove_destination=true)
+      copy_metadata(path, dst)
     end
 
     # This value is used later in the template for PKGINFO
