@@ -149,7 +149,7 @@ describe FPM::Package::Pacman do
       {"/usr" => 0755,
        "/usr/bin" => 0755,
        "/usr/bin/foo" => 0755,
-       "/usr/lib" => 0755,
+       "/usr/lib" => 0700,
        "/usr/lib/libfoo.so" => 0755,
        "/usr/share" => 0755,
        "/usr/share/doc" => 0755,
