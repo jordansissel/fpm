@@ -27,6 +27,7 @@ function main() {
       wait_for_others
       kill_others
       set_owner
+      pre_install
       unpack_payload
 
       if [ "$UNPACK_ONLY" == "1" ] ; then
@@ -173,6 +174,14 @@ function set_owner(){
     log "Installing as user $OWNER"
 }
 
+function pre_install() {
+    # for rationale on the `:`, see #871
+    :
+<% if script?(:before_install) -%>
+<%=    script(:before_install) %>
+<% end %>
+}
+
 function unpack_payload(){
     if [ "$FORCE" == "1" ] || [ ! "$(ls -A $INSTALL_DIR)" ] ; then
         log "Unpacking payload . . ."
@@ -242,6 +251,12 @@ function clean_out_old_releases(){
     fi
 }
 
+function print_package_metadata(){
+    local metadata_line=$(grep -a -n -m1 '__METADATA__$' $0 | sed 's/:.*//')
+    local archive_line=$(grep -a -n -m1 '__ARCHIVE__$' $0 | sed 's/:.*//')
+    sed -n "$((metadata_line + 1)),$((archive_line - 1)) p" $0
+}
+
 function print_usage(){
     echo "Usage: `basename $0` [options]"
     echo "Install this package"
@@ -275,7 +290,7 @@ function log(){
 }
 
 function parse_args() {
-    args=`getopt i:o:rfuyvh $*`
+    args=`getopt mi:o:rfuyvh $*`
 
     if [ $? != 0 ] ; then
         print_usage
@@ -286,6 +301,10 @@ function parse_args() {
     do
         case "$i"
             in
+            -m)
+                print_package_metadata
+                exit 0
+                shift;;
             -r)
                 USE_FLAT_RELEASE_DIRECTORY=1
                 shift;;
@@ -331,4 +350,6 @@ main
 save_environment $(fpm_metadata_file)
 exit 0
 
+__METADATA__
+<%= package_metadata if respond_to?(:package_metadata) %>
 __ARCHIVE__
