@@ -90,7 +90,15 @@ class get_metadata(Command):
 
         output = open(self.output, "w")
         if hasattr(json, 'dumps'):
-            output.write(json.dumps(data, indent=2))
+            def default_to_str(obj):
+                """ Fall back to using __str__ if possible """
+                # This checks if the class of obj defines __str__ itself,
+                # so we don't fall back to an inherited __str__ method.
+                if "__str__" in type(obj).__dict__:
+                    return str(obj)
+                return json.JSONEncoder.default(self, obj)
+
+            output.write(json.dumps(data, indent=2, default=default_to_str))
         else:
             # For Python 2.5 and Debian's python-json
             output.write(json.write(data))

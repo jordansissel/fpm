@@ -184,6 +184,10 @@ fi
 %preun
 if [ "${1}" -eq 0 ]
 then
+<%# Making sure that at least one command is in the function -%>
+<%# avoids a lot of potential errors, including the case that -%>
+<%# the script is non-empty, but just whitespace and/or comments -%>
+    :
 <%=    script(:before_remove) %>
 fi
 <%   end -%>
@@ -191,6 +195,10 @@ fi
 %postun
 if [ "${1}" -eq 0 ]
 then
+<%# Making sure that at least one command is in the function -%>
+<%# avoids a lot of potential errors, including the case that -%>
+<%# the script is non-empty, but just whitespace and/or comments -%>
+    :
 <%=    script(:after_remove) %>
 fi
 <%   end -%>
