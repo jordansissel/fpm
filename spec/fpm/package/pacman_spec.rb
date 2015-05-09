@@ -133,6 +133,8 @@ describe FPM::Package::Pacman do
         end
         File.chmod(0600, 'etc/foo.conf')
         FileUtils::mkdir_p 'var/lib/foo'
+        File.chmod(0755, 'var')
+        File.chmod(0755, 'var/lib')
         File.chmod(0755, 'var/lib/foo')
       end
 
