@@ -179,7 +179,7 @@ class FPM::Package::Pacman < FPM::Package
         self.scripts[:after_install] = functions["post_install"].join("\n")
       end
       if functions.include?("pre_upgrade")
-        self.scripts[:before_ugrade] = functions["pre_upgrade"].join("\n")
+        self.scripts[:before_upgrade] = functions["pre_upgrade"].join("\n")
       end
       if functions.include?("post_upgrade")
         self.scripts[:after_upgrade] = functions["post_upgrade"].join("\n")

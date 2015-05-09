@@ -9,7 +9,11 @@
 # ------------------------------------------------------------------------
 #
 pkgname = <%= name %>
+<% if !epoch.nil? -%>
 pkgver = <%= epoch %>:<%= version %>-<%= iteration %>
+<% else -%>
+pkgver = <%= version %>-<%= iteration %>
+<% end -%>
 pkgdesc = <%= description %>
 <% if !url.nil? and !url.empty? -%>
 url = <%= url %>

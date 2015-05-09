@@ -78,113 +78,17 @@ describe FPM::Package::Pacman do
     let(:original) { FPM::Package::Pacman.new }
     let(:input) { FPM::Package::Pacman.new }
 
-    before do
-      # output a package, use it as the input, set the subject to that input
-      # package. This helps ensure that we can write and read packages
-      # properly.
-      # The target file must not exist.
+    context "Test that empty epoch is tested properly" do
+      before do
 
-      original.name = "foo"
-      original.version = "123"
-      original.iteration = "100"
-      original.epoch = "5"
-      original.architecture = "all"
-      original.dependencies << "hello >= 20"
-      original.dependencies << "something > 10"
-      original.dependencies << "rpmlib(bogus)"
-      original.dependencies << "/usr/bin/bad-dep"
-      original.provides << "#{original.name} = #{original.version}"
-
-      original.conflicts = ["foo < 123"]
-      original.attributes[:pacman_opt_depends] = ["bamb > 10"]
-      original.directories << '/var/lib/foo'
-
-      ::Dir.chdir(original.staging_path) do
-        FileUtils::mkdir_p 'usr/bin'
-        File.open('usr/bin/foo', 'w') do |exe|
-          exe.write("Frankly, I think the odds are slightly in your favor " \
-                    "at hand fighting.")
-        end
-        File.chmod(0755, 'usr')
-        File.chmod(0755, 'usr/bin')
-        File.chmod(0755, 'usr/bin/foo')
-        FileUtils::mkdir_p 'usr/share/doc'
-        File.chmod(0755, 'usr/share')
-        File.chmod(0755, 'usr/share/doc')
-        File.open('usr/share/doc/foo.txt', 'w') do |doc|
-          doc.write("It's not my fault I'm the biggest or the strongest.")
-        end
-        File.chmod(0644, 'usr/share/doc/foo.txt')
-        FileUtils::mkdir_p 'usr/lib'
-        # incorrectly permissioned path (but that's what these tests are for)
-        File.chmod(0700, 'usr/lib')
-        File.open('usr/lib/libfoo.so', 'w') do |lib|
-          lib.write("I don't even excercise.")
-        end
-        File.chmod(0755, 'usr/lib/libfoo.so')
-        FileUtils::mkdir_p 'etc'
-        File.chmod(0755, 'etc')
-        File.open('etc/foo.conf', 'w') do |conf|
-          conf.write("You mean, you'll put down your rock and I'll put down " \
-                     "my sword, and we'll try and kill each other like " \
-                     "civilized people?")
-        end
-        File.chmod(0600, 'etc/foo.conf')
-        FileUtils::mkdir_p 'var/lib/foo'
-        File.chmod(0755, 'var')
-        File.chmod(0755, 'var/lib')
-        File.chmod(0755, 'var/lib/foo')
+        original.name = "foo"
+        original.version = "123"
+        original.iteration = "100"
+        # original.epoch conspicuously absent
+        original.architecture = "all"
+        original.output(target)
+        input.input(target)
       end
-
-      [:before_install, :after_install, :before_remove, :after_remove,
-       :before_upgrade, :after_upgrade].each do |script|
-        original.scripts[script] = "#!/bin/sh\n\necho #{script.to_s}"
-      end
-
-      original.output(target)
-      input.input(target)
-    end
-
-    after do
-      original.cleanup
-      input.cleanup
-    end # after
-
-    context "script contents" do
-      [:before_install, :after_install, :before_remove, :after_remove,
-       :before_upgrade, :after_upgrade].each do |script|
-        it "should be the same both with input as with original for #{script.to_s}" do
-          expect( \
-                 (input.scripts[script] =~ \
-                  /[\n :]+#{Regexp.quote(original.scripts[script])}/m \
-                 )
-                ).to(be_truthy)
-        end
-      end
-    end
-
-    context "file permissions" do
-      {"/usr" => 0755,
-       "/usr/bin" => 0755,
-       "/usr/bin/foo" => 0755,
-       "/usr/lib" => 0700,
-       "/usr/lib/libfoo.so" => 0755,
-       "/usr/share" => 0755,
-       "/usr/share/doc" => 0755,
-       "/usr/share/doc/foo.txt" => 0644,
-       "/etc" => 0755,
-       "/etc/foo.conf" => 0600,
-       "/var" => 0755,
-       "/var/lib" => 0755,
-       "/var/lib/foo" => 0755}.each do |dir, perm|
-         it "should preserve file permissions for #{dir}" do
-           insist { File.stat(File.join(input.staging_path,
-                                        dir)).mode & 07777 } == perm
-         end
-       end
-    end
-
-    context "package attributes" do
       it "should have the correct name" do
         insist { input.name } == original.name
       end
@@ -200,12 +104,139 @@ describe FPM::Package::Pacman do
       it "should have the correct epoch" do
         insist { input.epoch } == original.epoch
       end
+    end
 
-      it "should not have bogus dependencies, just correct dependencies" do
-        expect(input.dependencies).to(be == ["hello >= 20", "something > 10"])
+
+    context "normal tests" do
+      before do
+        # output a package, use it as the input, set the subject to that input
+        # package. This helps ensure that we can write and read packages
+        # properly.
+        # The target file must not exist.
+
+        original.name = "foo"
+        original.version = "123"
+        original.iteration = "100"
+        original.epoch = "5"
+        original.architecture = "all"
+        original.dependencies << "hello >= 20"
+        original.dependencies << "something > 10"
+        original.dependencies << "rpmlib(bogus)"
+        original.dependencies << "/usr/bin/bad-dep"
+        original.provides << "#{original.name} = #{original.version}"
+
+        original.conflicts = ["foo < 123"]
+        original.attributes[:pacman_opt_depends] = ["bamb > 10"]
+        original.directories << '/var/lib/foo'
+
+        ::Dir.chdir(original.staging_path) do
+          FileUtils::mkdir_p 'usr/bin'
+          File.open('usr/bin/foo', 'w') do |exe|
+            exe.write("Frankly, I think the odds are slightly in your favor " \
+                      "at hand fighting.")
+          end
+          File.chmod(0755, 'usr')
+          File.chmod(0755, 'usr/bin')
+          File.chmod(0755, 'usr/bin/foo')
+          FileUtils::mkdir_p 'usr/share/doc'
+          File.chmod(0755, 'usr/share')
+          File.chmod(0755, 'usr/share/doc')
+          File.open('usr/share/doc/foo.txt', 'w') do |doc|
+            doc.write("It's not my fault I'm the biggest or the strongest.")
+          end
+          File.chmod(0644, 'usr/share/doc/foo.txt')
+          FileUtils::mkdir_p 'usr/lib'
+          # incorrectly permissioned path (but that's what these tests are for)
+          File.chmod(0700, 'usr/lib')
+          File.open('usr/lib/libfoo.so', 'w') do |lib|
+            lib.write("I don't even excercise.")
+          end
+          File.chmod(0755, 'usr/lib/libfoo.so')
+          FileUtils::mkdir_p 'etc'
+          File.chmod(0755, 'etc')
+          File.open('etc/foo.conf', 'w') do |conf|
+            conf.write("You mean, you'll put down your rock and I'll put down " \
+                       "my sword, and we'll try and kill each other like " \
+                       "civilized people?")
+          end
+          File.chmod(0600, 'etc/foo.conf')
+          FileUtils::mkdir_p 'var/lib/foo'
+          File.chmod(0755, 'var')
+          File.chmod(0755, 'var/lib')
+          File.chmod(0755, 'var/lib/foo')
+        end
+
+        [:before_install, :after_install, :before_remove, :after_remove,
+         :before_upgrade, :after_upgrade].each do |script|
+          original.scripts[script] = "#!/bin/sh\n\necho #{script.to_s}"
+        end
+
+        original.output(target)
+        input.input(target)
       end
-    end # package attributes
-  end # #output
+
+      after do
+        original.cleanup
+        input.cleanup
+      end # after
+
+      context "script contents" do
+        [:before_install, :after_install, :before_remove, :after_remove,
+         :before_upgrade, :after_upgrade].each do |script|
+          it "should be the same both with input as with original for #{script.to_s}" do
+            expect( \
+                   (input.scripts[script] =~ \
+                    /[\n :]+#{Regexp.quote(original.scripts[script])}/m \
+                   )
+                  ).to(be_truthy)
+          end
+        end
+      end
+
+      context "file permissions" do
+        {"/usr" => 0755,
+         "/usr/bin" => 0755,
+         "/usr/bin/foo" => 0755,
+         "/usr/lib" => 0700,
+         "/usr/lib/libfoo.so" => 0755,
+         "/usr/share" => 0755,
+         "/usr/share/doc" => 0755,
+         "/usr/share/doc/foo.txt" => 0644,
+         "/etc" => 0755,
+         "/etc/foo.conf" => 0600,
+         "/var" => 0755,
+         "/var/lib" => 0755,
+         "/var/lib/foo" => 0755}.each do |dir, perm|
+           it "should preserve file permissions for #{dir}" do
+             insist { File.stat(File.join(input.staging_path,
+                                          dir)).mode & 07777 } == perm
+           end
+         end
+      end
+
+      context "package attributes" do
+        it "should have the correct name" do
+          insist { input.name } == original.name
+        end
+
+        it "should have the correct version" do
+          insist { input.version } == original.version
+        end
+
+        it "should have the correct iteration" do
+          insist { input.iteration } == original.iteration
+        end
+
+        it "should have the correct epoch" do
+          insist { input.epoch } == original.epoch
+        end
+
+        it "should not have bogus dependencies, just correct dependencies" do
+          expect(input.dependencies).to(be == ["hello >= 20", "something > 10"])
+        end
+      end # package attributes
+    end # #output
+  end
   # TODO: output sometimes make fu-:1.2.3.out.rpm or something. Make sure the
   # version isn't screwed up in transit.
 end # describe FPM::Package::Pacman
