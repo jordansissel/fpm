@@ -14,8 +14,8 @@ post_install() {
     :
 <%= script(:after_install) %>
 }
-<% end %>
-<% if script?(:before_upgrade) %>
+<% end -%>
+<% if script?(:before_upgrade) -%>
 pre_upgrade() {
     :
 <%= script(:before_upgrade) %>
@@ -34,8 +34,8 @@ pre_remove() {
 }
 <% end -%>
 <% if script?(:after_remove) -%>
-pre_remove() {
+post_remove() {
     :
-<%= script(:before_remove) %>
+<%= script(:after_remove) %>
 }
 <% end -%>

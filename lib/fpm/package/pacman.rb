@@ -306,11 +306,11 @@ class FPM::Package::Pacman < FPM::Package
       level += line.count "{"
       level -= line.count "}"
       if level > 0
-        prod.push(line)
+        prod.push(line.rstrip())
       else
         fine = line.sub(/\s*[}]\s*$/, "")
         if !(fine =~ /^\s*$/)
-          prod.push(fine)
+          prod.push(fine.rstrip())
         end
       end
     end
@@ -335,11 +335,11 @@ class FPM::Package::Pacman < FPM::Package
             line)
           if not m.nil? and look_for.include? m[1]
             if not m[2].nil?
-              functions[m[1]].push(m[2])
+              functions[m[1]].push(m[2].rstrip())
             end
             gobble_function(lines, functions[m[1]])
           else
-            global_lines.push(line)
+            global_lines.push(line.rstrip())
           end
         end
       rescue StopIteration
