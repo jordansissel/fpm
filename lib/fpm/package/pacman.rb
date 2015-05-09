@@ -20,10 +20,6 @@ class FPM::Package::Pacman < FPM::Package
 
   option "--group", "GROUP", "The group owner of files in this package", :default => 'root'
 
-  option "--changelog", "FILEPATH", "Add FILEPATH as debian changelog" do |file|
-    File.expand_path(file)
-  end
-
   def initialize(*args)
     super(*args)
     attributes[:pacman_opt_depends] = []
