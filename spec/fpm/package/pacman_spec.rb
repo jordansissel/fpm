@@ -206,4 +206,6 @@ describe FPM::Package::Pacman do
       end
     end # package attributes
   end # #output
+  # TODO: output sometimes make fu-:1.2.3.out.rpm or something. Make sure the
+  # version isn't screwed up in transit.
 end # describe FPM::Package::Pacman
