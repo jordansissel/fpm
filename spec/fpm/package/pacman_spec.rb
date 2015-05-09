@@ -1,10 +1,8 @@
 require "spec_setup"
 require 'fileutils'
 require "fpm" # local
-require "fpm/package/deb" # local
-require "fpm/package/dir" # local
+require "fpm/package/pacman" # local
 require "stud/temporary"
-require "English" # for $CHILD_STATUS
 
 describe FPM::Package::Pacman do
   let(:target) { Stud::Temporary.pathname + ".pkg.tar.xz" }
@@ -138,6 +136,11 @@ describe FPM::Package::Pacman do
         File.chmod(0755, 'var/lib/foo')
       end
 
+      [:before_install, :after_install, :before_remove, :after_remove,
+       :before_upgrade, :after_upgrade].each do |script|
+        original.scripts[script] = "#!/bin/sh\n\necho #{script.to_s}"
+      end
+
       original.output(target)
       input.input(target)
     end
@@ -146,6 +149,19 @@ describe FPM::Package::Pacman do
       original.cleanup
       input.cleanup
     end # after
+
+    context "script contents" do
+      [:before_install, :after_install, :before_remove, :after_remove,
+       :before_upgrade, :after_upgrade].each do |script|
+        it "should be the same both with input as with original for #{script.to_s}" do
+          expect( \
+                 (input.scripts[script] =~ \
+                  /[\n :]+#{Regexp.quote(original.scripts[script])}/m \
+                 )
+                ).to(be_truthy)
+        end
+      end
+    end
 
     context "file permissions" do
       {"/usr" => 0755,
@@ -189,8 +205,5 @@ describe FPM::Package::Pacman do
         expect(input.dependencies).to(be == ["hello >= 20", "something > 10"])
       end
     end # package attributes
-    # TODO: include a section that verifies that pacman can parse the package
-    # TODO: include a test that performs regression test on preserving file permissions
-    # TODO: include a test that checks that the script was slurped properly by input()
   end # #output
 end # describe FPM::Package::Pacman
