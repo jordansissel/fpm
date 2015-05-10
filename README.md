@@ -115,6 +115,7 @@ Sources:
 * rpm
 * deb
 * node packages (npm)
+* pacman (`pkg.tar.xz`, or ArchLinux) packages
 
 Targets:
 
@@ -124,6 +125,7 @@ Targets:
 * tar
 * directories
 * Mac OS X `.pkg` files (`osxpkg`)
+* pacman (`pkg.tar.xz`, or ArchLinux) packages
 
 ## Need Help or Want to Contribute?
 
