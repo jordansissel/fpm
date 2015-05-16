@@ -234,6 +234,8 @@ class FPM::Command < Clamp::Command
     "copying, downloading, etc. Roughly any scratch space fpm needs to build " \
     "your package.", :default => Dir.tmpdir
 
+  option "--recursive", :flag, "Build packages for dependencies, too, if possible."
+
   parameter "[ARGS] ...",
     "Inputs to the source package type. For the 'dir' type, this is the files" \
     " and directories you want to include in the package. For others, like " \
@@ -270,7 +272,6 @@ class FPM::Command < Clamp::Command
       logger.level = log_level.to_sym
     end
 
-
     if (stray_flags = args.grep(/^-/); stray_flags.any?)
       logger.warn("All flags should be before the first argument " \
                    "(stray flags found: #{stray_flags}")
@@ -297,6 +298,13 @@ class FPM::Command < Clamp::Command
       logger.fatal("Fix the above problems, and you'll be rolling packages in no time!")
       return 1
     end
+
+    # --recursive mode is a bit of a special kind of behavior, so we'll change
+    # directions now to do that if requested.
+    if recursive?
+      return recursive_package
+    end
+
     input_class = FPM::Package.types[input_type]
     output_class = FPM::Package.types[output_type]
 
@@ -508,6 +516,29 @@ class FPM::Command < Clamp::Command
       output.cleanup unless output.nil?
     end
   end # def execute
+
+  def recursive_package
+    case input_type
+    when "gem"
+
+      # Use rubygems to get a list of all the dependencies (direct and transitive)
+      # of the package we're requesting. This list will automatically include
+      # the package + version requested.
+      require "rubygems/dependency_installer"
+      resolver = Gem::DependencyInstaller.new.resolve_dependencies(args[0], version)
+      items = []
+      resolver.sorted_requests.collect do |dep|
+        items << [dep.name, dep.version.to_s]
+      end
+
+      items.each do |name, version|
+        cmd = FPM::Command.new("fpm")
+        cmd.parse(["-s", input_type, "-t", output_type, "--version", version, name ])
+        cmd.execute
+      end
+    end
+    nil
+  end
 
   def run(*args)
     logger.subscribe(STDOUT)
