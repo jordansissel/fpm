@@ -5,21 +5,19 @@ require "rake/tasklib"
 class FPM::RakeTask < Rake::TaskLib
   attr_reader :options
 
-  def initialize(*args, source:, target:, directory: ".", &block)
-    @options = OpenStruct.new
-    @source = source.to_s
-    @target = target.to_s
-    @directory = File.expand_path(directory)
+  def initialize(package_name, opts = {}, &block)
+    @options = OpenStruct.new(:name => package_name.to_s)
+    @source, @target = opts.values_at(:source, :target).map(&:to_s)
+    @directory = File.expand_path(opts[:directory].to_s)
 
-    abort("Must specify source and output") if @source.empty? || @target.empty?
-    options.name = args.shift.to_s || abort("Must specify a package name")
+    (@source.empty? || @target.empty? || options.name.empty?) &&
+      abort("Must specify package name, source and output")
 
     desc "Package #{@name}" unless ::Rake.application.last_comment
 
-    task(options.name, *args) do |_, task_args|
-      block.call(*[options, task_args].first(block.arity)) if block
-      abort("Must specify args") unless (@args = options.delete_field(:args))
-
+    task(options.name) do |_, task_args|
+      block.call(*[options, task_args].first(block.arity)) if block_given?
+      @args = options.delete_field(:args) || abort("Must specify args")
       run_cli
     end
   end
