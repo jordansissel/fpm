@@ -200,7 +200,7 @@ for review.
 ##Problems running bundle install?
 
 If you are installing on Mac OS 10.9 (Mavericks) you will need to make sure that 
-you have the standalone command line tools seperate from Xcode:
+you have the standalone command line tools separate from Xcode:
 
     $ xcode-select --install
 
