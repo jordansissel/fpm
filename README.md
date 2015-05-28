@@ -68,7 +68,7 @@ Many Linux distros do not ship ruby C headers or a compiler by default, and
 you'll need that to install fpm.
 
     apt-get install ruby-dev gcc
-    
+
     yum install ruby-devel gcc
 
 Additional packages will be required depending on the source and target package
@@ -80,7 +80,7 @@ which you must map to your distribution's package names.
 You can install fpm with gem:
 
     gem install fpm
-    
+
 (On OS X, you may also need gnutar: `brew install gnu-tar`.)
 
 Building a package named "awesome" might look something like this:
@@ -181,9 +181,9 @@ Most importantly, you should see the following output from the bundle command
 when it lists the fpm gem:
 
     ...
-    Using json (1.8.1) 
+    Using json (1.8.1)
     Using fpm (0.4.42) from source at .
-    Using hitimes (1.2.1) 
+    Using hitimes (1.2.1)
     ...
 
 Next, run make in root of the fpm repo.  If there are any problems (such as
@@ -199,7 +199,7 @@ for review.
 
 ##Problems running bundle install?
 
-If you are installing on Mac OS 10.9 (Mavericks) you will need to make sure that 
+If you are installing on Mac OS 10.9 (Mavericks) you will need to make sure that
 you have the standalone command line tools separate from Xcode:
 
     $ xcode-select --install
