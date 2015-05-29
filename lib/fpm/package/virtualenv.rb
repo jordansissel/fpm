@@ -1,11 +1,6 @@
 require "fpm/namespace"
 require "fpm/package"
 require "fpm/util"
-require "rubygems/package"
-require "rubygems"
-require "fileutils"
-require "tmpdir"
-require "json"
 
 # Support for python virtualenv packages.
 #
@@ -18,34 +13,46 @@ require "json"
 #     pkg.input("Django")
 #
 class FPM::Package::Virtualenv < FPM::Package
-  # Flags '--foo' will be accessable  as attributes[:python_foo]
+  # Flags '--foo' will be accessable  as attributes[:virtualenv_foo]
+
   option "--pypi", "PYPI_URL",
   "PyPi Server uri for retrieving packages.",
   :default => "https://pypi.python.org/simple"
   option "--package-name-prefix", "PREFIX", "Name to prefix the package " \
   "name with.", :default => "virtualenv"
+
+  option "--install-location", "DIRECTORY", "Location to which to " \
+  "install the virtualenv by default.", :default => "/usr/share/python" do |path|
+    File.expand_path(path)
+  end
+
   option "--fix-name", :flag, "Should the target package name be prefixed?",
   :default => true
-  option "--install-folder", "BIN_PATH", "The path to where python scripts " \
-  "should be installed to.", :default => "/usr/share/python"
-  option "--other-files-directory", "DIRECTORY", "Optionally, the contents of the " \
-  "specified directory may be added to the package.", :default => nil
+  option "--other-files-dir", "DIRECTORY", "Optionally, the contents of the " \
+  "specified directory may be added to the package. This is useful if the " \
+  "virtualenv needs configuration files, etc.", :default => nil
 
   private
 
   # Input a package.
   #
   def input(package)
+    installdir = attributes[:virtualenv_install_location]
     m = /^([^=]+)==([^=]+)$/.match(package)
     package_version = nil
+
     if m
-      self.name ||= m[1]
-      self.version ||= m[2]
-      package = m[1]
+      package_name = m[1]
       package_version = m[2]
+      self.version ||= package_version
     else
-      self.name ||= package
+      package_name = package
+      package_version = nil
     end
+
+    virtualenv_name = package_name
+
+    self.name ||= package_name
 
     if self.attributes[:virtualenv_fix_name?]
       self.name = [self.attributes[:virtualenv_package_name_prefix],
@@ -53,8 +60,11 @@ class FPM::Package::Virtualenv < FPM::Package
     end
 
     virtualenv_folder =
-      File.join(attributes[:virtualenv_install_folder],
-                package)
+      File.join(installdir,
+                virtualenv_name)
+
+    puts "virtualenv_folder: " + virtualenv_folder
+
     virtualenv_build_folder = build_path(virtualenv_folder)
 
     ::FileUtils.mkdir_p(virtualenv_build_folder)
@@ -89,39 +99,45 @@ class FPM::Package::Virtualenv < FPM::Package
       safesystem("virtualenv-tools", "--update-path", virtualenv_folder)
     end
 
-    if !attributes[:virtualenv_other_files_directory].nil?
-      ::Dir.foreach(attributes[:virtualenv_other_files_directory]) do |i|
-        next if i == '.' or i == '..'
-        copy_entry(File.join(attributes[:virtualenv_other_files_directory], i),
-                   build_path(i))
+    if !attributes[:virtualenv_other_files_dir].nil?
+      # Copy all files from other dir to build_path
+      Find.find(attributes[:virtualenv_other_files_dir]) do |path|
+        src = path.gsub(/^#{attributes[:virtualenv_other_files_dir]}/, '')
+        dst = File.join(build_path, src)
+        copy_entry(path, dst, preserve=true, remove_destination=true)
+        copy_metadata(path, dst)
       end
     end
 
-    logger.debug("Now removing python object and compiled files from the virtualenv")
-
-    ::Dir[build_path + "/**/*.pyo"].each do |f|
-      ::FileUtils.rm_f(f)
-    end
-
-    ::Dir[build_path + "/**/*.pyc"].each do |f|
-      ::FileUtils.rm_f(f)
-    end
+    remove_python_compiled_files virtualenv_build_folder
 
     # use dir to set stuff up properly, mainly so I don't have to reimplement
     # the chdir/prefix stuff special for tar.
     dir = convert(FPM::Package::Dir)
+
     if attributes[:chdir]
       dir.attributes[:chdir] = File.join(build_path, attributes[:chdir])
     else
       dir.attributes[:chdir] = build_path
     end
+
     cleanup_staging
     # Tell 'dir' to input "." and chdir/prefix will help it figure out the
     # rest.
     dir.input(".")
     @staging_path = dir.staging_path
     dir.cleanup_build
+
   end # def input
 
+  # Delete python precompiled files found in a given folder.
+  def remove_python_compiled_files path
+    logger.debug("Now removing python object and compiled files from the virtualenv")
+    Find.find(path) do |path|
+      if path.end_with? '.pyc' or path.end_with? '.pyo'
+        FileUtils.rm path
+      end
+    end
+  end
   public(:input)
-end # class FPM::Package::Python
+end # class FPM::Package::Virtualenv
