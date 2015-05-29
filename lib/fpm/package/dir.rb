@@ -203,27 +203,5 @@ class FPM::Package::Dir < FPM::Package
     copy_metadata(source, destination)
   end # def copy
 
-  def copy_metadata(source, destination)
-    source_stat = File::lstat(source)
-    dest_stat = File::lstat(destination)
-
-    # If this is a hard-link, there's no metadata to copy.
-    # If this is a symlink, what it points to hasn't been copied yet.
-    return if source_stat.ino == dest_stat.ino || dest_stat.symlink?
-
-    File.utime(source_stat.atime, source_stat.mtime, destination)
-    mode = source_stat.mode
-    begin
-      File.lchown(source_stat.uid, source_stat.gid, destination)
-    rescue Errno::EPERM
-      # clear setuid/setgid
-      mode &= 01777
-    end
-
-    unless source_stat.symlink?
-      File.chmod(mode, destination)
-    end
-  end # def copy_metadata
-
   public(:input, :output)
 end # class FPM::Package::Dir
