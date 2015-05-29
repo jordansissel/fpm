@@ -6,12 +6,6 @@ require "fpm/util"
 #
 # This supports input, but not output.
 #
-# Example:
-#
-#     # Download the django python package:
-#     pkg = FPM::Package::Python.new
-#     pkg.input("Django")
-#
 class FPM::Package::Virtualenv < FPM::Package
   # Flags '--foo' will be accessable  as attributes[:virtualenv_foo]
 
@@ -36,6 +30,7 @@ class FPM::Package::Virtualenv < FPM::Package
 
   # Input a package.
   #
+  #     `package` can look like `psutil==2.2.1` or `psutil`.
   def input(package)
     installdir = attributes[:virtualenv_install_location]
     m = /^([^=]+)==([^=]+)$/.match(package)
@@ -62,8 +57,6 @@ class FPM::Package::Virtualenv < FPM::Package
     virtualenv_folder =
       File.join(installdir,
                 virtualenv_name)
-
-    puts "virtualenv_folder: " + virtualenv_folder
 
     virtualenv_build_folder = build_path(virtualenv_folder)
 
