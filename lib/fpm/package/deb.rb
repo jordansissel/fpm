@@ -124,6 +124,10 @@ class FPM::Package::Deb < FPM::Package
     next @custom_fields
   end
 
+  option "--no-default-config-files", :flag,
+    "Do not add all files in /etc as configuration files by default for Debian packages.",
+    :default => false
+
   option "--shlibs", "SHLIBS", "Include control/shlibs content. This flag " \
     "expects a string that is used as the contents of the shlibs file. " \
     "See the following url for a description of this file and its format: " \
@@ -267,6 +271,22 @@ class FPM::Package::Deb < FPM::Package
       #self.config_files = config_files
 
       self.dependencies += parse_depends(parse.call("Depends")) if !attributes[:no_auto_depends?]
+
+      if File.file?(File.join(path, "preinst"))
+        self.scripts[:before_install] = File.read(File.join(path, "preinst"))
+      end
+      if File.file?(File.join(path, "postinst"))
+        self.scripts[:after_install] = File.read(File.join(path, "postinst"))
+      end
+      if File.file?(File.join(path, "prerm"))
+        self.scripts[:before_remove] = File.read(File.join(path, "prerm"))
+      end
+      if File.file?(File.join(path, "postrm"))
+        self.scripts[:after_remove] = File.read(File.join(path, "postrm"))
+      end
+      if File.file?(File.join(path, "conffiles"))
+        self.config_files = File.read(File.join(path, "conffiles")).split("\n")
+      end
     end
   end # def extract_info
 
@@ -641,29 +661,44 @@ class FPM::Package::Deb < FPM::Package
   end # def write_scripts
 
   def write_conffiles
-    return unless config_files.any?
-
-    # scan all conf file paths for files and add them
     allconfigs = []
-    config_files.each do |path|
+
+    # expand recursively a given path to be put in allconfigs
+    def add_path(path, allconfigs)
       # Strip leading /
       path = path[1..-1] if path[0,1] == "/"
       cfg_path = File.expand_path(path, staging_path)
-      begin
-        Find.find(cfg_path) do |p|
-          allconfigs << p.gsub("#{staging_path}/", '') if File.file? p
-        end
-      rescue Errno::ENOENT => e
-        raise FPM::InvalidPackageConfiguration,
-          "Error trying to use '#{cfg_path}' as a config file in the package. Does it exist?"
+      Find.find(cfg_path).select { |p| File.file?(p) }.each do |p|
+        allconfigs << p.gsub("#{staging_path}/", '')
       end
     end
+
+    # scan all conf file paths for files and add them
+    config_files.each do |path|
+      begin
+        add_path(path, allconfigs)
+      rescue Errno::ENOENT
+        raise FPM::InvalidPackageConfiguration,
+          "Error trying to use '#{path}' as a config file in the package. Does it exist?"
+      end
+    end
+
+    # Also add everything in /etc
+    begin
+      if !attributes[:deb_no_default_config_files?]
+        logger.warn("Debian packaging tools generally labels all files in /etc as config files, " \
+                    "as mandated by policy, so fpm defaults to this behavior for deb packages. " \
+                    "You can disable this default behavior with --deb-no-default-config-files flag")
+        add_path("/etc", allconfigs)
+      end
+    rescue Errno::ENOENT
+    end
+
     allconfigs.sort!.uniq!
+    return unless allconfigs.any?
 
     with(control_path("conffiles")) do |conffiles|
       File.open(conffiles, "w") do |out|
-        # 'config_files' comes from FPM::Package and is usually set with
-        # FPM::Command's --config-files flag
         allconfigs.each do |cf|
           # We need to put the leading / back. Stops lintian relative-conffile error.
           out.puts("/" + cf)
