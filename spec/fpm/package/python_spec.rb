@@ -99,6 +99,28 @@ describe FPM::Package::Python, :if => python_usable? do
     end
   end
 
+  context "when :python_dependencies is set" do
+    before :each do
+      subject.attributes[:python_dependencies] = true
+    end
+
+    it "it should include the dependencies from setup.py" do
+      subject.input(example_dir)
+      insist { subject.dependencies.sort } == ["python-dependency1  ","python-dependency2  "]
+    end
+
+    context "and :python_disable_dependency is set" do
+      before :each do
+        subject.attributes[:python_disable_dependency] = "Dependency1"
+      end
+
+      it "it should exclude the dependency" do
+        subject.input(example_dir)
+        insist { subject.dependencies.sort } == ["python-dependency2  "]
+      end
+    end
+  end
+
   context "when python_obey_requirements_txt? is true" do
     before :each do
       subject.attributes[:python_obey_requirements_txt?] = true
@@ -114,6 +136,12 @@ describe FPM::Package::Python, :if => python_usable? do
         subject.input(example_dir)
         insist { subject.dependencies.sort } == ["python-rtxt-dep1 > 0.1", "python-rtxt-dep2 = 0.1"]
       end
+
+      it "it should exclude the dependency" do
+        subject.attributes[:python_disable_dependency] = "rtxt-dep1"
+        subject.input(example_dir)
+        insist { subject.dependencies.sort } == ["python-rtxt-dep2 = 0.1"]
+      end
     end
 
     context "and :python_fix_dependencies? is false" do
@@ -125,12 +153,18 @@ describe FPM::Package::Python, :if => python_usable? do
         subject.input(example_dir)
         insist { subject.dependencies.sort } == ["rtxt-dep1 > 0.1", "rtxt-dep2 = 0.1"]
       end
+
+      it "it should exclude the dependency" do
+        subject.attributes[:python_disable_dependency] = "rtxt-dep1"
+        subject.input(example_dir)
+        insist { subject.dependencies.sort } == ["rtxt-dep2 = 0.1"]
+      end
     end
   end
 
   context "python_scripts_executable is set" do
     it "should have scripts with a custom hashbang line" do
-      subject.attributes[:python_install_bin] = '/usr/bin'
+      #subject.attributes[:python_install_bin] = '/usr/bin'
       subject.attributes[:python_scripts_executable] = "fancypants"
       subject.input("django")
 

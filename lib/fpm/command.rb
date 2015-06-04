@@ -24,7 +24,7 @@ class FPM::Command < Clamp::Command
   include FPM::Util
 
   def help(*args)
-    return [
+    lines = [
       "Intro:",
       "",
       "  This is fpm version #{FPM::VERSION}",
@@ -35,10 +35,14 @@ class FPM::Command < Clamp::Command
       "  You can find support on irc (#fpm on freenode irc) or via email with",
       "  fpm-users@googlegroups.com",
       "",
-
-      # Lastly, include the default help output via Clamp.
-      super
-    ].join("\n")
+      "Loaded package types:",
+    ]
+    FPM::Package.types.each do |name, _|
+      lines.push("  - #{name}")
+    end
+    lines.push("")
+    lines.push(super)
+    return lines.join("\n")
   end # def help
 
   option "-t", "OUTPUT_TYPE",
@@ -139,6 +143,11 @@ class FPM::Command < Clamp::Command
     excludes << val
     next excludes
   end # -x / --exclude
+
+  option "--exclude-file", "EXCLUDE_PATH",
+    "The path to a file containing a newline-sparated list of "\
+    "patterns to exclude from input."
+
   option "--description", "DESCRIPTION", "Add a description for this package." \
     " You can include '\n' sequences to indicate newline breaks.",
     :default => "no description" do |val|
@@ -191,7 +200,7 @@ class FPM::Command < Clamp::Command
   option "--after-upgrade", "FILE",
     "A script to be run after package upgrade. If not specified,\n" \
         "--before-install, --after-install, --before-remove, and \n" \
-        "--after-remove wil behave in a backwards-compatible manner\n" \
+        "--after-remove will behave in a backwards-compatible manner\n" \
         "(they will not be upgrade-case aware).\n" \
         "Currently only supports deb and rpm packages." do |val|
     File.expand_path(val) # Get the full path to the script
@@ -199,7 +208,7 @@ class FPM::Command < Clamp::Command
   option "--before-upgrade", "FILE",
     "A script to be run before package upgrade. If not specified,\n" \
         "--before-install, --after-install, --before-remove, and \n" \
-        "--after-remove wil behave in a backwards-compatible manner\n" \
+        "--after-remove will behave in a backwards-compatible manner\n" \
         "(they will not be upgrade-case aware).\n" \
         "Currently only supports deb and rpm packages." do |val|
     File.expand_path(val) # Get the full path to the script
@@ -343,6 +352,22 @@ class FPM::Command < Clamp::Command
       File.new(inputs, "r").each_line do |line|
         # Handle each line as if it were an argument
         input.input(line.strip)
+      end
+    end
+
+    # If --exclude-file was specified, read it as a file and append to
+    # the exclude pattern list.
+    if !exclude_file.nil?
+      if !File.exists?(exclude_file)
+        logger.fatal("File given for --exclude-file does not exist (#{exclude_file})")
+        return 1
+      end
+
+      # Read each line as a path
+      File.new(exclude-file, "r").each_line do |line| 
+        # Handle each line as if it were an argument
+        # 'excludes' is defined above near the -x option.
+        excludes << line.strip
       end
     end
 

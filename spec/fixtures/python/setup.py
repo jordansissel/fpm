@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 
 setup(name="Example",
       version="1.0",
@@ -8,6 +8,6 @@ setup(name="Example",
       url="sample url",
       packages=[],
       package_dir={},
-      requires=["Dependency1", "dependency2"],
+      install_requires=["Dependency1", "dependency2"],
       )
 
