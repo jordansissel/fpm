@@ -448,24 +448,6 @@ class FPM::Package::RPM < FPM::Package
       self.directories = alldirs
     end
 
-    # scan all conf file paths for files and add them
-    allconfigs = []
-    self.config_files.each do |path|
-      if self.prefix.nil?
-        cfg_path = File.join(staging_path, path)
-      else
-        cfg_path = File.join(staging_path, [self.prefix, path].join('/'))
-      end
-
-      raise "Config file path #{cfg_path} does not exist" unless File.exist?(cfg_path)
-      Find.find(cfg_path) do |p|
-        allconfigs << p.gsub("#{staging_path}/", '') if File.file? p
-      end
-    end
-    allconfigs.sort!.uniq!
-
-    self.config_files = allconfigs.map { |x| File.join("/", x) }
-
     # add init script if present
     (attributes[:rpm_init_list] or []).each do |init|
       name = File.basename(init, ".init")
