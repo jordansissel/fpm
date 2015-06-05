@@ -1,6 +1,10 @@
 # vim
 .*.sw[a-z]
 
+# emacs
+\#*#
+*~
+
 # build byproducts
 build-*/*
 fpm.wiki
@@ -25,3 +29,10 @@ Gemfile.lock
 
 .rbx
 .vagrant
+
+# Packages
+*.rpm
+*.deb
+
+# Bundler
+/.bundle
