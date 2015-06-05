@@ -39,3 +39,6 @@ Gemfile.lock
 
 docs/_build
 docs/.work
+
+# Bundler
+/.bundle
