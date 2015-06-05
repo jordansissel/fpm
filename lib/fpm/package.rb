@@ -186,6 +186,38 @@ class FPM::Package
     self.class.type
   end # def type
 
+  # expand recursively a given path to be put in configs
+  def add_config_path(path, configs)
+    # Strip leading /
+    path = path[1..-1] if path[0,1] == "/"
+    if self.prefix.nil?
+      cfg_path = staging_path(path)
+    else
+      cfg_path = staging_path(File.join(self.prefix, path))
+    end
+
+    Find.find(cfg_path).select { |p| File.file?(p) }.each do |p|
+      configs << p.gsub("#{staging_path}#{$/}", '')
+    end
+  end
+
+  def find_config_files()
+    # scan all conf file paths for files and add them
+    allconfigs = []
+    # scan all conf file paths for files and add them
+    self.config_files.each do |path|
+      begin
+        add_config_path(path, allconfigs)
+      rescue Errno::ENOENT
+        raise FPM::InvalidPackageConfiguration,
+          "Error trying to use '#{path}' as a config file in the package. Does it exist?"
+      end
+    end
+    allconfigs.sort!.uniq!
+
+    self.config_files = allconfigs.map { |x| File.join("/", x) }
+  end
+
   # Convert this package to a new package type
   def convert(klass)
     logger.info("Converting #{self.type} to #{klass.type}")
@@ -212,6 +244,8 @@ class FPM::Package
     # the destination package type unless their value is specified on the
     # source package object.
     pkg.attributes.merge!(self.attributes)
+
+    pkg.find_config_files
 
     pkg.converted_from(self.class)
     return pkg
@@ -507,7 +541,7 @@ class FPM::Package
       end
     end
   end
-  
+
   # Get the contents of the script by a given name.
   #
   # If template_scripts? is set in attributes (often by the --template-scripts
@@ -551,5 +585,5 @@ class FPM::Package
 
   # Package internal public api
   public(:cleanup_staging, :cleanup_build, :staging_path, :converted_from,
-         :edit_file, :build_path)
+         :edit_file, :build_path, :add_config_path)
 end # class FPM::Package

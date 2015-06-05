@@ -793,18 +793,6 @@ class FPM::Package::Deb < FPM::Package
   end # def write_scripts
 
   def write_conffiles
-    # expand recursively a given path to be put in allconfigs
-    def add_path(path, allconfigs)
-      # Strip leading /
-      path = path[1..-1] if path[0,1] == "/"
-      cfg_path = File.expand_path(path, staging_path)
-      Find.find(cfg_path) do |p|
-        if File.file?(p)
-          allconfigs << p.gsub("#{staging_path}/", '')
-        end
-      end
-    end
-
     # check for any init scripts or default files
     inits    = attributes.fetch(:deb_init_list, [])
     defaults = attributes.fetch(:deb_default_list, [])
@@ -816,7 +804,7 @@ class FPM::Package::Deb < FPM::Package
         logger.warn("Debian packaging tools generally labels all files in /etc as config files, " \
                     "as mandated by policy, so fpm defaults to this behavior for deb packages. " \
                     "You can disable this default behavior with --deb-no-default-config-files flag")
-        add_path("/etc", etcfiles)
+        add_config_path("/etc", etcfiles)
       end
     rescue Errno::ENOENT
     end
@@ -828,7 +816,7 @@ class FPM::Package::Deb < FPM::Package
     # scan all conf file paths for files and add them
     config_files.each do |path|
       begin
-        add_path(path, allconfigs)
+        add_config_path(path, allconfigs)
       rescue Errno::ENOENT
         raise FPM::InvalidPackageConfiguration,
           "Error trying to use '#{path}' as a config file in the package. Does it exist?"
@@ -856,8 +844,10 @@ class FPM::Package::Deb < FPM::Package
       end
     end
 
-    allconfigs.sort!.uniq!
     return unless allconfigs.any?
+
+    self.config_files.concat allconfigs
+    self.config_files.sort!.uniq!
 
     control_path("conffiles").tap do |conffiles|
       File.open(conffiles, "w") do |out|
