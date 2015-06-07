@@ -197,7 +197,8 @@ class FPM::Package
     end
 
     Find.find(cfg_path).select { |p| File.file?(p) }.each do |p|
-      configs << p.gsub("#{staging_path}#{$/}", '')
+      cleaned_path = p.gsub(/#{staging_path}(\/|$)/, "")
+      configs << cleaned_path
     end
   end
 
