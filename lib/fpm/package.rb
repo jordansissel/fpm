@@ -552,5 +552,5 @@ class FPM::Package
 
   # Package internal public api
   public(:cleanup_staging, :cleanup_build, :staging_path, :converted_from,
-         :edit_file, :build_path, :add_config_path)
+         :edit_file, :build_path, :add_config_path, :find_config_files)
 end # class FPM::Package
