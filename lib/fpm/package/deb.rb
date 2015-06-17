@@ -729,7 +729,7 @@ class FPM::Package::Deb < FPM::Package
   end # def write_debconf
 
   def write_meta_files
-    files = attributes[:deb_meta_files]
+    files = attributes[:deb_meta_file]
     return unless files
     files.each do |fn|
       dest = control_path(File.basename(fn))
