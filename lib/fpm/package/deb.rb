@@ -714,6 +714,7 @@ class FPM::Package::Deb < FPM::Package
     File.open(control_path("shlibs"), "w") do |out|
       out.write(attributes[:deb_shlibs])
     end
+    File.chmod(0644, control_path("shlibs"))
   end # def write_shlibs
 
   def write_debconf
