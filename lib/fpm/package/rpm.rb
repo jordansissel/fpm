@@ -165,6 +165,7 @@ class FPM::Package::RPM < FPM::Package
   def rpm_fix_name(name)
     name = "\"#{name}\"" if name[/\s/]
     name = name.gsub("[", "[\\[]")
+    name = name.gsub("]", "[\\]]")
     name = name.gsub("*", "[*]")
     name = name.gsub("?", "[?]")
     name = name.gsub("%", "[%]")
