@@ -164,7 +164,7 @@ class FPM::Package::RPM < FPM::Package
   # Replace % with [%] to make rpm not expand macros
   def rpm_fix_name(name)
     name = "\"#{name}\"" if name[/\s/]
-    name = name.gsub(/([\[\]])/, '[\\\1]')
+    name = name.gsub(/(\[|\])/, { '[' => '[\\[]', ']' => '[\\]]' })
     name = name.gsub("*", "[*]")
     name = name.gsub("?", "[?]")
     name = name.gsub("%", "[%]")
