@@ -15,6 +15,10 @@ class FPM::Package::Virtualenv < FPM::Package
   option "--package-name-prefix", "PREFIX", "Name to prefix the package " \
   "name with.", :default => "virtualenv"
 
+  option "--local-project-path", "DIRECTORY",
+  "Local python project path",
+  :default => ""
+
   option "--install-location", "DIRECTORY", "Location to which to " \
   "install the virtualenv by default.", :default => "/usr/share/python" do |path|
     File.expand_path(path)
@@ -72,9 +76,18 @@ class FPM::Package::Virtualenv < FPM::Package
                "pip", "distribute")
     safesystem(pip_exe, "uninstall", "-y", "distribute")
 
-    safesystem(pip_exe, "install", "-i",
+    # Installing from local project path has an advantage to now having to upload 
+    # python package to pypi server just to make distro package.
+    if attributes[:virtualenv_local_project_path]
+      logger.debug("Installing from local project path.")
+      safesystem(pip_exe, "install", "-e", "file://" + 
+               attributes[:virtualenv_local_project_path])
+    else
+      logger.debug("Installing from PyPi server.")
+      safesystem(pip_exe, "install", "-i",
                attributes[:virtualenv_pypi],
                package)
+    end
 
     if package_version.nil?
       frozen = safesystemout(pip_exe, "freeze")
