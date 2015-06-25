@@ -15,6 +15,10 @@ class FPM::Package::Virtualenv < FPM::Package
   option "--package-name-prefix", "PREFIX", "Name to prefix the package " \
   "name with.", :default => "virtualenv"
 
+  option "--local-project-path", "DIRECTORY",
+  "Local python project path",
+  :default => ""
+
   option "--install-location", "DIRECTORY", "DEPRECATED: Use --prefix instead." \
     "  Location to which to install the virtualenv by default.",
     :default => "/usr/share/python" do |path|
@@ -135,7 +139,15 @@ class FPM::Package::Virtualenv < FPM::Package
       target_args << package
     end
 
-    pip_args = [python_exe, pip_exe, "install", "-i", attributes[:virtualenv_pypi]] << extra_index_url_args << find_links_url_args << target_args
+    # Installing from local project path has an advantage to now having to upload
+    # python package to pypi server just to make distro package.
+    if attributes[:virtualenv_local_project_path]
+      logger.debug("Installing from local project path.")
+      pip_args = [python_exe, pip_exe, "install", "-e", "file://" + attributes[:virtualenv_local_project_path]] << extra_index_url_args << find_links_url_args
+    else
+      logger.debug("Installing from PyPi server.")
+      pip_args = [python_exe, pip_exe, "install", "-i", attributes[:virtualenv_pypi]] << extra_index_url_args << find_links_url_args << target_args
+    end
     safesystem(*pip_args.flatten)
 
     if attributes[:virtualenv_setup_install?]
