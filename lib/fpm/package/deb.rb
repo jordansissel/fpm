@@ -152,6 +152,11 @@ class FPM::Package::Deb < FPM::Package
     :multivalued => true do |file|
     next File.expand_path(file)
   end
+  
+  option "--systemd", "FILEPATH", "Add FILEPATH as a systemd script",
+	:multivalued => true do |file|
+    next File.expand_path(file)
+  end
 
   def initialize(*args)
     super(*args)
@@ -437,6 +442,14 @@ class FPM::Package::Deb < FPM::Package
       dest_init = staging_path("etc/init.d/#{name}")
       FileUtils.mkdir_p(File.dirname(dest_init))
       FileUtils.ln_s("/lib/init/upstart-job", dest_init)
+    end
+
+    attributes.fetch(:deb_systemd_list, []).each do |systemd|
+      name = File.basename(systemd, ".service")
+      dest_systemd = staging_path("etc/systemd/system/#{name}.service")
+      FileUtils.mkdir_p(File.dirname(dest_systemd))
+      FileUtils.cp(systemd, dest_systemd)
+      File.chmod(0644, dest_systemd)
     end
 
     write_control_tarball
