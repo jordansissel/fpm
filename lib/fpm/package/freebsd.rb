@@ -63,7 +63,8 @@ class FPM::Package::FreeBSD < FPM::Package
     # Populate files + checksums, then write +MANIFEST.
     pkgdata["files"] = {}
     checksums.each do |f, shasum|
-      pkgdata["files"]["/" + f] = shasum
+      # pkg expands % URL-style escapes, so make sure to escape % as %25
+      pkgdata["files"]["/" + f.gsub("%", "%25")] = shasum
     end
 
     File.open(staging_path("+MANIFEST"), "w+") do |file|
