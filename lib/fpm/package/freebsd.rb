@@ -42,10 +42,12 @@ class FPM::Package::FreeBSD < FPM::Package
       pkg_origin = "fpm/#{name}"
     end
 
+    pkg_version = "#{version}-#{iteration || 1}"
+
     pkgdata = {
       "abi" => attributes[:freebsd_abi],
       "name" => name,
-      "version" => version,
+      "version" => pkg_version,
       "comment" => description,
       "desc" => description,
       "origin" => pkg_origin,
@@ -117,7 +119,7 @@ class FPM::Package::FreeBSD < FPM::Package
   end # def add_path
 
   def to_s(format=nil)
-    return super("NAME-VERSION.txz") if format.nil?
+    return "#{name}-#{version}_#{iteration || 1}.txz"
     return super(format)
   end # def to_s
 end # class FPM::Package::FreeBSD
