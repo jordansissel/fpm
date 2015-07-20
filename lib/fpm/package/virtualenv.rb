@@ -12,6 +12,9 @@ class FPM::Package::Virtualenv < FPM::Package
   option "--pypi", "PYPI_URL",
   "PyPi Server uri for retrieving packages.",
   :default => "https://pypi.python.org/simple"
+  option "--pypi-extra-index-url", "PYPI_EXTRA_INDEX_URL",
+  "Extra URLs of package indexes to use.",
+  :default => nil
   option "--package-name-prefix", "PREFIX", "Name to prefix the package " \
   "name with.", :default => "virtualenv"
 
@@ -72,9 +75,16 @@ class FPM::Package::Virtualenv < FPM::Package
                "pip", "distribute")
     safesystem(pip_exe, "uninstall", "-y", "distribute")
 
-    safesystem(pip_exe, "install", "-i",
-               attributes[:virtualenv_pypi],
-               package)
+    if !attributes[:virtualenv_pypi_extra_index_url].nil?
+        safesystem(pip_exe, "install", "-i",
+                attributes[:virtualenv_pypi],
+                "--extra-index-url", attributes[:virtualenv_pypi_extra_index_url],
+                package)
+    else
+        safesystem(pip_exe, "install", "-i",
+                attributes[:virtualenv_pypi],
+                package)
+    end
 
     if package_version.nil?
       frozen = safesystemout(pip_exe, "freeze")
