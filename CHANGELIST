@@ -1,4 +1,4 @@
-1.4.0 (???)
+1.4.0 (July 26, 2015)
   - Solaris 11 IPS packages 'p5p' now supported `-t p5p`. (Jonathan Craig)
   - Python Virtualenv is now supported `-t virtualenv` (#930, Simone
     Margaritelli and Daniel Haskin)
