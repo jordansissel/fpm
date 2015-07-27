@@ -86,6 +86,9 @@ class FPM::Package::RPM < FPM::Package
     File.read(File.expand_path(file))
   end
 
+  option "--summary", "SUMMARY",
+    "Set the RPM summary. Overrides the first line on the description if set"
+
   option "--sign", :flag, "Pass --sign to rpmbuild"
 
   option "--auto-add-directories", :flag, "Auto add directories not part of filesystem"
@@ -512,6 +515,14 @@ class FPM::Package::RPM < FPM::Package
     #return File.join("BUILD", prefix)
   end # def build_sub_dir
 
+  def summary
+    if !attributes[:rpm_summary]
+      return @description.split("\n").first || "_"
+    end
+
+    return attributes[:rpm_summary]
+  end # def summary
+
   def version
     if @version.kind_of?(String) and @version.include?("-")
       logger.warn("Package version '#{@version}' includes dashes, converting" \
@@ -552,5 +563,5 @@ class FPM::Package::RPM < FPM::Package
 
   public(:input, :output, :converted_from, :architecture, :to_s, :iteration,
          :payload_compression, :digest_algorithm, :prefix, :build_sub_dir,
-         :epoch, :version, :prefixed_path)
+         :summary, :epoch, :version, :prefixed_path)
 end # class FPM::Package::RPM
