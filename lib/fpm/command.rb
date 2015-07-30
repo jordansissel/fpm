@@ -522,7 +522,7 @@ class FPM::Command < Clamp::Command
       if File.readable? rc_file
         logger.warn("Loading flags from rc file #{rc_file}")
         File.readlines(rc_file).each do |line|
-          # reverse becasue 'unshift' pushes onto the left side of the array.
+          # reverse because 'unshift' pushes onto the left side of the array.
           Shellwords.shellsplit(line).reverse.each do |arg|
             # Put '.fpm'-file flags *before* the command line flags
             # so that we the CLI can override the .fpm flags
