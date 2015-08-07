@@ -512,6 +512,24 @@ describe FPM::Package::RPM do
       # Default release must be '1'
       insist { rpmtags[:release] } == "1"
     end
+
+    context "with an empty description" do
+      it "should build a package" do
+        subject.description = ""
+        expect do
+          subject.output(@target)
+        end.not_to raise_error
+      end
+    end
+
+    context "with an one-line description" do
+      it "should build a package" do
+        subject.description = "hello world"
+        expect do
+          subject.output(@target)
+        end.not_to raise_error
+      end
+    end
   end # regression stuff
 
   describe "input validation stuff", :if => program_exists?("rpmbuild") do
