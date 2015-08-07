@@ -155,7 +155,7 @@ describe FPM::Package::Deb do
       original.attributes[:deb_field_given?] = true
       original.attributes[:deb_field] = { "foo" => "bar" }
 
-      original.attributes[:deb_meta_files] = %w(meta_test triggers).map do |fn|
+      original.attributes[:deb_meta_file] = %w(meta_test triggers).map do |fn|
         File.expand_path("../../../fixtures/deb/#{fn}", __FILE__)
       end
 
