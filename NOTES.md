@@ -3,7 +3,7 @@
 
 ## C libraries
 
-Linux seems to require 'ldconfig' runs after shared libraries are installe. I
+Linux seems to require 'ldconfig' runs after shared libraries are installed. I
 haven't bothered digging into why, but many debian C library packages run
 ldconfig as a postinstall step.
 

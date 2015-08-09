@@ -1,3 +1,35 @@
+1.4.0 (July 26, 2015)
+  - Solaris 11 IPS packages 'p5p' now supported `-t p5p`. (Jonathan Craig)
+  - Python Virtualenv is now supported `-t virtualenv` (#930, Simone
+    Margaritelli and Daniel Haskin)
+  - deb: Files in /etc are now by default marked as config files. (#877,
+    Vincent Bernat)
+  - `fpm --help` output now includes a list of supported package types (#896,
+    Daniel Haskin)
+  - cpan: --[no-]cpan-sandbox-non-core flag to make non-core module sandboxing
+    optional during packaging (#752, Matt Sharpe)
+  - rpm: Add --rpm-dist flag for specifically setting the target distribution
+    of an rpm.  (Adam Lamar)
+  - rpm: Fix a crash if --before-upgrade or --after-upgrade were used. (#822,
+    Dave Anderson)
+  - deb: Ensure maintainer scripts have shebang lines (#836, Wesley Spikes)
+  - deb: Fix bug in maintainer scripts where sometimes we would write an empty
+    shell function. Empty functions aren't valid in shell. (Wesley Spikes)
+  - Fix symlink copying bug (#863, Pete Fritchman)
+  - python: Default to https for pypi queries (Timothy Sutton)
+  - New flag --exclude-file for providing a file containing line-delimited
+    exclusions (Jamie Lawrence)
+  - python: new flag --python-disable-dependency to disable specific python
+    dependencies (Ward Vandewege)
+  - python: ensure we avoid wheel packages for now until fpm better supports them.
+    (#885, Matt Callaway)
+  - deb: Add support for installation states "abort-remove" and "abort-install"
+    (#887, Daniel Haskin)
+  - If PATH isn't set, and we need it, tell the user (#886, Ranjib Dey)
+  - cpan: --[no-]cpan-test now works correctly (#853, Matt Schreiber)
+  - deb-to-rpm: some improved support for config file knowledge passing from
+    deb to rpm packages (Daniel Haskin)
+    
 1.3.3 (December 11, 2014)
   - The fpm project now uses Contributor Covenant. You can read more about this on
     the website: http://contributor-covenant.org/

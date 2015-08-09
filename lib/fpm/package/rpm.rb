@@ -55,6 +55,8 @@ class FPM::Package::RPM < FPM::Package
     next rpmbuild_define
   end
 
+  option "--dist", "DIST-TAG", "Set the rpm distribution."
+
   option "--digest", DIGEST_ALGORITHM_MAP.keys.join("|"),
     "Select a digest algorithm. md5 works on the most platforms.",
     :default => "md5" do |value|
@@ -413,6 +415,9 @@ class FPM::Package::RPM < FPM::Package
       args += ["--target", rpm_target]
     end
 
+    # set the rpm dist tag
+    args += ["--define", "dist .#{attributes[:rpm_dist]}"] if attributes[:rpm_dist]
+
     args += [
       "--define", "buildroot #{build_path}/BUILD",
       "--define", "_topdir #{build_path}",
@@ -530,7 +535,10 @@ class FPM::Package::RPM < FPM::Package
   end # def epoch
 
   def to_s(format=nil)
-    return super("NAME-VERSION-ITERATION.ARCH.TYPE") if format.nil?
+    if format.nil?
+      return super("NAME-VERSION-ITERATION.DIST.ARCH.TYPE").gsub('DIST', attributes[:rpm_dist]) if attributes[:rpm_dist]
+      return super("NAME-VERSION-ITERATION.ARCH.TYPE")
+    end
     return super(format)
   end # def to_s
 
