@@ -32,6 +32,8 @@ describe FPM::Package::CPAN, :if => have_cpanm do
 
   context "given a distribution without a META.* file" do
     it "should package IPC::Session" do
+      # IPC::Session fails 'make test'
+      subject.attributes[:cpan_test?] = false
       subject.input("IPC::Session")
     end
   end
