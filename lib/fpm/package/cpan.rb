@@ -70,8 +70,6 @@ class FPM::Package::CPAN < FPM::Package
     # local META file.
     metadata = result.merge(local_metadata || {})
 
-    puts metadata.inspect
-
     if metadata.empty?
       raise FPM::InvalidPackageConfiguration,
         "Could not find package metadata. Checked for META.json, META.yml, and MetaCPAN API data"
