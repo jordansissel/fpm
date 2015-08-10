@@ -56,6 +56,9 @@ describe FPM::Package::CPAN do
 
   it "should package File::Spec" do
     pending("Disabled on travis-ci because it always fails, and there is no way to debug it?") if is_travis
+
+    # Disabled for the reasons articulated above with respect to `Digest::MD5`.
+    subject.attributes[:cpan_test?] = false
     subject.input("File::Spec")
 
     # the File::Spec module comes from the PathTools CPAN distribution
@@ -76,7 +79,8 @@ describe FPM::Package::CPAN do
     it "should package IPC::Session" do
       pending("Disabled on travis-ci because it always fails, and there is no way to debug it?") if is_travis
 
-      # IPC::Session fails 'make test'
+      # Disabled for the reasons articulated above with respect to
+      # `Digest::MD5`.
       subject.attributes[:cpan_test?] = false
       subject.input("IPC::Session")
     end
