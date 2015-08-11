@@ -519,6 +519,12 @@ class FPM::Command < Clamp::Command
     rc_files << File.join(ENV["HOME"], ".fpm") if ENV["HOME"]
 
     rc_args = []
+
+    if ENV["FPMOPTS"]
+      logger.warn("Loading flags from FPMOPTS environment variable")
+      rc_args.push(*Shellwords.shellsplit(ENV["FPMOPTS"]))
+    end
+
     rc_files.each do |rc_file|
       if File.readable? rc_file
         logger.warn("Loading flags from rc file #{rc_file}")
