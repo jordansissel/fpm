@@ -364,7 +364,7 @@ class FPM::Command < Clamp::Command
       end
 
       # Read each line as a path
-      File.new(exclude-file, "r").each_line do |line| 
+      File.new(exclude_file, "r").each_line do |line|
         # Handle each line as if it were an argument
         # 'excludes' is defined above near the -x option.
         excludes << line.strip
