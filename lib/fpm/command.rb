@@ -363,11 +363,13 @@ class FPM::Command < Clamp::Command
         return 1
       end
 
+      # Ensure hash is initialized
+      input.attributes[:excludes] ||= []
+
       # Read each line as a path
       File.new(exclude_file, "r").each_line do |line|
         # Handle each line as if it were an argument
-        # 'excludes' is defined above near the -x option.
-        excludes << line.strip
+        input.attributes[:excludes] << line.strip
       end
     end
 
