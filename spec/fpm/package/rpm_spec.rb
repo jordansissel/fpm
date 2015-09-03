@@ -39,6 +39,19 @@ describe FPM::Package::RPM do
     end
   end
 
+  describe "#summary" do
+    it "should default to description" do
+      expected = subject.description
+      insist { subject.summary } == expected
+    end
+
+    it "should return description override" do
+      subject.attributes[:rpm_summary] = "a summary"
+      expected = subject.description
+      insist { subject.summary } != expected
+    end
+  end
+
   describe "#epoch" do
     it "should default to empty" do
       insist { subject.epoch.to_s } == ""
@@ -152,6 +165,7 @@ describe FPM::Package::RPM do
         subject.dependencies << "hello >= 20"
         subject.conflicts << "bad < 2"
         subject.attributes[:rpm_os] = "fancypants"
+        subject.attributes[:rpm_summary] = "fancypants"
 
         # Make sure multi-line licenses are hacked to work in rpm (#252)
         subject.license = "this\nis\nan\example"
@@ -196,6 +210,11 @@ describe FPM::Package::RPM do
 
       it "should obey the os attribute" do
         insist { @rpmtags[:os] } == subject.attributes[:rpm_os]
+      end
+
+      it "should have a different summary and description" do
+        insist { @rpmtags[:summary] } == subject.summary
+        insist { @rpmtags[:summary] } != subject.description
       end
 
       it "should have the correct version" do
@@ -379,6 +398,10 @@ describe FPM::Package::RPM do
       #it "should have the correct epoch" do
         #insist { @rpmtags[:epoch].first.to_s } == ""
       #end
+
+      it "should have the default summary as first line of description" do
+        insist { @rpmtags[:summary] } == @rpmtags[:description].split("\n").first
+      end
 
       it "should output a package with the no conflicts" do
         # @rpm.requires is an array of [name, op, requires] elements
