@@ -44,7 +44,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency("ffi") # license: GPL3/LGPL3
 
   spec.add_development_dependency("rspec", "~> 3.0.0") # license: MIT (according to wikipedia)
-  spec.add_development_dependency("insist", "~> 0.0.5") # license: ???
+  spec.add_development_dependency("insist", "~> 1.0.0") # license: Apache 2
   spec.add_development_dependency("pry")
   spec.add_development_dependency("stud")
 
