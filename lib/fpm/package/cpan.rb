@@ -39,12 +39,16 @@ class FPM::Package::CPAN < FPM::Package
         #"me know by filing an issue: " \
         #"https://github.com/jordansissel/fpm/issues"
     #end
-    #require "ftw" # for http access
     require "net/http"
     require "json"
 
+    user, repo, branch = fromGithub(package)
+
     if (attributes[:cpan_local_module?])
       moduledir = package
+    elsif user && repo
+      tarball = octopus(user, repo, branch)
+      moduledir = unpack(tarball)
     else
       result = search(package)
       tarball = download(result, version)
@@ -249,16 +253,52 @@ class FPM::Package::CPAN < FPM::Package
         self.architecture = "native"
       end
     end
-  end
+  end # def input
+
+  def fromGithub(package)
+    if package =~ %r{^Github:([\w_.-]+)/([\w_.-]+)(?:@(.*))?$}
+      # Github:user/repo[@branch]
+      return $1, $2, $3
+    elsif package =~ %r{^git@github\.com:([\w_.-]+)/([\w_.-]+).git(?:@(.*))?$}
+      # git@github.com:user/repo.git[@branch]
+      return $1, $2, $3
+    elsif package =~ %r{^\w+://github\.com/([\w_.-]+)/([\w_.-]+)\.git(?:@(.*))?$}
+      # https://github.com/user/repo.git[@branch]
+      return $1, $2, $3
+    else
+      return false, false, false
+    end
+  end # def fromGithub
 
   def unpack(tarball)
     directory = build_path("module")
     ::Dir.mkdir(directory)
-    args = [ "-C", directory, "-zxf", tarball,
-      "--strip-components", "1" ]
+    args = [ "-C", directory, "-zxf", tarball, "--strip-components", "1" ]
     safesystem("tar", *args)
     return directory
-  end
+  end # def unpack
+
+  def octopus(user, repo, branch)
+    branch ||= "master"
+    filename = File.basename("#{branch}.tar.gz")
+    download_url = "https://github.com/#{user}/#{repo}/archive/#{branch}.tar.gz"
+
+    logger.info("Downloading module from Github:#{user}/#{repo}@#{branch}")
+    logger.debug("Fetching module", :url => download_url)
+
+    begin
+      response = httpfetch(download_url)
+    rescue Net::HTTPServerException => e
+      logger.error("Download failed", :error => e, :url => download_url)
+      raise FPM::InvalidPackageConfiguration, "Github download failed"
+    end
+
+    File.open(build_path(filename), "w") do |fd|
+      fd.write(response.body)
+    end
+
+    return build_path(filename)
+  end # def octopus
 
   def download(metadata, cpan_version=nil)
     distribution = metadata["distribution"]
@@ -268,7 +308,7 @@ class FPM::Package::CPAN < FPM::Package
                  :distribution => distribution,
                  :version => cpan_version)
 
-    # default to latest versionunless we specify one
+    # default to latest version unless we specify one
     if cpan_version.nil?
       self.version = metadata["version"]
     else
@@ -336,7 +376,7 @@ class FPM::Package::CPAN < FPM::Package
     data = response.body
     metadata = JSON.parse(data)
     return metadata
-  end # def metadata
+  end # def search
 
   def fix_name(name)
     case name
@@ -353,13 +393,14 @@ class FPM::Package::CPAN < FPM::Package
     else
       http = Net::HTTP.new(uri.host, uri.port)
     end
+    http.use_ssl = (uri.scheme == "https")
     response = http.request(Net::HTTP::Get.new(uri.request_uri))
     case response
       when Net::HTTPSuccess; return response
       when Net::HTTPRedirection; return httpfetch(response["location"])
       else; response.error!
     end
-  end
+  end # def httpfetch
 
   public(:input)
 end # class FPM::Package::NPM
