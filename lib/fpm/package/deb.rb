@@ -152,6 +152,8 @@ class FPM::Package::Deb < FPM::Package
 	:multivalued => true do |file|
     next File.expand_path(file)
   end
+  
+  option "--systemd-restart-after-upgrade", :flag , "Restart service after upgrade", :default => true
 
   def initialize(*args)
     super(*args)
