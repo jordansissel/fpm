@@ -135,6 +135,9 @@ module FPM::Util
         system("#{tar} > /dev/null 2> /dev/null")
         return tar unless $?.exitstatus == 127
       end
+    when "FreeBSD"
+      # use gnutar instead
+      return "gtar"
     else
       return "tar"
     end
