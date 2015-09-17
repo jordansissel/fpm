@@ -115,7 +115,7 @@ Sources:
 * rpm
 * deb
 * node packages (npm)
-* pacman (`pkg.tar.xz`, or ArchLinux) packages
+* pacman (ArchLinux) packages
 
 Targets:
 
