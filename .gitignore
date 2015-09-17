@@ -1,8 +1,11 @@
 # vim
 .*.sw[a-z]
+
 # emacs
+\#*#
+
+# other editors
 *~
-[#]*[#]
 
 # build byproducts
 build-*/*
@@ -12,7 +15,6 @@ fpm.wiki
 
 # python
 *.pyc
-*.egg-info
 
 # RVM
 .rvmrc
@@ -29,4 +31,3 @@ Gemfile.lock
 
 .rbx
 .vagrant
-/.project
