@@ -125,7 +125,7 @@ Targets:
 * tar
 * directories
 * Mac OS X `.pkg` files (`osxpkg`)
-* pacman (`pkg.tar.xz`, or ArchLinux) packages
+* pacman (ArchLinux) packages
 
 ## Need Help or Want to Contribute?
 
