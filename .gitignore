@@ -4,6 +4,12 @@
 *~
 [#]*[#]
 
+# emacs
+\#*#
+
+# other editors
+*~
+
 # build byproducts
 build-*/*
 fpm.wiki

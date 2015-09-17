@@ -55,6 +55,8 @@ class FPM::Package::RPM < FPM::Package
     next rpmbuild_define
   end
 
+  option "--dist", "DIST-TAG", "Set the rpm distribution."
+
   option "--digest", DIGEST_ALGORITHM_MAP.keys.join("|"),
     "Select a digest algorithm. md5 works on the most platforms.",
     :default => "md5" do |value|
@@ -83,6 +85,9 @@ class FPM::Package::RPM < FPM::Package
   option "--changelog", "FILEPATH", "Add changelog from FILEPATH contents" do |file|
     File.read(File.expand_path(file))
   end
+
+  option "--summary", "SUMMARY",
+    "Set the RPM summary. Overrides the first line on the description if set"
 
   option "--sign", :flag, "Pass --sign to rpmbuild"
 
@@ -413,6 +418,9 @@ class FPM::Package::RPM < FPM::Package
       args += ["--target", rpm_target]
     end
 
+    # set the rpm dist tag
+    args += ["--define", "dist .#{attributes[:rpm_dist]}"] if attributes[:rpm_dist]
+
     args += [
       "--define", "buildroot #{build_path}/BUILD",
       "--define", "_topdir #{build_path}",
@@ -507,6 +515,14 @@ class FPM::Package::RPM < FPM::Package
     #return File.join("BUILD", prefix)
   end # def build_sub_dir
 
+  def summary
+    if !attributes[:rpm_summary]
+      return @description.split("\n").first || "_"
+    end
+
+    return attributes[:rpm_summary]
+  end # def summary
+
   def version
     if @version.kind_of?(String) and @version.include?("-")
       logger.warn("Package version '#{@version}' includes dashes, converting" \
@@ -530,7 +546,10 @@ class FPM::Package::RPM < FPM::Package
   end # def epoch
 
   def to_s(format=nil)
-    return super("NAME-VERSION-ITERATION.ARCH.TYPE") if format.nil?
+    if format.nil?
+      return super("NAME-VERSION-ITERATION.DIST.ARCH.TYPE").gsub('DIST', attributes[:rpm_dist]) if attributes[:rpm_dist]
+      return super("NAME-VERSION-ITERATION.ARCH.TYPE")
+    end
     return super(format)
   end # def to_s
 
@@ -544,5 +563,5 @@ class FPM::Package::RPM < FPM::Package
 
   public(:input, :output, :converted_from, :architecture, :to_s, :iteration,
          :payload_compression, :digest_algorithm, :prefix, :build_sub_dir,
-         :epoch, :version, :prefixed_path)
+         :summary, :epoch, :version, :prefixed_path)
 end # class FPM::Package::RPM
