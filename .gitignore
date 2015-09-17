@@ -3,9 +3,13 @@
 
 # emacs
 \#*#
-
-# other editors
 *~
+.#*
+
+# package builds
+*.rpm
+*.deb
+*.pkg.tar*
 
 # build byproducts
 build-*/*
@@ -15,6 +19,7 @@ fpm.wiki
 
 # python
 *.pyc
+*.egg-info
 
 # RVM
 .rvmrc
