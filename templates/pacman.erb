@@ -36,7 +36,7 @@ conflict = <%= confl %>
 provides = <%= prov %>
 <% end -%>
 <% config_files.each do |conf| -%>
-<%   conf.gsub!(/^\/+/, "") -%>
+<%   conf.gsub(/^\/+/, "") -%>
 backup = <%= conf %>
 <% end -%>
 <% dependencies.each do |req| -%>
