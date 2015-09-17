@@ -39,6 +39,19 @@ describe FPM::Package::RPM do
     end
   end
 
+  describe "#summary" do
+    it "should default to description" do
+      expected = subject.description
+      insist { subject.summary } == expected
+    end
+
+    it "should return description override" do
+      subject.attributes[:rpm_summary] = "a summary"
+      expected = subject.description
+      insist { subject.summary } != expected
+    end
+  end
+
   describe "#epoch" do
     it "should default to empty" do
       insist { subject.epoch.to_s } == ""
@@ -59,6 +72,18 @@ describe FPM::Package::RPM do
 
       # This is the default filename I see commonly output by rpmbuild
       insist { subject.to_s } == "name-123-100.noarch.rpm"
+    end
+
+    it "should include the dist when specified" do
+      subject.name = "name"
+      subject.version = "123"
+      subject.architecture = "all"
+      subject.iteration = "100"
+      subject.epoch = "5"
+
+      insist { subject.to_s } == "name-123-100.noarch.rpm"
+      subject.attributes[:rpm_dist] = "el6"
+      insist { subject.to_s } == "name-123-100.el6.noarch.rpm"
     end
   end
 
@@ -140,6 +165,7 @@ describe FPM::Package::RPM do
         subject.dependencies << "hello >= 20"
         subject.conflicts << "bad < 2"
         subject.attributes[:rpm_os] = "fancypants"
+        subject.attributes[:rpm_summary] = "fancypants"
 
         # Make sure multi-line licenses are hacked to work in rpm (#252)
         subject.license = "this\nis\nan\example"
@@ -184,6 +210,11 @@ describe FPM::Package::RPM do
 
       it "should obey the os attribute" do
         insist { @rpmtags[:os] } == subject.attributes[:rpm_os]
+      end
+
+      it "should have a different summary and description" do
+        insist { @rpmtags[:summary] } == subject.summary
+        insist { @rpmtags[:summary] } != subject.description
       end
 
       it "should have the correct version" do
@@ -368,6 +399,10 @@ describe FPM::Package::RPM do
         #insist { @rpmtags[:epoch].first.to_s } == ""
       #end
 
+      it "should have the default summary as first line of description" do
+        insist { @rpmtags[:summary] } == @rpmtags[:description].split("\n").first
+      end
+
       it "should output a package with the no conflicts" do
         # @rpm.requires is an array of [name, op, requires] elements
         # fpm uses strings here, so convert.
@@ -388,6 +423,38 @@ describe FPM::Package::RPM do
         end
       end
     end # package attributes
+
+    context "dist" do
+      it "should have the dist in the release" do
+        subject.name = "example"
+        subject.attributes[:rpm_dist] = "el6"
+        subject.version = "1.0"
+        @target = Stud::Temporary.pathname
+
+        # Write RPM
+        subject.output(@target)
+
+        @rpm = ::RPM::File.new(@target)
+        insist { @rpm.tags[:release] } == "#{subject.iteration}.el6"
+
+        File.unlink(@target)
+      end
+
+      it "should accept the dist in the iteration" do
+        subject.name = "example"
+        subject.iteration = "1.el6"
+        subject.version = "1.0"
+        @target = Stud::Temporary.pathname
+
+        # Write RPM
+        subject.output(@target)
+
+        @rpm = ::RPM::File.new(@target)
+        insist { @rpm.tags[:release] } == "#{subject.iteration}"
+
+        File.unlink(@target)
+      end
+    end # dist
   end # #output
 
   describe "regressions should not occur", :if => program_exists?("rpmbuild") do
@@ -467,6 +534,24 @@ describe FPM::Package::RPM do
 
       # Default release must be '1'
       insist { rpmtags[:release] } == "1"
+    end
+
+    context "with an empty description" do
+      it "should build a package" do
+        subject.description = ""
+        expect do
+          subject.output(@target)
+        end.not_to raise_error
+      end
+    end
+
+    context "with an one-line description" do
+      it "should build a package" do
+        subject.description = "hello world"
+        expect do
+          subject.output(@target)
+        end.not_to raise_error
+      end
     end
   end # regression stuff
 
