@@ -20,6 +20,18 @@ class FPM::Package::Pacman < FPM::Package
 
   option "--group", "GROUP", "The group owner of files in this package", :default => 'root'
 
+  # The list of supported compression types. Default is xz (LZMA2)
+  COMPRESSION_TYPES = [ "gz", "bzip2", "xz", "none" ]
+
+  option "--compression", "COMPRESSION", "The compression type to use, must " \
+    "be one of #{COMPRESSION_TYPES.join(", ")}.", :default => "xz" do |value|
+    if !COMPRESSION_TYPES.include?(value)
+      raise ArgumentError, "Pacman compression value of '#{value}' is invalid. " \
+        "Must be one of #{COMPRESSION_TYPES.join(", ")}"
+    end
+    value
+  end
+
   def initialize(*args)
     super(*args)
     attributes[:pacman_opt_depends] = []
@@ -194,6 +206,36 @@ class FPM::Package::Pacman < FPM::Package
 
   end # def input
 
+  def compression_option
+    case self.attributes[:pacman_compression]
+      when nil, "xz"
+        return "J"
+      when "none"
+        return ""
+      when "gz"
+        return "z"
+      when "bzip2"
+        return "j"
+      else
+        return "J"
+      end
+  end
+
+  def compression_ending
+    case self.attributes[:pacman_compression]
+      when nil, "xz"
+        return ".xz"
+      when "none"
+        return ""
+      when "gz"
+        return ".gz"
+      when "bzip2"
+        return ".bz2"
+      else
+        return ".xz"
+      end
+  end
+
   # Output this package to the given path.
   def output(output_path)
     output_check(output_path)
@@ -224,9 +266,11 @@ class FPM::Package::Pacman < FPM::Package
 
     generate_mtree
 
+    tar_options = "c#{compression_option}f"
+
     with(File.expand_path(output_path)) do |path|
       ::Dir.chdir(build_path) do
-        safesystem(*(["tar", "cJf",
+        safesystem(*(["tar", tar_options,
                       path] + data_tar_flags + \
                       ::Dir.entries(".").reject{|entry| entry =~ /^\.{1,2}$/ }))
       end
@@ -268,7 +312,7 @@ class FPM::Package::Pacman < FPM::Package
   def to_s(format=nil)
     # Default format if nil
     # git_1.7.9.3-1_amd64.deb
-    return super("NAME-FULLVERSION-ARCH.pkg.tar.xz") if format.nil?
+    return super("NAME-FULLVERSION-ARCH.pkg.tar#{compression_ending}") if format.nil?
     return super(format)
   end # def to_s
 
