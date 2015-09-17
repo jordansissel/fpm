@@ -4,12 +4,6 @@
 *~
 [#]*[#]
 
-# emacs
-\#*#
-
-# other editors
-*~
-
 # build byproducts
 build-*/*
 fpm.wiki
@@ -18,6 +12,7 @@ fpm.wiki
 
 # python
 *.pyc
+*.egg-info
 
 # RVM
 .rvmrc
