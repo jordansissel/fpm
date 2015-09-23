@@ -128,6 +128,11 @@ class FPM::Package::Deb < FPM::Package
     "Do not add all files in /etc as configuration files by default for Debian packages.",
     :default => false
 
+  option "--no-auto-config-files", :flag,
+    "Do not declare specified init script or default configuration files automatically " \
+    "as configuration files for Debian packages.",
+    :default => false
+
   option "--shlibs", "SHLIBS", "Include control/shlibs content. This flag " \
     "expects a string that is used as the contents of the shlibs file. " \
     "See the following url for a description of this file and its format: " \
@@ -386,24 +391,6 @@ class FPM::Package::Deb < FPM::Package
       end
     end
 
-    write_control_tarball
-
-    # Tar up the staging_path into data.tar.{compression type}
-    case self.attributes[:deb_compression]
-      when "gz", nil
-        datatar = build_path("data.tar.gz")
-        compression = "-z"
-      when "bzip2"
-        datatar = build_path("data.tar.bz2")
-        compression = "-j"
-      when "xz"
-        datatar = build_path("data.tar.xz")
-        compression = "-J"
-      else
-        raise FPM::InvalidPackageConfiguration,
-          "Unknown compression type '#{self.attributes[:deb_compression]}'"
-    end
-
     # Write the changelog file
     dest_changelog = File.join(staging_path, "usr/share/doc/#{name}/changelog.Debian.gz")
     FileUtils.mkdir_p(File.dirname(dest_changelog))
@@ -447,9 +434,27 @@ class FPM::Package::Deb < FPM::Package
       File.chmod(0644, dest_upstart)
 
       # Install an init.d shim that calls upstart
-      dest_init = staging_path("/etc/init.d/#{name}")
+      dest_init = staging_path("etc/init.d/#{name}")
       FileUtils.mkdir_p(File.dirname(dest_init))
       FileUtils.ln_s("/lib/init/upstart-job", dest_init)
+    end
+
+  	write_control_tarball
+
+    # Tar up the staging_path into data.tar.{compression type}
+    case self.attributes[:deb_compression]
+      when "gz", nil
+        datatar = build_path("data.tar.gz")
+        compression = "-z"
+      when "bzip2"
+        datatar = build_path("data.tar.bz2")
+        compression = "-j"
+      when "xz"
+        datatar = build_path("data.tar.xz")
+        compression = "-J"
+      else
+        raise FPM::InvalidPackageConfiguration,
+          "Unknown compression type '#{self.attributes[:deb_compression]}'"
     end
 
     args = [ tar_cmd, "-C", staging_path, compression ] + data_tar_flags + [ "-cf", datatar, "." ]
@@ -661,6 +666,12 @@ class FPM::Package::Deb < FPM::Package
   end # def write_scripts
 
   def write_conffiles
+  	# check for any init scripts or default files
+    inits    = attributes.fetch(:deb_init_list, [])
+    defaults = attributes.fetch(:deb_default_list, [])
+    upstarts = attributes.fetch(:deb_upstart_list, [])
+    return unless (config_files.any? or inits.any? or defaults.any? or upstarts.any?)
+
     allconfigs = []
 
     # expand recursively a given path to be put in allconfigs
@@ -696,6 +707,27 @@ class FPM::Package::Deb < FPM::Package
     rescue Errno::ENOENT
     end
 
+    if !attributes[:deb_no_auto_config_files?]
+	    inits.each do |init|
+	      name = File.basename(init, ".init")
+	      initscript = "/etc/init.d/#{name}"
+          logger.debug("Add conf file declaration for init script", :script => initscript)
+	      allconfigs << initscript[1..-1]
+	    end
+	    defaults.each do |default|
+	      name = File.basename(default, ".default")
+	      confdefaults = "/etc/default/#{name}"
+          logger.debug("Add conf file declaration for defaults", :default => confdefaults)
+	      allconfigs << confdefaults[1..-1]
+	    end
+	    upstarts.each do |upstart|
+	      name = File.basename(upstart, ".upstart")
+	      upstartscript = "etc/init/#{name}.conf"
+          logger.debug("Add conf file declaration for upstart script", :script => upstartscript)
+	      allconfigs << upstartscript[1..-1]
+	    end
+	end
+	    
     allconfigs.sort!.uniq!
     return unless allconfigs.any?
 
