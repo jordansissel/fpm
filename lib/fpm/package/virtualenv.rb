@@ -143,7 +143,7 @@ class FPM::Package::Virtualenv < FPM::Package
     # python package to pypi server just to make distro package.
     if attributes[:virtualenv_local_project_path]
       logger.debug("Installing from local project path.")
-      pip_args = [python_exe, pip_exe, "install", "-e", "file://" + attributes[:virtualenv_local_project_path]] << extra_index_url_args << find_links_url_args
+      pip_args = [python_exe, pip_exe, "install", "file://" + attributes[:virtualenv_local_project_path]] << extra_index_url_args << find_links_url_args
     else
       logger.debug("Installing from PyPi server.")
       pip_args = [python_exe, pip_exe, "install", "-i", attributes[:virtualenv_pypi]] << extra_index_url_args << find_links_url_args << target_args
