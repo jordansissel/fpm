@@ -351,7 +351,7 @@ class FPM::Package
     system("#{editor} #{Shellwords.escape(path)}")
     if !$?.success?
       raise ProcessFailed.new("'#{editor}' failed (exit code " \
-                              "#{$?.exitstatus}) Full command was: "\
+                              "#{$?.exitstatus}) Full command was: " \
                               "#{command}");
     end
 
