@@ -42,9 +42,9 @@ describe FPM::Package::Pacman do
     end
   end
 
-  describe "#opt_depends" do
+  describe "#optional_depends" do
     it "should default to []" do
-      expect(subject.attributes[:pacman_opt_depends]).to(be == [])
+      expect(subject.attributes[:pacman_optional_depends]).to(be == [])
     end
   end
 

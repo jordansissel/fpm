@@ -352,6 +352,9 @@ class FPM::Package::Pacman < FPM::Package
     end
   end # def gobble_function
 
+  FIND_SCRIPT_FUNCTION_LINE =
+    /^\s*(\w+)\s*\(\s*\)\s*\{\s*([^}]+?)?\s*(\})?\s*$/
+
   def parse_install_script(path)
     global_lines = []
     look_for = Set.new(["pre_install", "post_install",
@@ -372,8 +375,6 @@ class FPM::Package::Pacman < FPM::Package
           # Examples:
           #   fname() {
           #   fname() { echo hi }
-          FIND_SCRIPT_FUNCTION_LINE =
-            /^\s*(\w+)\s*\(\s*\)\s*\{\s*([^}]+?)?\s*(\})?\s*$/
           m = FIND_SCRIPT_FUNCTION_LINE.match(line)
           if not m.nil? and look_for.include? m[1]
             if not m[2].nil?
