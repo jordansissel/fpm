@@ -15,6 +15,7 @@ fpm.wiki
 
 # python
 *.pyc
+spec/fixtures/python/Example.egg-info
 
 # RVM
 .rvmrc
