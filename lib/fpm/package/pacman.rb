@@ -6,12 +6,8 @@ require "find"
 
 class FPM::Package::Pacman < FPM::Package
 
-  opt_depends = []
-  option "--optdepends", "PACKAGE",
-    "Add an optional dependency to the pacman package." do |define|
-    opt_depends << define
-    next opt_depends
-  end
+  option "--optional-depends", "PACKAGE",
+    "Add an optional dependency to the pacman package.", :multivalued => true
 
   option "--use-file-permissions", :flag,
     "Use existing file permissions when defining ownership and modes"
@@ -34,7 +30,7 @@ class FPM::Package::Pacman < FPM::Package
 
   def initialize(*args)
     super(*args)
-    attributes[:pacman_opt_depends] = []
+    attributes[:pacman_optional_depends] = []
   end # def initialize
 
   def architecture
@@ -53,7 +49,7 @@ class FPM::Package::Pacman < FPM::Package
   end # def architecture
 
   def iteration
-    return @iteration ? @iteration : 1
+    return @iteration || 1
   end # def iteration
 
   def config_files
@@ -64,7 +60,7 @@ class FPM::Package::Pacman < FPM::Package
     bogus_regex = /[^\sA-Za-z0-9><=-]/
     # Actually modifies depencies if they are not right
     bogus_dependencies = @dependencies.grep bogus_regex
-    if !bogus_dependencies.empty?
+    if bogus_dependencies.any?
       @dependencies.reject! { |a| a =~ bogus_regex }
       logger.warn("Some of the dependencies looked like they weren't package " \
                   "names. Such dependency entries only serve to confuse arch. " \
@@ -101,9 +97,9 @@ class FPM::Package::Pacman < FPM::Package
     control = {}
     # Unpack the control tarball
     safesystem("tar", "-C", staging_path, "-xf", pacman_pkg_path)
-    pkginfo = File.join(staging_path, ".PKGINFO")
-    mtree = File.join(staging_path, ".MTREE")
-    install = File.join(staging_path, ".INSTALL")
+    pkginfo = staging_path(".PKGINFO")
+    mtree = staging_path(".MTREE")
+    install = staging_path(".INSTALL")
 
     control_contents = File.read(pkginfo)
     FileUtils.rm(pkginfo)
@@ -168,7 +164,7 @@ class FPM::Package::Pacman < FPM::Package
 
     self.dependencies = control["depend"] || self.dependencies
 
-    self.attributes[:pacman_opt_depends] = control["optdepend"] || []
+    self.attributes[:pacman_optional_depends] = control["optdepend"] || []
     # There are other available attributes, but I didn't include them because:
     # - makedepend: deps needed to make the arch package. But it's already
     #   made. It just needs to be converted at this point
@@ -240,10 +236,10 @@ class FPM::Package::Pacman < FPM::Package
   def output(output_path)
     output_check(output_path)
 
-    # copy all files from staging to BUILD dir
+    # Copy all files from staging to BUILD dir
     Find.find(staging_path) do |path|
       src = path.gsub(/^#{staging_path}/, '')
-      dst = File.join(build_path, src)
+      dst = build_path(src)
       copy_entry(path, dst, preserve=true, remove_destination=true)
       copy_metadata(path, dst)
     end
@@ -371,8 +367,14 @@ class FPM::Package::Pacman < FPM::Package
       begin
         while true
           line = lines.next
-          m = /^\s*(\w+)\s*\(\s*\)\s*\{\s*([^}]+?)?\s*(\})?\s*$/.match(
-            line)
+          # This regex picks up beginning names of posix shell
+          # functions
+          # Examples:
+          #   fname() {
+          #   fname() { echo hi }
+          FIND_SCRIPT_FUNCTION_LINE =
+            /^\s*(\w+)\s*\(\s*\)\s*\{\s*([^}]+?)?\s*(\})?\s*$/
+          m = FIND_SCRIPT_FUNCTION_LINE.match(line)
           if not m.nil? and look_for.include? m[1]
             if not m[2].nil?
               functions[m[1]].push(m[2].rstrip())
