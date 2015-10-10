@@ -205,15 +205,15 @@ class FPM::Package::Pacman < FPM::Package
   def compression_option
     case self.attributes[:pacman_compression]
       when nil, "xz"
-        return "J"
+        return "--xz"
       when "none"
         return ""
       when "gz"
-        return "z"
+        return "-z"
       when "bzip2"
-        return "j"
+        return "-j"
       else
-        return "J"
+        return "--xz"
       end
   end
 
@@ -262,11 +262,11 @@ class FPM::Package::Pacman < FPM::Package
 
     generate_mtree
 
-    tar_options = "c#{compression_option}f"
-
     with(File.expand_path(output_path)) do |path|
       ::Dir.chdir(build_path) do
-        safesystem(*(["tar", tar_options,
+        safesystem(*(["tar",
+                      compression_option,
+                      "-cf",
                       path] + data_tar_flags + \
                       ::Dir.entries(".").reject{|entry| entry =~ /^\.{1,2}$/ }))
       end
