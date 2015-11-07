@@ -122,7 +122,9 @@ class FPM::Command < Clamp::Command
     "directory all files inside it will be recursively marked as config files.",
     :multivalued => true, :attribute_name => :config_files
   option "--directories", "DIRECTORIES", "Recursively mark a directory as being owned " \
-    "by the package", :multivalued => true, :attribute_name => :directories
+    "by the package. Use this flag multiple times if you have multiple directories " \
+    "and they are not under the same parent directory ", :multivalued => true,
+    :attribute_name => :directories
   option ["-a", "--architecture"], "ARCHITECTURE",
     "The architecture name. Usually matches 'uname -m'. For automatic values," \
     " you can use '-a all' or '-a native'. These two strings will be " \
