@@ -25,10 +25,10 @@ class FPM::Package::Virtualenv < FPM::Package
   option "--other-files-dir", "DIRECTORY", "Optionally, the contents of the " \
   "specified directory may be added to the package. This is useful if the " \
   "virtualenv needs configuration files, etc.", :default => nil
-  option "--pypi-extra", "PYPI_EXTRA_URL",
-  "PyPi extra-index-url for pointing to your priviate PyPi",
-  :multivalued => true, :attribute_name => :virtualenv_pypi_extra_index_urls,
-  :default => nil
+  option "--pypi-extra-url", "PYPI_EXTRA_URL",
+    "PyPi extra-index-url for pointing to your priviate PyPi",
+    :multivalued => true, :attribute_name => :virtualenv_pypi_extra_index_urls,
+    :default => nil
 
   private
 
@@ -77,7 +77,7 @@ class FPM::Package::Virtualenv < FPM::Package
     safesystem(pip_exe, "uninstall", "-y", "distribute")
 
     extra_index_url_args = []
-    if !attributes[:virtualenv_pypi_extra_index_urls].nil?
+    if attributes[:virtualenv_pypi_extra_index_urls]
       attributes[:virtualenv_pypi_extra_index_urls].each do |extra_url|
         extra_index_url_args << "--extra-index-url" << extra_url
       end
