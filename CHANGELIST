@@ -1,3 +1,29 @@
+?????
+  - Arch package support is now available via -s pacman and -t pacman. 
+    (#916; wonderful community effort making this happen!)
+  - You can now set fpm flags and arguments with the FPMOPTS environment
+    variable (#977, mildred)
+  - Using --exclude-file no longer causes a crash. Yay! (#982, wyaeld)
+  - A new rake task is available for folks who want to invoke fpm from rake
+    (#756, pstengel)
+  - On FreeBSD, when tarring, gtar is now used. (#1008, liv3d)
+
+  - virtualenv: Add --virtualenv-pypi-extra-url flag to specify additional PyPI
+    locations to use when searching for packages (#1012, Paul Krohn)
+
+  - deb: Init scripts, etc/default, and upstart files are automatically added
+    as config files in a debian package. Disable this behavior with ---deb-auto-config-files
+  - cpan: Add --[no-]cpan-cpanm-force flag to pass --force to cpanm.
+  - rpm: File names with both spaces and symbols should now be packageable.
+    (#946, iwonbigbro)
+  - cpan: Now queries MetaCPAN for package info if we can't find any in the
+    cpan archive we just downloaded. (#849, BaxterStockman)
+  - rpm: You can now specify custom rpm tags at the command line. Be careful,
+    as no validation is done on this before sending to rpmbuild. (#687, vStone)
+  - cpan: Install if the package name given is a local file (#986, mdom)
+  - sh: Metadata now available as env vars for post-install scripts (#1006, Ed Healy)
+
+
 1.4.0 (July 26, 2015)
   - Solaris 11 IPS packages 'p5p' now supported `-t p5p`. (Jonathan Craig)
   - Python Virtualenv is now supported `-t virtualenv` (#930, Simone
