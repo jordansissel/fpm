@@ -379,7 +379,7 @@ class FPM::Package
 
         if File.fnmatch(wildcard, match_path)
           logger.info("Removing excluded path", :path => match_path, :matches => wildcard)
-          FileUtils.remove_entry_secure(path)
+          FileUtils.rm_r(path)
           Find.prune
           break
         end
