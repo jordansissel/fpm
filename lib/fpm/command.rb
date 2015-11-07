@@ -202,7 +202,7 @@ class FPM::Command < Clamp::Command
         "--before-install, --after-install, --before-remove, and \n" \
         "--after-remove will behave in a backwards-compatible manner\n" \
         "(they will not be upgrade-case aware).\n" \
-        "Currently only supports deb and rpm packages." do |val|
+        "Currently only supports deb, rpm and pacman packages." do |val|
     File.expand_path(val) # Get the full path to the script
   end # --after-upgrade
   option "--before-upgrade", "FILE",
@@ -210,7 +210,7 @@ class FPM::Command < Clamp::Command
         "--before-install, --after-install, --before-remove, and \n" \
         "--after-remove will behave in a backwards-compatible manner\n" \
         "(they will not be upgrade-case aware).\n" \
-        "Currently only supports deb and rpm packages." do |val|
+        "Currently only supports deb, rpm and pacman packages." do |val|
     File.expand_path(val) # Get the full path to the script
   end # --before-upgrade
 
@@ -414,7 +414,6 @@ class FPM::Command < Clamp::Command
     end
 
     input.attrs = h
-
 
     script_errors = []
     setscript = proc do |scriptname|
