@@ -43,7 +43,7 @@ class FPM::Package::CPAN < FPM::Package
     require "net/http"
     require "json"
 
-    if (attributes[:cpan_local_module?])
+    if File.exist?(package)
       moduledir = package
     else
       result = search(package)
