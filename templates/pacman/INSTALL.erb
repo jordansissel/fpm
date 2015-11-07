@@ -1,0 +1,41 @@
+<%# In each function, a `:` is the first command. -%>
+<%# This makes sure that at least one command is in the function -%>
+<%# This avoids a lot of potential errors, including the case that -%>
+<%# the script is non-empty, but just whitespace and/or comments -%>
+<%# see issue #875 for more details -%>
+<% if script?(:before_install) -%>
+pre_install() {
+    :
+<%= script(:before_install) %>
+}
+<% end -%>
+<% if script?(:after_install) -%>
+post_install() {
+    :
+<%= script(:after_install) %>
+}
+<% end -%>
+<% if script?(:before_upgrade) -%>
+pre_upgrade() {
+    :
+<%= script(:before_upgrade) %>
+}
+<% end -%>
+<% if script?(:after_upgrade) -%>
+post_upgrade() {
+    :
+<%= script(:after_upgrade) %>
+}
+<% end -%>
+<% if script?(:before_remove) -%>
+pre_remove() {
+    :
+<%= script(:before_remove) %>
+}
+<% end -%>
+<% if script?(:after_remove) -%>
+post_remove() {
+    :
+<%= script(:after_remove) %>
+}
+<% end -%>
