@@ -30,6 +30,9 @@ class FPM::Package::CPAN < FPM::Package
   option "--sandbox-non-core", :flag,
     "Sandbox all non-core modules, even if they're already installed", :default => true
 
+  option "--cpanm-force", :flag,
+    "Pass the --force parameter to cpanm", :default => false
+
   private
   def input(package)
     #if RUBY_VERSION =~ /^1\.8/
@@ -125,6 +128,7 @@ class FPM::Package::CPAN < FPM::Package
     cpanm_flags += ["-n"] if !attributes[:cpan_test?]
     cpanm_flags += ["--mirror", "#{attributes[:cpan_mirror]}"] if !attributes[:cpan_mirror].nil?
     cpanm_flags += ["--mirror-only"] if attributes[:cpan_mirror_only?] && !attributes[:cpan_mirror].nil?
+    cpanm_flags += ["--force"] if attributes[:cpan_cpanm_force?]
 
     safesystem(attributes[:cpan_cpanm_bin], *cpanm_flags)
 
