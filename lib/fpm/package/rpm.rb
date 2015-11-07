@@ -309,12 +309,16 @@ class FPM::Package::RPM < FPM::Package
 
   def rpm_get_trigger_type(flag)
     if (flag & (1 << 25)) == (1 << 25)
+       # RPMSENSE_TRIGGERPREIN = (1 << 25),  /*!< %triggerprein dependency. */
        :rpm_trigger_before_install
     elsif (flag & (1 << 16)) == (1 << 16)
+       # RPMSENSE_TRIGGERIN  = (1 << 16),    /*!< %triggerin dependency. */
        :rpm_trigger_after_install
     elsif (flag & (1 << 17)) == (1 << 17)
+       # RPMSENSE_TRIGGERUN  = (1 << 17),    /*!< %triggerun dependency. */
        :rpm_trigger_before_uninstall
     elsif (flag & (1 << 18)) == (1 << 18)
+       # RPMSENSE_TRIGGERPOSTUN = (1 << 18), /*!< %triggerpostun dependency. */
        :rpm_trigger_after_target_uninstall
     else
        @logger.fatal("I don't know about this triggerflag ('#{flag}')")
