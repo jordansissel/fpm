@@ -508,7 +508,7 @@ class FPM::Command < Clamp::Command
     end
   end # def execute
 
-  def run(*args)
+  def run(*run_args)
     logger.subscribe(STDOUT)
 
     # fpm initialization files, note the order of the following array is
@@ -517,21 +517,41 @@ class FPM::Command < Clamp::Command
     rc_files = [ ".fpm" ]
     rc_files << File.join(ENV["HOME"], ".fpm") if ENV["HOME"]
 
+    rc_args = []
+
+    if ENV["FPMOPTS"]
+      logger.warn("Loading flags from FPMOPTS environment variable")
+      rc_args.push(*Shellwords.shellsplit(ENV["FPMOPTS"]))
+    end
+
     rc_files.each do |rc_file|
       if File.readable? rc_file
         logger.warn("Loading flags from rc file #{rc_file}")
-        File.readlines(rc_file).each do |line|
-          # reverse because 'unshift' pushes onto the left side of the array.
-          Shellwords.shellsplit(line).reverse.each do |arg|
-            # Put '.fpm'-file flags *before* the command line flags
-            # so that we the CLI can override the .fpm flags
-            ARGV.unshift(arg)
-          end
-        end
+        rc_args.push(*Shellwords.shellsplit(File.read(rc_file)))
       end
     end
 
-    super(*args)
+    flags = []
+    args = []
+    while rc_args.size > 0 do
+      arg = rc_args.shift
+      opt = self.class.find_option(arg)
+      if opt and not opt.flag?
+        flags.push(arg)
+        flags.push(rc_args.shift)
+      elsif opt or arg[0] == "-"
+        flags.push(arg)
+      else
+        args.push(arg)
+      end
+    end
+
+    logger.warn("Additional options: #{flags.join " "}") if flags.size > 0
+    logger.warn("Additional arguments: #{args.join " "}") if args.size > 0
+
+    ARGV.unshift(*flags)
+    ARGV.push(*args)
+    super(*run_args)
   rescue FPM::Package::InvalidArgument => e
     logger.error("Invalid package argument: #{e}")
     return 1
