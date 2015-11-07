@@ -216,7 +216,7 @@ class FPM::Package
     return pkg
   end # def convert
 
-  # This method is invoked on a package when it has been covered to a new
+  # This method is invoked on a package when it has been converted to a new
   # package format. The purpose of this method is to do any extra conversion
   # steps, like translating dependency conditions, etc.
   def converted_from(origin)
@@ -351,7 +351,7 @@ class FPM::Package
     system("#{editor} #{Shellwords.escape(path)}")
     if !$?.success?
       raise ProcessFailed.new("'#{editor}' failed (exit code " \
-                              "#{$?.exitstatus}) Full command was: "\
+                              "#{$?.exitstatus}) Full command was: " \
                               "#{command}");
     end
 
