@@ -128,10 +128,10 @@ class FPM::Package::Deb < FPM::Package
     "Do not add all files in /etc as configuration files by default for Debian packages.",
     :default => false
 
-  option "--no-auto-config-files", :flag,
-    "Do not declare specified init script or default configuration files automatically " \
-    "as configuration files for Debian packages.",
-    :default => false
+  option "--[no-]auto-config-files", :flag,
+    "Init script and default configuration files will be labeled as" \
+    "configuration files for Debian packages.",
+    :default => true
 
   option "--shlibs", "SHLIBS", "Include control/shlibs content. This flag " \
     "expects a string that is used as the contents of the shlibs file. " \
@@ -707,7 +707,7 @@ class FPM::Package::Deb < FPM::Package
     rescue Errno::ENOENT
     end
 
-    if !attributes[:deb_no_auto_config_files?]
+    if attributes[:deb_auto_config_files?]
 	    inits.each do |init|
 	      name = File.basename(init, ".init")
 	      initscript = "/etc/init.d/#{name}"
