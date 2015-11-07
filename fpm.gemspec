@@ -43,6 +43,7 @@ Gem::Specification.new do |spec|
   # For calling functions in dynamic libraries
   spec.add_dependency("ffi") # license: GPL3/LGPL3
 
+  spec.add_development_dependency("rake", "~> 10") # license: MIT
   spec.add_development_dependency("rspec", "~> 3.0.0") # license: MIT (according to wikipedia)
   spec.add_development_dependency("insist", "~> 1.0.0") # license: Apache 2
   spec.add_development_dependency("pry")
