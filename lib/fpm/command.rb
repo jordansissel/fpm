@@ -394,7 +394,6 @@ class FPM::Command < Clamp::Command
     set.call(input, :url)
     set.call(input, :vendor)
     set.call(input, :version)
-    set.call(input, :architecture)
 
     input.conflicts += conflicts
     input.dependencies += dependencies
