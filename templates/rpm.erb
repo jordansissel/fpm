@@ -83,6 +83,9 @@ Packager: <%= maintainer %>
 <% dependencies.each do |req| -%>
 Requires: <%= req %>
 <% end -%>
+<% (attributes[:rpm_tags] or []).each do |tag| -%>
+<%= tag %>
+<% end -%>
 <% end -%>
 <% provides.each do |prov| -%>
 Provides: <%= prov %>
