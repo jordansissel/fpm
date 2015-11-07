@@ -62,8 +62,9 @@ function slug_already_current(){
         if [ "$FORCE" == "1" ] ; then
         log "Force was specified. Proceeding with install after renaming live directory to allow running service to shutdown correctly."
             local real_dir=$(readlink ${INSTALL_ROOT}/current)
-            if [ -f ${real_dir}.old ] ; then
+            if [ -e ${real_dir}.old ] ; then
                 # remove that .old directory, if needed
+                log "removing existing .old version of release"
                 rm -rf ${real_dir}.old
             fi
             mv ${real_dir} ${real_dir}.old
@@ -196,6 +197,7 @@ function unpack_payload(){
 function run_post_install(){
     local AFTER_INSTALL=$INSTALL_DIR/.fpm/after_install
     if [ -r $AFTER_INSTALL ] ; then
+        set_post_install_vars
         chmod +x $AFTER_INSTALL
         log "Running post install script"
         output=$($AFTER_INSTALL 2>&1)
@@ -206,11 +208,21 @@ function run_post_install(){
     return 0
 }
 
+function set_post_install_vars(){
+    <% if respond_to?(:package_metadata)%>
+      <% package_metadata_hash = JSON.parse(package_metadata)%>
+      <% package_metadata_hash.each do |k,v| %>
+        <%= "export #{k.upcase}='#{v}'; "%>
+      <% end %>
+    <% end %>
+}
+
 function create_symlinks(){
     [ -n "$USE_FLAT_RELEASE_DIRECTORY" ] && return
 
     export CURRENT_DIR="$INSTALL_ROOT/current"
-    if [ -e "$CURRENT_DIR" ] ; then
+    if [ -e "$CURRENT_DIR" ] || [ -h "$CURRENT_DIR" ] ; then
+        log "Removing current symlink"
         OLD_CURRENT_TARGET=$(readlink $CURRENT_DIR)
         rm "$CURRENT_DIR"
     fi
