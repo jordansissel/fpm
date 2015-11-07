@@ -67,7 +67,7 @@ The goal of FPM is to be able to easily build platform-native packages.
 Many Linux distros do not ship ruby C headers or a compiler by default, and
 you'll need that to install fpm.
 
-    apt-get install ruby-dev gcc
+    apt-get install ruby-dev gcc make
     
     yum install ruby-devel gcc
 
