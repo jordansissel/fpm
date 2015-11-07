@@ -176,11 +176,15 @@ class FPM::Package::RPM < FPM::Package
   # Replace ? with [?] to make rpm not use globs
   # Replace % with [%] to make rpm not expand macros
   def rpm_fix_name(name)
-    name = "\"#{name}\"" if name[/\s/]
-    name = name.gsub("[", "[\\[]")
-    name = name.gsub("*", "[*]")
-    name = name.gsub("?", "[?]")
-    name = name.gsub("%", "[%]")
+    name = name.gsub(/(\ |\[|\]|\*|\?|\%|\$)/, {
+      ' ' => '?',
+      '%' => '[%]',
+      '$' => '[$]',
+      '?' => '[?]',
+      '*' => '[*]',
+      '[' => '[\[]',
+      ']' => '[\]]'
+    })
   end
 
   def rpm_file_entry(file)
