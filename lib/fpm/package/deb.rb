@@ -139,17 +139,17 @@ class FPM::Package::Deb < FPM::Package
     "http://www.debian.org/doc/debian-policy/ch-sharedlibs.html#s-shlibs"
 
   option "--init", "FILEPATH", "Add FILEPATH as an init script",
-	:multivalued => true do |file|
+    :multivalued => true do |file|
     next File.expand_path(file)
   end
 
   option "--default", "FILEPATH", "Add FILEPATH as /etc/default configuration",
-	:multivalued => true do |file|
+    :multivalued => true do |file|
     next File.expand_path(file)
   end
 
   option "--upstart", "FILEPATH", "Add FILEPATH as an upstart script",
-	:multivalued => true do |file|
+    :multivalued => true do |file|
     next File.expand_path(file)
   end
 
@@ -439,7 +439,7 @@ class FPM::Package::Deb < FPM::Package
       FileUtils.ln_s("/lib/init/upstart-job", dest_init)
     end
 
-  	write_control_tarball
+    write_control_tarball
 
     # Tar up the staging_path into data.tar.{compression type}
     case self.attributes[:deb_compression]
@@ -666,7 +666,7 @@ class FPM::Package::Deb < FPM::Package
   end # def write_scripts
 
   def write_conffiles
-  	# check for any init scripts or default files
+    # check for any init scripts or default files
     inits    = attributes.fetch(:deb_init_list, [])
     defaults = attributes.fetch(:deb_default_list, [])
     upstarts = attributes.fetch(:deb_upstart_list, [])
@@ -708,26 +708,26 @@ class FPM::Package::Deb < FPM::Package
     end
 
     if attributes[:deb_auto_config_files?]
-	    inits.each do |init|
-	      name = File.basename(init, ".init")
-	      initscript = "/etc/init.d/#{name}"
-          logger.debug("Add conf file declaration for init script", :script => initscript)
-	      allconfigs << initscript[1..-1]
-	    end
-	    defaults.each do |default|
-	      name = File.basename(default, ".default")
-	      confdefaults = "/etc/default/#{name}"
-          logger.debug("Add conf file declaration for defaults", :default => confdefaults)
-	      allconfigs << confdefaults[1..-1]
-	    end
-	    upstarts.each do |upstart|
-	      name = File.basename(upstart, ".upstart")
-	      upstartscript = "etc/init/#{name}.conf"
-          logger.debug("Add conf file declaration for upstart script", :script => upstartscript)
-	      allconfigs << upstartscript[1..-1]
-	    end
-	end
-	    
+      inits.each do |init|
+        name = File.basename(init, ".init")
+        initscript = "/etc/init.d/#{name}"
+        logger.debug("Add conf file declaration for init script", :script => initscript)
+        allconfigs << initscript[1..-1]
+      end
+      defaults.each do |default|
+        name = File.basename(default, ".default")
+        confdefaults = "/etc/default/#{name}"
+        logger.debug("Add conf file declaration for defaults", :default => confdefaults)
+        allconfigs << confdefaults[1..-1]
+      end
+      upstarts.each do |upstart|
+        name = File.basename(upstart, ".upstart")
+        upstartscript = "etc/init/#{name}.conf"
+        logger.debug("Add conf file declaration for upstart script", :script => upstartscript)
+        allconfigs << upstartscript[1..-1]
+      end
+    end
+
     allconfigs.sort!.uniq!
     return unless allconfigs.any?
 
