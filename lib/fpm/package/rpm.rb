@@ -48,6 +48,8 @@ class FPM::Package::RPM < FPM::Package
       value
   end
 
+  option "--prefix-python-dependencies", :flag, "Prepend the python-package-name-prefix to python dependencies"
+
   rpmbuild_define = []
   option "--rpmbuild-define", "DEFINITION",
     "Pass a --define argument to rpmbuild." do |define|
@@ -257,6 +259,14 @@ class FPM::Package::RPM < FPM::Package
           end
         end
       end
+    end
+
+    if origin == FPM::Package::Python and self.attributes[:rpm_prefix_python_dependencies] == true
+      prefixed_defs = []
+      self.dependencies.each do |dep|
+        prefixed_defs << "#{self.attributes[:python_package_name_prefix]}-#{dep}"
+      end
+      self.dependencies = prefixed_defs
     end
 
     # Convert != dependency as Conflict =, as rpm doesn't understand !=
