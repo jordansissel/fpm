@@ -74,4 +74,29 @@ describe FPM::Package::Gem, :if => have_gem do
       insist { subject.name } == "example"
     end
   end
+
+  context "when :gem_shebang is nil/default" do
+    before :each do
+      subject.attributes[:gem_bin_path] = '/usr/bin'
+    end
+
+    it 'should not change the shebang' do
+      subject.input(example_gem)
+      file_path = File.join(subject.staging_path, '/usr/bin/example')
+      insist { File.readlines(file_path).grep(/^#!\/usr\/bin\/env /).any? } == true
+    end
+  end
+
+  context "when :gem_shebang is set" do
+    before :each do
+      subject.attributes[:gem_shebang] = '/opt/special/bin/ruby'
+      subject.attributes[:gem_bin_path] = '/usr/bin'
+    end
+
+    it 'should change the shebang' do
+      subject.input(example_gem)
+      file_path = File.join(subject.staging_path, '/usr/bin/example')
+      insist { File.readlines(file_path).grep("#!/opt/special/bin/ruby\n").any? } == true
+    end
+  end
 end # describe FPM::Package::Gem
