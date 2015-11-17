@@ -152,6 +152,13 @@ class FPM::Package::Deb < FPM::Package
     :multivalued => true do |file|
     next File.expand_path(file)
   end
+  
+  option "--systemd", "FILEPATH", "Add FILEPATH as a systemd script",
+	:multivalued => true do |file|
+    next File.expand_path(file)
+  end
+  
+  option "--systemd-restart-after-upgrade", :flag , "Restart service after upgrade", :default => true
 
   def initialize(*args)
     super(*args)
@@ -376,19 +383,49 @@ class FPM::Package::Deb < FPM::Package
       end
     end
 
-    if script?(:before_upgrade) or script?(:after_upgrade)
-      if script?(:before_install) or script?(:before_upgrade)
+    attributes.fetch(:deb_systemd_list, []).each do |systemd|
+      name = File.basename(systemd, ".service")
+      dest_systemd = staging_path("etc/systemd/system/#{name}.service")
+      FileUtils.mkdir_p(File.dirname(dest_systemd))
+      FileUtils.cp(systemd, dest_systemd)
+      File.chmod(0644, dest_systemd)
+
+      # set the attribute with the systemd service name
+      attributes[:deb_systemd] = name
+    end
+
+    if script?(:before_upgrade) or script?(:after_upgrade) or attributes[:deb_systemd]
+      puts "Adding action files"
+      if script?(:before_install) or script?(:before_upgrade) 
         scripts[:before_install] = template("deb/preinst_upgrade.sh.erb").result(binding)
       end
-      if script?(:before_remove)
+      if script?(:before_remove) or attributes[:deb_systemd]
         scripts[:before_remove] = template("deb/prerm_upgrade.sh.erb").result(binding)
       end
-      if script?(:after_install) or script?(:after_upgrade)
+      if script?(:after_install) or script?(:after_upgrade) or attributes[:deb_systemd]
         scripts[:after_install] = template("deb/postinst_upgrade.sh.erb").result(binding)
       end
       if script?(:after_remove)
         scripts[:after_remove] = template("deb/postrm_upgrade.sh.erb").result(binding)
       end
+    end
+
+    write_control_tarball
+
+    # Tar up the staging_path into data.tar.{compression type}
+    case self.attributes[:deb_compression]
+      when "gz", nil
+        datatar = build_path("data.tar.gz")
+        compression = "-z"
+      when "bzip2"
+        datatar = build_path("data.tar.bz2")
+        compression = "-j"
+      when "xz"
+        datatar = build_path("data.tar.xz")
+        compression = "-J"
+      else
+        raise FPM::InvalidPackageConfiguration,
+          "Unknown compression type '#{self.attributes[:deb_compression]}'"
     end
 
     # Write the changelog file
@@ -437,6 +474,14 @@ class FPM::Package::Deb < FPM::Package
       dest_init = staging_path("etc/init.d/#{name}")
       FileUtils.mkdir_p(File.dirname(dest_init))
       FileUtils.ln_s("/lib/init/upstart-job", dest_init)
+    end
+
+    attributes.fetch(:deb_systemd_list, []).each do |systemd|
+      name = File.basename(systemd, ".service")
+      dest_systemd = staging_path("etc/systemd/system/#{name}.service")
+      FileUtils.mkdir_p(File.dirname(dest_systemd))
+      FileUtils.cp(systemd, dest_systemd)
+      File.chmod(0644, dest_systemd)
     end
 
     write_control_tarball
