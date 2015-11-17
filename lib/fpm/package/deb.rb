@@ -157,6 +157,8 @@ class FPM::Package::Deb < FPM::Package
 	:multivalued => true do |file|
     next File.expand_path(file)
   end
+  
+  option "--systemd-restart-after-upgrade", :flag , "Restart service after upgrade", :default => true
 
   def initialize(*args)
     super(*args)
@@ -408,9 +410,6 @@ class FPM::Package::Deb < FPM::Package
       end
     end
 
-<<<<<<< HEAD
-=======
-
     write_control_tarball
 
     # Tar up the staging_path into data.tar.{compression type}
@@ -429,7 +428,6 @@ class FPM::Package::Deb < FPM::Package
           "Unknown compression type '#{self.attributes[:deb_compression]}'"
     end
 
->>>>>>> let fpm generate the systemd start / stop commands as well
     # Write the changelog file
     dest_changelog = File.join(staging_path, "usr/share/doc/#{name}/changelog.Debian.gz")
     FileUtils.mkdir_p(File.dirname(dest_changelog))
