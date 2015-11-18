@@ -144,10 +144,14 @@ class FPM::Package::Virtualenv < FPM::Package
       safesystem(*setup_args.flatten)
     end
 
+    if package =~ /\// and File.directory?(package)
+      package_name = safesystemout("cd #{package} && #{python_exe} setup.py --name | tail -1").strip
+    end
+
     if ! is_requirements_file && package_version.nil?
       frozen = safesystemout(python_exe, pip_exe, "freeze")
-      frozen_version = frozen[/#{package}==[^=]+$/]
-      package_version = frozen_version && frozen_version.split("==")[1].chomp!
+      frozen_version = frozen[/#{package_name}==[^=]+$/]
+      package_version = frozen_version && frozen_version.split("==")[1].strip
       self.version ||= package_version
     end
 
