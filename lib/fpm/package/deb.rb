@@ -236,7 +236,7 @@ class FPM::Package::Deb < FPM::Package
   end # def input
 
   def extract_info(package)
-    with(build_path("control")) do |path|
+    build_path("control").tap do |path|
       FileUtils.mkdir(path) if !File.directory?(path)
       # Unpack the control tarball
       safesystem("ar p #{package} control.tar.gz | tar -zxf - -C #{path}")
@@ -268,7 +268,7 @@ class FPM::Package::Deb < FPM::Package
       self.name = parse.call("Package")
       self.url = parse.call("Homepage")
       self.vendor = parse.call("Vendor") || self.vendor
-      with(parse.call("Provides")) do |provides_str|
+      parse.call("Provides").tap do |provides_str|
         next if provides_str.nil?
         self.provides = provides_str.split(/\s*,\s*/)
       end
@@ -507,7 +507,7 @@ class FPM::Package::Deb < FPM::Package
 
     # pack up the .deb, which is just an 'ar' archive with 3 files
     # the 'debian-binary' file has to be first
-    with(File.expand_path(output_path)) do |output_path|
+    File.expand_path(output_path).tap do |output_path|
       ::Dir.chdir(build_path) do
         safesystem("ar", "-qc", output_path, "debian-binary", "control.tar.gz", datatar)
       end
@@ -644,7 +644,7 @@ class FPM::Package::Deb < FPM::Package
     write_md5sums # write the md5sums file
 
     # Make the control.tar.gz
-    with(build_path("control.tar.gz")) do |controltar|
+    build_path("control.tar.gz").tap do |controltar|
       logger.info("Creating", :path => controltar, :from => control_path)
 
       args = [ tar_cmd, "-C", control_path, "-zcf", controltar,
@@ -677,7 +677,7 @@ class FPM::Package::Deb < FPM::Package
     end
 
     # Write the control file
-    with(control_path("control")) do |control|
+    control_path("control").tap do |control|
       if attributes[:deb_custom_control]
         logger.debug("Using '#{attributes[:deb_custom_control]}' template for the control file")
         control_data = File.read(attributes[:deb_custom_control])
@@ -701,7 +701,7 @@ class FPM::Package::Deb < FPM::Package
     SCRIPT_MAP.each do |scriptname, filename|
       next unless script?(scriptname)
 
-      with(control_path(filename)) do |controlscript|
+      control_path(filename).tap do |controlscript|
         logger.debug("Writing control script", :source => filename, :target => controlscript)
         File.write(controlscript, script(scriptname))
         # deb maintainer scripts are required to be executable
@@ -776,7 +776,7 @@ class FPM::Package::Deb < FPM::Package
     allconfigs.sort!.uniq!
     return unless allconfigs.any?
 
-    with(control_path("conffiles")) do |conffiles|
+    control_path("conffiles").tap do |conffiles|
       File.open(conffiles, "w") do |out|
         allconfigs.each do |cf|
           # We need to put the leading / back. Stops lintian relative-conffile error.

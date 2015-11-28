@@ -81,7 +81,7 @@ class FPM::Package::OSXpkg < FPM::Package
     SCRIPT_MAP.each do |scriptname, filename|
       next unless script?(scriptname)
 
-      with(scripts_path(filename)) do |pkgscript|
+      scripts_path(filename).tap do |pkgscript|
         logger.info("Writing pkg script", :source => filename, :target => pkgscript)
         File.write(pkgscript, script(scriptname))
         # scripts are required to be executable
@@ -103,7 +103,7 @@ class FPM::Package::OSXpkg < FPM::Package
 
   # Extract name and version from PackageInfo XML
   def extract_info(package)
-    with(build_path("expand")) do |path|
+    build_path("expand").tap do |path|
       doc = REXML::Document.new File.open(File.join(path, "PackageInfo"))
       pkginfo_elem = doc.elements["pkg-info"]
       identifier = pkginfo_elem.attribute("identifier").value

@@ -155,7 +155,7 @@ class FPM::Package
     # Iterate over all the options and set defaults
     if self.class.respond_to?(:declared_options)
       self.class.declared_options.each do |option|
-        with(option.attribute_name) do |attr|
+        option.attribute_name.tap do |attr|
           # clamp makes option attributes available as accessor methods
           # do --foo-bar is available as 'foo_bar'
           # make these available as package attributes.

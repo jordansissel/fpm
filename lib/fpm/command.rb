@@ -314,7 +314,7 @@ class FPM::Command < Clamp::Command
     #
     # Things like '--foo-bar' will be available as pkg.attributes[:foo_bar]
     self.class.declared_options.each do |option|
-      with(option.attribute_name) do |attr|
+      option.attribute_name.tap do |attr|
         next if attr == "help"
         # clamp makes option attributes available as accessor methods
         # --foo-bar is available as 'foo_bar'. Put these in the package
@@ -587,21 +587,21 @@ class FPM::Command < Clamp::Command
 
       # Verify the types requested are valid
       types = FPM::Package.types.keys.sort
-      with(@command.input_type) do |val|
+      @command.input_type.tap do |val|
         next if val.nil?
         mandatory(FPM::Package.types.include?(val),
                   "Invalid input package -s flag) type #{val.inspect}. " \
                   "Expected one of: #{types.join(", ")}")
       end
 
-      with(@command.output_type) do |val|
+      @command.output_type.tap do |val|
         next if val.nil?
         mandatory(FPM::Package.types.include?(val),
                   "Invalid output package (-t flag) type #{val.inspect}. " \
                   "Expected one of: #{types.join(", ")}")
       end
 
-      with (@command.dependencies) do |dependencies|
+      @command.dependencies.tap do |dependencies|
         # Verify dependencies don't include commas (#257)
         dependencies.each do |dep|
           next unless dep.include?(",")

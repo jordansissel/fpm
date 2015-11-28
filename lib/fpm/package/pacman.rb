@@ -262,7 +262,7 @@ class FPM::Package::Pacman < FPM::Package
 
     generate_mtree
 
-    with(File.expand_path(output_path)) do |path|
+    File.expand_path(output_path).tap do |path|
       ::Dir.chdir(build_path) do
         safesystem(*(["tar",
                       compression_option,
