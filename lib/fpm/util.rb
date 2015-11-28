@@ -143,12 +143,6 @@ module FPM::Util
     end
   end # def tar_cmd
 
-  # Run a block with a value.
-  # Useful in lieu of assigning variables
-  def with(value, &block)
-    block.call(value)
-  end # def with
-
   # wrapper around mknod ffi calls
   def mknod_w(path, mode, dev)
     rc = -1
