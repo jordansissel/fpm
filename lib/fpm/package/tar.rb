@@ -19,7 +19,7 @@ class FPM::Package::Tar < FPM::Package
     args = ["-xf", input_path, "-C", build_path]
 
     # Add the tar compression flag if necessary
-    with(tar_compression_flag(input_path)) do |flag|
+    tar_compression_flag(input_path).tap do |flag|
       args << flag unless flag.nil?
     end
 
@@ -50,7 +50,7 @@ class FPM::Package::Tar < FPM::Package
     output_check(output_path)
     # Unpack the tarball to the staging path
     args = ["-cf", output_path, "-C", staging_path]
-    with(tar_compression_flag(output_path)) do |flag|
+    tar_compression_flag(output_path).tap do |flag|
       args << flag unless flag.nil?
     end
     args << "."
