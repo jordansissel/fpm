@@ -17,7 +17,8 @@ class FPM::RakeTask < Rake::TaskLib
 
     task(options.name) do |_, task_args|
       block.call(*[options, task_args].first(block.arity)) if block_given?
-      @args = options.delete_field(:args) || abort("Must specify args")
+      abort("Must specify args") unless options.respond_to?(:args)
+      @args = options.delete_field(:args)
       run_cli
     end
   end
