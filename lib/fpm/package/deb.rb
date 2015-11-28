@@ -128,7 +128,7 @@ class FPM::Package::Deb < FPM::Package
     "Do not add all files in /etc as configuration files by default for Debian packages.",
     :default => false
 
-  option "--[no-]auto-config-files", :flag,
+  option "--auto-config-files", :flag,
     "Init script and default configuration files will be labeled as" \
     "configuration files for Debian packages.",
     :default => true
