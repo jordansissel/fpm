@@ -163,6 +163,10 @@ class FPM::Package::Pacman < FPM::Package
     end
 
     self.dependencies = control["depend"] || self.dependencies
+    
+    if attributes[:no_auto_depends?]
+      self.dependencies = []
+    end
 
     self.attributes[:pacman_optional_depends] = control["optdepend"] || []
     # There are other available attributes, but I didn't include them because:
