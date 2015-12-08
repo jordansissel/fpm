@@ -385,7 +385,7 @@ class FPM::Package::Deb < FPM::Package
 
     attributes.fetch(:deb_systemd_list, []).each do |systemd|
       name = File.basename(systemd, ".service")
-      dest_systemd = staging_path("etc/systemd/system/#{name}.service")
+      dest_systemd = staging_path("lib/systemd/system/#{name}.service")
       FileUtils.mkdir_p(File.dirname(dest_systemd))
       FileUtils.cp(systemd, dest_systemd)
       File.chmod(0644, dest_systemd)
