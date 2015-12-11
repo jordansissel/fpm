@@ -152,8 +152,7 @@ class FPM::Command < Clamp::Command
 
   option "--description", "DESCRIPTION", "Add a description for this package." \
     " You can include '\\n' sequences to indicate newline breaks.",
-    :default => "no description" do |val|
-  end
+    :default => "no description"
   option "--url", "URI", "Add a url for this package.",
     :default => "http://example.com/no-uri-given"
   option "--inputs", "INPUTS_PATH",
