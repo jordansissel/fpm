@@ -129,7 +129,7 @@ class FPM::Package::Deb < FPM::Package
     :default => false
 
   option "--auto-config-files", :flag,
-    "Init script and default configuration files will be labeled as" \
+    "Init script and default configuration files will be labeled as " \
     "configuration files for Debian packages.",
     :default => true
 
