@@ -62,568 +62,97 @@ class FPM::Package::APK< FPM::Package
     logger.error("Extraction is not yet implemented")
   end # def extract_info
 
-  # Parse a 'depends' line from a debian control file.
-  #
-  # The expected input 'data' should be everything after the 'Depends: ' string
-  #
-  # Example:
-  #
-  #     parse_depends("foo (>= 3), bar (= 5), baz")
-  def parse_depends(data)
-    return [] if data.nil? or data.empty?
-    # parse dependencies. Debian dependencies come in one of two forms:
-    # * name
-    # * name (op version)
-    # They are all on one line, separated by ", "
-
-    dep_re = /^([^ ]+)(?: \(([>=<]+) ([^)]+)\))?$/
-    return data.split(/, */).collect do |dep|
-      m = dep_re.match(dep)
-      if m
-        name, op, version = m.captures
-        # deb uses ">>" and "<<" for greater and less than respectively.
-        # fpm wants just ">" and "<"
-        op = "<" if op == "<<"
-        op = ">" if op == ">>"
-        # this is the proper form of dependency
-        "#{name} #{op} #{version}"
-      else
-        # Assume normal form dependency, "name op version".
-        dep
-      end
-    end
-  end # def parse_depends
-
   def extract_files(package)
-    
+
     # unpack the data.tar.{gz,bz2,xz} from the deb package into staging_path
     safesystem("ar p #{package} data.tar.gz " \
                "| tar gz -xf - -C #{staging_path}")
   end # def extract_files
 
   def output(output_path)
-    self.provides = self.provides.collect { |p| fix_provides(p) }
+
     output_check(output_path)
-    # Abort if the target path already exists.
 
-    # create 'debian-binary' file, required to make a valid debian package
-    File.write(build_path("debian-binary"), "2.0\n")
+    control_path = build_path("control")
+    controltar_path = build_path("control.tar.gz")
 
-    # If we are given --deb-shlibs but no --after-install script, we
-    # should implicitly create a before/after scripts that run ldconfig
-    if attributes[:deb_shlibs]
-      if !script?(:after_install)
-        logger.info("You gave --deb-shlibs but no --after-install, so " \
-                     "I am adding an after-install script that runs " \
-                     "ldconfig to update the system library cache")
-        scripts[:after_install] = template("deb/ldconfig.sh.erb").result(binding)
-      end
-      if !script?(:after_remove)
-        logger.info("You gave --deb-shlibs but no --after-remove, so " \
-                     "I am adding an after-remove script that runs " \
-                     "ldconfig to update the system library cache")
-        scripts[:after_remove] = template("deb/ldconfig.sh.erb").result(binding)
-      end
+    FileUtils.mkdir(control_path)
+
+    # control tar.
+    begin
+
+      write_pkginfo(control_path)
+
+      # scripts
+      scripts = write_control_scripts(control_path)
+
+      # zip it
+      compress_control(control_path, controltar_path)
+    ensure
+      FileUtils.rm_r(control_path)
     end
 
-    attributes.fetch(:deb_systemd_list, []).each do |systemd|
-      name = File.basename(systemd, ".service")
-      dest_systemd = staging_path("lib/systemd/system/#{name}.service")
-      FileUtils.mkdir_p(File.dirname(dest_systemd))
-      FileUtils.cp(systemd, dest_systemd)
-      File.chmod(0644, dest_systemd)
-
-      # set the attribute with the systemd service name
-      attributes[:deb_systemd] = name
+    # data tar.
+    begin
+    ensure
     end
 
-    if script?(:before_upgrade) or script?(:after_upgrade) or attributes[:deb_systemd]
-      puts "Adding action files"
-      if script?(:before_install) or script?(:before_upgrade)
-        scripts[:before_install] = template("deb/preinst_upgrade.sh.erb").result(binding)
-      end
-      if script?(:before_remove) or attributes[:deb_systemd]
-        scripts[:before_remove] = template("deb/prerm_upgrade.sh.erb").result(binding)
-      end
-      if script?(:after_install) or script?(:after_upgrade) or attributes[:deb_systemd]
-        scripts[:after_install] = template("deb/postinst_upgrade.sh.erb").result(binding)
-      end
-      if script?(:after_remove)
-        scripts[:after_remove] = template("deb/postrm_upgrade.sh.erb").result(binding)
-      end
+    # concatenate the two into a real apk.
+    begin
+    ensure
     end
 
-    write_control_tarball
+    logger.warn("apk output to is not implemented")
+  end
 
-    # Tar up the staging_path into data.tar.{compression type}
-    case self.attributes[:deb_compression]
-      when "gz", nil
-        datatar = build_path("data.tar.gz")
-        compression = "-z"
-      when "bzip2"
-        datatar = build_path("data.tar.bz2")
-        compression = "-j"
-      when "xz"
-        datatar = build_path("data.tar.xz")
-        compression = "-J"
-      else
-        raise FPM::InvalidPackageConfiguration,
-          "Unknown compression type '#{self.attributes[:deb_compression]}'"
+  def write_pkginfo(base_path)
+
+    path = "#{base_path}/.PKGINFO"
+
+    pkginfo_io = StringIO::new
+    package_version = to_s("FULLVERSION")
+
+    pkginfo_io << "pkgname = #{@name}\n"
+    pkginfo_io << "pkgver = #{package_version}\n"
+    pkginfo_io << "datahash = 123\n"
+
+    File.write(path, pkginfo_io.string)
+    `cp #{path} /tmp/.PKGINFO`
+  end
+
+  # Writes each control script from template into the build path,
+  # in the folder given by [base_path]
+  def write_control_scripts(base_path)
+
+    scripts = ["pre-install",
+                "post-install",
+                "pre-deinstall",
+                "post-deinstall",
+                "pre-upgrade",
+                "post-upgrade"
+              ]
+
+    scripts.each do |path|
+
+      script_path = "#{base_path}/#{path}"
+      File.write(script_path, template("apk/#{path}").result(binding))
     end
+  end
 
-    # Write the changelog file
-    dest_changelog = File.join(staging_path, "usr/share/doc/#{name}/changelog.Debian.gz")
-    FileUtils.mkdir_p(File.dirname(dest_changelog))
-    File.new(dest_changelog, "wb", 0644).tap do |changelog|
-      Zlib::GzipWriter.new(changelog, Zlib::BEST_COMPRESSION).tap do |changelog_gz|
-        if attributes[:deb_changelog]
-          logger.info("Writing user-specified changelog", :source => attributes[:deb_changelog])
-          File.new(attributes[:deb_changelog]).tap do |fd|
-            chunk = nil
-            # Ruby 1.8.7 doesn't have IO#copy_stream
-            changelog_gz.write(chunk) while chunk = fd.read(16384)
-          end.close
-        else
-          logger.info("Creating boilerplate changelog file")
-          changelog_gz.write(template("deb/changelog.erb").result(binding))
-        end
-      end.close
-    end # No need to close, GzipWriter#close will close it.
+  # Compresses the current contents of the given
+  def compress_control(path, target_path)
 
-    attributes.fetch(:deb_init_list, []).each do |init|
-      name = File.basename(init, ".init")
-      dest_init = File.join(staging_path, "etc/init.d/#{name}")
-      FileUtils.mkdir_p(File.dirname(dest_init))
-      FileUtils.cp init, dest_init
-      File.chmod(0755, dest_init)
-    end
-
-    attributes.fetch(:deb_default_list, []).each do |default|
-      name = File.basename(default, ".default")
-      dest_default = File.join(staging_path, "etc/default/#{name}")
-      FileUtils.mkdir_p(File.dirname(dest_default))
-      FileUtils.cp default, dest_default
-      File.chmod(0644, dest_default)
-    end
-
-    attributes.fetch(:deb_upstart_list, []).each do |upstart|
-      name = File.basename(upstart, ".upstart")
-      dest_upstart = staging_path("etc/init/#{name}.conf")
-      FileUtils.mkdir_p(File.dirname(dest_upstart))
-      FileUtils.cp(upstart, dest_upstart)
-      File.chmod(0644, dest_upstart)
-
-      # Install an init.d shim that calls upstart
-      dest_init = staging_path("etc/init.d/#{name}")
-      FileUtils.mkdir_p(File.dirname(dest_init))
-      FileUtils.ln_s("/lib/init/upstart-job", dest_init)
-    end
-
-    attributes.fetch(:deb_systemd_list, []).each do |systemd|
-      name = File.basename(systemd, ".service")
-      dest_systemd = staging_path("lib/systemd/system/#{name}.service")
-      FileUtils.mkdir_p(File.dirname(dest_systemd))
-      FileUtils.cp(systemd, dest_systemd)
-      File.chmod(0644, dest_systemd)
-    end
-
-    write_control_tarball
-
-    # Tar up the staging_path into data.tar.{compression type}
-    case self.attributes[:deb_compression]
-      when "gz", nil
-        datatar = build_path("data.tar.gz")
-        compression = "-z"
-      when "bzip2"
-        datatar = build_path("data.tar.bz2")
-        compression = "-j"
-      when "xz"
-        datatar = build_path("data.tar.xz")
-        compression = "-J"
-      else
-        raise FPM::InvalidPackageConfiguration,
-          "Unknown compression type '#{self.attributes[:deb_compression]}'"
-    end
-
-    args = [ tar_cmd, "-C", staging_path, compression ] + data_tar_flags + [ "-cf", datatar, "." ]
+    args = [ tar_cmd, "-C", path, "-zcf", target_path,
+      "--owner=0", "--group=0", "--numeric-owner", "." ]
     safesystem(*args)
 
-    # pack up the .deb, which is just an 'ar' archive with 3 files
-    # the 'debian-binary' file has to be first
-    File.expand_path(output_path).tap do |output_path|
-      ::Dir.chdir(build_path) do
-        safesystem("ar", "-qc", output_path, "debian-binary", "control.tar.gz", datatar)
-      end
-    end
-  end # def output
-
-  def converted_from(origin)
-    self.dependencies = self.dependencies.collect do |dep|
-      fix_dependency(dep)
-    end.flatten
-    self.provides = self.provides.collect do |provides|
-      fix_provides(provides)
-    end.flatten
-
-    if origin == FPM::Package::Deb
-      changelog_path = staging_path("usr/share/doc/#{name}/changelog.Debian.gz")
-      if File.exists?(changelog_path)
-        logger.debug("Found a deb changelog file, using it.", :path => changelog_path)
-        attributes[:deb_changelog] = build_path("deb_changelog")
-        File.open(attributes[:deb_changelog], "w") do |deb_changelog|
-          Zlib::GzipReader.open(changelog_path) do |gz|
-            IO::copy_stream(gz, deb_changelog)
-          end
-        end
-        File.unlink(changelog_path)
-      end
-    end
-  end # def converted_from
-
-  def debianize_op(op)
-    # Operators in debian packaging are <<, <=, =, >= and >>
-    # So any operator like < or > must be replaced
-    {:< => "<<", :> => ">>"}[op.to_sym] or op
+    `cp #{target_path} /tmp/control.tar.gz`
   end
-
-  def fix_dependency(dep)
-    # Deb dependencies are: NAME (OP VERSION), like "zsh (> 3.0)"
-    # Convert anything that looks like 'NAME OP VERSION' to this format.
-    if dep =~ /[\(,\|]/
-      # Don't "fix" ones that could appear well formed already.
-    else
-      # Convert ones that appear to be 'name op version'
-      name, op, version = dep.split(/ +/)
-      if !version.nil?
-        # Convert strings 'foo >= bar' to 'foo (>= bar)'
-        dep = "#{name} (#{debianize_op(op)} #{version})"
-      end
-    end
-
-    name_re = /^[^ \(]+/
-    name = dep[name_re]
-    if name =~ /[A-Z]/
-      logger.warn("Downcasing dependency '#{name}' because deb packages " \
-                   " don't work so good with uppercase names")
-      dep = dep.gsub(name_re) { |n| n.downcase }
-    end
-
-    if dep.include?("_")
-      logger.warn("Replacing dependency underscores with dashes in '#{dep}' because " \
-                   "debs don't like underscores")
-      dep = dep.gsub("_", "-")
-    end
-
-    # Convert gem ~> X.Y.Z to '>= X.Y.Z' and << X.Y+1.0
-    if dep =~ /\(~>/
-      name, version = dep.gsub(/[()~>]/, "").split(/ +/)[0..1]
-      nextversion = version.split(".").collect { |v| v.to_i }
-      l = nextversion.length
-      nextversion[l-2] += 1
-      nextversion[l-1] = 0
-      nextversion = nextversion.join(".")
-      return ["#{name} (>= #{version})", "#{name} (<< #{nextversion})"]
-    elsif (m = dep.match(/(\S+)\s+\(!= (.+)\)/))
-      # Move '!=' dependency specifications into 'Breaks'
-      self.attributes[:deb_breaks] ||= []
-      self.attributes[:deb_breaks] << dep.gsub(/!=/,"=")
-      return []
-    elsif (m = dep.match(/(\S+)\s+\(= (.+)\)/)) and
-        self.attributes[:deb_ignore_iteration_in_dependencies?]
-      # Convert 'foo (= x)' to 'foo (>= x)' and 'foo (<< x+1)'
-      # but only when flag --ignore-iteration-in-dependencies is passed.
-      name, version = m[1..2]
-      nextversion = version.split('.').collect { |v| v.to_i }
-      nextversion[-1] += 1
-      nextversion = nextversion.join(".")
-      return ["#{name} (>= #{version})", "#{name} (<< #{nextversion})"]
-    elsif (m = dep.match(/(\S+)\s+\(> (.+)\)/))
-      # Convert 'foo (> x) to 'foo (>> x)'
-      name, version = m[1..2]
-      return ["#{name} (>> #{version})"]
-    else
-      # otherwise the dep is probably fine
-      return dep.rstrip
-    end
-  end # def fix_dependency
-
-  def fix_provides(provides)
-    name_re = /^[^ \(]+/
-    name = provides[name_re]
-    if name =~ /[A-Z]/
-      logger.warn("Downcasing provides '#{name}' because deb packages " \
-                   " don't work so good with uppercase names")
-      provides = provides.gsub(name_re) { |n| n.downcase }
-    end
-
-    if provides.include?("_")
-      logger.warn("Replacing 'provides' underscores with dashes in '#{provides}' because " \
-                   "debs don't like underscores")
-      provides = provides.gsub("_", "-")
-    end
-    return provides.rstrip
-  end
-
-  def control_path(path=nil)
-    @control_path ||= build_path("control")
-    FileUtils.mkdir(@control_path) if !File.directory?(@control_path)
-
-    if path.nil?
-      return @control_path
-    else
-      return File.join(@control_path, path)
-    end
-  end # def control_path
-
-  def write_control_tarball
-    # Use custom Debian control file when given ...
-    write_control # write the control file
-    write_shlibs # write optional shlibs file
-    write_scripts # write the maintainer scripts
-    write_conffiles # write the conffiles
-    write_debconf # write the debconf files
-    write_meta_files # write additional meta files
-    write_triggers # write trigger config to 'triggers' file
-    write_md5sums # write the md5sums file
-
-    # Make the control.tar.gz
-    build_path("control.tar.gz").tap do |controltar|
-      logger.info("Creating", :path => controltar, :from => control_path)
-
-      args = [ tar_cmd, "-C", control_path, "-zcf", controltar,
-        "--owner=0", "--group=0", "--numeric-owner", "." ]
-      safesystem(*args)
-    end
-
-    logger.debug("Removing no longer needed control dir", :path => control_path)
-  ensure
-    FileUtils.rm_r(control_path)
-  end # def write_control_tarball
-
-  def write_control
-    # warn user if epoch is set
-    logger.warn("epoch in Version is set", :epoch => self.epoch) if self.epoch
-
-    # calculate installed-size if necessary:
-    if attributes[:deb_installed_size].nil?
-      logger.info("No deb_installed_size set, calculating now.")
-      total = 0
-      Find.find(staging_path) do |path|
-        stat = File.lstat(path)
-        next if stat.directory?
-        total += stat.size
-      end
-      # Per http://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-Installed-Size
-      #   "The disk space is given as the integer value of the estimated
-      #    installed size in bytes, divided by 1024 and rounded up."
-      attributes[:deb_installed_size] = total / 1024
-    end
-
-    # Write the control file
-    control_path("control").tap do |control|
-      if attributes[:deb_custom_control]
-        logger.debug("Using '#{attributes[:deb_custom_control]}' template for the control file")
-        control_data = File.read(attributes[:deb_custom_control])
-      else
-        logger.debug("Using 'deb.erb' template for the control file")
-        control_data = template("deb.erb").result(binding)
-      end
-
-      logger.debug("Writing control file", :path => control)
-      File.write(control, control_data)
-      File.chmod(0644, control)
-      edit_file(control) if attributes[:edit?]
-    end
-  end # def write_control
-
-  # Write out the maintainer scripts
-  #
-  # SCRIPT_MAP is a map from the package ':after_install' to debian
-  # 'post_install' names
-  def write_scripts
-    SCRIPT_MAP.each do |scriptname, filename|
-      next unless script?(scriptname)
-
-      control_path(filename).tap do |controlscript|
-        logger.debug("Writing control script", :source => filename, :target => controlscript)
-        File.write(controlscript, script(scriptname))
-        # deb maintainer scripts are required to be executable
-        File.chmod(0755, controlscript)
-      end
-    end
-  end # def write_scripts
-
-  def write_conffiles
-    # check for any init scripts or default files
-    inits    = attributes.fetch(:deb_init_list, [])
-    defaults = attributes.fetch(:deb_default_list, [])
-    upstarts = attributes.fetch(:deb_upstart_list, [])
-    return unless (config_files.any? or inits.any? or defaults.any? or upstarts.any?)
-
-    allconfigs = []
-
-    # expand recursively a given path to be put in allconfigs
-    def add_path(path, allconfigs)
-      # Strip leading /
-      path = path[1..-1] if path[0,1] == "/"
-      cfg_path = File.expand_path(path, staging_path)
-      Find.find(cfg_path) do |p|
-        if File.file?(p)
-          allconfigs << p.gsub("#{staging_path}/", '')
-        end
-      end
-    end
-
-    # scan all conf file paths for files and add them
-    config_files.each do |path|
-      begin
-        add_path(path, allconfigs)
-      rescue Errno::ENOENT
-        raise FPM::InvalidPackageConfiguration,
-          "Error trying to use '#{path}' as a config file in the package. Does it exist?"
-      end
-    end
-
-    # Also add everything in /etc
-    begin
-      if !attributes[:deb_no_default_config_files?]
-        logger.warn("Debian packaging tools generally labels all files in /etc as config files, " \
-                    "as mandated by policy, so fpm defaults to this behavior for deb packages. " \
-                    "You can disable this default behavior with --deb-no-default-config-files flag")
-        add_path("/etc", allconfigs)
-      end
-    rescue Errno::ENOENT
-    end
-
-    if attributes[:deb_auto_config_files?]
-      inits.each do |init|
-        name = File.basename(init, ".init")
-        initscript = "/etc/init.d/#{name}"
-        logger.debug("Add conf file declaration for init script", :script => initscript)
-        allconfigs << initscript[1..-1]
-      end
-      defaults.each do |default|
-        name = File.basename(default, ".default")
-        confdefaults = "/etc/default/#{name}"
-        logger.debug("Add conf file declaration for defaults", :default => confdefaults)
-        allconfigs << confdefaults[1..-1]
-      end
-      upstarts.each do |upstart|
-        name = File.basename(upstart, ".upstart")
-        upstartscript = "etc/init/#{name}.conf"
-        logger.debug("Add conf file declaration for upstart script", :script => upstartscript)
-        allconfigs << upstartscript[1..-1]
-      end
-    end
-
-    allconfigs.sort!.uniq!
-    return unless allconfigs.any?
-
-    control_path("conffiles").tap do |conffiles|
-      File.open(conffiles, "w") do |out|
-        allconfigs.each do |cf|
-          # We need to put the leading / back. Stops lintian relative-conffile error.
-          out.puts("/" + cf)
-        end
-      end
-      File.chmod(0644, conffiles)
-    end
-  end # def write_conffiles
-
-  def write_shlibs
-    return unless attributes[:deb_shlibs]
-    logger.info("Adding shlibs", :content => attributes[:deb_shlibs])
-    File.open(control_path("shlibs"), "w") do |out|
-      out.write(attributes[:deb_shlibs])
-    end
-    File.chmod(0644, control_path("shlibs"))
-  end # def write_shlibs
-
-  def write_debconf
-    if attributes[:deb_config]
-      FileUtils.cp(attributes[:deb_config], control_path("config"))
-      File.chmod(0755, control_path("config"))
-    end
-
-    if attributes[:deb_templates]
-      FileUtils.cp(attributes[:deb_templates], control_path("templates"))
-      File.chmod(0755, control_path("templates"))
-    end
-  end # def write_debconf
-
-  def write_meta_files
-    files = attributes[:deb_meta_file]
-    return unless files
-    files.each do |fn|
-      dest = control_path(File.basename(fn))
-      FileUtils.cp(fn, dest)
-      File.chmod(0644, dest)
-    end
-  end
-
-  def write_triggers
-    lines = [['interest', :deb_interest],
-             ['activate', :deb_activate]].map { |label, attr|
-      (attributes[attr] || []).map { |e| "#{label} #{e}\n" }
-    }.flatten.join('')
-
-    if lines.size > 0
-      File.open(control_path("triggers"), 'a') do |f|
-        f.write "\n" if f.size > 0
-        f.write lines
-      end
-    end
-  end
-
-  def write_md5sums
-    md5_sums = {}
-
-    Find.find(staging_path) do |path|
-      if File.file?(path) && !File.symlink?(path)
-        md5 = Digest::MD5.file(path).hexdigest
-        md5_path = path.gsub("#{staging_path}/", "")
-        md5_sums[md5_path] = md5
-      end
-    end
-
-    if not md5_sums.empty?
-      File.open(control_path("md5sums"), "w") do |out|
-        md5_sums.each do |path, md5|
-          out.puts "#{md5}  #{path}"
-        end
-      end
-      File.chmod(0644, control_path("md5sums"))
-    end
-  end # def write_md5sums
 
   def to_s(format=nil)
-    # Default format if nil
-    # git_1.7.9.3-1_amd64.deb
     return super("NAME_FULLVERSION_ARCH.TYPE") if format.nil?
     return super(format)
-  end # def to_s
+  end
 
-  def data_tar_flags
-    data_tar_flags = []
-    if attributes[:deb_use_file_permissions?].nil?
-      if !attributes[:deb_user].nil?
-        if attributes[:deb_user] == 'root'
-          data_tar_flags += [ "--numeric-owner", "--owner", "0" ]
-        else
-          data_tar_flags += [ "--owner", attributes[:deb_user] ]
-        end
-      end
-
-      if !attributes[:deb_group].nil?
-        if attributes[:deb_group] == 'root'
-          data_tar_flags += [ "--numeric-owner", "--group", "0" ]
-        else
-          data_tar_flags += [ "--group", attributes[:deb_group] ]
-        end
-      end
-    end
-    return data_tar_flags
-  end # def data_tar_flags
-
-  public(:input, :output, :architecture, :name, :prefix, :converted_from, :to_s, :data_tar_flags)
-end # class FPM::Target::Deb
+  public(:input, :output, :architecture, :name, :prefix, :converted_from, :to_s)
+end
