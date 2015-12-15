@@ -826,6 +826,7 @@ class FPM::Package::Deb < FPM::Package
 
     if lines.size > 0
       File.open(control_path("triggers"), 'a') do |f|
+        f.chmod 0644
         f.write "\n" if f.size > 0
         f.write lines
       end
