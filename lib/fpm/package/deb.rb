@@ -160,6 +160,9 @@ class FPM::Package::Deb < FPM::Package
   
   option "--systemd-restart-after-upgrade", :flag , "Restart service after upgrade", :default => true
 
+  option "--template-services", :flag,
+    "Allow Upstart and Init scripts to be templated, similar to --template-scripts FOO"
+
   def initialize(*args)
     super(*args)
     attributes[:deb_priority] = "extra"
@@ -450,8 +453,18 @@ class FPM::Package::Deb < FPM::Package
     attributes.fetch(:deb_init_list, []).each do |init|
       name = File.basename(init, ".init")
       dest_init = File.join(staging_path, "etc/init.d/#{name}")
-      FileUtils.mkdir_p(File.dirname(dest_init))
-      FileUtils.cp init, dest_init
+      if name.end_with?(".erb") and attributes[:deb_template_services?]
+        @logger.info("processing init template #{name}")
+        name = File.basename(name, ".erb")
+        dest_init = File.join(staging_path, "etc/init.d/#{name}")
+        FileUtils.mkdir_p(File.dirname(dest_init))
+        File.open(dest_init, 'w') do |file|
+          file.write template(init, nil).result(binding)
+        end
+      else
+        FileUtils.mkdir_p(File.dirname(dest_init))
+        FileUtils.cp(init, dest_init)
+      end
       File.chmod(0755, dest_init)
     end
 
@@ -466,8 +479,18 @@ class FPM::Package::Deb < FPM::Package
     attributes.fetch(:deb_upstart_list, []).each do |upstart|
       name = File.basename(upstart, ".upstart")
       dest_upstart = staging_path("etc/init/#{name}.conf")
-      FileUtils.mkdir_p(File.dirname(dest_upstart))
-      FileUtils.cp(upstart, dest_upstart)
+      if name.end_with?(".erb") and attributes[:deb_template_services?]
+        @logger.info("processing upstart template #{name}")
+        name = File.basename(name, ".erb")
+        dest_upstart = staging_path("etc/init/#{name}.conf")
+        FileUtils.mkdir_p(File.dirname(dest_upstart))
+        File.open(dest_upstart, 'w') do |file|
+          file.write template(upstart, nil).result(binding)
+        end
+      else
+        FileUtils.mkdir_p(File.dirname(dest_upstart))
+        FileUtils.cp(upstart, dest_upstart)
+      end
       File.chmod(0644, dest_upstart)
 
       # Install an init.d shim that calls upstart
