@@ -150,7 +150,6 @@ class FPM::Package::APK< FPM::Package
 
     record_length = 0
     contiguous_records = 0
-    current_position = 0
     desired_tar_length = 0
 
     # Scan to find the location of the two contiguous null records
@@ -167,7 +166,6 @@ class FPM::Package::APK< FPM::Package
         end
 
         record_length = ascii_length.to_i(8)
-        logger.info("Record length: #{ascii_length} (#{record_length}), current position: #{(124 + current_position).to_s(16)}")
 
         if(record_length == 0)
           contiguous_records += 1
@@ -183,7 +181,6 @@ class FPM::Package::APK< FPM::Package
           if(record_length % 512 != 0)
             record_length += (512 * (1 - (record_length / 512.0))).round
           end
-          current_position += record_length
 
           # reset, add length.
           contiguous_records = 0
@@ -203,7 +200,6 @@ class FPM::Package::APK< FPM::Package
       raise StandardError.new("Unable to trim apk control tar")
     end
 
-    logger.info("Truncating '#{target_path}' to #{desired_tar_length}")
     File.truncate(target_path, desired_tar_length)
   end
 
