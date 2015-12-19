@@ -74,35 +74,39 @@ class FPM::Package::APK< FPM::Package
     output_check(output_path)
 
     control_path = build_path("control")
-    controltar_path = build_path("control.tar.gz")
+    controltar_path = build_path("control.tar")
+    datatar_path = build_path("data.tar")
 
     FileUtils.mkdir(control_path)
 
+    # data tar.
+    tar_path(staging_path(""), datatar_path)
+
     # control tar.
     begin
-
       write_pkginfo(control_path)
-
-      # scripts
-      scripts = write_control_scripts(control_path)
-
-      # zip it
-      compress_control(control_path, controltar_path)
+      write_control_scripts(control_path)
+      tar_path(control_path, controltar_path)
     ensure
       FileUtils.rm_r(control_path)
     end
 
-    # data tar.
-    begin
-    ensure
-    end
-
     # concatenate the two into a real apk.
     begin
-    ensure
-    end
 
-    logger.warn("apk output to is not implemented")
+      # cut end-of-tar record from control tar
+      cut_tar_record(controltar_path)
+
+      # calculate/rewrite sha1 hashes for data tar
+      hash_datatar(datatar_path)
+
+      # concatenate the two into the final apk
+      concat_tars(controltar_path, datatar_path, output_path)
+    ensure
+      logger.warn("apk output to is not implemented")
+      `rm -rf /tmp/apkfpm`
+      `cp -r #{build_path("")} /tmp/apkfpm`
+    end
   end
 
   def write_pkginfo(base_path)
@@ -114,23 +118,23 @@ class FPM::Package::APK< FPM::Package
 
     pkginfo_io << "pkgname = #{@name}\n"
     pkginfo_io << "pkgver = #{package_version}\n"
-    pkginfo_io << "datahash = 123\n"
 
     File.write(path, pkginfo_io.string)
-    `cp #{path} /tmp/.PKGINFO`
   end
 
   # Writes each control script from template into the build path,
   # in the folder given by [base_path]
   def write_control_scripts(base_path)
 
-    scripts = ["pre-install",
-                "post-install",
-                "pre-deinstall",
-                "post-deinstall",
-                "pre-upgrade",
-                "post-upgrade"
-              ]
+    scripts =
+    [
+      "pre-install",
+      "post-install",
+      "pre-deinstall",
+      "post-deinstall",
+      "pre-upgrade",
+      "post-upgrade"
+    ]
 
     scripts.each do |path|
 
@@ -139,14 +143,110 @@ class FPM::Package::APK< FPM::Package
     end
   end
 
-  # Compresses the current contents of the given
-  def compress_control(path, target_path)
+  # Removes the end-of-tar records from the given [target_path].
+  # End of tar records are two contiguous empty tar records at the end of the file
+  # Taken together, they comprise 1k of null data.
+  def cut_tar_record(target_path)
 
-    args = [ tar_cmd, "-C", path, "-zcf", target_path,
-      "--owner=0", "--group=0", "--numeric-owner", "." ]
+    record_length = 0
+    contiguous_records = 0
+    current_position = 0
+    desired_tar_length = 0
+
+    # Scan to find the location of the two contiguous null records
+    open(target_path, "rb") do |file|
+
+      until(contiguous_records == 2)
+
+        # skip to header length
+        file.read(124)
+
+        ascii_length = file.read(12)
+        if(file.eof?())
+          raise StandardError.new("Invalid tar stream, eof before end-of-tar record")
+        end
+
+        record_length = ascii_length.to_i(8)
+        logger.info("Record length: #{ascii_length} (#{record_length}), current position: #{(124 + current_position).to_s(16)}")
+
+        if(record_length == 0)
+          contiguous_records += 1
+        else
+          # If there was a previous null tar, add its header length too.
+          if(contiguous_records != 0)
+            desired_tar_length += 512
+          end
+
+          desired_tar_length += 512
+
+          # tarballs work in 512-byte blocks, round up to the nearest block.
+          if(record_length % 512 != 0)
+            record_length += (512 * (1 - (record_length / 512.0))).round
+          end
+          current_position += record_length
+
+          # reset, add length.
+          contiguous_records = 0
+          desired_tar_length += record_length
+        end
+
+        # finish off the read of the header length
+        file.read(376)
+
+        # skip content of record
+        file.read(record_length)
+      end
+    end
+
+    # Truncate file
+    if(desired_tar_length <= 0)
+      raise StandardError.new("Unable to trim apk control tar")
+    end
+
+    logger.info("Truncating '#{target_path}' to #{desired_tar_length}")
+    File.truncate(target_path, desired_tar_length)
+  end
+
+  # Rewrites the tar file located at the given [target_tar_path]
+  # to have its file headers use a sha1 checksum.
+  def hash_datatar(target_tar_path)
+
+  end
+
+  # Concatenates the given [apath] and [bpath] into the given [target_path]
+  def concat_tars(apath, bpath, target_path)
+
+    target_file = open(target_path, "wb")
+
+    open(apath, "rb") do |file|
+      until(file.eof?())
+        target_file.write(file.read(4096))
+      end
+    end
+    open(bpath, "rb") do |file|
+      until(file.eof?())
+        target_file.write(file.read(4096))
+      end
+    end
+  end
+
+  # Tars the current contents of the given [path] to the given [target_path].
+  def tar_path(path, target_path)
+
+    args =
+    [
+      tar_cmd,
+      "-C",
+      path,
+      "-cf",
+      target_path,
+      "--owner=0",
+      "--group=0",
+      "--numeric-owner",
+      "."
+    ]
+
     safesystem(*args)
-
-    `cp #{target_path} /tmp/control.tar.gz`
   end
 
   def to_s(format=nil)
