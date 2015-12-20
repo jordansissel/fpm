@@ -320,7 +320,13 @@ class FPM::Package::APK< FPM::Package
     hash_length = (hash.length * 2) + 512 + 4 # 512 is header length, 4 is magic.
     name = "APK-TOOLS.checksum.sha1"
 
-    return "#{hash_length} #{name}=#{hash}"
+    ret = "#{hash_length} #{name}=#{hash}"
+
+    # pad out the result
+    until(ret.length % 512 == 0)
+      ret += '\0'
+    end
+    return ret
   end
 
   # Tars the current contents of the given [path] to the given [target_path].
