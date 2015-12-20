@@ -224,21 +224,16 @@ class FPM::Package::APK< FPM::Package
         data = ""
         record_length = determine_record_length(record_length)
 
-        for i in 0..(record_length / 512)
+        until(data.length == record_length)
           data += file.read(512)
         end
 
-        extension_header = ""
-        for i in 0..511
-          extension_header << "\0"
-        end
+        extension_header = header
 
         # hash data contents with sha1
         extension_data = hash_record(data)
         extension_header[124..135] = extension_data.length.to_s(8).rjust(12, '0')
         extension_header = checksum_header(extension_header)
-
-        logger.info("Extension header: #{extension_header}")
 
         # write extension record
         target_file.write(extension_header)
@@ -262,21 +257,20 @@ class FPM::Package::APK< FPM::Package
   # Concatenates the given [apath] and [bpath] into the given [target_path]
   def concat_tars(apath, bpath, target_path)
 
-    target_file = open(target_path, "wb")
-
+    zip_writer = Zlib::GzipWriter.open(target_path, Zlib::BEST_COMPRESSION)
     begin
       open(apath, "rb") do |file|
         until(file.eof?())
-          target_file.write(file.read(4096))
+          zip_writer.write(file.read(4096))
         end
       end
       open(bpath, "rb") do |file|
         until(file.eof?())
-          target_file.write(file.read(4096))
+          zip_writer.write(file.read(4096))
         end
       end
     ensure
-      target_file.close()
+      zip_writer.close()
     end
   end
 
@@ -320,10 +314,9 @@ class FPM::Package::APK< FPM::Package
     # len name=hash
 
     hash = Digest::SHA1.hexdigest(data)
-    hash_length = (hash.length * 2) + 512 + 4 # 512 is header length, 4 is magic.
-    name = "APK-TOOLS.checksum.sha1"
+    name = "APK-TOOLS.checksum.SHA1"
 
-    ret = "#{hash_length} #{name}=#{hash}"
+    ret = "#{hash.length} #{name}=#{hash}"
 
     # pad out the result
     until(ret.length % 512 == 0)
