@@ -205,9 +205,9 @@ class FPM::Package::APK< FPM::Package
   # and the apk sha1 hash extension.
   def hash_datatar(target_path)
 
-    header = ""
-    data = ""
-    record_length = 0
+    header = extension_header = ""
+    data = extension_data = ""
+    record_length = extension_length = 0
 
     temporary_file_name = target_path + "~"
 
@@ -223,29 +223,30 @@ class FPM::Package::APK< FPM::Package
           header = file.read(512)
           record_length = header[124..135].to_i(8)
 
-          # blank out header checksum
-          for i in 148..155
-            header[i] = ' '
+          data = ""
+          record_length = determine_record_length(record_length)
+
+          for i in 0..(record_length / 512)
+            data += file.read(512)
           end
 
-          # calculate new checksum
-          checksum = 0
-
+          extension_header = ""
           for i in 0..511
-            checksum += header.getbyte(i)
+            extension_header += '\0'
           end
 
-          checksum = checksum.to_s(8).rjust(8, '0')
-          logger.info("Checksum: #{checksum}")
-          header[148..155] = checksum
+          # hash data contents with sha1
+          extension_data = hash_record(data)
+          extension_header[124..135] = extension_data.length.to_s(8).rjust(12, '0')
+          extension_header = checksum_header(extension_header)
+
+          # write extension record
+          target_file.write(extension_header)
+          target_file.write(extension_data)
 
           # write header and data to target file.
           target_file.write(header)
-
-          record_length = determine_record_length(record_length)
-          for i in 0..(record_length / 512)
-            target_file.write(file.read(512))
-          end
+          target_file.write(data)
         end
       end
 
@@ -283,6 +284,43 @@ class FPM::Package::APK< FPM::Package
       record_length += (512 * (1 - (record_length / 512.0))).round
     end
     return record_length
+  end
+
+  # Checksums the entire contents of the given [header]
+  # Writes the resultant checksum into indices 148-155 of the same [header],
+  # and returns the modified header.
+  # 148-155 is the "size" range in a tar/ustar header.
+  def checksum_header(header)
+
+    # blank out header checksum
+    for i in 148..155
+      header[i] = ' '
+    end
+
+    # calculate new checksum
+    checksum = 0
+
+    for i in 0..511
+      checksum += header.getbyte(i)
+    end
+
+    checksum = checksum.to_s(8).rjust(8, '0')
+    header[148..155] = checksum
+    return header
+  end
+
+  # SHA-1 hashes the given data, then places it in the APK hash string format
+  # and returns
+  def hash_record(data)
+
+    # %u %s=%s\n
+    # len name=hash
+
+    hash = Digest::SHA1.hexdigest(data)
+    hash_length = (hash.length * 2) + 512 + 4 # 512 is header length, 4 is magic.
+    name = "APK-TOOLS.checksum.sha1"
+
+    return "#{hash_length} #{name}=#{hash}"
   end
 
   # Tars the current contents of the given [path] to the given [target_path].
