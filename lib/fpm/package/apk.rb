@@ -307,7 +307,7 @@ class FPM::Package::APK< FPM::Package
   end
 
   # SHA-1 hashes the given data, then places it in the APK hash string format
-  # and returns
+  # then returns.
   def hash_record(data)
 
     # %u %s=%s\n
@@ -316,7 +316,21 @@ class FPM::Package::APK< FPM::Package
     hash = Digest::SHA1.hexdigest(data)
     name = "APK-TOOLS.checksum.SHA1"
 
-    ret = "#{hash.length} #{name}=#{hash}"
+    ret = "#{name}=#{hash}\n"
+
+    # the length requirement needs to know its own length too, because the length
+    # is the entire length of the line, not just the contents.
+    length = ret.length
+    line_length = length.to_s
+    length += line_length.length
+    candidate_ret = "#{line_length} #{ret}"
+
+    if(candidate_ret.length != length)
+      length += 1
+      candidate_ret = "#{length.to_s} #{ret}"
+    end
+
+    ret = candidate_ret
 
     # pad out the result
     until(ret.length % 512 == 0)
