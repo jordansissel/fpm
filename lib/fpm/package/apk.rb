@@ -219,6 +219,7 @@ class FPM::Package::APK< FPM::Package
       until(file.eof?())
 
         header = file.read(512)
+        typeflag = header[156]
         record_length = header[124..135].to_i(8)
 
         data = ""
@@ -228,16 +229,19 @@ class FPM::Package::APK< FPM::Package
           data += file.read(512)
         end
 
-        extension_header = header
+        # If it's not a null record, and not a directory, do extension hash.
+        if(typeflag != '' && typeflag != '5')
+          extension_header = header
 
-        # hash data contents with sha1
-        extension_data = hash_record(data)
-        extension_header[124..135] = extension_data.length.to_s(8).rjust(12, '0')
-        extension_header = checksum_header(extension_header)
+          # hash data contents with sha1
+          extension_data = hash_record(data)
+          extension_header[124..135] = extension_data.length.to_s(8).rjust(12, '0')
+          extension_header = checksum_header(extension_header)
 
-        # write extension record
-        target_file.write(extension_header)
-        target_file.write(extension_data)
+          # write extension record
+          target_file.write(extension_header)
+          target_file.write(extension_data)
+        end
 
         # write header and data to target file.
         target_file.write(header)
