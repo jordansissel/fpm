@@ -212,46 +212,45 @@ class FPM::Package::APK< FPM::Package
     temporary_file_name = target_path + "~"
 
     target_file = open(temporary_file_name, "wb")
+    file = open(target_path, "rb")
     begin
 
       success = false
+      until(file.eof?())
 
-      open(target_path, "rb") do |file|
+        header = file.read(512)
+        record_length = header[124..135].to_i(8)
 
-        until(file.eof?())
+        data = ""
+        record_length = determine_record_length(record_length)
 
-          header = file.read(512)
-          record_length = header[124..135].to_i(8)
-
-          data = ""
-          record_length = determine_record_length(record_length)
-
-          for i in 0..(record_length / 512)
-            data += file.read(512)
-          end
-
-          extension_header = ""
-          for i in 0..511
-            extension_header += '\0'
-          end
-
-          # hash data contents with sha1
-          extension_data = hash_record(data)
-          extension_header[124..135] = extension_data.length.to_s(8).rjust(12, '0')
-          extension_header = checksum_header(extension_header)
-
-          # write extension record
-          target_file.write(extension_header)
-          target_file.write(extension_data)
-
-          # write header and data to target file.
-          target_file.write(header)
-          target_file.write(data)
+        for i in 0..(record_length / 512)
+          data += file.read(512)
         end
-      end
 
+        extension_header = ""
+        for i in 0..511
+          extension_header << "\0"
+        end
+
+        # hash data contents with sha1
+        extension_data = hash_record(data)
+        extension_header[124..135] = extension_data.length.to_s(8).rjust(12, '0')
+        extension_header = checksum_header(extension_header)
+
+        logger.info("Extension header: #{extension_header}")
+
+        # write extension record
+        target_file.write(extension_header)
+        target_file.write(extension_data)
+
+        # write header and data to target file.
+        target_file.write(header)
+        target_file.write(data)
+      end
       success = true
     ensure
+      file.close()
       target_file.close()
 
       if(success)
@@ -265,15 +264,19 @@ class FPM::Package::APK< FPM::Package
 
     target_file = open(target_path, "wb")
 
-    open(apath, "rb") do |file|
-      until(file.eof?())
-        target_file.write(file.read(4096))
+    begin
+      open(apath, "rb") do |file|
+        until(file.eof?())
+          target_file.write(file.read(4096))
+        end
       end
-    end
-    open(bpath, "rb") do |file|
-      until(file.eof?())
-        target_file.write(file.read(4096))
+      open(bpath, "rb") do |file|
+        until(file.eof?())
+          target_file.write(file.read(4096))
+        end
       end
+    ensure
+      target_file.close()
     end
   end
 
@@ -324,7 +327,7 @@ class FPM::Package::APK< FPM::Package
 
     # pad out the result
     until(ret.length % 512 == 0)
-      ret += '\0'
+      ret << "\0"
     end
     return ret
   end
