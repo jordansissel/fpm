@@ -6,6 +6,7 @@ require "fpm/util"
 require "backports"
 require "fileutils"
 require "digest"
+require 'digest/sha1'
 
 # Support for debian packages (.deb files)
 #
@@ -175,16 +176,12 @@ class FPM::Package::APK< FPM::Package
             desired_tar_length += 512
           end
 
-          desired_tar_length += 512
-
           # tarballs work in 512-byte blocks, round up to the nearest block.
-          if(record_length % 512 != 0)
-            record_length += (512 * (1 - (record_length / 512.0))).round
-          end
+          record_length = determine_record_length(record_length)
 
-          # reset, add length.
+          # reset, add length of content and header.
           contiguous_records = 0
-          desired_tar_length += record_length
+          desired_tar_length += record_length + 512
         end
 
         # finish off the read of the header length
@@ -204,9 +201,62 @@ class FPM::Package::APK< FPM::Package
   end
 
   # Rewrites the tar file located at the given [target_tar_path]
-  # to have its file headers use a sha1 checksum.
-  def hash_datatar(target_tar_path)
+  # to have its record headers use a simple checksum,
+  # and the apk sha1 hash extension.
+  def hash_datatar(target_path)
 
+    header = ""
+    data = ""
+    record_length = 0
+
+    temporary_file_name = target_path + "~"
+
+    target_file = open(temporary_file_name, "wb")
+    begin
+
+      success = false
+
+      open(target_path, "rb") do |file|
+
+        until(file.eof?())
+
+          header = file.read(512)
+          record_length = header[124..135].to_i(8)
+
+          # blank out header checksum
+          for i in 148..155
+            header[i] = ' '
+          end
+
+          # calculate new checksum
+          checksum = 0
+
+          for i in 0..511
+            checksum += header.getbyte(i)
+          end
+
+          checksum = checksum.to_s(8).rjust(8, '0')
+          logger.info("Checksum: #{checksum}")
+          header[148..155] = checksum
+
+          # write header and data to target file.
+          target_file.write(header)
+
+          record_length = determine_record_length(record_length)
+          for i in 0..(record_length / 512)
+            target_file.write(file.read(512))
+          end
+        end
+      end
+
+      success = true
+    ensure
+      target_file.close()
+
+      if(success)
+        FileUtils.mv(temporary_file_name, target_path)
+      end
+    end
   end
 
   # Concatenates the given [apath] and [bpath] into the given [target_path]
@@ -224,6 +274,15 @@ class FPM::Package::APK< FPM::Package
         target_file.write(file.read(4096))
       end
     end
+  end
+
+  # Rounds the given [record_length] to the nearest highest evenly-divisble number of 512.
+  def determine_record_length(record_length)
+
+    if(record_length % 512 != 0)
+      record_length += (512 * (1 - (record_length / 512.0))).round
+    end
+    return record_length
   end
 
   # Tars the current contents of the given [path] to the given [target_path].
