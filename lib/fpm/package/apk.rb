@@ -278,7 +278,7 @@ class FPM::Package::APK< FPM::Package
   def determine_record_length(record_length)
 
     if(record_length % 512 != 0)
-      record_length += (512 * (1 - (record_length / 512.0))).round
+      record_length = (record_length + 511) & ~511;
     end
     return record_length
   end
