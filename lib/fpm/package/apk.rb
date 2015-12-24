@@ -102,7 +102,7 @@ class FPM::Package::APK< FPM::Package
       hash_datatar(datatar_path)
 
       # concatenate the two into the final apk
-      concat_tars(controltar_path, datatar_path, output_path)
+      concat_zip_tars(controltar_path, datatar_path, output_path)
     ensure
       logger.warn("apk output to is not implemented")
       `rm -rf /tmp/apkfpm`
@@ -205,6 +205,7 @@ class FPM::Package::APK< FPM::Package
   # and the apk sha1 hash extension.
   def hash_datatar(target_path)
 
+    empty_records = 0
     header = extension_header = ""
     data = extension_data = ""
     record_length = extension_length = 0
@@ -216,12 +217,13 @@ class FPM::Package::APK< FPM::Package
     begin
 
       success = false
-      until(file.eof?())
+      until(file.eof?() || empty_records == 2)
 
         header = file.read(512)
         typeflag = header[156]
         record_length = header[124..135].to_i(8)
 
+        logger.info("Read chunk, typeflag: '#{typeflag}', length: #{record_length}")
         data = ""
         record_length = determine_record_length(record_length)
 
@@ -229,12 +231,19 @@ class FPM::Package::APK< FPM::Package
           data += file.read(512)
         end
 
+        # empty record, check to see if we're EOF.
+        if(typeflag == "\0")
+          empty_records += 1
+          loop
+        end
+
         # If it's not a null record, and not a directory, do extension hash.
-        if(typeflag != '' && typeflag != '5')
-          extension_header = header
+        if(typeflag != "\0" && typeflag != '5')
+          extension_header = header.dup()
 
           # hash data contents with sha1
           extension_data = hash_record(data)
+          extension_header[156] = 'x'
           extension_header[124..135] = extension_data.length.to_s(8).rjust(12, '0')
           extension_header = checksum_header(extension_header)
 
@@ -258,23 +267,40 @@ class FPM::Package::APK< FPM::Package
     end
   end
 
-  # Concatenates the given [apath] and [bpath] into the given [target_path]
-  def concat_tars(apath, bpath, target_path)
+  # Concatenates each of the given [apath] and [bpath] into the given [target_path]
+  def concat_zip_tars(apath, bpath, target_path)
 
-    zip_writer = Zlib::GzipWriter.open(target_path, Zlib::BEST_COMPRESSION)
-    begin
+    temp_apath = apath + "~"
+    temp_bpath = bpath + "~"
+
+    Zlib::GzipWriter.open(temp_apath, Zlib::BEST_COMPRESSION) do |target_writer|
       open(apath, "rb") do |file|
         until(file.eof?())
-          zip_writer.write(file.read(4096))
+          target_writer.write(file.read(4096))
         end
       end
+    end
+
+    Zlib::GzipWriter.open(temp_bpath, Zlib::BEST_COMPRESSION) do |target_writer|
       open(bpath, "rb") do |file|
         until(file.eof?())
-          zip_writer.write(file.read(4096))
+          target_writer.write(file.read(4096))
         end
       end
-    ensure
-      zip_writer.close()
+    end
+
+    # concat both into one.
+    File.open(target_path, "wb") do |target_writer|
+      open(temp_apath, "rb") do |file|
+        until(file.eof?())
+          target_writer.write(file.read(4096))
+        end
+      end
+      open(temp_bpath, "rb") do |file|
+        until(file.eof?())
+          target_writer.write(file.read(4096))
+        end
+      end
     end
   end
 
