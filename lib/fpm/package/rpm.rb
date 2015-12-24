@@ -554,7 +554,6 @@ class FPM::Package::RPM < FPM::Package
     return @epoch if @epoch.is_a?(Numeric)
 
     if @epoch.nil? or @epoch.empty?
-      logger.warn("no value for epoch is set, defaulting to nil")
       return nil
     end
 
