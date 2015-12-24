@@ -223,7 +223,6 @@ class FPM::Package::APK< FPM::Package
         typeflag = header[156]
         record_length = header[124..135].to_i(8)
 
-        logger.info("Read chunk, typeflag: '#{typeflag}', length: #{record_length}")
         data = ""
         record_length = determine_record_length(record_length)
 
