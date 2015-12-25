@@ -17,7 +17,8 @@ class FPM::Package::APK< FPM::Package
   TAR_TYPEFLAG_OFFSET = 156
   TAR_LENGTH_OFFSET_START = 124
   TAR_LENGTH_OFFSET_END = 135
-
+  TAR_CHECKSUM_OFFSET_START = 148
+  TAR_CHECKSUM_OFFSET_END = 155
 
   # Map of what scripts are named.
   SCRIPT_MAP = {
@@ -239,12 +240,25 @@ class FPM::Package::APK< FPM::Package
         if(typeflag != "\0")
           extension_header = header.dup()
 
+          # directories have a magic string inserted into their name
+          full_record_path = extension_header[0..(extension_header.index("\0"))]
+          full_record_path = add_paxstring(full_record_path)
+
           # hash data contents with sha1, if there is any content.
           if(typeflag == '5')
+
             extension_data = ""
+
+            # ensure it doesn't end with a slash
+            if(full_record_path[full_record_path.length-1] == '/')
+              full_record_path = full_record_path[0..full_record_path.length-1]
+            end
           else
             extension_data = hash_record(data)
           end
+
+          full_record_path = pad_string_to(full_record_path, 100)
+          extension_header[0..99] = full_record_path
 
           extension_header[TAR_TYPEFLAG_OFFSET] = 'x'
           extension_header[TAR_LENGTH_OFFSET_START..TAR_LENGTH_OFFSET_END] = extension_data.length.to_s(8).rjust(12, '0')
@@ -322,19 +336,19 @@ class FPM::Package::APK< FPM::Package
   def checksum_header(header)
 
     # blank out header checksum
-    for i in 148..155
+    for i in TAR_CHECKSUM_OFFSET_START..TAR_CHECKSUM_OFFSET_END
       header[i] = ' '
     end
 
     # calculate new checksum
     checksum = 0
 
-    for i in 0..511
+    for i in 0..(TAR_CHUNK_SIZE-1)
       checksum += header.getbyte(i)
     end
 
     checksum = checksum.to_s(8).rjust(8, '0')
-    header[148..155] = checksum
+    header[TAR_CHECKSUM_OFFSET_START..TAR_CHECKSUM_OFFSET_END] = checksum
     return header
   end
 
@@ -365,9 +379,7 @@ class FPM::Package::APK< FPM::Package
     ret = candidate_ret
 
     # pad out the result
-    until(ret.length % 512 == 0)
-      ret << "\0"
-    end
+    ret = pad_string_to(ret, TAR_CHUNK_SIZE)
     return ret
   end
 
@@ -396,6 +408,27 @@ class FPM::Package::APK< FPM::Package
 
       safesystem(*args)
     end
+  end
+
+  # APK adds a "PAX" magic string into most directory names.
+  # This takes an unchanged directory name and "paxifies" it.
+  def add_paxstring(ret)
+
+    pax_slash = ret.rindex('/', ret.rindex('/')-1)
+    if(!pax_slash || pax_slash < 0)
+      pax_slash = 0
+    end
+    return ret.insert(pax_slash, "/PaxHeaders.14670")
+  end
+
+  # Appends null zeroes to the end of [ret] until it is divisible by [length].
+  # Returns the padded result.
+  def pad_string_to(ret, length)
+
+    until(ret.length % length == 0)
+      ret << "\0"
+    end
+    return ret
   end
 
   def to_s(format=nil)
