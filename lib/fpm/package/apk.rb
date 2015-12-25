@@ -347,8 +347,9 @@ class FPM::Package::APK< FPM::Package
       checksum += header.getbyte(i)
     end
 
-    checksum = checksum.to_s(8).rjust(8, '0')
-    header[TAR_CHECKSUM_OFFSET_START..TAR_CHECKSUM_OFFSET_END] = checksum
+    checksum = checksum.to_s(8).rjust(6, '0')
+    header[TAR_CHECKSUM_OFFSET_START..TAR_CHECKSUM_OFFSET_END-2] = checksum
+    header[TAR_CHECKSUM_OFFSET_END-1] = "\0"
     return header
   end
 
