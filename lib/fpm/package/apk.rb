@@ -139,7 +139,7 @@ class FPM::Package::APK< FPM::Package
 
     scripts.each do |path|
 
-      script_path = "#{base_path}/#{path}"
+      script_path = "#{base_path}/.#{path}"
       File.write(script_path, template("apk/#{path}").result(binding))
     end
   end
@@ -205,7 +205,6 @@ class FPM::Package::APK< FPM::Package
   # and the apk sha1 hash extension.
   def hash_datatar(target_path)
 
-    empty_records = 0
     header = extension_header = ""
     data = extension_data = ""
     record_length = extension_length = 0
@@ -217,7 +216,7 @@ class FPM::Package::APK< FPM::Package
     begin
 
       success = false
-      until(file.eof?() || empty_records == 2)
+      until(file.eof?())
 
         header = file.read(512)
         typeflag = header[156]
@@ -230,18 +229,17 @@ class FPM::Package::APK< FPM::Package
           data += file.read(512)
         end
 
-        # empty record, check to see if we're EOF.
-        if(typeflag == "\0")
-          empty_records += 1
-          loop
-        end
-
-        # If it's not a null record, and not a directory, do extension hash.
-        if(typeflag != "\0" && typeflag != '5')
+        # If it's not a null record, do extension hash.
+        if(typeflag != "\0")
           extension_header = header.dup()
 
-          # hash data contents with sha1
-          extension_data = hash_record(data)
+          # hash data contents with sha1, if there is any content.
+          if(typeflag == '5')
+            extension_data = hash_record(data)
+          else
+            extension_data = ""
+          end
+
           extension_header[156] = 'x'
           extension_header[124..135] = extension_data.length.to_s(8).rjust(12, '0')
           extension_header = checksum_header(extension_header)
@@ -272,7 +270,7 @@ class FPM::Package::APK< FPM::Package
     temp_apath = apath + "~"
     temp_bpath = bpath + "~"
 
-    Zlib::GzipWriter.open(temp_apath, Zlib::BEST_COMPRESSION) do |target_writer|
+    Zlib::GzipWriter.open(temp_apath) do |target_writer|
       open(apath, "rb") do |file|
         until(file.eof?())
           target_writer.write(file.read(4096))
@@ -280,7 +278,7 @@ class FPM::Package::APK< FPM::Package
       end
     end
 
-    Zlib::GzipWriter.open(temp_bpath, Zlib::BEST_COMPRESSION) do |target_writer|
+    Zlib::GzipWriter.open(temp_bpath) do |target_writer|
       open(bpath, "rb") do |file|
         until(file.eof?())
           target_writer.write(file.read(4096))
@@ -371,20 +369,27 @@ class FPM::Package::APK< FPM::Package
   # Tars the current contents of the given [path] to the given [target_path].
   def tar_path(path, target_path)
 
-    args =
-    [
-      tar_cmd,
-      "-C",
-      path,
-      "-cf",
-      target_path,
-      "--owner=0",
-      "--group=0",
-      "--numeric-owner",
-      "."
-    ]
+    File::Dir::chdir(path) do
+      entries = File::Dir::glob("**", File::FNM_DOTMATCH)
 
-    safesystem(*args)
+      args =
+      [
+        tar_cmd,
+        "-f",
+        target_path,
+        "-c"
+      ]
+
+      entries.each do |entry|
+        unless(entry == '..' || entry == '.')
+          args = args << entry
+          logger.info("Adding #{entry}")
+        end
+      end
+
+      logger.info(args)
+      safesystem(*args)
+    end
   end
 
   def to_s(format=nil)
