@@ -241,7 +241,7 @@ class FPM::Package::APK< FPM::Package
           extension_header = header.dup()
 
           # directories have a magic string inserted into their name
-          full_record_path = extension_header[0..(extension_header.index("\0"))]
+          full_record_path = extension_header[0..99].delete("\0")
           full_record_path = add_paxstring(full_record_path)
 
           # hash data contents with sha1, if there is any content.
@@ -251,12 +251,13 @@ class FPM::Package::APK< FPM::Package
 
             # ensure it doesn't end with a slash
             if(full_record_path[full_record_path.length-1] == '/')
-              full_record_path = full_record_path[0..full_record_path.length-1]
+              full_record_path = full_record_path.chop()
             end
           else
             extension_data = hash_record(data)
           end
 
+          logger.info("'#{full_record_path}'")
           full_record_path = pad_string_to(full_record_path, 100)
           extension_header[0..99] = full_record_path
 
@@ -415,11 +416,19 @@ class FPM::Package::APK< FPM::Package
   # This takes an unchanged directory name and "paxifies" it.
   def add_paxstring(ret)
 
-    pax_slash = ret.rindex('/', ret.rindex('/')-1)
-    if(!pax_slash || pax_slash < 0)
+    pax_slash = ret.rindex('/')
+    if(pax_slash == nil)
       pax_slash = 0
+    else
+      pax_slash = ret.rindex('/', pax_slash-1)
+      if(pax_slash == nil || pax_slash < 0)
+        pax_slash = 0
+      end
     end
-    return ret.insert(pax_slash, "/PaxHeaders.14670")
+
+    ret = ret.insert(pax_slash, "/PaxHeaders.14670/")
+    ret = ret.sub("//", "/")
+    return ret
   end
 
   # Appends null zeroes to the end of [ret] until it is divisible by [length].
