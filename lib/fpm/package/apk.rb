@@ -13,6 +13,12 @@ require 'digest/sha1'
 # This class supports both input and output of packages.
 class FPM::Package::APK< FPM::Package
 
+  TAR_CHUNK_SIZE = 512
+  TAR_TYPEFLAG_OFFSET = 156
+  TAR_LENGTH_OFFSET_START = 124
+  TAR_LENGTH_OFFSET_END = 135
+
+
   # Map of what scripts are named.
   SCRIPT_MAP = {
     :before_install     => "pre-install",
@@ -173,7 +179,7 @@ class FPM::Package::APK< FPM::Package
         else
           # If there was a previous null tar, add its header length too.
           if(contiguous_records != 0)
-            desired_tar_length += 512
+            desired_tar_length += TAR_CHUNK_SIZE
           end
 
           # tarballs work in 512-byte blocks, round up to the nearest block.
@@ -181,7 +187,7 @@ class FPM::Package::APK< FPM::Package
 
           # reset, add length of content and header.
           contiguous_records = 0
-          desired_tar_length += record_length + 512
+          desired_tar_length += record_length + TAR_CHUNK_SIZE
         end
 
         # finish off the read of the header length
@@ -208,6 +214,7 @@ class FPM::Package::APK< FPM::Package
     header = extension_header = ""
     data = extension_data = ""
     record_length = extension_length = 0
+    empty_records = 0
 
     temporary_file_name = target_path + "~"
 
@@ -215,18 +222,17 @@ class FPM::Package::APK< FPM::Package
     file = open(target_path, "rb")
     begin
 
-      success = false
-      until(file.eof?())
+      until(file.eof?() || empty_records == 2)
 
-        header = file.read(512)
-        typeflag = header[156]
-        record_length = header[124..135].to_i(8)
+        header = file.read(TAR_CHUNK_SIZE)
+        typeflag = header[TAR_TYPEFLAG_OFFSET]
+        record_length = header[TAR_LENGTH_OFFSET_START..TAR_LENGTH_OFFSET_END].to_i(8)
 
         data = ""
         record_length = determine_record_length(record_length)
 
         until(data.length == record_length)
-          data += file.read(512)
+          data += file.read(TAR_CHUNK_SIZE)
         end
 
         # If it's not a null record, do extension hash.
@@ -235,32 +241,30 @@ class FPM::Package::APK< FPM::Package
 
           # hash data contents with sha1, if there is any content.
           if(typeflag == '5')
-            extension_data = hash_record(data)
-          else
             extension_data = ""
+          else
+            extension_data = hash_record(data)
           end
 
-          extension_header[156] = 'x'
-          extension_header[124..135] = extension_data.length.to_s(8).rjust(12, '0')
+          extension_header[TAR_TYPEFLAG_OFFSET] = 'x'
+          extension_header[TAR_LENGTH_OFFSET_START..TAR_LENGTH_OFFSET_END] = extension_data.length.to_s(8).rjust(12, '0')
           extension_header = checksum_header(extension_header)
 
           # write extension record
           target_file.write(extension_header)
           target_file.write(extension_data)
+        else
+          empty_records += 1
         end
 
         # write header and data to target file.
         target_file.write(header)
         target_file.write(data)
       end
-      success = true
+      FileUtils.mv(temporary_file_name, target_path)
     ensure
       file.close()
       target_file.close()
-
-      if(success)
-        FileUtils.mv(temporary_file_name, target_path)
-      end
     end
   end
 
@@ -270,6 +274,7 @@ class FPM::Package::APK< FPM::Package
     temp_apath = apath + "~"
     temp_bpath = bpath + "~"
 
+    # zip each path separately
     Zlib::GzipWriter.open(temp_apath) do |target_writer|
       open(apath, "rb") do |file|
         until(file.eof?())
@@ -369,6 +374,9 @@ class FPM::Package::APK< FPM::Package
   # Tars the current contents of the given [path] to the given [target_path].
   def tar_path(path, target_path)
 
+    # Change directory to the source path, and glob files
+    # This is done so that we end up with a "flat" archive, that doesn't
+    # have any path artifacts from the packager's absolute path.
     File::Dir::chdir(path) do
       entries = File::Dir::glob("**", File::FNM_DOTMATCH)
 
@@ -383,11 +391,9 @@ class FPM::Package::APK< FPM::Package
       entries.each do |entry|
         unless(entry == '..' || entry == '.')
           args = args << entry
-          logger.info("Adding #{entry}")
         end
       end
 
-      logger.info(args)
       safesystem(*args)
     end
   end
