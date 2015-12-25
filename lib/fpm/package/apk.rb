@@ -172,7 +172,7 @@ class FPM::Package::APK< FPM::Package
           header = file.read(512)
 
           # clear off ownership info
-          header = replace_ownership_headers(header)
+          header = replace_ownership_headers(header, true)
 
           typeflag = header[TAR_TYPEFLAG_OFFSET]
           ascii_length = header[TAR_LENGTH_OFFSET_START..TAR_LENGTH_OFFSET_END]
@@ -228,11 +228,13 @@ class FPM::Package::APK< FPM::Package
         end
 
         # Clear ownership fields
-        header = replace_ownership_headers(header)
+        header = replace_ownership_headers(header, false)
 
         # If it's not a null record, do extension hash.
         if(typeflag != "\0")
           extension_header = header.dup()
+
+          extension_header = replace_ownership_headers(extension_header, true)
 
           # directories have a magic string inserted into their name
           full_record_path = extension_header[0..99].delete("\0")
@@ -444,12 +446,21 @@ class FPM::Package::APK< FPM::Package
   end
 
   # Nulls out the ownership bits of the given tar [header].
-  def replace_ownership_headers(header)
+  def replace_ownership_headers(header, nullify_names)
 
-    header = replace_string_range(header, 108, 115, "\0") #uid
-    header = replace_string_range(header, 116, 123, "\0") #gid
-    header = replace_string_range(header, 265, 296, "\0") #uname
-    header = replace_string_range(header, 297, 328, "\0") #gname
+    header[257..264] = "ustar\0" + "00"
+    header = replace_string_range(header, 108, 115, "0") #uid
+    header = replace_string_range(header, 116, 123, "0") #gid
+    header[123] = "\0"
+    header[115] = "\0"
+
+    if(nullify_names)
+      header = replace_string_range(header, 265, 296, "\0") #uname
+      header = replace_string_range(header, 297, 328, "\0") #gname
+    else
+      header[265..296] = pad_string_to("root", 32)
+      header[297..328] = pad_string_to("root", 32)
+    end
 
     return header
   end
