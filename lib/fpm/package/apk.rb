@@ -156,55 +156,46 @@ class FPM::Package::APK< FPM::Package
   # Taken together, they comprise 1k of null data.
   def cut_tar_record(target_path)
 
+    temporary_target_path = target_path + "~"
+
     record_length = 0
-    contiguous_records = 0
-    desired_tar_length = 0
+    empty_records = 0
 
-    # Scan to find the location of the two contiguous null records
-    open(target_path, "rb") do |file|
+    open(temporary_target_path, "wb") do |target_file|
 
-      until(contiguous_records == 2)
+      # Scan to find the location of the two contiguous null records
+      open(target_path, "rb") do |file|
 
-        # skip to header length
-        file.read(124)
+        until(empty_records == 2)
 
-        ascii_length = file.read(12)
-        if(file.eof?())
-          raise StandardError.new("Invalid tar stream, eof before end-of-tar record")
-        end
+          # skip to header length
+          header = file.read(512)
 
-        record_length = ascii_length.to_i(8)
+          # clear off ownership info
+          header = replace_ownership_headers(header)
 
-        if(record_length == 0)
-          contiguous_records += 1
-        else
-          # If there was a previous null tar, add its header length too.
-          if(contiguous_records != 0)
-            desired_tar_length += TAR_CHUNK_SIZE
+          typeflag = header[TAR_TYPEFLAG_OFFSET]
+          ascii_length = header[TAR_LENGTH_OFFSET_START..TAR_LENGTH_OFFSET_END]
+
+          if(file.eof?())
+            raise StandardError.new("Invalid tar stream, eof before end-of-tar record")
           end
 
-          # tarballs work in 512-byte blocks, round up to the nearest block.
+          if(typeflag == "\0")
+            empty_records += 1
+            next
+          end
+
+          record_length = ascii_length.to_i(8)
           record_length = determine_record_length(record_length)
 
-          # reset, add length of content and header.
-          contiguous_records = 0
-          desired_tar_length += record_length + TAR_CHUNK_SIZE
+          target_file.write(header)
+          target_file.write(file.read(record_length))
         end
-
-        # finish off the read of the header length
-        file.read(376)
-
-        # skip content of record
-        file.read(record_length)
       end
     end
 
-    # Truncate file
-    if(desired_tar_length <= 0)
-      raise StandardError.new("Unable to trim apk control tar")
-    end
-
-    File.truncate(target_path, desired_tar_length)
+    FileUtils::mv(temporary_target_path, target_path)
   end
 
   # Rewrites the tar file located at the given [target_tar_path]
@@ -236,6 +227,9 @@ class FPM::Package::APK< FPM::Package
           data += file.read(TAR_CHUNK_SIZE)
         end
 
+        # Clear ownership fields
+        header = replace_ownership_headers(header)
+
         # If it's not a null record, do extension hash.
         if(typeflag != "\0")
           extension_header = header.dup()
@@ -257,7 +251,6 @@ class FPM::Package::APK< FPM::Package
             extension_data = hash_record(data)
           end
 
-          logger.info("'#{full_record_path}'")
           full_record_path = pad_string_to(full_record_path, 100)
           extension_header[0..99] = full_record_path
 
@@ -337,9 +330,7 @@ class FPM::Package::APK< FPM::Package
   def checksum_header(header)
 
     # blank out header checksum
-    for i in TAR_CHECKSUM_OFFSET_START..TAR_CHECKSUM_OFFSET_END
-      header[i] = ' '
-    end
+    replace_string_range(header, TAR_CHECKSUM_OFFSET_START, TAR_CHECKSUM_OFFSET_END, ' ')
 
     # calculate new checksum
     checksum = 0
@@ -439,6 +430,28 @@ class FPM::Package::APK< FPM::Package
       ret << "\0"
     end
     return ret
+  end
+
+  # Replaces every character between [start] and [finish] in the given [str]
+  # with [character].
+  def replace_string_range(str, start, finish, character)
+
+    for i in (start..finish)
+      str[i] = character
+    end
+
+    return str
+  end
+
+  # Nulls out the ownership bits of the given tar [header].
+  def replace_ownership_headers(header)
+
+    header = replace_string_range(header, 108, 115, "\0") #uid
+    header = replace_string_range(header, 116, 123, "\0") #gid
+    header = replace_string_range(header, 265, 296, "\0") #uname
+    header = replace_string_range(header, 297, 328, "\0") #gname
+
+    return header
   end
 
   def to_s(format=nil)
