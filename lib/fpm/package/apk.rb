@@ -121,13 +121,16 @@ class FPM::Package::APK< FPM::Package
 
     path = "#{base_path}/.PKGINFO"
 
-    pkginfo_io = StringIO::new
-    package_version = to_s("FULLVERSION")
+    pkginfo = ""
 
-    pkginfo_io << "pkgname = #{@name}\n"
-    pkginfo_io << "pkgver = #{package_version}\n"
+    pkginfo << "pkgname = #{@name}\n"
+    pkginfo << "pkgver = #{to_s("FULLVERSION")}\n"
+    # pkginfo << "arch = x86_64\n"
+    # pkginfo << "size = 512\n"
+    # pkginfo << "pkgdesc = A great package\n"
+    # pkginfo << "url = http://example.com/fpm\n"
 
-    File.write(path, pkginfo_io.string)
+    File.write(path, pkginfo)
   end
 
   # Writes each control script from template into the build path,
@@ -168,7 +171,6 @@ class FPM::Package::APK< FPM::Package
 
         until(empty_records == 2)
 
-          # skip to header length
           header = file.read(512)
 
           # clear off ownership info
@@ -395,6 +397,16 @@ class FPM::Package::APK< FPM::Package
         "-c"
       ]
 
+      # temporarily move pkginfo to the front.
+      for i in (0..entries.length)
+        if(entries[i] == ".PKGINFO")
+          entries[i] = entries[0]
+          entries[0] = ".PKGINFO"
+          break
+        end
+      end
+
+      # add entries to arguments.
       entries.each do |entry|
         unless(entry == '..' || entry == '.')
           args = args << entry
@@ -448,18 +460,32 @@ class FPM::Package::APK< FPM::Package
   # Nulls out the ownership bits of the given tar [header].
   def replace_ownership_headers(header, nullify_names)
 
+    # magic
     header[257..264] = "ustar\0" + "00"
+
+    # ids
     header = replace_string_range(header, 108, 115, "0") #uid
     header = replace_string_range(header, 116, 123, "0") #gid
     header[123] = "\0"
     header[115] = "\0"
 
+    # names
     if(nullify_names)
       header = replace_string_range(header, 265, 296, "\0") #uname
       header = replace_string_range(header, 297, 328, "\0") #gname
+
+      # major/minor
+      # header[329..336] = "0".rjust(8, '0')
+      # header[337..344] = "0".rjust(8, '0')
+      # header[344] = "\0"
+      # header[336] = "\0"
     else
       header[265..296] = pad_string_to("root", 32)
       header[297..328] = pad_string_to("root", 32)
+
+      # linkname
+      #linkname = pad_string_to("\0\0\0APK2", 100)
+      #header[157..256] = linkname
     end
 
     return header
