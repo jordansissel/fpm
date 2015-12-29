@@ -129,6 +129,11 @@ class FPM::Package::APK< FPM::Package
     pkginfo << "url = #{url()}\n"
     pkginfo << "size = 102400\n" # totally magic, not sure what it's used for.
 
+    # write depends lines
+    for dependency in dependencies()
+      pkginfo << "depend = #{dependency}\n"
+    end
+
     File.write("#{base_path}/.PKGINFO", pkginfo)
   end
 
