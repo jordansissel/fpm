@@ -36,17 +36,6 @@ class FPM::Package::APK< FPM::Package
   TAR_MINOR_START = 337
   TAR_MINOR_END = 344
 
-  # Map of what scripts are named.
-  SCRIPT_MAP = {
-    :before_install     => "pre-install",
-    :after_install      => "post-install",
-    :before_remove      => "pre-deinstall",
-    :after_remove       => "post-deinstall",
-  } unless defined?(SCRIPT_MAP)
-
-  # The list of supported compression types. Default is gz (gzip)
-  COMPRESSION_TYPES = [ "gz" ]
-
   private
 
   # Get the name of this package. See also FPM::Package#name
@@ -70,35 +59,24 @@ class FPM::Package::APK< FPM::Package
     end
 
     return @name
-  end # def name
+  end
 
   def prefix
     return (attributes[:prefix] or "/")
-  end # def prefix
+  end
 
   def architecture
+
+    # "native" in apk should be "noarch"
     if @architecture.nil? or @architecture == "native"
       @architecture = "noarch"
     end
     return @architecture
-  end # def architecture
+  end
 
   def input(input_path)
-    extract_info(input_path)
-    extract_files(input_path)
-  end # def input
-
-  def extract_info(package)
-
-    logger.error("Extraction is not yet implemented")
-  end # def extract_info
-
-  def extract_files(package)
-
-    # unpack the data.tar.{gz,bz2,xz} from the deb package into staging_path
-    safesystem("ar p #{package} data.tar.gz " \
-               "| tar gz -xf - -C #{staging_path}")
-  end # def extract_files
+    logger.error("apk extraction is not yet implemented")
+  end
 
   def output(output_path)
 
@@ -409,8 +387,8 @@ class FPM::Package::APK< FPM::Package
     # Change directory to the source path, and glob files
     # This is done so that we end up with a "flat" archive, that doesn't
     # have any path artifacts from the packager's absolute path.
-    File::Dir::chdir(path) do
-      entries = File::Dir::glob("**", File::FNM_DOTMATCH)
+    ::Dir::chdir(path) do
+      entries = ::Dir::glob("**", File::FNM_DOTMATCH)
 
       args =
       [
