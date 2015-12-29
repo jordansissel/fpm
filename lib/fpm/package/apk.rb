@@ -141,21 +141,29 @@ class FPM::Package::APK< FPM::Package
   # in the folder given by [base_path]
   def write_control_scripts(base_path)
 
-    scripts =
-    [
-      "pre-install",
-      "post-install",
-      "pre-deinstall",
-      "post-deinstall",
-      "pre-upgrade",
-      "post-upgrade"
-    ]
+    scripts = {}
 
-    scripts.each do |path|
+    scripts = register_script('post-install',   :after_install,   scripts)
+    scripts = register_script('post-install',   :before_install,  scripts)
+    scripts = register_script('post-install',   :before_upgrade,  scripts)
+    scripts = register_script('post-install',   :after_upgrade,  scripts)
+    scripts = register_script('pre-deinstall',  :before_remove,   scripts)
+    scripts = register_script('post-deinstall', :after_remove,    scripts)
 
-      script_path = "#{base_path}/.#{path}"
-      File.write(script_path, template("apk/#{path}").result(binding))
+    scripts.each do |key, content|
+
+      File.write("#{base_path}/.#{key}", content)
     end
+  end
+
+  # Convenience method for 'write_control_scripts' to register control scripts
+  # if they exist.
+  def register_script(key, value, hash)
+
+    if(script?(value))
+      hash[key] = scripts[value]
+    end
+    return hash
   end
 
   # Removes the end-of-tar records from the given [target_path].
