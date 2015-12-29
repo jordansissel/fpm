@@ -15,6 +15,8 @@ class FPM::Package::APK< FPM::Package
 
   TAR_CHUNK_SIZE = 512
   TAR_TYPEFLAG_OFFSET = 156
+  TAR_NAME_OFFSET_START = 0
+  TAR_NAME_OFFSET_END = 99
   TAR_LENGTH_OFFSET_START = 124
   TAR_LENGTH_OFFSET_END = 135
   TAR_CHECKSUM_OFFSET_START = 148
@@ -118,6 +120,9 @@ class FPM::Package::APK< FPM::Package
       # concatenate the two into the final apk
       concat_zip_tars(controltar_path, datatar_path, output_path)
     end
+
+    logger.warn("apk output does not currently sign packages.")
+    logger.warn("It's recommended that your package be installed with '--allow-untrusted'")
   end
 
   def write_pkginfo(base_path)
@@ -241,7 +246,7 @@ class FPM::Package::APK< FPM::Package
           extension_header = replace_ownership_headers(extension_header, true)
 
           # directories have a magic string inserted into their name
-          full_record_path = extension_header[0..99].delete("\0")
+          full_record_path = extension_header[TAR_NAME_OFFSET_START..TAR_NAME_OFFSET_END].delete("\0")
           full_record_path = add_paxstring(full_record_path)
 
           # hash data contents with sha1, if there is any content.
@@ -258,7 +263,7 @@ class FPM::Package::APK< FPM::Package
           end
 
           full_record_path = pad_string_to(full_record_path, 100)
-          extension_header[0..99] = full_record_path
+          extension_header[TAR_NAME_OFFSET_START..TAR_NAME_OFFSET_END] = full_record_path
 
           extension_header[TAR_TYPEFLAG_OFFSET] = 'x'
           extension_header[TAR_LENGTH_OFFSET_START..TAR_LENGTH_OFFSET_END] = extension_data.length.to_s(8).rjust(12, '0')
@@ -323,8 +328,10 @@ class FPM::Package::APK< FPM::Package
   # Rounds the given [record_length] to the nearest highest evenly-divisble number of 512.
   def determine_record_length(record_length)
 
-    if(record_length % 512 != 0)
-      record_length = (record_length + 511) & ~511;
+    sans_size = TAR_CHUNK_SIZE-1
+
+    if(record_length % TAR_CHUNK_SIZE != 0)
+      record_length = (record_length + sans_size) & ~sans_size;
     end
     return record_length
   end
@@ -462,28 +469,43 @@ class FPM::Package::APK< FPM::Package
   # Nulls out the ownership bits of the given tar [header].
   def replace_ownership_headers(header, nullify_names)
 
+    TAR_MAGIC_START = 257
+    TAR_MAGIC_END = 264
+    TAR_UID_START = 108
+    TAR_UID_END = 115
+    TAR_GID_START = 116
+    TAR_GID_END = 123
+    TAR_UNAME_START = 265
+    TAR_UNAME_END = 296
+    TAR_GNAME_START = 297
+    TAR_GNAME_END = 328
+    TAR_MAJOR_START = 329
+    TAR_MAJOR_END = 336
+    TAR_MINOR_START = 337
+    TAR_MINOR_END = 344
+
     # magic
-    header[257..264] = "ustar\0" + "00"
+    header[TAR_MAGIC_START..TAR_MAGIC_END] = "ustar\0" + "00"
 
     # ids
-    header = replace_string_range(header, 108, 115, "0") #uid
-    header = replace_string_range(header, 116, 123, "0") #gid
-    header[123] = "\0"
-    header[115] = "\0"
+    header = replace_string_range(header, TAR_UID_START, TAR_UID_END, "0")
+    header = replace_string_range(header, TAR_GID_START, TAR_GID_END, "0")
+    header[TAR_GID_END] = "\0"
+    header[TAR_UID_END] = "\0"
 
     # names
     if(nullify_names)
-      header = replace_string_range(header, 265, 296, "\0") #uname
-      header = replace_string_range(header, 297, 328, "\0") #gname
+      header = replace_string_range(header, TAR_UNAME_START, TAR_UNAME_END, "\0")
+      header = replace_string_range(header, TAR_GNAME_START, TAR_GNAME_END, "\0")
 
       # major/minor
-      header[329..336] = "0".rjust(8, '0')
-      header[337..344] = "0".rjust(8, '0')
-      header[344] = "\0"
-      header[336] = "\0"
+      header[TAR_MAJOR_START..TAR_MAJOR_END] = "0".rjust(8, '0')
+      header[TAR_MINOR_START..TAR_MINOR_END] = "0".rjust(8, '0')
+      header[TAR_MAJOR_END] = "\0"
+      header[TAR_MINOR_END] = "\0"
     else
-      header[265..296] = pad_string_to("root", 32)
-      header[297..328] = pad_string_to("root", 32)
+      header[TAR_UNAME_START..TAR_UNAME_END] = pad_string_to("root", 32)
+      header[TAR_GNAME_START..TAR_GNAME_END] = pad_string_to("root", 32)
     end
 
     return header
