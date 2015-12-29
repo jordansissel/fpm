@@ -399,7 +399,7 @@ class FPM::Package::APK< FPM::Package
         "-c"
       ]
 
-      # temporarily move pkginfo to the front.
+      # Move pkginfo to the front, if it exists.
       for i in (0..entries.length)
         if(entries[i] == ".PKGINFO")
           entries[i] = entries[0]
@@ -477,17 +477,13 @@ class FPM::Package::APK< FPM::Package
       header = replace_string_range(header, 297, 328, "\0") #gname
 
       # major/minor
-      # header[329..336] = "0".rjust(8, '0')
-      # header[337..344] = "0".rjust(8, '0')
-      # header[344] = "\0"
-      # header[336] = "\0"
+      header[329..336] = "0".rjust(8, '0')
+      header[337..344] = "0".rjust(8, '0')
+      header[344] = "\0"
+      header[336] = "\0"
     else
       header[265..296] = pad_string_to("root", 32)
       header[297..328] = pad_string_to("root", 32)
-
-      # linkname
-      #linkname = pad_string_to("\0\0\0APK2", 100)
-      #header[157..256] = linkname
     end
 
     return header
