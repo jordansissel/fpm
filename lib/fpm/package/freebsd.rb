@@ -33,7 +33,7 @@ class FPM::Package::FreeBSD < FPM::Package
       if File.symlink?(path)
         checksums[f] = "-"
       elsif File.file?(path)
-        checksums[f] = Digest::SHA1.file(path).hexdigest
+        checksums[f] = Digest::SHA256.file(path).hexdigest
       end
     end
 
