@@ -1,9 +1,9 @@
 require "backports" # gem backports
 require "fpm/package"
 require "fpm/util"
-require "archive/tar/minitar"
 require "digest"
 require "fileutils"
+require "rubygems/package"
 require "xz"
 
 class FPM::Package::FreeBSD < FPM::Package
@@ -74,35 +74,31 @@ class FPM::Package::FreeBSD < FPM::Package
     end
 
     # Create the .txz package archive from the files in staging_path.
-    XZ::StreamWriter.open(output_path) do |xz|
-      tar = Archive::Tar::Minitar::Output.new(xz)
+    File.open(output_path, "wb") do |file|
+      XZ::StreamWriter.new(file) do |xz|
+        Archive::Tar::Minitar::Output.new(xz) do |tar|
+          # The manifests must come first for pkg.
+          add_path(tar, "+COMPACT_MANIFEST",
+                   File.join(staging_path, "+COMPACT_MANIFEST"))
+          add_path(tar, "+MANIFEST",
+                   File.join(staging_path, "+MANIFEST"))
 
-      # The manifests must come first for pkg.
-      add_path(tar, "+COMPACT_MANIFEST",
-              staging_path("+COMPACT_MANIFEST"))
-      add_path(tar, "+MANIFEST",
-              staging_path("+MANIFEST"))
-
-      checksums.keys.each do |path|
-        add_path(tar, "/" + path, staging_path(path))
+          checksums.keys.each do |path|
+            add_path(tar, "/" + path, File.join(staging_path, path))
+          end
+        end
       end
     end
   end # def output
 
   def add_path(tar, tar_path, path)
     stat = File.lstat(path)
-    opts = {
-      :size => stat.size,
-      :mode => stat.mode,
-      :mtime => stat.mtime,
-    }
-
     if stat.directory?
-      tar.tar.mkdir(tar_path, opts)
+      tar.mkdir(tar_path, stat.mode)
     elsif stat.symlink?
-      tar.tar.symlink(tar_path, File.readlink(path), opts)
+      tar.add_symlink(tar_path, File.readlink(path), stat.mode)
     else
-      tar.tar.add_file_simple(tar_path, opts) do |io|
+      tar.add_file_simple(tar_path, stat.mode, stat.size) do |io|
         File.open(path) do |fd|
           chunk = nil
           size = 0
@@ -123,3 +119,33 @@ class FPM::Package::FreeBSD < FPM::Package
     return super(format)
   end # def to_s
 end # class FPM::Package::FreeBSD
+
+# Backport Symlink Support to TarWriter
+# https://github.com/rubygems/rubygems/blob/4a778c9c2489745e37bcc2d0a8f12c601a9c517f/lib/rubygems/package/tar_writer.rb#L239-L253
+module TarWriterAddSymlink
+  refine Gem::Package::TarWriter do
+    def add_symlink(name, target, mode)
+      check_closed
+
+      name, prefix = split_name name
+
+      header = Gem::Package::TarHeader.new(:name => name, :mode => mode,
+                                           :size => 0, :typeflag => "2",
+                                           :linkname => target,
+                                           :prefix => prefix,
+                                           :mtime => Time.now).to_s
+
+      @io.write header
+
+      self
+    end # def add_symlink
+  end # refine Gem::Package::TarWriter
+end # module TarWriterAddSymlink
+
+module Util
+  module Tar
+    unless Gem::Package::TarWriter.public_instance_methods.include? :add_symlink
+      using TarWriterAddSymlink
+    end
+  end # module Tar
+end # module Util
