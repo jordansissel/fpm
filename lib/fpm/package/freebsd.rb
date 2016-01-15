@@ -7,6 +7,13 @@ require "rubygems/package"
 require "xz"
 
 class FPM::Package::FreeBSD < FPM::Package
+  SCRIPT_MAP = {
+    :before_install     => "pre-install",
+    :after_install      => "post-install",
+    :before_remove      => "pre-deinstall",
+    :after_remove       => "post-deinstall",
+  } unless defined?(SCRIPT_MAP)
+
   def self.default_abi
     abi_name = %x{uname -s}.chomp
     abi_version = %x{uname -r}.chomp.split(".")[0]
@@ -67,6 +74,12 @@ class FPM::Package::FreeBSD < FPM::Package
     checksums.each do |f, shasum|
       # pkg expands % URL-style escapes, so make sure to escape % as %25
       pkgdata["files"]["/" + f.gsub("%", "%25")] = shasum
+    end
+
+    # Populate scripts
+    pkgdata["scripts"] = {}
+    scripts.each do |name, data|
+      pkgdata["scripts"][SCRIPT_MAP[name]] = data
     end
 
     File.open(staging_path("+MANIFEST"), "w+") do |file|
