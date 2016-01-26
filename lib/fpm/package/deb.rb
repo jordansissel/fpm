@@ -386,7 +386,7 @@ class FPM::Package::Deb < FPM::Package
     attributes.fetch(:deb_systemd_list, []).each do |systemd|
       name = File.basename(systemd, ".service")
       dest_systemd = staging_path("lib/systemd/system/#{name}.service")
-      FileUtils.mkdir_p(File.dirname(dest_systemd))
+      mkdir_p(File.dirname(dest_systemd))
       FileUtils.cp(systemd, dest_systemd)
       File.chmod(0644, dest_systemd)
 
@@ -430,7 +430,7 @@ class FPM::Package::Deb < FPM::Package
 
     # Write the changelog file
     dest_changelog = File.join(staging_path, "usr/share/doc/#{name}/changelog.Debian.gz")
-    FileUtils.mkdir_p(File.dirname(dest_changelog))
+    mkdir_p(File.dirname(dest_changelog))
     File.new(dest_changelog, "wb", 0644).tap do |changelog|
       Zlib::GzipWriter.new(changelog, Zlib::BEST_COMPRESSION).tap do |changelog_gz|
         if attributes[:deb_changelog]
@@ -450,7 +450,7 @@ class FPM::Package::Deb < FPM::Package
     attributes.fetch(:deb_init_list, []).each do |init|
       name = File.basename(init, ".init")
       dest_init = File.join(staging_path, "etc/init.d/#{name}")
-      FileUtils.mkdir_p(File.dirname(dest_init))
+      mkdir_p(File.dirname(dest_init))
       FileUtils.cp init, dest_init
       File.chmod(0755, dest_init)
     end
@@ -458,7 +458,7 @@ class FPM::Package::Deb < FPM::Package
     attributes.fetch(:deb_default_list, []).each do |default|
       name = File.basename(default, ".default")
       dest_default = File.join(staging_path, "etc/default/#{name}")
-      FileUtils.mkdir_p(File.dirname(dest_default))
+      mkdir_p(File.dirname(dest_default))
       FileUtils.cp default, dest_default
       File.chmod(0644, dest_default)
     end
@@ -466,20 +466,20 @@ class FPM::Package::Deb < FPM::Package
     attributes.fetch(:deb_upstart_list, []).each do |upstart|
       name = File.basename(upstart, ".upstart")
       dest_upstart = staging_path("etc/init/#{name}.conf")
-      FileUtils.mkdir_p(File.dirname(dest_upstart))
+      mkdir_p(File.dirname(dest_upstart))
       FileUtils.cp(upstart, dest_upstart)
       File.chmod(0644, dest_upstart)
 
       # Install an init.d shim that calls upstart
       dest_init = staging_path("etc/init.d/#{name}")
-      FileUtils.mkdir_p(File.dirname(dest_init))
+      mkdir_p(File.dirname(dest_init))
       FileUtils.ln_s("/lib/init/upstart-job", dest_init)
     end
 
     attributes.fetch(:deb_systemd_list, []).each do |systemd|
       name = File.basename(systemd, ".service")
       dest_systemd = staging_path("lib/systemd/system/#{name}.service")
-      FileUtils.mkdir_p(File.dirname(dest_systemd))
+      mkdir_p(File.dirname(dest_systemd))
       FileUtils.cp(systemd, dest_systemd)
       File.chmod(0644, dest_systemd)
     end
@@ -852,6 +852,10 @@ class FPM::Package::Deb < FPM::Package
       File.chmod(0644, control_path("md5sums"))
     end
   end # def write_md5sums
+
+  def mkdir_p(dir)
+    FileUtils.mkdir_p(dir, :mode => 0755)
+  end
 
   def to_s(format=nil)
     # Default format if nil
