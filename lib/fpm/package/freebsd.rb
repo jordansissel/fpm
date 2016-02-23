@@ -89,7 +89,7 @@ class FPM::Package::FreeBSD < FPM::Package
     # Create the .txz package archive from the files in staging_path.
     File.open(output_path, "wb") do |file|
       XZ::StreamWriter.new(file) do |xz|
-        Archive::Tar::Minitar::Output.new(xz) do |tar|
+        ::Gem::Package::TarWriter.new(xz) do |tar|
           # The manifests must come first for pkg.
           add_path(tar, "+COMPACT_MANIFEST",
                    File.join(staging_path, "+COMPACT_MANIFEST"))
