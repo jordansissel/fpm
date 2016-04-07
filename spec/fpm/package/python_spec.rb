@@ -170,8 +170,18 @@ describe FPM::Package::Python, :if => python_usable? do
 
       # Get the default scripts install directory and use it to find django-admin.py from Django
       # Then let's make sure the scripts executable setting worked!
-      python_bindir = %x{python -c 'from distutils.sysconfig import get_config_var; print(get_config_var("BINDIR"))'}.chomp
-      path = subject.staging_path(File.join(python_bindir, "django-admin.py"))
+      if /darwin/ =~ RUBY_PLATFORM
+        # OSX
+        django_bindir = %x{python -c 'from distutils.sysconfig import get_config_var; print(get_config_var("BINDIR"))'}.chomp
+      elsif /cygwin|mswin|mingw|bccwin|wince|emx/ =~ RUBY_PLATFORM
+        # Windows
+        # (ptomulik) I'm not sure about this
+        django_bindir = %x{python -c 'from distutils.sysconfig import get_config_var; print(get_config_var("BINDIR"))'}.chomp
+      else
+        # Unix
+        django_bindir = '/usr/local/bin'
+      end
+      path = subject.staging_path(File.join(django_bindir, "django-admin.py"))
 
       # Read the first line (the hashbang line) of the django-admin.py script
       fd = File.new(path, "r")
