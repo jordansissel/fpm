@@ -13,5 +13,6 @@ script: bundle exec rspec
 addons:
   apt:
     packages:
+      - bsdtar
       - rpm
       - lintian
