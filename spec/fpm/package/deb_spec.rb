@@ -342,6 +342,9 @@ describe FPM::Package::Deb do
     before do
       # TODO(sissel): Refactor this to use factory pattern instead of fixture?
       FileUtils.cp_r(Dir['spec/fixtures/deb/staging/*'], staging_path)
+      ['/etc', '/etc/init.d', '/etc/init.d/test'].each do |f|
+        File.chmod(0755, File.join(staging_path, f)) # cp_r may mess-up with attributes
+      end
 
       subject.name = "name"
       subject.version = "0.0.1"
