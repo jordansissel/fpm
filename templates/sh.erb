@@ -209,6 +209,8 @@ function run_post_install(){
 }
 
 function set_post_install_vars(){
+    # for rationale on the `:`, see #871
+    :
     <% if respond_to?(:package_metadata)%>
       <% package_metadata_hash = JSON.parse(package_metadata)%>
       <% package_metadata_hash.each do |k,v| %>
