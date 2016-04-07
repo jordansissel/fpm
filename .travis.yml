@@ -16,3 +16,4 @@ addons:
       - bsdtar
       - rpm
       - lintian
+      - python-setuptools
