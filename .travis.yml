@@ -12,6 +12,9 @@ rvm:
   - 2.0.0
   - 2.1.1
   - 2.2.1
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update           ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install gnu-tar  ; fi
 script: bundle exec rspec
 addons:
   apt:
