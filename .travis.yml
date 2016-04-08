@@ -14,7 +14,14 @@ rvm:
   - 2.2.1
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update           ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install gnu-tar  ; fi
+    # dpkg has also gnu-tar and xz as dependencies, these packages are used
+    # by pacman.rb, for example.
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install dpkg ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which dpkg-deb || 'dpkg-deb not found'; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which lintian || echo 'lintian not found'; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which python || brew install python; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which easy_install || echo 'easy_install not found'; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which rpm || brew install rpm ; fi
 script: bundle exec rspec
 addons:
   apt:
