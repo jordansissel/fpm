@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 require "fpm/package"
+require "fpm/util"
 require "backports"
 require "fileutils"
 require "find"
@@ -96,7 +97,7 @@ class FPM::Package::Pacman < FPM::Package
   def input(pacman_pkg_path)
     control = {}
     # Unpack the control tarball
-    safesystem("tar", "-C", staging_path, "-xf", pacman_pkg_path)
+    safesystem(FPM::Util.tar_cmd, "-C", staging_path, "-xf", pacman_pkg_path)
     pkginfo = staging_path(".PKGINFO")
     mtree = staging_path(".MTREE")
     install = staging_path(".INSTALL")
@@ -264,7 +265,7 @@ class FPM::Package::Pacman < FPM::Package
 
     File.expand_path(output_path).tap do |path|
       ::Dir.chdir(build_path) do
-        safesystem(*(["tar",
+        safesystem(*([FPM::Util.tar_cmd,
                       compression_option,
                       "-cf",
                       path] + data_tar_flags + \
