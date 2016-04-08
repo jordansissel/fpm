@@ -1,3 +1,6 @@
+os:
+  - linux
+  - osx
 language: ruby
 sudo: false
 rvm:
