@@ -372,7 +372,6 @@ describe FPM::Package::Deb do
       it "should return no errors" do
         lintian_output = `lintian #{target} --suppress-tags '#{lintian_errors_to_ignore.join(",")}'`
         expect($CHILD_STATUS).to eq(0), lintian_output
-        expect($CHILD_STDERR).to be nil
       end
     end
   end
