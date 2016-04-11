@@ -1,11 +1,36 @@
-start() {
+#! /bin/sh
+# Start/stop the test daemon.
+#
+### BEGIN INIT INFO
+# Provides:          test
+# Required-Start:    $syslog
+# Required-Stop:     $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:
+# Short-Description: Test
+# Description:       Test
+### END INIT INFO
+
+. /lib/lsb/init-functions
+
+do_start() {
+  :
 }
 
-stop() {
+do_stop() {
+  :
 }
 
-restart() {
+do_restart() {
+  :
 }
 
-force-reload() {
+do_reload() {
+  :
 }
+
+case $1 in
+  start) do_start ;;
+  stop) do_stop ;;
+  force-reload) do_reload ;;
+esac

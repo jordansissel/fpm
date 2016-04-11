@@ -51,6 +51,9 @@ Gem::Specification.new do |spec|
   # For creating FreeBSD package archives (xz-compressed tars)
   spec.add_dependency("ruby-xz") # license: MIT
 
+  # For backward compatibility with older rubies
+  spec.add_dependency("corefines", "~>1.9") # license: MIT
+
   spec.add_development_dependency("rspec", "~> 3.0.0") # license: MIT (according to wikipedia)
   spec.add_development_dependency("insist", "~> 1.0.0") # license: Apache 2
   spec.add_development_dependency("pry")

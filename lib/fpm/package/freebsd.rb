@@ -5,6 +5,7 @@ require "digest"
 require "fileutils"
 require "rubygems/package"
 require "xz"
+require "corefines"
 
 class FPM::Package::FreeBSD < FPM::Package
   SCRIPT_MAP = {
