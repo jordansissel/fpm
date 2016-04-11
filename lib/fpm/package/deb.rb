@@ -87,6 +87,10 @@ class FPM::Package::Deb < FPM::Package
     File.expand_path(file)
   end
 
+  option "--upstream-changelog", "FILEPATH", "Add FILEPATH as upstream changelog" do |file|
+    File.expand_path(file)
+  end
+
   option "--recommends", "PACKAGE", "Add PACKAGE to Recommends" do |pkg|
     @recommends ||= []
     @recommends << pkg
@@ -152,12 +156,12 @@ class FPM::Package::Deb < FPM::Package
     :multivalued => true do |file|
     next File.expand_path(file)
   end
-  
+
   option "--systemd", "FILEPATH", "Add FILEPATH as a systemd script",
 	:multivalued => true do |file|
     next File.expand_path(file)
   end
-  
+
   option "--systemd-restart-after-upgrade", :flag , "Restart service after upgrade", :default => true
 
   def initialize(*args)
@@ -396,7 +400,7 @@ class FPM::Package::Deb < FPM::Package
 
     if script?(:before_upgrade) or script?(:after_upgrade) or attributes[:deb_systemd]
       puts "Adding action files"
-      if script?(:before_install) or script?(:before_upgrade) 
+      if script?(:before_install) or script?(:before_upgrade)
         scripts[:before_install] = template("deb/preinst_upgrade.sh.erb").result(binding)
       end
       if script?(:before_remove) or attributes[:deb_systemd]
@@ -428,7 +432,12 @@ class FPM::Package::Deb < FPM::Package
           "Unknown compression type '#{self.attributes[:deb_compression]}'"
     end
 
-    # Write the changelog file
+    # There are two changelogs that may appear:
+    #   - debian-specific changelog, which should be archived as changelog.Debian.gz
+    #   - upstream changelog, which should be archived as changelog.gz
+    # see https://www.debian.org/doc/debian-policy/ch-docs.html#s-changelogs
+
+    # Write the changelog.Debian.gz file
     dest_changelog = File.join(staging_path, "usr/share/doc/#{name}/changelog.Debian.gz")
     mkdir_p(File.dirname(dest_changelog))
     File.new(dest_changelog, "wb", 0644).tap do |changelog|
@@ -446,6 +455,26 @@ class FPM::Package::Deb < FPM::Package
         end
       end.close
     end # No need to close, GzipWriter#close will close it.
+
+    # Write the changelog.gz file (upstream changelog)
+    dest_upstream_changelog = File.join(staging_path, "usr/share/doc/#{name}/changelog.gz")
+    if attributes[:deb_upstream_changelog]
+      File.new(dest_upstream_changelog, "wb", 0644).tap do |changelog|
+        Zlib::GzipWriter.new(changelog, Zlib::BEST_COMPRESSION).tap do |changelog_gz|
+            logger.info("Writing user-specified upstream changelog", :source => attributes[:deb_upstream_changelog])
+            File.new(attributes[:deb_upstream_changelog]).tap do |fd|
+              chunk = nil
+              # Ruby 1.8.7 doesn't have IO#copy_stream
+              changelog_gz.write(chunk) while chunk = fd.read(16384)
+            end.close
+        end.close
+      end # No need to close, GzipWriter#close will close it.
+    end
+
+    if File.exists?(dest_changelog) and not File.exists?(dest_upstream_changelog)
+      # see https://www.debian.org/doc/debian-policy/ch-docs.html#s-changelogs
+      File.rename(dest_changelog, dest_upstream_changelog)
+    end
 
     attributes.fetch(:deb_init_list, []).each do |init|
       name = File.basename(init, ".init")
@@ -530,6 +559,20 @@ class FPM::Package::Deb < FPM::Package
         File.open(attributes[:deb_changelog], "w") do |deb_changelog|
           Zlib::GzipReader.open(changelog_path) do |gz|
             IO::copy_stream(gz, deb_changelog)
+          end
+        end
+        File.unlink(changelog_path)
+      end
+    end
+
+    if origin == FPM::Package::Deb
+      changelog_path = staging_path("usr/share/doc/#{name}/changelog.gz")
+      if File.exists?(changelog_path)
+        logger.debug("Found an upstream changelog file, using it.", :path => changelog_path)
+        attributes[:deb_upstream_changelog] = build_path("deb_upstream_changelog")
+        File.open(attributes[:deb_upstream_changelog], "w") do |deb_upstream_changelog|
+          Zlib::GzipReader.open(changelog_path) do |gz|
+            IO::copy_stream(gz, deb_upstream_changelog)
           end
         end
         File.unlink(changelog_path)
@@ -711,25 +754,37 @@ class FPM::Package::Deb < FPM::Package
   end # def write_scripts
 
   def write_conffiles
-    # check for any init scripts or default files
-    inits    = attributes.fetch(:deb_init_list, [])
-    defaults = attributes.fetch(:deb_default_list, [])
-    upstarts = attributes.fetch(:deb_upstart_list, [])
-    return unless (config_files.any? or inits.any? or defaults.any? or upstarts.any?)
-
-    allconfigs = []
-
     # expand recursively a given path to be put in allconfigs
     def add_path(path, allconfigs)
       # Strip leading /
       path = path[1..-1] if path[0,1] == "/"
       cfg_path = File.expand_path(path, staging_path)
-      Find.find(cfg_path) do |p| 
+      Find.find(cfg_path) do |p|
         if File.file?(p)
           allconfigs << p.gsub("#{staging_path}/", '')
         end
       end
     end
+
+    # check for any init scripts or default files
+    inits    = attributes.fetch(:deb_init_list, [])
+    defaults = attributes.fetch(:deb_default_list, [])
+    upstarts = attributes.fetch(:deb_upstart_list, [])
+    etcfiles = []
+    # Add everything in /etc
+    begin
+      if !attributes[:deb_no_default_config_files?]
+        logger.warn("Debian packaging tools generally labels all files in /etc as config files, " \
+                    "as mandated by policy, so fpm defaults to this behavior for deb packages. " \
+                    "You can disable this default behavior with --deb-no-default-config-files flag")
+        add_path("/etc", etcfiles)
+      end
+    rescue Errno::ENOENT
+    end
+
+    return unless (config_files.any? or inits.any? or defaults.any? or upstarts.any? or etcfiles.any?)
+
+    allconfigs = etcfiles
 
     # scan all conf file paths for files and add them
     config_files.each do |path|
@@ -739,17 +794,6 @@ class FPM::Package::Deb < FPM::Package
         raise FPM::InvalidPackageConfiguration,
           "Error trying to use '#{path}' as a config file in the package. Does it exist?"
       end
-    end
-
-    # Also add everything in /etc
-    begin
-      if !attributes[:deb_no_default_config_files?]
-        logger.warn("Debian packaging tools generally labels all files in /etc as config files, " \
-                    "as mandated by policy, so fpm defaults to this behavior for deb packages. " \
-                    "You can disable this default behavior with --deb-no-default-config-files flag")
-        add_path("/etc", allconfigs)
-      end
-    rescue Errno::ENOENT
     end
 
     if attributes[:deb_auto_config_files?]
