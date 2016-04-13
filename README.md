@@ -85,7 +85,7 @@ You can install fpm with gem:
     
 (On OS X, you may also need gnutar: `brew install gnu-tar`.)
 
-Building a package named "awesome" might look something like this:
+Building a package might look something like this:
 
     fpm -s <source type> -t <target type> [list of sources]...
 
