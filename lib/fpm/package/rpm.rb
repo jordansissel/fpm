@@ -396,7 +396,9 @@ class FPM::Package::RPM < FPM::Package
     end
     #input.replaces += replaces
 
-    self.config_files += rpm.config_files
+    if !tags[:fileflags].nil?
+      self.config_files += rpm.config_files
+    end
 
     # rpms support '%dir' things for specifying empty directories to package,
     # but the rpm header itself doesn't actually record this information.
