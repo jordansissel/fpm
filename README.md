@@ -1,5 +1,7 @@
 # Effing Package Management
 
+[![Build Status](https://travis-ci.org/jordansissel/fpm.svg?branch=master)](https://travis-ci.org/jordansissel/fpm)
+
 ## Preface
 
 Package maintainers work hard and take a lot of shit. You can't please
