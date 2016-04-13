@@ -107,7 +107,7 @@ class FPM::Command < Clamp::Command
     "specified multiple times.", :multivalued => true,
     :attribute_name => :provides
   option "--conflicts", "CONFLICTS",
-    "Other packages/versions this package conflicts with. This flag can " \
+    "Other packages/versions this package conflicts with. This flag can be " \
     "specified multiple times.", :multivalued => true,
     :attribute_name => :conflicts
   option "--replaces", "REPLACES",
