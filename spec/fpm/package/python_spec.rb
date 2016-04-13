@@ -179,7 +179,8 @@ describe FPM::Package::Python, :if => python_usable? do
         django_bindir = %x{python -c 'from distutils.sysconfig import get_config_var; print(get_config_var("BINDIR"))'}.chomp
       else
         # Unix
-        django_bindir = '/usr/local/bin'
+        #django_bindir = '/usr/local/bin'
+        django_bindir = %x{python -c 'from distutils.sysconfig import get_config_var; print(get_config_var("BINDIR"))'}.chomp
       end
       path = subject.staging_path(File.join(django_bindir, "django-admin.py"))
 
