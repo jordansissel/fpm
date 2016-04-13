@@ -188,10 +188,17 @@ Most importantly, you should see the following output from the bundle command
 when it lists the fpm gem:
 
     ...
-    Using json (1.8.1) 
+    Using json (1.8.1)
     Using fpm (0.4.42) from source at .
-    Using hitimes (1.2.1) 
+    Using hitimes (1.2.1)
     ...
+
+If your system doesn't have `bsdtar` by default, make sure to install it or some
+tests will fail:
+
+    apt-get install bsdtar
+    
+    yum install bsdtar
 
 Next, run make in root of the fpm repo.  If there are any problems (such as
 missing dependencies) you should receive an error
