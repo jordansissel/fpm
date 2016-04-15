@@ -562,8 +562,8 @@ class FPM::Package::RPM < FPM::Package
 
   def to_s(format=nil)
     if format.nil?
-      return super("NAME-VERSION-ITERATION.DIST.ARCH.TYPE").gsub('DIST', attributes[:rpm_dist]) if attributes[:rpm_dist]
-      return super("NAME-VERSION-ITERATION.ARCH.TYPE")
+      return super("NAME-VERSION-ITERATION.DIST.ARCH.EXTENSION").gsub('DIST', attributes[:rpm_dist]) if attributes[:rpm_dist]
+      return super("NAME-VERSION-ITERATION.ARCH.EXTENSION")
     end
     return super(format)
   end # def to_s
