@@ -128,8 +128,17 @@ class FPM::Package::FreeBSD < FPM::Package
     end
   end # def add_path
 
+  def to_s_extension; "txz"; end
+
+  def to_s_fullversion()
+    # iteration (PORTREVISION on FreeBSD) shall be appended only(?) if non-zero.
+    # https://www.freebsd.org/doc/en/books/porters-handbook/makefile-naming.html
+    return "#{to_s_version}_#{iteration}" if iteration and (iteration.to_i > 0)
+    return to_s_version
+  end
+
   def to_s(format=nil)
-    return "#{name}-#{version}_#{iteration || 1}.txz"
+    return super("NAME-FULLVERSION.EXTENSION") if format.nil?
     return super(format)
   end # def to_s
 end # class FPM::Package::FreeBSD

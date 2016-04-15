@@ -306,10 +306,12 @@ class FPM::Package::Pacman < FPM::Package
     end
   end # def default_output
 
+  def to_s_extension; "pkg.tar#{compression_ending}"; end
+
   def to_s(format=nil)
     # Default format if nil
     # git_1.7.9.3-1_amd64.deb
-    return super("NAME-FULLVERSION-ARCH.pkg.tar#{compression_ending}") if format.nil?
+    return super("NAME-FULLVERSION-ARCH.EXTENSION") if format.nil?
     return super(format)
   end # def to_s
 
