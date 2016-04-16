@@ -339,15 +339,14 @@ class FPM::Package
   def to_s_arch; architecture.to_s; end
   def to_s_name; name.to_s;         end
   def to_s_fullversion
-    ver = to_s_version
-    ver += "-#{iteration}" if iteration
-    return ver
+    return "#{version}-#{iteration}" if iteration
+    return "#{version}"
   end
   def to_s_version;   version.to_s;   end
   def to_s_iteration; iteration.to_s; end
   def to_s_epoch;     epoch.to_s;     end
   def to_s_type;      type.to_s;      end
-  def to_s_extension; to_s_type;      end
+  def to_s_extension; type.to_s;      end
   #######################################
 
   def to_s(fmt=nil)
