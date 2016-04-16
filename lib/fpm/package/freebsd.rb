@@ -50,7 +50,15 @@ class FPM::Package::FreeBSD < FPM::Package
       pkg_origin = "fpm/#{name}"
     end
 
-    pkg_version = "#{version}-#{iteration || 1}"
+    # Follow similar rules to these used in ``to_s_fullversion`` method.
+    # FIXME: maybe epoch should also be introduced somehow ("#{version},#{epoch})?
+    #        should it go to pkgdata["version"] or to another place?
+    # https://www.freebsd.org/doc/en/books/porters-handbook/makefile-naming.html
+    if iteration and iteration.to_i > 0
+      pkg_version = "#{version}-#{iteration}"
+    else
+      pkg_version = "#{version}"
+    end
 
     pkgdata = {
       "abi" => attributes[:freebsd_abi],
@@ -133,8 +141,8 @@ class FPM::Package::FreeBSD < FPM::Package
   def to_s_fullversion()
     # iteration (PORTREVISION on FreeBSD) shall be appended only(?) if non-zero.
     # https://www.freebsd.org/doc/en/books/porters-handbook/makefile-naming.html
-    return "#{to_s_version}_#{iteration}" if iteration and (iteration.to_i > 0)
-    return to_s_version
+    return "#{version}_#{iteration}" if iteration and (iteration.to_i > 0)
+    return "#{version}"
   end
 
   def to_s(format=nil)
