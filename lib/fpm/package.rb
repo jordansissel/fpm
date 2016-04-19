@@ -336,17 +336,14 @@ class FPM::Package
   # easily override particular substitut-
   # ions performed by to_s for subclasses
   #######################################
-  def to_s_arch; architecture.to_s; end
-  def to_s_name; name.to_s;         end
-  def to_s_fullversion
-    return "#{version}-#{iteration}" if iteration
-    return "#{version}"
-  end
-  def to_s_version;   version.to_s;   end
-  def to_s_iteration; iteration.to_s; end
-  def to_s_epoch;     epoch.to_s;     end
-  def to_s_type;      type.to_s;      end
-  def to_s_extension; type.to_s;      end
+  def to_s_arch;        architecture.to_s;  end
+  def to_s_name;        name.to_s;          end
+  def to_s_fullversion; iteration ? "#{version}-#{iteration}" : "#{version}"; end
+  def to_s_version;     version.to_s;       end
+  def to_s_iteration;   iteration.to_s;     end
+  def to_s_epoch;       epoch.to_s;         end
+  def to_s_type;        type.to_s;          end
+  def to_s_extension;   type.to_s;          end
   #######################################
 
   def to_s(fmt=nil)

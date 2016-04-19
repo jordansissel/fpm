@@ -905,8 +905,7 @@ class FPM::Package::Deb < FPM::Package
   def to_s(format=nil)
     # Default format if nil
     # git_1.7.9.3-1_amd64.deb
-    return super("NAME_FULLVERSION_ARCH.EXTENSION") if format.nil?
-    return super(format)
+    return super(format.nil? ? "NAME_FULLVERSION_ARCH.EXTENSION" : format)
   end # def to_s
 
   def data_tar_flags
