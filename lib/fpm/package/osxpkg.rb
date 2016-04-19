@@ -157,8 +157,7 @@ class FPM::Package::OSXpkg < FPM::Package
   def to_s_extension; "pkg"; end
 
   def to_s(format=nil)
-    return super("NAME-VERSION.EXTENSION") if format.nil?
-    return super(format)
+    return super(format.nil? ? "NAME-VERSION.EXTENSION" : format)
   end # def to_s
 
   public(:input, :output, :identifier, :to_s)
