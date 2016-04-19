@@ -331,17 +331,31 @@ class FPM::Package
     return erb
   end # def template
 
-  def to_s(fmt="NAME.TYPE")
-    fmt = "NAME.TYPE" if fmt.nil?
-    fullversion = version.to_s
-    fullversion += "-#{iteration}" if iteration
-    return fmt.gsub("ARCH", architecture.to_s) \
-      .gsub("NAME", name.to_s) \
-      .gsub("FULLVERSION", fullversion) \
-      .gsub("VERSION", version.to_s) \
-      .gsub("ITERATION", iteration.to_s) \
-      .gsub("EPOCH", epoch.to_s) \
-      .gsub("TYPE", type.to_s)
+  #######################################
+  # The following methods are provided to
+  # easily override particular substitut-
+  # ions performed by to_s for subclasses
+  #######################################
+  def to_s_arch;        architecture.to_s;  end
+  def to_s_name;        name.to_s;          end
+  def to_s_fullversion; iteration ? "#{version}-#{iteration}" : "#{version}"; end
+  def to_s_version;     version.to_s;       end
+  def to_s_iteration;   iteration.to_s;     end
+  def to_s_epoch;       epoch.to_s;         end
+  def to_s_type;        type.to_s;          end
+  def to_s_extension;   type.to_s;          end
+  #######################################
+
+  def to_s(fmt=nil)
+    fmt = "NAME.EXTENSION" if fmt.nil?
+    return fmt.gsub("ARCH", to_s_arch) \
+      .gsub("NAME",         to_s_name) \
+      .gsub("FULLVERSION",  to_s_fullversion) \
+      .gsub("VERSION",      to_s_version) \
+      .gsub("ITERATION",    to_s_iteration) \
+      .gsub("EPOCH",        to_s_epoch) \
+      .gsub("TYPE",         to_s_type) \
+      .gsub("EXTENSION",    to_s_extension)
   end # def to_s
 
   def edit_file(path)
