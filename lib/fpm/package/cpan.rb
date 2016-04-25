@@ -297,7 +297,7 @@ class FPM::Package::CPAN < FPM::Package
       release_response = httpfetch(metacpan_release_url)
     rescue Net::HTTPServerException => e
       logger.error("metacpan release query failed.", :error => e.message,
-                    :module => package, :url => metacpan_release_url)
+                    :url => metacpan_release_url)
       raise FPM::InvalidPackageConfiguration, "metacpan release query failed"
     end
 
