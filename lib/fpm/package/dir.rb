@@ -162,6 +162,9 @@ class FPM::Package::Dir < FPM::Package
         copy(path, target)
       end
     end
+
+    logger.debug("Updating destination folder permissions with 0755", :destination => destination)
+    File.chmod(0755, destination)
   end # def clone
 
   # Copy a path.
