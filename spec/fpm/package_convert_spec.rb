@@ -28,7 +28,7 @@ describe "FPM::Package#convert" do
     insist { subject.provides }.include?("rubygem19(whatever) = 1.0")
   end
 
-  it "should erase release cantidate declariations from dependencies" do
+  it "should erase release candidate declariations from dependencies" do
     insist { subject.dependencies[0] } == "something > 10"
     insist { subject.dependencies[1] } == "another >= 1.2.3"
   end
