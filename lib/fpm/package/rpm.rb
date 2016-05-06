@@ -301,6 +301,11 @@ class FPM::Package::RPM < FPM::Package
         end
       end.flatten
     end
+   
+    # Erase troublesome release cantidate declarations.
+    self.dependencies = self.dependencies.collect do |dep|
+      dep.gsub(/.rc\d*/, '')
+    end
 
   setscript = proc do |scriptname|
       script_path = self.attributes[scriptname]
