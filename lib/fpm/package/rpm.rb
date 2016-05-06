@@ -302,7 +302,7 @@ class FPM::Package::RPM < FPM::Package
       end.flatten
     end
    
-    # Erase troublesome release cantidate declarations.
+    # Erase troublesome release candidate declarations.
     self.dependencies = self.dependencies.collect do |dep|
       dep.gsub(/.rc\d*/, '')
     end
