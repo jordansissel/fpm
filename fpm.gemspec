@@ -21,10 +21,10 @@ Gem::Specification.new do |spec|
   # For parsing JSON (required for some Python support, etc)
   # http://flori.github.com/json/doc/index.html
   spec.add_dependency("json", ">= 1.7.7") # license: Ruby License
-  
+
   # For logging
   # https://github.com/jordansissel/ruby-cabin
-  spec.add_dependency("cabin", ">= 0.6.0") # license: Apache 2 
+  spec.add_dependency("cabin", ">= 0.6.0") # license: Apache 2
 
   # For backports to older rubies
   # https://github.com/marcandre/backports
@@ -50,9 +50,6 @@ Gem::Specification.new do |spec|
 
   # For creating FreeBSD package archives (xz-compressed tars)
   spec.add_dependency("ruby-xz") # license: MIT
-
-  # For backward compatibility with older rubies
-  spec.add_dependency("corefines", "~>1.9") # license: MIT
 
   spec.add_development_dependency("rspec", "~> 3.0.0") # license: MIT (according to wikipedia)
   spec.add_development_dependency("insist", "~> 1.0.0") # license: Apache 2
