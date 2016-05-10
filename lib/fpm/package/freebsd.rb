@@ -3,9 +3,7 @@ require "fpm/package"
 require "fpm/util"
 require "digest"
 require "fileutils"
-require "rubygems/package"
 require "xz"
-require "corefines"
 
 class FPM::Package::FreeBSD < FPM::Package
   SCRIPT_MAP = {
@@ -94,7 +92,7 @@ class FPM::Package::FreeBSD < FPM::Package
     # Create the .txz package archive from the files in staging_path.
     File.open(output_path, "wb") do |file|
       XZ::StreamWriter.new(file) do |xz|
-        ::Gem::Package::TarWriter.new(xz) do |tar|
+        FPM::Util::TarWriter.new(xz) do |tar|
           # The manifests must come first for pkg.
           add_path(tar, "+COMPACT_MANIFEST",
                    File.join(staging_path, "+COMPACT_MANIFEST"))
@@ -144,33 +142,3 @@ class FPM::Package::FreeBSD < FPM::Package
     return super(format.nil? ? "NAME-FULLVERSION.EXTENSION" : format)
   end # def to_s
 end # class FPM::Package::FreeBSD
-
-# Backport Symlink Support to TarWriter
-# https://github.com/rubygems/rubygems/blob/4a778c9c2489745e37bcc2d0a8f12c601a9c517f/lib/rubygems/package/tar_writer.rb#L239-L253
-module TarWriterAddSymlink
-  refine Gem::Package::TarWriter do
-    def add_symlink(name, target, mode)
-      check_closed
-
-      name, prefix = split_name name
-
-      header = Gem::Package::TarHeader.new(:name => name, :mode => mode,
-                                           :size => 0, :typeflag => "2",
-                                           :linkname => target,
-                                           :prefix => prefix,
-                                           :mtime => Time.now).to_s
-
-      @io.write header
-
-      self
-    end # def add_symlink
-  end # refine Gem::Package::TarWriter
-end # module TarWriterAddSymlink
-
-module Util
-  module Tar
-    unless Gem::Package::TarWriter.public_instance_methods.include? :add_symlink
-      using TarWriterAddSymlink
-    end
-  end # module Tar
-end # module Util
