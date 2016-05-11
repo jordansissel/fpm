@@ -55,6 +55,6 @@ class FPM::RakeTask < Rake::TaskLib
 
     args.flatten!.compact!
 
-    exit(FPM::Command.new("fpm").run(args) || 0)
+    abort 'FPM failed!' unless FPM::Command.new("fpm").run(args) == 0
   end
 end
