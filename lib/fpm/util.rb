@@ -354,3 +354,5 @@ module FPM::Util
     @logger ||= Cabin::Channel.get
   end # def logger
 end # module FPM::Util
+
+require 'fpm/util/tar_writer'
