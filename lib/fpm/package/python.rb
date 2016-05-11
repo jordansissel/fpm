@@ -131,6 +131,7 @@ class FPM::Package::Python < FPM::Package
                  "--build-directory", target, want_pkg)
     else
       logger.debug("using pip", :pip => attributes[:python_pip])
+      # TODO: Support older versions of pip
       safesystem(attributes[:python_pip], "download", "--no-clean", "--no-deps", "--no-binary", ":all:", "-i", attributes[:python_pypi], "--build", target,  want_pkg)
     end
 
