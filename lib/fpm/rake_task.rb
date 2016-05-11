@@ -1,3 +1,4 @@
+require "fpm/namespace"
 require "ostruct"
 require "rake"
 require "rake/tasklib"
