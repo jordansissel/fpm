@@ -111,8 +111,8 @@ class FPM::Command < Clamp::Command
     "specified multiple times.", :multivalued => true,
     :attribute_name => :conflicts
   option "--replaces", "REPLACES",
-    "Other packages/versions this package replaces. This flag can be " \
-    "specified multiple times.", :multivalued => true,
+    "Other packages/versions this package replaces. Equivalent of rpm's 'Obsoletes'. " \
+    "This flag can be specified multiple times.", :multivalued => true,
     :attribute_name => :replaces
 
   option "--config-files", "CONFIG_FILES",
