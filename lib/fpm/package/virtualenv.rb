@@ -92,7 +92,7 @@ class FPM::Package::Virtualenv < FPM::Package
     end
 
     ::Dir[build_path + "/**/*"].each do |f|
-      if ! File.world_readable? f
+      if ! File.readable? f
         File.lchmod(File.stat(f).mode | 444)
       end
     end

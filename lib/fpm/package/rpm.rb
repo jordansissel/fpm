@@ -554,19 +554,25 @@ class FPM::Package::RPM < FPM::Package
     return @epoch if @epoch.is_a?(Numeric)
 
     if @epoch.nil? or @epoch.empty?
-      logger.warn("no value for epoch is set, defaulting to nil")
       return nil
     end
 
     return @epoch
   end # def epoch
 
+  def to_s_dist;
+    attributes[:rpm_dist] ? "#{attributes[:rpm_dist]}" : "DIST";
+  end
+
   def to_s(format=nil)
     if format.nil?
-      return super("NAME-VERSION-ITERATION.DIST.ARCH.TYPE").gsub('DIST', attributes[:rpm_dist]) if attributes[:rpm_dist]
-      return super("NAME-VERSION-ITERATION.ARCH.TYPE")
+      format = if attributes[:rpm_dist]
+        "NAME-VERSION-ITERATION.DIST.ARCH.EXTENSION"
+      else
+        "NAME-VERSION-ITERATION.ARCH.EXTENSION"
+      end
     end
-    return super(format)
+    return super(format.gsub("DIST", to_s_dist))
   end # def to_s
 
   def payload_compression
