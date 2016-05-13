@@ -332,12 +332,18 @@ class FPM::Command < Clamp::Command
       end
     end
 
-    # Each remaining command line parameter is used as an 'input' argument.
-    # For directories, this means paths. For things like gem and python, this
-    # means package name or paths to the packages (rails, foo-1.0.gem, django,
-    # bar/setup.py, etc)
-    args.each do |arg|
-      input.input(arg)
+    if input_type == "pleaserun"
+      # Special case for pleaserun that all parameters are considered the 'command'
+      # to run through pleaserun.
+      input.input(args)
+    else
+      # Each remaining command line parameter is used as an 'input' argument.
+      # For directories, this means paths. For things like gem and python, this
+      # means package name or paths to the packages (rails, foo-1.0.gem, django,
+      # bar/setup.py, etc)
+      args.each do |arg|
+        input.input(arg)
+      end
     end
 
     # If --inputs was specified, read it as a file.
