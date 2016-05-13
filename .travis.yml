@@ -1,11 +1,32 @@
+os:
+  - linux
+  - osx
 language: ruby
+sudo: false
 rvm:
-  - 1.8.7
-  - 1.9.2
+  # We use language features of Ruby that are not supported in Ruby 1.9.x or
+  # older.
+  #- 1.8.7
+  #- 1.9.2
   - 1.9.3
   - 2.0.0
-script: rspec
+  - 2.1.1
+  - 2.2.1
 before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq rpm
-  - sudo apt-get install -qq lintian
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update           ; fi
+    # dpkg has also gnu-tar and xz as dependencies, these packages are used
+    # by pacman.rb, for example.
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install dpkg ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which dpkg-deb || 'dpkg-deb not found'; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which lintian || echo 'lintian not found'; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which python || brew install python; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which easy_install || echo 'easy_install not found'; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which rpm || brew install rpm ; fi
+script: bundle exec rspec
+addons:
+  apt:
+    packages:
+      - bsdtar
+      - rpm
+      - lintian
+      - python-setuptools

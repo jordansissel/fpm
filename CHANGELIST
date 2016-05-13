@@ -1,18 +1,22 @@
-?????
+1.5.0 (April 12, 2016)
   - Arch package support is now available via -s pacman and -t pacman. 
     (#916; wonderful community effort making this happen!)
+  - FreeBSD packages can now be built `-t freebsd` 
+    (#1073; huge community effort making this happen!)
   - You can now set fpm flags and arguments with the FPMOPTS environment
     variable (#977, mildred)
   - Using --exclude-file no longer causes a crash. Yay! (#982, wyaeld)
   - A new rake task is available for folks who want to invoke fpm from rake
     (#756, pstengel)
   - On FreeBSD, when tarring, gtar is now used. (#1008, liv3d)
-
   - virtualenv: Add --virtualenv-pypi-extra-url flag to specify additional PyPI
     locations to use when searching for packages (#1012, Paul Krohn)
-
   - deb: Init scripts, etc/default, and upstart files are automatically added
-    as config files in a debian package. Disable this behavior with ---deb-auto-config-files
+    as config files in a debian package. Disable this behavior with
+    ---deb-auto-config-files
+  - deb: Small changes to make lintian complain less about our resulting debs.
+  - deb: New flag --deb-systemd lets you specify a systemd service file to include
+    in your package. (#952, Jens Peter Schroer)
   - cpan: Add --[no-]cpan-cpanm-force flag to pass --force to cpanm.
   - rpm: File names with both spaces and symbols should now be packageable.
     (#946, iwonbigbro)
@@ -22,6 +26,7 @@
     as no validation is done on this before sending to rpmbuild. (#687, vStone)
   - cpan: Install if the package name given is a local file (#986, mdom)
   - sh: Metadata now available as env vars for post-install scripts (#1006, Ed Healy)
+  - rpm: No more warning if you don't set an epoch. (#1053, Joseph Frazier)
 
 
 1.4.0 (July 26, 2015)

@@ -154,9 +154,10 @@ class FPM::Package::OSXpkg < FPM::Package
     FileUtils.remove_file(temp_info)
   end # def output
 
+  def to_s_extension; "pkg"; end
+
   def to_s(format=nil)
-    return super("NAME-VERSION.pkg") if format.nil?
-    return super(format)
+    return super(format.nil? ? "NAME-VERSION.EXTENSION" : format)
   end # def to_s
 
   public(:input, :output, :identifier, :to_s)

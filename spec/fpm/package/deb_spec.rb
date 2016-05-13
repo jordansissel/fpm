@@ -174,7 +174,7 @@ describe FPM::Package::Deb do
     context "when the deb's control section is extracted" do
       let(:control_dir) { Stud::Temporary.directory }
       before do
-        system("ar p '#{target}' control.tar.gz | tar -zx -C '#{control_dir}'")
+        system("ar p '#{target}' control.tar.gz | tar -zx -C '#{control_dir}' -f -")
         raise "couldn't extract test deb" unless $CHILD_STATUS.success?
       end
 
@@ -342,6 +342,9 @@ describe FPM::Package::Deb do
     before do
       # TODO(sissel): Refactor this to use factory pattern instead of fixture?
       FileUtils.cp_r(Dir['spec/fixtures/deb/staging/*'], staging_path)
+      ['/etc', '/etc/init.d', '/etc/init.d/test'].each do |f|
+        File.chmod(0755, File.join(staging_path, f)) # cp_r may mess-up with attributes
+      end
 
       subject.name = "name"
       subject.version = "0.0.1"
@@ -349,6 +352,7 @@ describe FPM::Package::Deb do
       subject.description = "Test package\nExtended description."
       subject.attributes[:deb_user] = "root"
       subject.attributes[:deb_group] = "root"
+      subject.category = "comm"
 
       subject.instance_variable_set(:@staging_path, staging_path)
 
@@ -362,12 +366,11 @@ describe FPM::Package::Deb do
     context "when run against lintian", :if => have_lintian do
       lintian_errors_to_ignore = [
         "no-copyright-file",
-        "init.d-script-missing-lsb-section",
-        "non-standard-file-permissions-for-etc-init.d-script"
+        "script-in-etc-init.d-not-registered-via-update-rc.d"
       ]
 
       it "should return no errors" do
-        lintian_output = `lintian #{target} --suppress-tags #{lintian_errors_to_ignore.join(",")}`
+        lintian_output = `lintian #{target} --suppress-tags '#{lintian_errors_to_ignore.join(",")}'`
         expect($CHILD_STATUS).to eq(0), lintian_output
       end
     end
