@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 require "fpm/package"
+require "fpm/util"
 require "backports"
 require "fileutils"
 require "find"
@@ -96,7 +97,7 @@ class FPM::Package::Pacman < FPM::Package
   def input(pacman_pkg_path)
     control = {}
     # Unpack the control tarball
-    safesystem("tar", "-C", staging_path, "-xf", pacman_pkg_path)
+    safesystem(tar_cmd, "-C", staging_path, "-xf", pacman_pkg_path)
     pkginfo = staging_path(".PKGINFO")
     mtree = staging_path(".MTREE")
     install = staging_path(".INSTALL")
@@ -268,7 +269,7 @@ class FPM::Package::Pacman < FPM::Package
 
     File.expand_path(output_path).tap do |path|
       ::Dir.chdir(build_path) do
-        safesystem(*(["tar",
+        safesystem(*([tar_cmd,
                       compression_option,
                       "-cf",
                       path] + data_tar_flags + \
@@ -309,11 +310,12 @@ class FPM::Package::Pacman < FPM::Package
     end
   end # def default_output
 
+  def to_s_extension; "pkg.tar#{compression_ending}"; end
+
   def to_s(format=nil)
     # Default format if nil
-    # git_1.7.9.3-1_amd64.deb
-    return super("NAME-FULLVERSION-ARCH.pkg.tar#{compression_ending}") if format.nil?
-    return super(format)
+    # git_1.7.9.3-1-amd64.pkg.tar.xz
+    return super(format.nil? ? "NAME-FULLVERSION-ARCH.EXTENSION" : format)
   end # def to_s
 
   private

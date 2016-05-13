@@ -1,5 +1,7 @@
 # Effing Package Management
 
+[![Build Status](https://travis-ci.org/jordansissel/fpm.svg?branch=master)](https://travis-ci.org/jordansissel/fpm)
+
 ## Preface
 
 Package maintainers work hard and take a lot of shit. You can't please
@@ -67,9 +69,12 @@ The goal of FPM is to be able to easily build platform-native packages.
 Many Linux distros do not ship ruby C headers or a compiler by default, and
 you'll need that to install fpm.
 
+```
+# deb based distributions:
     apt-get install ruby-dev gcc make
-    
-    yum install ruby-devel gcc
+# rpm ones:
+    yum install ruby-devel gcc make
+```
 
 Additional packages will be required depending on the source and target package
 types (rpmbuild for rpm, etc.). FPM will show the commands that are required
@@ -83,7 +88,7 @@ You can install fpm with gem:
     
 (On OS X, you may also need gnutar: `brew install gnu-tar`.)
 
-Building a package named "awesome" might look something like this:
+Building a package might look something like this:
 
     fpm -s <source type> -t <target type> [list of sources]...
 
@@ -183,10 +188,17 @@ Most importantly, you should see the following output from the bundle command
 when it lists the fpm gem:
 
     ...
-    Using json (1.8.1) 
+    Using json (1.8.1)
     Using fpm (0.4.42) from source at .
-    Using hitimes (1.2.1) 
+    Using hitimes (1.2.1)
     ...
+
+If your system doesn't have `bsdtar` by default, make sure to install it or some
+tests will fail:
+
+    apt-get install bsdtar
+    
+    yum install bsdtar
 
 Next, run make in root of the fpm repo.  If there are any problems (such as
 missing dependencies) you should receive an error

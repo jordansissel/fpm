@@ -45,6 +45,144 @@ module FPM::Util
     return shell
   end
 
+  ############################################################################
+  # execmd([env,] cmd [,opts])
+  #
+  # Execute a command as a child process. The function allows to:
+  #
+  # - pass environment variables to child process,
+  # - communicate with stdin, stdout and stderr of the child process via pipes,
+  # - retrieve execution's status code.
+  #
+  # ---- EXAMPLE 1 (simple execution)
+  #
+  # if execmd(['which', 'python']) == 0
+  #   p "Python is installed"
+  # end
+  #
+  # ---- EXAMPLE 2 (custom environment variables)
+  #
+  # execmd({:PYTHONPATH=>'/home/me/foo'}, [ 'python', '-m', 'bar'])
+  #
+  # ---- EXAMPLE 3 (communicating via stdin, stdout and stderr)
+  #
+  # script = <<PYTHON
+  # import sys
+  # sys.stdout.write("normal output\n")
+  # sys.stdout.write("narning or error\n")
+  # PYTHON
+  # status = execmd('python') do |stdin,stdout,stderr|
+  #   stdin.write(script)
+  #   stdin.close
+  #   p "STDOUT: #{stdout.read}"
+  #   p "STDERR: #{stderr.read}"
+  # end
+  # p "STATUS: #{status}"
+  #
+  # ---- EXAMPLE 4 (additional options)
+  #
+  # execmd(['which', 'python'], :process=>true, :stdin=>false, :stderr=>false) do |process,stdout|
+  #  p = stdout.read.chomp
+  #  process.wait
+  #  if (x = process.exit_code) == 0
+  #    p "PYTHON: #{p}"
+  #  else
+  #    p "ERROR:  #{x}"
+  #  end
+  # end
+  #
+  #
+  # OPTIONS:
+  #
+  #   :process (default: false) -- pass process object as the first argument the to block,
+  #   :stdin   (default: true)  -- pass stdin object of the child process to the block for writting,
+  #   :stdout  (default: true)  -- pass stdout object of the child process to the block for reading,
+  #   :stderr  (default: true)  -- pass stderr object of the child process to the block for reading,
+  #
+  def execmd(*args)
+    i = 0
+    if i < args.size
+      if args[i].kind_of?(Hash)
+        # args[0] may contain environment variables
+        env = args[i]
+        i += 1
+      else
+        env = Hash[]
+      end
+    end
+
+    if i < args.size
+      if args[i].kind_of?(Array)
+        args2 = args[i]
+      else
+        args2 = [ args[i] ]
+      end
+      program = args2[0]
+      i += 1
+    else
+      raise ArgumentError.new("missing argument: cmd")
+    end
+
+    if i < args.size
+      if args[i].kind_of?(Hash)
+        opts = Hash[args[i].map {|k,v| [k.to_sym, v]} ]
+        i += 1
+      end
+    else
+      opts = Hash[]
+    end
+
+    opts[:process] = false unless opts.include?(:process)
+    opts[:stdin]   = true  unless opts.include?(:stdin)
+    opts[:stdout]  = true  unless opts.include?(:stdout)
+    opts[:stderr]  = true  unless opts.include?(:stderr)
+
+    if !program.include?("/") and !program_in_path?(program)
+      raise ExecutableNotFound.new(program)
+    end
+
+    logger.debug("Running command", :args => args2)
+
+    stdout_r, stdout_w = IO.pipe
+    stderr_r, stderr_w = IO.pipe
+
+    process = ChildProcess.build(*args2)
+    process.environment.merge!(env)
+
+    process.io.stdout = stdout_w
+    process.io.stderr = stderr_w
+
+    if block_given? and opts[:stdin]
+      process.duplex = true
+    end
+
+    process.start
+
+    stdout_w.close; stderr_w.close
+    logger.debug("Process is running", :pid => process.pid)
+    if block_given?
+      args3 = []
+      args3.push(process)           if opts[:process]
+      args3.push(process.io.stdin)  if opts[:stdin]
+      args3.push(stdout_r)          if opts[:stdout]
+      args3.push(stderr_r)          if opts[:stderr]
+
+      yield(*args3)
+
+      process.io.stdin.close        if opts[:stdin] and not process.io.stdin.closed?
+      stdout_r.close                unless stdout_r.closed?
+      stderr_r.close                unless stderr_r.closed?
+    else
+      # Log both stdout and stderr as 'info' because nobody uses stderr for
+      # actually reporting errors and as a result 'stderr' is a misnomer.
+      logger.pipe(stdout_r => :info, stderr_r => :info)
+    end
+
+    process.wait if process.alive?
+
+    return process.exit_code
+  end # def execmd
+
   # Run a command safely in a way that gets reports useful errors.
   def safesystem(*args)
     # ChildProcess isn't smart enough to run a $SHELL if there's
@@ -54,33 +192,11 @@ module FPM::Util
     end
     program = args[0]
 
-    if !program_exists?(program)
-      raise ExecutableNotFound.new(program)
-    end
-
-    logger.debug("Running command", :args => args)
-
-    # Create a pair of pipes to connect the
-    # invoked process to the cabin logger
-    stdout_r, stdout_w = IO.pipe
-    stderr_r, stderr_w = IO.pipe
-
-    process           = ChildProcess.build(*args)
-    process.io.stdout = stdout_w
-    process.io.stderr = stderr_w
-
-    process.start
-    stdout_w.close; stderr_w.close
-    logger.debug('Process is running', :pid => process.pid)
-    # Log both stdout and stderr as 'info' because nobody uses stderr for
-    # actually reporting errors and as a result 'stderr' is a misnomer.
-    logger.pipe(stdout_r => :info, stderr_r => :info)
-
-    process.wait
-    success = (process.exit_code == 0)
+    exit_code = execmd(args)
+    success = (exit_code == 0)
 
     if !success
-      raise ProcessFailed.new("#{program} failed (exit code #{process.exit_code})" \
+      raise ProcessFailed.new("#{program} failed (exit code #{exit_code})" \
                               ". Full command was:#{args.inspect}")
     end
     return success
@@ -97,29 +213,16 @@ module FPM::Util
       raise ExecutableNotFound.new(program)
     end
 
-    logger.debug("Running command", :args => args)
-
-    stdout_r, stdout_w = IO.pipe
-    stderr_r, stderr_w = IO.pipe
-
-    process           = ChildProcess.build(*args)
-    process.io.stdout = stdout_w
-    process.io.stderr = stderr_w
-
-    process.start
-    stdout_w.close; stderr_w.close
-    stdout_r_str = stdout_r.read
-    stdout_r.close; stderr_r.close
-    logger.debug("Process is running", :pid => process.pid)
-
-    process.wait
-    success = (process.exit_code == 0)
+    stdout_r_str = nil
+    exit_code = execmd(args, :stdin=>false, :stderr=>false) do |stdout|
+      stdout_r_str = stdout.read
+    end
+    success = (exit_code == 0)
 
     if !success
-      raise ProcessFailed.new("#{program} failed (exit code #{process.exit_code})" \
+      raise ProcessFailed.new("#{program} failed (exit code #{exit_code})" \
                               ". Full command was:#{args.inspect}")
     end
-
     return stdout_r_str
   end # def safesystemout
 
@@ -251,3 +354,5 @@ module FPM::Util
     @logger ||= Cabin::Channel.get
   end # def logger
 end # module FPM::Util
+
+require 'fpm/util/tar_writer'

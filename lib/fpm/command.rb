@@ -56,8 +56,8 @@ class FPM::Command < Clamp::Command
     :attribute_name => :chdir
   option "--prefix", "PREFIX",
     "A path to prefix files with when building the target package. This may " \
-    "be necessary for all input packages. For example, the 'gem' type will " \
-    "prefix with your gem directory automatically."
+    "not be necessary for all input packages. For example, the 'gem' type " \
+    "will prefix with your gem directory automatically."
   option ["-p", "--package"], "OUTPUT", "The package file path to output."
   option ["-f", "--force"], :flag, "Force output even if it will overwrite an " \
     "existing file", :default => false
@@ -107,12 +107,12 @@ class FPM::Command < Clamp::Command
     "specified multiple times.", :multivalued => true,
     :attribute_name => :provides
   option "--conflicts", "CONFLICTS",
-    "Other packages/versions this package conflicts with. This flag can " \
+    "Other packages/versions this package conflicts with. This flag can be " \
     "specified multiple times.", :multivalued => true,
     :attribute_name => :conflicts
   option "--replaces", "REPLACES",
-    "Other packages/versions this package replaces. This flag can be " \
-    "specified multiple times.", :multivalued => true,
+    "Other packages/versions this package replaces. Equivalent of rpm's 'Obsoletes'. " \
+    "This flag can be specified multiple times.", :multivalued => true,
     :attribute_name => :replaces
 
   option "--config-files", "CONFIG_FILES",
@@ -152,8 +152,7 @@ class FPM::Command < Clamp::Command
 
   option "--description", "DESCRIPTION", "Add a description for this package." \
     " You can include '\\n' sequences to indicate newline breaks.",
-    :default => "no description" do |val|
-  end
+    :default => "no description"
   option "--url", "URI", "Add a url for this package.",
     :default => "http://example.com/no-uri-given"
   option "--inputs", "INPUTS_PATH",
