@@ -9,53 +9,41 @@ require "pleaserun/cli"
 #
 # This does not currently support 'output'
 class FPM::Package::PleaseRun < FPM::Package
-  # Copy flags from the PleaseRun::CLI
-  ::PleaseRun::CLI.declared_options.each do |o|
-    # Skip exposing 'install prefix' flag since only internally we need to use this.
-    next if ["--install", "--install-prefix"].include?(o.long_switch)
+  # TODO(sissel): Implement flags.
+  
+  require "pleaserun/platform/systemd"
+  require "pleaserun/platform/upstart"
+  require "pleaserun/platform/launchd"
+  require "pleaserun/platform/sysv"
 
-    option o.long_switch.gsub("[no-]", ""), o.type, o.description, {
-      :required => o.required?,
-      :multivalued => o.multivalued?,
-      :default => o.default_value,
-      :environment_variable => o.environment_variable,
-      :hidden => o.hidden?
-    }.reject { |k,v| v.nil? }
-  end
+  option "--name", "SERVICE_NAME", "The name of the service you are creating"
 
   private
   def input(command)
-    flags = ::PleaseRun::CLI.declared_options.collect do |o|
-      name = "pleaserun_#{o.attribute_name}".to_sym
-      value = attributes[name]
-      next if value.nil?
+    platforms = [
+      ::PleaseRun::Platform::Systemd.new("default"),
+      ::PleaseRun::Platform::Upstart.new("1.5"),
+      ::PleaseRun::Platform::Launchd.new("10.9"),
+      ::PleaseRun::Platform::SYSV.new("lsb-3.1")
+    ]
 
-      case o.type
-      when :flag
-        o.long_switch
-      else
-        [o.long_switch, value]
-      end
-    end.reject(&:nil?).flatten
+    attributes[:pleaserun_name] ||= File.basename(command.first)
+    attributes[:prefix] ||= "/usr/share/pleaserun/#{attributes[:pleaserun_name]}"
 
-
-    flags += [ "--install-prefix", staging_path ]
-    pleaserun = ::PleaseRun::CLI.new("fpm -s pleaserun")
-
-    # hack to override the logging setup in pleaserun
-    l = logger
-    pleaserun.define_singleton_method(:setup_logger) do
-      instance_variable_set(:@logger, l)
+    platforms.each do |platform|
+      logger.info("Generating service manifest.", :platform => platform.class.name)
+      platform.program = command.first
+      platform.name = attributes[:pleaserun_name]
+      platform.args = command[1..-1]
+      platform.description = attributes[:description]
+      base = staging_path(File.join(attributes[:prefix], "#{platform.platform}-#{platform.target_version || "default"}"))
+      target = File.join(base, "files")
+      actions_script = File.join(base, "install_actions.sh")
+      ::PleaseRun::Installer.install_files(platform, target, false)
+      ::PleaseRun::Installer.write_actions(platform, actions_script)
     end
-    
-    pleaserun.run(flags + command)
 
-    staging_path("install_actions.sh").tap do |install_actions|
-      if File.exist?(install_actions)
-        scripts[:after_install] = File.read(install_actions)
-        File.unlink(install_actions)
-      end
-    end
+    scripts[:after_install] = template(File.join("pleaserun", "install.sh")).result(binding)
   end # def input
 
   public(:input)
