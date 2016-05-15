@@ -21,6 +21,7 @@ install_files() {
     # Write a cleanup script
     find . -print0 | xargs -r0 -n1 "$source/generate-cleanup.sh" > "$cleanup_script"
 
+    # Actually do the installation
     find . -print0 | xargs -r0 -n1 "$source/install-path.sh"
   )
 }
