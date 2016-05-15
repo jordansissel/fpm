@@ -44,7 +44,15 @@ class FPM::Package::PleaseRun < FPM::Package
       ::PleaseRun::Installer.write_actions(platform, actions_script)
     end
 
-    scripts[:after_install] = template(File.join("pleaserun", "install.sh")).result(binding)
+    libs = [ "install.sh", "install-path.sh", "generate-cleanup.sh" ]
+    libs.each do |file|
+      base = staging_path(File.join(attributes[:prefix]))
+      File.write(File.join(base, file), template(File.join("pleaserun", file)).result(binding))
+      File.chmod(0755, File.join(base, file))
+    end
+
+    scripts[:after_install] = template(File.join("pleaserun", "scripts", "after-install.sh")).result(binding)
+    scripts[:before_remove] = template(File.join("pleaserun", "scripts", "before-remove.sh")).result(binding)
   end # def input
 
   public(:input)
