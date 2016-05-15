@@ -71,9 +71,9 @@ has_sysv() {
   [ -d "/etc/init.d" ] 
 }
 
-has_freebsd_rcng() {
-  [ -d "/etc/rc.d" ] && silent which rcorder
-}
+#has_freebsd_rcng() {
+  #[ -d "/etc/rc.d" ] && silent which rcorder
+#}
 
 has_daemontools() {
   [ -d "/service" ] && silent which sv
@@ -81,6 +81,15 @@ has_daemontools() {
 
 has_launchd() { 
   [ -d "/Library/LaunchDaemons" ] && silent which launchtl
+}
+
+install_help() {
+  case $platform in
+    systemd) echo "To start this service, use: systemctl start <%= attributes[:pleaserun_name] %>" ;;
+    upstart) echo "To start this service, use: initctl start <%= attributes[:pleaserun_name] %>" ;;
+    launchd) echo "To start this service, use: launchctl start <%= attributes[:pleaserun_name] %>" ;;
+    sysv) echo "To start this service, use: /etc/init.d/<%= attributes[:pleaserun_name] %> start" ;;
+  esac
 }
 
 platforms="systemd upstart launchd sysv"
@@ -91,6 +100,7 @@ for platform in $platforms ; do
     echo "Platform $platform ($version) detected. Installing service."
     install_files $platform
     install_actions $platform
+    install_help $platform
     installed=1
     break
   fi
