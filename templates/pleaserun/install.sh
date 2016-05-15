@@ -1,6 +1,8 @@
 #!/bin/sh
 
-BASEDIR="<%= attributes[:prefix] %>"
+source="<%= attributes[:prefix] %>"
+
+cleanup_script="$source/cleanup.sh"
 
 silent() {
   "$@" > /dev/null 2>&1
@@ -13,10 +15,13 @@ install_files() {
 
   (
     # TODO(sissel): Should I just rely on rsync for this stuff?
-    #rsync -av "${BASEDIR}/${platform}/${version}/files/" /
-    cd "${BASEDIR}/${platform}/${version}/files/" || exit 1
-    find . -print0 \
-      | xargs -0 -n1 sh -c 'd="${1##.}"; if [ ! -z "$d" ] ; then if [ -d "$1" -a ! -d "$d" ] ; then mkdir "$d"; fi; if [ -f "$1" ] ; then cp -p "$1" "$d" ; fi; fi' -
+    #rsync -av "${source}/${platform}/${version}/files/" /
+    cd "${source}/${platform}/${version}/files/" || exit 1
+
+    # Write a cleanup script
+    find . -print0 | xargs -r0 -n1 "$source/generate-cleanup.sh" > "$cleanup_script"
+
+    find . -print0 | xargs -r0 -n1 "$source/install-path.sh"
   )
 }
 
@@ -26,7 +31,7 @@ install_actions() {
   version="$(version_${platform})"
   
 
-  actions="${BASEDIR}/${platform}/${version}/install_actions.sh"
+  actions="${source}/${platform}/${version}/install_actions.sh"
   if [ -f "$actions" ] ; then
     . "$actions"
   fi
@@ -107,5 +112,5 @@ for platform in $platforms ; do
 done
 
 if [ "$installed" -eq 0 ] ; then
-  echo "Failed to detect any service platform, so no service was installed. Files are available in ${BASEDIR} if you need them."
+  echo "Failed to detect any service platform, so no service was installed. Files are available in ${source} if you need them."
 fi
