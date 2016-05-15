@@ -21,10 +21,11 @@ class FPM::Package::PleaseRun < FPM::Package
   private
   def input(command)
     platforms = [
-      ::PleaseRun::Platform::Systemd.new("default"),
-      ::PleaseRun::Platform::Upstart.new("1.5"),
-      ::PleaseRun::Platform::Launchd.new("10.9"),
-      ::PleaseRun::Platform::SYSV.new("lsb-3.1")
+      ::PleaseRun::Platform::Systemd.new("default"), # RHEL 7, Fedora 19+, Debian 8, Ubuntu 16.04
+      ::PleaseRun::Platform::Upstart.new("1.5"), # Recent Ubuntus
+      ::PleaseRun::Platform::Upstart.new("0.6.5"), # CentOS 6
+      ::PleaseRun::Platform::Launchd.new("10.9"), # OS X
+      ::PleaseRun::Platform::SYSV.new("lsb-3.1") # Ancient stuff
     ]
 
     attributes[:pleaserun_name] ||= File.basename(command.first)
