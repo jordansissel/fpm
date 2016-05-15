@@ -24,22 +24,38 @@ install_actions() {
   # TODO(sissel): Need to know what prefix the files exist at
   platform="$1"
   version="$(version_${platform})"
-  . "${BASEDIR}/${platform}/${version}/install_actions.sh"
+  
+
+  actions="${BASEDIR}/${platform}/${version}/install_actions.sh"
+  if [ -f "$actions" ] ; then
+    . "$actions"
+  fi
 }
 
 version_systemd() {
+  # Treat all systemd versions the same
   echo default
 }
 
 version_launchd() {
+  # Treat all launchd versions the same
   echo 10.9
 }
 
 version_upstart() {
-  echo "default"
+  # Treat all upstart versions the same
+  # TODO(sissel): Upstart 0.6.5 needs to be handled specially.
+  version="$(initctl --version | head -1 | tr -d '()' | awk '{print $NF}')"
+
+  case $version in
+    0.6.5) echo $version ;;
+    *) echo "1.5" ;; # default modern assumption
+  esac
 }
 
 version_sysv() {
+  # TODO(sissel): Once pleaserun supports multiple sysv implementations, maybe
+  # we inspect the OS to find out what we should target.
   echo lsb-3.1
 }
 
