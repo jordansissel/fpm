@@ -36,7 +36,7 @@ class FPM::Package::PleaseRun < FPM::Package
       platform.name = attributes[:pleaserun_name]
       platform.args = command[1..-1]
       platform.description = attributes[:description]
-      base = staging_path(File.join(attributes[:prefix], "#{platform.platform}-#{platform.target_version || "default"}"))
+      base = staging_path(File.join(attributes[:prefix], "#{platform.platform}/#{platform.target_version || "default"}"))
       target = File.join(base, "files")
       actions_script = File.join(base, "install_actions.sh")
       ::PleaseRun::Installer.install_files(platform, target, false)
