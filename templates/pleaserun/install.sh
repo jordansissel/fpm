@@ -15,7 +15,6 @@ install_files() {
 
   (
     # TODO(sissel): Should I just rely on rsync for this stuff?
-    #rsync -av "${source}/${platform}/${version}/files/" /
     cd "${source}/${platform}/${version}/files/" || exit 1
 
     # Write a cleanup script
@@ -66,7 +65,8 @@ version_sysv() {
 }
 
 has_systemd() {
-  [ -d "/lib/systemd/system/" ] && silent which systemctl
+  # Some OS vendors put systemd in ... different places ...
+  [ -d "/lib/systemd/system/" -o -d "/usr/lib/systemd/system" ] && silent which systemctl
 }
 
 has_upstart() {
