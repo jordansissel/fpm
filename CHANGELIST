@@ -1,3 +1,13 @@
+1.6.0 (May 25, 2016)
+  - New source: pleaserun. This lets you create packages that will install a
+    system service. An after-install script is used in the package to determine
+    which service platform to target (systemd, upstart, etc). (#1119, #1112)
+  - New target: Alpine Linux "apk" packages. (#1054, George Lester)
+  - deb: don't append `.conf` to an upstart file if the file name already ends
+    in `.conf`. (#1115, josegonzalez)
+  - freebsd: fix bug where --package flag was ignored. (#1093, Paweł Tomulik)
+  - Improvements to the fpm rake tasks (#1101, Evan Gilman)
+  
 1.5.0 (April 12, 2016)
   - Arch package support is now available via -s pacman and -t pacman. 
     (#916; wonderful community effort making this happen!)
