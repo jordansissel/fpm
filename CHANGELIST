@@ -1,7 +1,9 @@
 1.6.0 (May 25, 2016)
   - New source: pleaserun. This lets you create packages that will install a
     system service. An after-install script is used in the package to determine
-    which service platform to target (systemd, upstart, etc). (#1119, #1112)
+    which service platform to target (systemd, upstart, etc). Originated from
+    Aaron Mildenstein's work on solving this problem for Logstash. (#1119,
+    #1112)
   - New target: Alpine Linux "apk" packages. (#1054, George Lester)
   - deb: don't append `.conf` to an upstart file if the file name already ends
     in `.conf`. (#1115, josegonzalez)
