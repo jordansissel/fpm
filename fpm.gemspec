@@ -35,7 +35,7 @@ Gem::Specification.new do |spec|
 
   # For command-line flag support
   # https://github.com/mdub/clamp/blob/master/README.markdown
-  spec.add_dependency("clamp", "~> 0.6") # license: MIT
+  spec.add_dependency("clamp", "~> 1.0.0") # license: MIT
 
   # For starting external processes across various ruby interpreters
   spec.add_dependency("childprocess") # license: ???
@@ -50,6 +50,9 @@ Gem::Specification.new do |spec|
 
   # For creating FreeBSD package archives (xz-compressed tars)
   spec.add_dependency("ruby-xz") # license: MIT
+
+  # For sourcing from pleaserun 
+  spec.add_dependency("pleaserun", "~> 0.0.24") # license: Apache 2
 
   spec.add_development_dependency("rspec", "~> 3.0.0") # license: MIT (according to wikipedia)
   spec.add_development_dependency("insist", "~> 1.0.0") # license: Apache 2
