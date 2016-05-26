@@ -73,6 +73,10 @@ class FPM::Package::Python < FPM::Package
     "The python package name to remove from dependency list",
     :multivalued => true, :attribute_name => :python_disable_dependency,
     :default => []
+  option "--setup-py-arguments", "setup_py_argument",
+    "Arbitrary argument(s) to be passed to setup.py",
+    :multivalued => true, :attribute_name => :python_setup_py_arguments,
+    :default => []
 
   private
 
@@ -308,6 +312,13 @@ class FPM::Package::Python < FPM::Package
       if !attributes[:python_scripts_executable].nil?
         # Overwrite installed python scripts shebang binary with provided executable
         flags += [ "build_scripts", "--executable", attributes[:python_scripts_executable] ]
+      end
+
+      if !attributes[:python_setup_py_arguments].nil? and !attributes[:python_setup_py_arguments].empty?
+        # Add optional setup.py arguments
+        attributes[:python_setup_py_arguments].each do |a|
+          flags += [ a ]
+        end
       end
 
       safesystem(attributes[:python_bin], "setup.py", "install", *flags)
