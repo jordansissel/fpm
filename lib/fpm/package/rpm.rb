@@ -101,7 +101,7 @@ class FPM::Package::RPM < FPM::Package
   option "--autoprov", :flag, "Enable RPM's AutoProv option"
 
   option "--attr", "ATTRFILE",
-    "Set the attribute for a file (%attr).",
+    "Set the attribute for a file (%attr), e.g. --rpm-attr 750,user1,group1:/some/file",
     :multivalued => true, :attribute_name => :attrs
 
   option "--init", "FILEPATH", "Add FILEPATH as an init script",
