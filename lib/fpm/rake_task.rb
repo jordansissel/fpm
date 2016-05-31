@@ -14,7 +14,7 @@ class FPM::RakeTask < Rake::TaskLib
     (@source.empty? || @target.empty? || options.name.empty?) &&
       abort("Must specify package name, source and output")
 
-    desc "Package #{@name}" unless ::Rake.application.last_comment
+    desc "Package #{@name}" unless ::Rake.application.last_description
 
     task(options.name) do |_, task_args|
       block.call(*[options, task_args].first(block.arity)) if block_given?
