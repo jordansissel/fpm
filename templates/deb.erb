@@ -13,13 +13,13 @@ Depends: <%= dependencies.collect { |d| fix_dependency(d) }.flatten.join(", ") %
 <% if !conflicts.empty? -%>
 Conflicts: <%= conflicts.collect { |d| fix_dependency(d) }.flatten.join(", ") %>
 <% end -%>
-<% if attributes[:deb_breaks] -%>
+<% if attributes[:deb_breaks] and !attributes[:deb_breaks].empty? -%>
 Breaks: <%= attributes[:deb_breaks].collect { |d| fix_dependency(d) }.flatten.join(", ") %>
 <% end -%>
-<% if attributes[:deb_pre_depends_given?] -%>
+<% if attributes[:deb_pre_depends] and !attributes[:deb_pre_depends].empty? -%>
 Pre-Depends: <%= attributes[:deb_pre_depends].collect { |d| fix_dependency(d) }.flatten.join(", ") %>
 <% end -%>
-<% if attributes[:deb_build_depends_given?] -%>
+<% if attributes[:deb_build_depends] and !attributes[:deb_build_depends].empty? -%>
 Build-Depends: <%= attributes[:deb_build_depends].collect { |d| fix_dependency(d) }.flatten.join(", ") %>
 <% end -%>
 <% if !provides.empty? -%>
@@ -30,10 +30,10 @@ Provides: <%= provides.map {|p| p.split(" ").first}.join ", " %>
 <% if !replaces.empty? -%>
 Replaces: <%= replaces.join(", ") %>
 <% end -%>
-<% if attributes[:deb_recommends_given?] -%>
+<% if attributes[:deb_recommends] and !attributes[:deb_recommends].empty? -%>
 Recommends: <%= attributes[:deb_recommends].collect { |d| fix_dependency(d) }.flatten.join(", ") %>
 <% end -%>
-<% if attributes[:deb_suggests_given?] -%>
+<% if attributes[:deb_suggests] and !attributes[:deb_suggests].empty? -%>
 Suggests: <%= attributes[:deb_suggests].collect { |d| fix_dependency(d) }.flatten.join(", ") %>
 <% end -%>
 Section: <%= category %>
