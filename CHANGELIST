@@ -1,3 +1,7 @@
+1.6.1 (June 10, 2016)
+  - freebsd: Only load xz support if we are doing a freebsd output. (#1132,
+    #1090, Ketan Padegaonkar)
+
 1.6.0 (May 25, 2016)
   - New source: pleaserun. This lets you create packages that will install a
     system service. An after-install script is used in the package to determine
