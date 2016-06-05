@@ -328,6 +328,13 @@ describe FPM::Package::Deb do
       # output a package so that @data_tar_flags is computed
       expect(package.data_tar_flags).to(be == ["--numeric-owner", "--owner", "0", "--group", "nogroup"])
     end
+    
+    it "should set the mode for the package's data files" do
+      @package.attributes[:deb_mode] = "-arwX"
+      # output a package so that @data_tar_flags is computed
+      insist { @package.data_tar_flags } == ["--numeric-owner", "--owner", "0", "--numeric-owner", "--group", "0", "--mode", "-arwX"]
+    end
+
 
     it "should not set the user or group for the package's data files if :deb_use_file_permissions? is not nil" do
       package.attributes[:deb_use_file_permissions?] = true
