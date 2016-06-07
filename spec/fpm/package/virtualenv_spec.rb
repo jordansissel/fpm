@@ -112,4 +112,38 @@ describe FPM::Package::Virtualenv, :if => virtualenv_usable? do
       expect(File.exists?(egg_path)).to(be_truthy)
     end
   end
+
+  context "input is a requirements.txt file" do
+
+    before :each do
+      subject.attributes[:virtualenv_requirements?] = true
+    end
+
+    let :fixtures_dir do
+      File.expand_path("../../fixtures/virtualenv/", File.dirname(__FILE__))
+    end
+
+    context "default use" do
+
+      it "creates the virtualenv, using the parent dir as the package name" do
+        subject.input(File.join(fixtures_dir, 'requirements.txt'))
+
+        activate_path = File.join(subject.build_path, '/usr/share/python/virtualenv/bin/activate')
+        expect(File.exists?(activate_path)).to(be_truthy)
+        expect(subject.name).to eq("virtualenv-virtualenv")
+      end
+    end
+
+    context "with --name" do
+      it "uses the supplied argument over the parent dir " do
+        subject.name = 'foo'
+        subject.input(File.join(fixtures_dir, 'requirements.txt'))
+        activate_path = File.join(subject.build_path, '/usr/share/python/virtualenv/bin/activate')
+
+        expect(File.exists?(activate_path)).to(be_truthy)
+
+        expect(subject.name).to eq("virtualenv-foo")
+      end
+    end
+  end
 end
