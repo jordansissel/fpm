@@ -3,7 +3,6 @@ require "fpm/package"
 require "fpm/util"
 require "digest"
 require "fileutils"
-require "xz"
 
 class FPM::Package::FreeBSD < FPM::Package
   SCRIPT_MAP = {
@@ -30,6 +29,10 @@ class FPM::Package::FreeBSD < FPM::Package
          :default => "fpm/<name>"
 
   def output(output_path)
+    # See https://github.com/jordansissel/fpm/issues/1090
+    # require xz later, because this triggers a load of liblzma.so.5 that is
+    # unavailable on older CentOS/RH distros.
+    require "xz"
     output_check(output_path)
 
     # Build the packaging metadata files.
