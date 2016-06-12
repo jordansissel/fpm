@@ -30,6 +30,20 @@ describe FPM::Package::CPAN, :if => have_cpanm do
     insist { subject.name } == "perl-PathTools"
   end
 
+  context "given /tmp as local::lib root" do
+    it "should export local::lib environment relative to /tmp" do
+      tmpdir = "/tmp"
+      stored_perl_mb_opt = ENV["PERL_MB_OPT"]
+      stored_perl_mm_opt = ENV["PERL_MM_OPT"]
+      subject.send :export_local_lib_env, tmpdir
+      insist { ENV["PATH"] =~ /^#{File.join(tmpdir, "bin")}/ }
+      insist { ENV["PERL5LIB"] = /^#{File.join(tmpdir, "lib", "perl5")}/ }
+      insist { ENV["PERL_LOCAL_LIB_ROOT"] =  /^#{File.join(tmpdir, ".")}/ }
+      insist { ENV["PERL_MB_OPT"] } == stored_perl_mb_opt
+      insist { ENV["PERL_MM_OPT"] } == stored_perl_mm_opt
+    end
+  end
+
   context "given a distribution without a META.* file" do
     it "should package IPC::Session" do
       # IPC::Session fails 'make test'

@@ -179,21 +179,18 @@ class FPM::Package::CPAN < FPM::Package
       prefix = attributes[:prefix] || "/usr/local"
       # TODO(sissel): Set default INSTALL path?
 
+      # Set up the local::lib environment
+      export_local_lib_env(build_path("cpan"))
+
       # Try Makefile.PL, Build.PL
       #
       if File.exist?("Build.PL")
         # Module::Build is in use here; different actions required.
-        safesystem(attributes[:cpan_perl_bin],
-                   "-Mlocal::lib=#{build_path("cpan")}",
-                   "Build.PL")
-        safesystem(attributes[:cpan_perl_bin],
-                   "-Mlocal::lib=#{build_path("cpan")}",
-                   "./Build")
+        safesystem(attributes[:cpan_perl_bin], "Build.PL")
+        safesystem(attributes[:cpan_perl_bin], "./Build")
 
         if attributes[:cpan_test?]
-          safesystem(attributes[:cpan_perl_bin],
-                   "-Mlocal::lib=#{build_path("cpan")}",
-                   "./Build", "test")
+          safesystem(attributes[:cpan_perl_bin], "./Build", "test")
         end
         if attributes[:cpan_perl_lib_path]
           perl_lib_path = attributes[:cpan_perl_lib_path]
@@ -201,24 +198,16 @@ class FPM::Package::CPAN < FPM::Package
                      --destdir #{staging_path} --prefix #{prefix} --destdir #{staging_path}")
         else
            safesystem("./Build", "install",
-                     "--prefix", prefix, "--destdir", staging_path,
-                     # Empty install_base to avoid local::lib being used.
-                     "--install_base", "")
+                     "--prefix", prefix, "--destdir", staging_path)
         end
       elsif File.exist?("Makefile.PL")
         if attributes[:cpan_perl_lib_path]
           perl_lib_path = attributes[:cpan_perl_lib_path]
           safesystem(attributes[:cpan_perl_bin],
-                     "-Mlocal::lib=#{build_path("cpan")}",
-                     "Makefile.PL", "PREFIX=#{prefix}", "LIB=#{perl_lib_path}",
-                     # Empty install_base to avoid local::lib being used.
-                     "INSTALL_BASE=")
+                     "Makefile.PL", "PREFIX=#{prefix}", "LIB=#{perl_lib_path}")
         else
           safesystem(attributes[:cpan_perl_bin],
-                     "-Mlocal::lib=#{build_path("cpan")}",
-                     "Makefile.PL", "PREFIX=#{prefix}",
-                     # Empty install_base to avoid local::lib being used.
-                     "INSTALL_BASE=")
+                     "Makefile.PL", "PREFIX=#{prefix}")
         end
         if attributes[:cpan_test?]
           make = [ "env", "PERL5LIB=#{build_path("cpan/lib/perl5")}", "make" ]
@@ -261,6 +250,30 @@ class FPM::Package::CPAN < FPM::Package
                      :path => path)
         self.architecture = "native"
       end
+    end
+  end
+
+  # Set up ENV with values from Perl's local::lib module.  Opens a subprocess
+  # to the configured Perl executable, printing all values from Perl's %ENV
+  # hash as "key=value" strings.  Then reads from the subprocess' output,
+  # inserting into ENV any new key-value pairs, in this way injecting the
+  # local::lib values into the current environment.
+  def export_local_lib_env(local_lib_path)
+    perl_env_out = safesystemout(
+      attributes[:cpan_perl_bin],
+      "-Mlocal::lib=#{local_lib_path}",
+      "-le",
+      'while (my ($k, $v) = each %ENV) { print "${k}=${v}" }'
+    )
+
+    perl_env_out.each_line do |line|
+      k, v = line.chomp.split("=", 2)
+
+      # PERL_MM_OPT and PERL_MB_OPT are incompatible with setting PREFIX, which
+      # is done during the build process.
+      next if [nil, "PERL_MM_OPT", "PERL_MB_OPT"].include?(k)
+
+      ENV[k] = v
     end
   end
 
