@@ -523,6 +523,7 @@ class FPM::Package::RPM < FPM::Package
   end # def output
 
   def prefix
+    attributes[:prefix].nil? ? nil : attributes[:prefix]=attributes[:prefix].chomp('/')
     return (attributes[:prefix] or "/")
   end # def prefix
 
