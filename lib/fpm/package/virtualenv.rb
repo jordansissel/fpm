@@ -20,8 +20,6 @@ class FPM::Package::Virtualenv < FPM::Package
     File.expand_path(path)
   end
 
-  option "--requirements", :flag, "Instead of a package, supply a requirements.txt file"
-
   option "--fix-name", :flag, "Should the target package name be prefixed?",
   :default => true
   option "--other-files-dir", "DIRECTORY", "Optionally, the contents of the " \
@@ -42,10 +40,16 @@ class FPM::Package::Virtualenv < FPM::Package
     m = /^([^=]+)==([^=]+)$/.match(package)
     package_version = nil
 
-    requirements = attributes[:virtualenv_requirements?]
+    is_requirements_file = (File.basename(package) == "requirements.txt")
 
-    if requirements
+    if is_requirements_file
+      if !File.file?(package)
+        raise FPM::InvalidPackageConfiguration, "Path looks like a requirements.txt, but it doesn't exist: #{package}"
+      end
+
+      package = File.join(::Dir.pwd, package) if File.dirname(package) == "."
       package_name = File.basename(File.dirname(package))
+      logger.info("No name given. Using the directory's name", :name => package_name)
       package_version = nil
     elsif m
       package_name = m[1]
@@ -91,7 +95,7 @@ class FPM::Package::Virtualenv < FPM::Package
     end
 
     target_args = []
-    if requirements
+    if is_requirements_file
       target_args << "-r" << package
     else
       target_args << package
@@ -100,7 +104,7 @@ class FPM::Package::Virtualenv < FPM::Package
     pip_args = [pip_exe, "install", "-i", attributes[:virtualenv_pypi]] << extra_index_url_args << target_args
     safesystem(*pip_args.flatten)
 
-    if ! requirements && package_version.nil?
+    if ! is_requirements_file && package_version.nil?
       frozen = safesystemout(pip_exe, "freeze")
       package_version = frozen[/#{package}==[^=]+$/].split("==")[1].chomp!
       self.version ||= package_version
