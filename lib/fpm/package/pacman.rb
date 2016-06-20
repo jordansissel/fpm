@@ -137,7 +137,7 @@ class FPM::Package::Pacman < FPM::Package
     # Speaking of just taking the first entry of the field:
     # A crude thing to do, but I suppose it's better than nothing.
     # -- Daniel Haskin, 3/24/2015
-    self.category = control["group"][0] || self.category
+    self.category = control["group"] && control["group"][0] || self.category
 
     # Licenses could include more than one.
     # Speaking of just taking the first entry of the field:
@@ -164,6 +164,10 @@ class FPM::Package::Pacman < FPM::Package
     end
 
     self.dependencies = control["depend"] || self.dependencies
+    
+    if attributes[:no_auto_depends?]
+      self.dependencies = []
+    end
 
     self.attributes[:pacman_optional_depends] = control["optdepend"] || []
     # There are other available attributes, but I didn't include them because:
