@@ -20,6 +20,8 @@ class FPM::Package::Virtualenv < FPM::Package
     File.expand_path(path)
   end
 
+  option "--requirements", :flag, "Instead of a package, supply a requirements.txt file"
+
   option "--fix-name", :flag, "Should the target package name be prefixed?",
   :default => true
   option "--other-files-dir", "DIRECTORY", "Optionally, the contents of the " \
@@ -40,7 +42,12 @@ class FPM::Package::Virtualenv < FPM::Package
     m = /^([^=]+)==([^=]+)$/.match(package)
     package_version = nil
 
-    if m
+    requirements = attributes[:virtualenv_requirements?]
+
+    if requirements
+      package_name = File.basename(File.dirname(package))
+      package_version = nil
+    elsif m
       package_name = m[1]
       package_version = m[2]
       self.version ||= package_version
@@ -82,10 +89,18 @@ class FPM::Package::Virtualenv < FPM::Package
         extra_index_url_args << "--extra-index-url" << extra_url
       end
     end
-    pip_args = [pip_exe, "install", "-i", attributes[:virtualenv_pypi]] << extra_index_url_args << package
+
+    target_args = []
+    if requirements
+      target_args << "-r" << package
+    else
+      target_args << package
+    end
+
+    pip_args = [pip_exe, "install", "-i", attributes[:virtualenv_pypi]] << extra_index_url_args << target_args
     safesystem(*pip_args.flatten)
 
-    if package_version.nil?
+    if ! requirements && package_version.nil?
       frozen = safesystemout(pip_exe, "freeze")
       package_version = frozen[/#{package}==[^=]+$/].split("==")[1].chomp!
       self.version ||= package_version
