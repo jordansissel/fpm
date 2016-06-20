@@ -913,19 +913,11 @@ class FPM::Package::Deb < FPM::Package
     data_tar_flags = []
     if attributes[:deb_use_file_permissions?].nil?
       if !attributes[:deb_user].nil?
-        if attributes[:deb_user] == 'root'
-          data_tar_flags += [ "--numeric-owner", "--owner", "0" ]
-        else
-          data_tar_flags += [ "--owner", attributes[:deb_user] ]
-        end
+        data_tar_flags += [ "--owner", attributes[:deb_user] ]
       end
 
       if !attributes[:deb_group].nil?
-        if attributes[:deb_group] == 'root'
-          data_tar_flags += [ "--numeric-owner", "--group", "0" ]
-        else
-          data_tar_flags += [ "--group", attributes[:deb_group] ]
-        end
+        data_tar_flags += [ "--group", attributes[:deb_group] ]
       end
     end
     return data_tar_flags
