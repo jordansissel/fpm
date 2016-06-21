@@ -523,7 +523,11 @@ class FPM::Package::RPM < FPM::Package
   end # def output
 
   def prefix
-    return (attributes[:prefix] or "/")
+    if attributes[:prefix] and attributes[:prefix] != '/'
+      return attributes[:prefix].chomp('/')
+    else
+      return "/"
+    end
   end # def prefix
 
   def build_sub_dir

@@ -457,6 +457,24 @@ describe FPM::Package::RPM do
     end # dist
   end # #output
 
+  describe "prefix attribute" do
+    it "should default to slash" do
+      insist { subject.prefix } == "/"
+    end
+    it "should leave a single slash as it is" do
+      subject.attributes[:prefix] = "/"
+      insist { subject.prefix } == "/"
+    end
+    it "should leave a path without trailing slash it is" do
+      subject.attributes[:prefix] = "/foo/bar"
+      insist { subject.prefix } == "/foo/bar"
+    end
+    it "should remove trailing slashes" do
+      subject.attributes[:prefix] = "/foo/bar/"
+      insist { subject.prefix } == "/foo/bar"
+    end
+  end
+
   describe "regressions should not occur", :if => program_exists?("rpmbuild") do
     before :each do
       @tempfile_handle =
