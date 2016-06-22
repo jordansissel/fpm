@@ -99,20 +99,6 @@ class FPM::Package::Dir < FPM::Package
       logger["method"] = "output"
       clone(".", output_path)
     end
-
-    # Write the scripts, too.
-    scripts_path = File.join(output_path, ".scripts")
-    ::Dir.mkdir(scripts_path)
-    [:before_install, :after_install, :before_remove, :after_remove].each do |name|
-      next unless script?(name)
-      out = File.join(scripts_path, name.to_s)
-      logger.debug("Writing script", :source => name, :target => out)
-      File.write(out, script(name))
-      require "pry"
-      binding.pry
-      File.chmod(0755, out)
-    end
-
   ensure
     logger.remove("method")
   end # def output

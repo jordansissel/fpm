@@ -48,18 +48,6 @@ class FPM::Package::Tar < FPM::Package
   # the compression type.
   def output(output_path)
     output_check(output_path)
-
-    # Write the scripts, too.
-    scripts_path = File.join(staging_path, ".scripts")
-    ::Dir.mkdir(scripts_path)
-    [:before_install, :after_install, :before_remove, :after_remove].each do |name|
-      next unless script?(name)
-      out = File.join(scripts_path, name.to_s)
-      logger.debug("Writing script", :source => name, :target => out)
-      File.write(out, script(name))
-      File.chmod(0755, out)
-    end
-
     # Unpack the tarball to the staging path
     args = ["-cf", output_path, "-C", staging_path]
     tar_compression_flag(output_path).tap do |flag|
