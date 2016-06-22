@@ -605,8 +605,8 @@ describe FPM::Package::RPM do
       insist { subject.architecture } == "noarch" # see #architecture
       insist { subject.iteration } == "100"
       insist { subject.epoch } == 5
-      insist { subject.dependencies }.include?("something > 10")
-      insist { subject.dependencies }.include?("hello >= 20")
+      insist { subject.dependencies[0] }  == "something > 10"
+      insist { subject.dependencies[1] } == "hello >= 20"
       insist { subject.conflicts[0] } == "bad < 2"
       insist { subject.license } == @generator.license.split("\n").join(" ") # See issue #252
       insist { subject.provides[0] } == "bacon = 1.0"

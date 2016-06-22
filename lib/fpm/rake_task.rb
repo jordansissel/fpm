@@ -1,4 +1,3 @@
-require "fpm/namespace"
 require "ostruct"
 require "rake"
 require "rake/tasklib"
@@ -14,7 +13,7 @@ class FPM::RakeTask < Rake::TaskLib
     (@source.empty? || @target.empty? || options.name.empty?) &&
       abort("Must specify package name, source and output")
 
-    desc "Package #{@name}" unless ::Rake.application.last_description
+    desc "Package #{@name}" unless ::Rake.application.last_comment
 
     task(options.name) do |_, task_args|
       block.call(*[options, task_args].first(block.arity)) if block_given?
@@ -55,6 +54,6 @@ class FPM::RakeTask < Rake::TaskLib
 
     args.flatten!.compact!
 
-    abort 'FPM failed!' unless FPM::Command.new("fpm").run(args) == 0
+    exit(FPM::Command.new("fpm").run(args) || 0)
   end
 end

@@ -494,8 +494,7 @@ class FPM::Package::Deb < FPM::Package
 
     attributes.fetch(:deb_upstart_list, []).each do |upstart|
       name = File.basename(upstart, ".upstart")
-      name = "#{name}.conf" if !(name =~ /\.conf$/)
-      dest_upstart = staging_path("etc/init/#{name}")
+      dest_upstart = staging_path("etc/init/#{name}.conf")
       mkdir_p(File.dirname(dest_upstart))
       FileUtils.cp(upstart, dest_upstart)
       File.chmod(0644, dest_upstart)

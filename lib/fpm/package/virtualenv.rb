@@ -40,18 +40,7 @@ class FPM::Package::Virtualenv < FPM::Package
     m = /^([^=]+)==([^=]+)$/.match(package)
     package_version = nil
 
-    is_requirements_file = (File.basename(package) == "requirements.txt")
-
-    if is_requirements_file
-      if !File.file?(package)
-        raise FPM::InvalidPackageConfiguration, "Path looks like a requirements.txt, but it doesn't exist: #{package}"
-      end
-
-      package = File.join(::Dir.pwd, package) if File.dirname(package) == "."
-      package_name = File.basename(File.dirname(package))
-      logger.info("No name given. Using the directory's name", :name => package_name)
-      package_version = nil
-    elsif m
+    if m
       package_name = m[1]
       package_version = m[2]
       self.version ||= package_version
@@ -93,18 +82,10 @@ class FPM::Package::Virtualenv < FPM::Package
         extra_index_url_args << "--extra-index-url" << extra_url
       end
     end
-
-    target_args = []
-    if is_requirements_file
-      target_args << "-r" << package
-    else
-      target_args << package
-    end
-
-    pip_args = [pip_exe, "install", "-i", attributes[:virtualenv_pypi]] << extra_index_url_args << target_args
+    pip_args = [pip_exe, "install", "-i", attributes[:virtualenv_pypi]] << extra_index_url_args << package
     safesystem(*pip_args.flatten)
 
-    if ! is_requirements_file && package_version.nil?
+    if package_version.nil?
       frozen = safesystemout(pip_exe, "freeze")
       package_version = frozen[/#{package}==[^=]+$/].split("==")[1].chomp!
       self.version ||= package_version
