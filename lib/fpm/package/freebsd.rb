@@ -12,17 +12,19 @@ class FPM::Package::FreeBSD < FPM::Package
     :after_remove       => "post-deinstall",
   } unless defined?(SCRIPT_MAP)
 
-  def self.default_abi
-    abi_name = %x{uname -s}.chomp
-    abi_version = %x{uname -r}.chomp.split(".")[0]
-    abi_arch = %x{uname -m}.chomp
+  # <osname>:<osversion>:<arch>:<wordsize>
+  def self.default_arch
+    name = %x{uname -s}.chomp
+    version = %x{uname -r}.chomp.split(".")[0]
+    arch = %x{uname -m}.chomp
+    wordsize = %x{getconf LONG_BIT}.chomp
 
-    [abi_name, abi_version, abi_arch].join(":")
+    [name, version, arch, wordsize].join(":")
   end
 
-  option "--abi", "ABI",
-         "Sets the FreeBSD abi pkg field to specify binary compatibility.",
-         :default => default_abi
+  option "--arch", "ABI",
+         "Sets the FreeBSD arch pkg field to specify binary compatibility.",
+         :default => default_arch
 
   option "--origin", "ABI",
          "Sets the FreeBSD 'origin' pkg field",
@@ -58,7 +60,7 @@ class FPM::Package::FreeBSD < FPM::Package
     pkg_version = (iteration and (iteration.to_i > 0)) ?  "#{version}-#{iteration}" : "#{version}"
 
     pkgdata = {
-      "abi" => attributes[:freebsd_abi],
+      "arch" => attributes[:freebsd_arch],
       "name" => name,
       "version" => pkg_version,
       "comment" => description,
