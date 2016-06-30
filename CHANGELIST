@@ -1,3 +1,14 @@
+1.6.2 (July 1, 2016)
+  - Reduce `json` dependency version to avoid requiring Ruby 2.0 (#1146, #1147;
+    patch by Matt Hoffman)
+  - pacman: skip automatic dependnecies if --no-auto-depends is given (Leo P)
+  - rpm: Fix bug where --rpm-tag was accidentally ignored (#1134, Michal Mach)
+  - deb: Omit certain fields from control file if (Breaks, Depends, Recommends,
+    etc) if there are no values to put in that field. (#1113, TomyLobo)
+  - rpm: remove trailing slash from Prefix for rpm packages (#819, luto)
+  - virtualenv: Now supports being given a requirements.txt as the input. (Nick
+    Griffiths)
+
 1.6.1 (June 10, 2016)
   - freebsd: Only load xz support if we are doing a freebsd output. (#1132,
     #1090, Ketan Padegaonkar)
