@@ -58,7 +58,7 @@ class FPM::Package::Pacman < FPM::Package
   end # def config_files
 
   def dependencies
-    bogus_regex = /[^\sA-Za-z0-9><=-]/
+    bogus_regex = /[^\sA-Za-z0-9><=+._@-]/
     # Actually modifies depencies if they are not right
     bogus_dependencies = @dependencies.grep bogus_regex
     if bogus_dependencies.any?
