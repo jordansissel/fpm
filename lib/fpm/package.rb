@@ -385,6 +385,10 @@ class FPM::Package
       installdir = staging_path
     end
 
+    # exclude happens during convert and depending on how packages are being
+    # used, the staging_path + prefix may not be filled up yet
+    return unless File.exist?(installdir)
+
     Find.find(installdir) do |path|
       match_path = path.sub("#{installdir.chomp('/')}/", '')
 
