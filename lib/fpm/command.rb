@@ -257,7 +257,7 @@ class FPM::Command < Clamp::Command
   # Execute this command. See Clamp::Command#execute and Clamp's documentation
   def execute
     # Short-circuit if someone simply runs `fpm --version`
-    if ARGV == [ "--version" ]
+    unless (ARGV & ["-v", "--version"]).empty?
       puts FPM::VERSION
       return 0
     end
