@@ -25,6 +25,37 @@ describe FPM::Command do
   describe "--directories"
   describe "-a | --architecture"
 
+  describe "-v | --version" do
+    context "when no rc file is present" do
+      it "should not fail" do
+        Stud::Temporary.directory do |path|
+          cmd = FPM::Command.new("fpm")
+
+          stub_const('ARGV', ["--version"])
+          insist { cmd.run(["--version", path]) } == 0
+
+          stub_const('ARGV', ["-v"])
+          insist { cmd.run(["-v", path]) } == 0
+        end
+      end
+    end
+
+    context "when rc file is present" do
+      it "should not fail" do
+        Stud::Temporary.directory do |path|
+          cmd = FPM::Command.new("fpm")
+          File.open(File.join(path, ".fpm"), "w") { |file| file.puts("-- --rpm-sign") }
+
+          stub_const('ARGV', [ "--version" ])
+          insist { cmd.run(["--version", path]) } == 0
+
+          stub_const('ARGV', [ "-v" ])
+          insist { cmd.run(["-v", path]) } == 0
+        end
+      end
+    end
+  end
+
   describe "-p | --package" do
     context "when given a directory" do
       it "should write the package to the given directory." do
