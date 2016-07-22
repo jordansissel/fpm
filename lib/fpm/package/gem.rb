@@ -209,7 +209,7 @@ class FPM::Package::Gem < FPM::Package
         next unless File.ftype(file_path) == 'file'
         # replace shebang in files if there is one
         file = File.read(file_path)
-        if file.gsub!(/^#!.*$/, "#!#{attributes[:gem_shebang]}")
+        if file.gsub!(/\A#!.*$/, "#!#{attributes[:gem_shebang]}")
           File.open(file_path, 'w'){|f| f << file}
         end
       end
