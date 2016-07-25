@@ -193,4 +193,27 @@ describe FPM::Package do
       expect(subject.attributes[:template_scripts?]).to(be_falsey)
     end
   end
+
+  describe "#staging_path and #staging_path" do
+    before() do
+      @oldtmp = ENV["TMP"]
+      ENV["TMP"] = '/var/tmp'
+    end
+
+    after() do
+      ENV["TMP"] = @oldtmp
+    end
+
+    it "should be a subdirectory of workdir (#1124)" do
+      expect(subject.build_path("hello1")).to(start_with("/var/tmp"))
+      expect(subject.build_path("hello1")).to(end_with("hello1"))
+      expect(subject.build_path("hello1")).to(include("build"))
+    end
+
+    it "should be a subdirectory of workdir (#1124)" do
+      expect(subject.staging_path("hello2")).to(start_with("/var/tmp"))
+      expect(subject.staging_path("hello2")).to(end_with("hello2"))
+      expect(subject.staging_path("hello2")).to(include("staging"))
+    end
+  end
 end # describe FPM::Package

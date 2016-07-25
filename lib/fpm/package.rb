@@ -8,6 +8,7 @@ require "socket" # stdlib, for Socket.gethostname
 require "shellwords" # stdlib, for Shellwords.escape
 require "erb" # stdlib, for template processing
 require "cabin" # gem "cabin"
+require "stud/temporary"
 
 # This class is the parent of all packages.
 # If you want to implement an FPM package type, you'll inherit from this.
@@ -249,7 +250,7 @@ class FPM::Package
   end # def output
 
   def staging_path(path=nil)
-    @staging_path ||= ::Dir.mktmpdir("package-#{type}-staging") #, ::Dir.pwd)
+    @staging_path ||= Stud::Temporary.directory("package-#{type}-staging")
 
     if path.nil?
       return @staging_path
@@ -259,7 +260,7 @@ class FPM::Package
   end # def staging_path
 
   def build_path(path=nil)
-    @build_path ||= ::Dir.mktmpdir("package-#{type}-build") #, ::Dir.pwd)
+    @build_path ||= Stud::Temporary.directory("package-#{type}-build")
 
     if path.nil?
       return @build_path
