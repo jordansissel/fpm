@@ -60,7 +60,7 @@ RedHat policies, you can and should if that is what you desire)
 
 The goal of FPM is to be able to easily build platform-native packages.
 
-* Creating packages easily (deb, rpm, etc)
+* Creating packages easily (deb, rpm, freebsd, etc)
 * Tweaking existing packages (removing files, changing metadata/dependencies)
 * Stripping pre/post/maintainer scripts from packages
 
@@ -127,6 +127,7 @@ Targets:
 * deb
 * rpm
 * solaris
+* freebsd
 * tar
 * directories
 * Mac OS X `.pkg` files (`osxpkg`)
