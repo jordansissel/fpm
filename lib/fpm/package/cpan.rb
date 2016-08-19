@@ -133,8 +133,19 @@ class FPM::Package::CPAN < FPM::Package
     safesystem(attributes[:cpan_cpanm_bin], *cpanm_flags)
 
     if !attributes[:no_auto_depends?]
-      unless metadata["requires"].nil?
-        metadata["requires"].each do |dep_name, version|
+     found_dependencies = {}
+     if metadata["requires"]
+       found_dependencies.merge!(metadata["requires"])
+     end
+     if metadata["prereqs"]
+       if metadata["prereqs"]["runtime"]
+         if metadata["prereqs"]["runtime"]["requires"]
+           found_dependencies.merge!(metadata["prereqs"]["runtime"]["requires"])
+         end
+       end
+     end
+     unless found_dependencies.empty?
+       found_dependencies.each do |dep_name, version|
           # Special case for representing perl core as a version.
           if dep_name == "perl"
             self.dependencies << "#{dep_name} >= #{version}"
