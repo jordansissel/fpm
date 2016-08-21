@@ -3,6 +3,7 @@ require "fpm/package"
 require "fpm/util"
 require "fileutils"
 require "find"
+require "pathname"
 
 class FPM::Package::CPAN < FPM::Package
   # Flags '--foo' will be accessable  as attributes[:npm_foo]
@@ -256,6 +257,19 @@ class FPM::Package::CPAN < FPM::Package
         logger.debug("Removing useless file.",
                       :path => path.gsub(staging_path, ""))
         File.unlink(path)
+      end
+      
+      # Remove useless .packlist files and their empty parent folders
+      # https://github.com/jordansissel/fpm/issues/1179
+      ::Dir.glob(File.join(staging_path, glob_prefix, "**/.packlist")).each do |path|
+        logger.debug("Removing useless file.",
+                      :path => path.gsub(staging_path, ""))
+        File.unlink(path)
+        Pathname.new(path).parent.ascend do |parent|
+          if ::Dir.entries(parent) == ['.', '..']
+            FileUtils.rmdir parent
+          end
+        end
       end
     end
 
