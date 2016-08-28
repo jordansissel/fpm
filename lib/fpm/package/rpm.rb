@@ -537,7 +537,7 @@ class FPM::Package::RPM < FPM::Package
 
   def summary
     if !attributes[:rpm_summary]
-      return @description.split("\n").first || "_"
+      return @description.split("\n").find { |line| !line.strip.empty? } || "_"
     end
 
     return attributes[:rpm_summary]
