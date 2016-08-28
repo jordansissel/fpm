@@ -277,7 +277,7 @@ module FPM::Util
     end
 
     unless source_stat.symlink?
-      File.chmod(mode, destination)
+      File.chmod(mode, destination) unless dest_stat.world_readable?
     end
   end # def copy_metadata
 
