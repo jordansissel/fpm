@@ -386,7 +386,7 @@ class FPM::Package
       installdir = staging_path
     end
 
-    Find.find(installdir) do |path|
+    Find.find(staging_path) do |path|
       match_path = path.sub("#{installdir.chomp('/')}/", '')
 
       attributes[:excludes].each do |wildcard|
