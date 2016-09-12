@@ -6,7 +6,7 @@ require "fixtures/mockpackage"
 
 describe FPM::Command do
   describe "--prefix"
-  describe "-C"
+  describe "-C / --chdir"
   describe "-p / --package"
   describe "-f"
   describe "-n"

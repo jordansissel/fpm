@@ -45,13 +45,13 @@ class FPM::Command < Clamp::Command
     return lines.join("\n")
   end # def help
 
-  option "-t", "OUTPUT_TYPE",
+  option ["-t", "--output-type"], "OUTPUT_TYPE",
     "the type of package you want to create (deb, rpm, solaris, etc)",
     :attribute_name => :output_type
-  option "-s", "INPUT_TYPE",
+  option ["-s", "--input-type"], "INPUT_TYPE",
     "the package type to use as input (gem, rpm, python, etc)",
     :attribute_name => :input_type
-  option "-C", "CHDIR",
+  option ["-C", "--chdir"], "CHDIR",
     "Change directory to here before searching for files",
     :attribute_name => :chdir
   option "--prefix", "PREFIX",
