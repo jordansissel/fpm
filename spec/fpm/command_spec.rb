@@ -26,31 +26,40 @@ describe FPM::Command do
   describe "-a | --architecture"
 
   describe "-v | --version" do
+    subject { FPM::Command.new("fpm") }
+
+    # Have output from `fpm` cli be nulled.
+    let(:null) { File.open(File::NULL, "w") }
+    let!(:stdout) { $stdout }
+
+    before do
+      $stdout = null
+    end
+
+    after do
+      $stdout = stdout
+    end
+
     context "when no rc file is present" do
       it "should not fail" do
-        Stud::Temporary.directory do |path|
-          cmd = FPM::Command.new("fpm")
+        stub_const('ARGV', ["--version"])
+        insist { subject.run(["--version"]) } == 0
 
-          stub_const('ARGV', ["--version"])
-          insist { cmd.run(["--version", path]) } == 0
-
-          stub_const('ARGV', ["-v"])
-          insist { cmd.run(["-v", path]) } == 0
-        end
+        stub_const('ARGV', ["-v"])
+        insist { subject.run(["-v"]) } == 0
       end
     end
 
     context "when rc file is present" do
       it "should not fail" do
         Stud::Temporary.directory do |path|
-          cmd = FPM::Command.new("fpm")
           File.open(File.join(path, ".fpm"), "w") { |file| file.puts("-- --rpm-sign") }
 
           stub_const('ARGV', [ "--version" ])
-          insist { cmd.run(["--version", path]) } == 0
+          insist { subject.run(["--version"]) } == 0
 
           stub_const('ARGV', [ "-v" ])
-          insist { cmd.run(["-v", path]) } == 0
+          insist { subject.run(["-v"]) } == 0
         end
       end
     end

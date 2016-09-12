@@ -256,19 +256,12 @@ class FPM::Command < Clamp::Command
 
   # Execute this command. See Clamp::Command#execute and Clamp's documentation
   def execute
-    # Short-circuit if someone simply runs `fpm --version`
-    unless (ARGV & ["-v", "--version"]).empty?
-      puts FPM::VERSION
-      return 0
-    end
-
     logger.level = :warn
     logger.level = :info if verbose? # --verbose
     logger.level = :debug if debug? # --debug
     if log_level
       logger.level = log_level.to_sym
     end
-
 
     if (stray_flags = args.grep(/^-/); stray_flags.any?)
       logger.warn("All flags should be before the first argument " \
@@ -514,8 +507,15 @@ class FPM::Command < Clamp::Command
     end
   end # def execute
 
-  def run(*run_args)
+  def run(run_args)
     logger.subscribe(STDOUT)
+
+    # Short circuit for a `fpm --version` or `fpm -v` short invocation that 
+    # is the user asking us for the version of fpm.
+    if run_args == [ "-v" ] || run_args == [ "--version" ]
+      puts FPM::VERSION
+      return 0
+    end
 
     # fpm initialization files, note the order of the following array is
     # important, try .fpm in users home directory first and then the current
@@ -557,7 +557,7 @@ class FPM::Command < Clamp::Command
 
     ARGV.unshift(*flags)
     ARGV.push(*args)
-    super(*run_args)
+    super(run_args)
   rescue FPM::Package::InvalidArgument => e
     logger.error("Invalid package argument: #{e}")
     return 1
