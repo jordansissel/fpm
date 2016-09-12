@@ -73,7 +73,7 @@ you'll need that to install fpm.
 # deb based distributions:
     apt-get install ruby-dev gcc make
 # rpm ones:
-    yum install ruby-devel gcc make
+    yum install ruby-devel gcc make rpm-build
 ```
 
 Additional packages will be required depending on the source and target package
