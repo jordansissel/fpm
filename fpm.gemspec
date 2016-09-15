@@ -10,6 +10,8 @@ Gem::Specification.new do |spec|
   files << "CONTRIBUTORS"
   files << "CHANGELIST"
 
+  files = files.reject { |path| path =~ /\.pyc$/ }
+
   spec.name = "fpm"
   spec.version = FPM::VERSION
   spec.summary = "fpm - package building and mangling"
