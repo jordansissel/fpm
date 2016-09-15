@@ -1,3 +1,6 @@
+1.6.3 (September 15, 2016)
+  - Fix bug in fpm's release that accidentally included a few `.pyc` files (#1191)
+
 1.6.2 (July 1, 2016)
   - Reduce `json` dependency version to avoid requiring Ruby 2.0 (#1146, #1147;
     patch by Matt Hoffman)
