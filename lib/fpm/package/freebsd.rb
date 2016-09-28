@@ -12,18 +12,6 @@ class FPM::Package::FreeBSD < FPM::Package
     :after_remove       => "post-deinstall",
   } unless defined?(SCRIPT_MAP)
 
-  def self.default_abi
-    abi_name = %x{uname -s}.chomp
-    abi_version = %x{uname -r}.chomp.split(".")[0]
-    abi_arch = %x{uname -m}.chomp
-
-    [abi_name, abi_version, abi_arch].join(":")
-  end
-
-  option "--abi", "ABI",
-         "Sets the FreeBSD abi pkg field to specify binary compatibility.",
-         :default => default_abi
-
   option "--origin", "ABI",
          "Sets the FreeBSD 'origin' pkg field",
          :default => "fpm/<name>"
@@ -58,7 +46,7 @@ class FPM::Package::FreeBSD < FPM::Package
     pkg_version = (iteration and (iteration.to_i > 0)) ?  "#{version}-#{iteration}" : "#{version}"
 
     pkgdata = {
-      "abi" => attributes[:freebsd_abi],
+      "arch" => architecture,
       "name" => name,
       "version" => pkg_version,
       "comment" => description,
@@ -109,6 +97,29 @@ class FPM::Package::FreeBSD < FPM::Package
       end
     end
   end # def output
+
+  # Handle architecture naming conversion:
+  # <osname>:<osversion>:<arch>:<wordsize>[.other]
+  def architecture
+    osname    = %x{uname -s}.chomp
+    osversion = %x{uname -r}.chomp.split('.').first
+
+    # Essentially because no testing on other platforms
+    arch = 'x86'
+
+    wordsize = case @architecture
+    when nil, 'native'
+      %x{getconf LONG_BIT}.chomp # 'native' is current arch
+    when 'amd64'
+      '64'
+    when 'i386'
+      '32'
+    else
+      %x{getconf LONG_BIT}.chomp # default to native, the current arch
+    end
+
+    return [osname, osversion, arch, wordsize].join(':')
+  end
 
   def add_path(tar, tar_path, path)
     stat = File.lstat(path)
