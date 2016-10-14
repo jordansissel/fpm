@@ -320,27 +320,28 @@ class FPM::Package::CPAN < FPM::Package
       end
     end
 
-    metacpan_release_url = "http://api.metacpan.org/v0/release/#{author}/#{distribution}-#{self.version}"
+    # Search metacpan to get download URL for this version of the module
+    metacpan_search_url = "http://api.metacpan.org/v0/release/_search"
+    metacpan_search_query = '{"query":{"match_all":{}},"filter":{"term":{"release.name":"' + "#{distribution}-#{self.version}" + '"}}}'
     begin
-      release_response = httpfetch(metacpan_release_url)
+      search_response = httppost(metacpan_search_url,metacpan_search_query)
     rescue Net::HTTPServerException => e
       logger.error("metacpan release query failed.", :error => e.message,
-                    :url => metacpan_release_url)
+                    :url => metacpan_search_url)
       raise FPM::InvalidPackageConfiguration, "metacpan release query failed"
     end
 
-    data = release_response.body
+    data = search_response.body
     release_metadata = JSON.parse(data)
-    archive = release_metadata["archive"]
 
-    # should probably be basepathed from the url
-    tarball = File.basename(archive)
+    download_url = release_metadata['hits']['hits'][0]['_source']['download_url']
+    download_path = URI.parse(download_url).path
+    tarball = File.basename(download_path)
 
     url_base = "http://www.cpan.org/"
     url_base = "#{attributes[:cpan_mirror]}" if !attributes[:cpan_mirror].nil?
 
-    #url = "http://www.cpan.org/CPAN/authors/id/#{author[0,1]}/#{author[0,2]}/#{author}/#{tarball}"
-    url = "#{url_base}/authors/id/#{author[0,1]}/#{author[0,2]}/#{author}/#{archive}"
+    url = "#{url_base}#{download_path}"
     logger.debug("Fetching perl module", :url => url)
 
     begin
@@ -398,6 +399,22 @@ class FPM::Package::CPAN < FPM::Package
     case response
       when Net::HTTPSuccess; return response
       when Net::HTTPRedirection; return httpfetch(response["location"])
+      else; response.error!
+    end
+  end
+
+  def httppost(url, body)
+    uri = URI.parse(url)
+    if ENV['http_proxy']
+      proxy = URI.parse(ENV['http_proxy'])
+      http = Net::HTTP.Proxy(proxy.host,proxy.port,proxy.user,proxy.password).new(uri.host, uri.port)
+    else
+      http = Net::HTTP.new(uri.host, uri.port)
+    end
+    response = http.post(uri.request_uri, body)
+    case response
+      when Net::HTTPSuccess; return response
+      when Net::HTTPRedirection; return httppost(response["location"])
       else; response.error!
     end
   end
