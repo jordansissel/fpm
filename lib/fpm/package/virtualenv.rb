@@ -106,7 +106,8 @@ class FPM::Package::Virtualenv < FPM::Package
 
     if ! is_requirements_file && package_version.nil?
       frozen = safesystemout(python_exe, pip_exe, "freeze")
-      package_version = frozen[/#{package}==[^=]+$/].split("==")[1].chomp!
+      frozen_version = frozen[/#{package}==[^=]+$/]
+      package_version = frozen_version && frozen_version.split("==")[1].chomp!
       self.version ||= package_version
     end
 
