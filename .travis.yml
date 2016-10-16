@@ -22,7 +22,8 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which python || brew install python; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which easy_install || echo 'easy_install not found'; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which rpm || brew install rpm ; fi
-script: bundle exec rspec
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then which virtualenv-tools || pip install --user virtualenv virtualenv-tools ; fi
+script: PATH=${PATH}:${HOME}/.local/bin bundle exec rspec
 addons:
   apt:
     packages:
@@ -30,3 +31,4 @@ addons:
       - rpm
       - lintian
       - python-setuptools
+      - python-pip

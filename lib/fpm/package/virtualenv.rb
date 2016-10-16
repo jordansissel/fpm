@@ -82,10 +82,10 @@ class FPM::Package::Virtualenv < FPM::Package
     python_exe = File.join(virtualenv_build_folder, "bin", "python")
 
     # Why is this hack here? It looks important, so I'll keep it in.
-    safesystem(pip_exe, "install", "-U", "-i",
+    safesystem(python_exe, pip_exe, "install", "-U", "-i",
                attributes[:virtualenv_pypi],
                "pip", "distribute")
-    safesystem(pip_exe, "uninstall", "-y", "distribute")
+    safesystem(python_exe, pip_exe, "uninstall", "-y", "distribute")
 
     extra_index_url_args = []
     if attributes[:virtualenv_pypi_extra_index_urls]
@@ -101,12 +101,13 @@ class FPM::Package::Virtualenv < FPM::Package
       target_args << package
     end
 
-    pip_args = [pip_exe, "install", "-i", attributes[:virtualenv_pypi]] << extra_index_url_args << target_args
+    pip_args = [python_exe, pip_exe, "install", "-i", attributes[:virtualenv_pypi]] << extra_index_url_args << target_args
     safesystem(*pip_args.flatten)
 
     if ! is_requirements_file && package_version.nil?
-      frozen = safesystemout(pip_exe, "freeze")
-      package_version = frozen[/#{package}==[^=]+$/].split("==")[1].chomp!
+      frozen = safesystemout(python_exe, pip_exe, "freeze")
+      frozen_version = frozen[/#{package}==[^=]+$/]
+      package_version = frozen_version && frozen_version.split("==")[1].chomp!
       self.version ||= package_version
     end
 
