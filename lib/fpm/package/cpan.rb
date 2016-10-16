@@ -49,6 +49,7 @@ class FPM::Package::CPAN < FPM::Package
 
     if File.exist?(package)
       moduledir = package
+      result = {}
     else
       result = search(package)
       tarball = download(result, version)
