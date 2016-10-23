@@ -34,6 +34,9 @@ class FPM::Package::Virtualenv < FPM::Package
   "useful when building a virtualenv for packages and including their requirements from "
   "requirements.txt"
 
+  option "--system-site-packages", :flag, "Give the virtual environment access to the "\
+  "global site-packages"
+
   private
 
   # Input a package.
@@ -81,7 +84,13 @@ class FPM::Package::Virtualenv < FPM::Package
 
     ::FileUtils.mkdir_p(virtualenv_build_folder)
 
-    safesystem("virtualenv", virtualenv_build_folder)
+    if self.attributes[:virtualenv_system_site_packages?]
+        logger.info("Creating virtualenv with --system-site-packages")
+        safesystem("virtualenv", "--system-site-packages", virtualenv_build_folder)
+    else
+        safesystem("virtualenv", virtualenv_build_folder)
+    end
+
     pip_exe = File.join(virtualenv_build_folder, "bin", "pip")
     python_exe = File.join(virtualenv_build_folder, "bin", "python")
 
