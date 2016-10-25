@@ -152,7 +152,9 @@ class FPM::Package::Deb < FPM::Package
     next File.expand_path(file)
   end
 
-  option "--upstart", "FILEPATH", "Add FILEPATH as an upstart script",
+  option "--upstart", "FILEPATH", "Add FILEPATH as an upstart script. It is " \
+    "expected to be named <service>.upstart and will placed in " \
+    "/etc/init/<service>.conf",
     :multivalued => true do |file|
     next File.expand_path(file)
   end
@@ -812,7 +814,7 @@ class FPM::Package::Deb < FPM::Package
       end
       upstarts.each do |upstart|
         name = File.basename(upstart, ".upstart")
-        upstartscript = "etc/init/#{name}.conf"
+        upstartscript = "/etc/init/#{name}.conf"
         logger.debug("Add conf file declaration for upstart script", :script => upstartscript)
         allconfigs << upstartscript[1..-1]
       end
