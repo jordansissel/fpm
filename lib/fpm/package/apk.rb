@@ -8,7 +8,7 @@ require "fileutils"
 require "digest"
 require 'digest/sha1'
 
-# Support for debian packages (.deb files)
+# Support for Alpine packages (.apk files)
 #
 # This class supports both input and output of packages.
 class FPM::Package::APK< FPM::Package
