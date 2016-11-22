@@ -1,5 +1,7 @@
 require 'rubygems/package'
 
+require 'stringio'
+
 module FPM
   module Issues
     module TarWriter
