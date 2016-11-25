@@ -17,6 +17,7 @@ class FPM::Package::PleaseRun < FPM::Package
   require "pleaserun/platform/sysv"
 
   option "--name", "SERVICE_NAME", "The name of the service you are creating"
+  option "--chdir", "CHDIR", "The working directory used by the service"
 
   private
   def input(command)
@@ -36,6 +37,7 @@ class FPM::Package::PleaseRun < FPM::Package
       platform.program = command.first
       platform.name = attributes[:pleaserun_name]
       platform.args = command[1..-1]
+      platform.chdir = attributes[:pleaserun_chdir] if attributes[:pleaserun_chdir]
       platform.description = if attributes[:description_given?]
         attributes[:description]
       else
