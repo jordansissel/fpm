@@ -15,4 +15,4 @@ docker-prep: Dockerfile
 
 .PHONY: build
 build: | docker-prep
-	@docker run -itv $$PWD:/docs:z $(IMAGE) sh -c 'make -C docs html && chown -R 1000:1000 /docs'
+	docker run -it -v $$PWD/../:/project:z $(IMAGE) sh -xc 'make -C /project/docs html && chown -R 1000:1000 /project/docs'
