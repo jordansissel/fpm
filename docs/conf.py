@@ -45,7 +45,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'fpm'
+project = u'fpm - packaging made simple'
 copyright = u'2016, Jordan Sissel'
 author = u'Jordan Sissel'
 
