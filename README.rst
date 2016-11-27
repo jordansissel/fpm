@@ -1,36 +1,22 @@
-# Effing Package Management
+What is fpm?
+------------
 
-[![Build Status](https://travis-ci.org/jordansissel/fpm.svg?branch=master)](https://travis-ci.org/jordansissel/fpm)
+The goal of fpm is to make it easy and quick to build packages such as rpms,
+debs, OSX packages, etc.
 
-## Preface
+fpm, as a project, exists with the following principles in mind:
 
-Package maintainers work hard and take a lot of shit. You can't please
-everyone. So, if you're a maintainer: Thanks for maintaining packages!
+* If fpm is not helping you make packages easily, then there is a bug in fpm.
+* If you are having a bad time with fpm, then there is a bug in fpm.
+* If the documentation is confusing, then this is a bug in fpm.
 
-## What is fpm?
+If there is a bug in fpm, then we can work together to fix it. If you wish to
+report a bug/problem/whatever, I welcome you to do on `the project issue tracker`_.
 
-It helps you build packages quickly and easily (Packages like RPM and DEB
-formats).
+.. _the project issue tracker: https://github.com/jordansissel/fpm/issues
 
-FUNDAMENTAL PRINCIPLE: IF FPM IS NOT HELPING YOU MAKE PACKAGES EASILY, THEN
-THERE IS A BUG IN FPM.
-
-Here is a presentation I gave on fpm at BayLISA: <http://goo.gl/sWs3Z> (I
-included speaker notes you can read, too)
-
-At BayLISA in April 2011, I gave a talk about fpm. At the end, I asked "What
-can I package for you?"
-
-Someone asked for memcached.
-
-Google for 'memcached', download the source, unpack, ./configure, make, make
-install, fpm, deploy.
-
-In 60 seconds, starting from nothing, I had both an RPM and a .DEB of memcached
-ready to deploy, and I didn't need to know how to use rpmbuild, rpm specfiles,
-dh\_make, debian control files, etc.
-
-## Backstory
+Backstory
+---------
 
 Sometimes packaging is done wrong (because you can't do it right for all
 situations), but small tweaks can fix it.
@@ -48,65 +34,22 @@ save myself (and you) that pain in the future.
 It should be easy to say "here's my install dir and here's some dependencies;
 please make a package"
 
-## The Solution - FPM
+The Solution - FPM
+------------------
 
-I want a simple way to create packages without all the bullshit. In my own
-infrastructure, I have no interest in Debian policy and RedHat packaging
-guidelines - I have interest in my group's own style culture and have a very strong
-interest in getting work done.
+I wanted a simple way to create packages without needing to memorize too much.
 
-(This is not to say that you can't create packages with FPM that obey Debian or
-RedHat policies, you can and should if that is what you desire)
+I wanted a tool to help me deliver software with minimal steps or training.
 
 The goal of FPM is to be able to easily build platform-native packages.
+
+With fpm, you can do many things, including:
 
 * Creating packages easily (deb, rpm, freebsd, etc)
 * Tweaking existing packages (removing files, changing metadata/dependencies)
 * Stripping pre/post/maintainer scripts from packages
 
-## System packages
-
-Many Linux distros do not ship ruby C headers or a compiler by default, and
-you'll need that to install fpm.
-
-```
-# deb based distributions:
-    apt-get install ruby-dev gcc make
-# rpm ones:
-    yum install ruby-devel gcc make rpm-build
-```
-
-Additional packages will be required depending on the source and target package
-types (rpmbuild for rpm, etc.). FPM will show the commands that are required
-which you must map to your distribution's package names.
-
-## Get with the download
-
-You can install fpm with gem:
-
-    gem install fpm
-    
-(On OS X, you may also need gnutar: `brew install gnu-tar`.)
-
-Building a package might look something like this:
-
-    fpm -s <source type> -t <target type> [list of sources]...
-
-"Source type" is what your package is coming from; a directory (dir), a rubygem
-(gem), an rpm (rpm), a python package (python), a php pear module (pear), etc.
-
-"Target type" is what your output package form should be. Most common are "rpm"
-and "deb" but others exist (solaris, etc)
-
-You have two options for learning to run FPM:
-
-1. If you're impatient, just scan through `fpm --help`; you'll need various
-   options, and they're reasonably straightforward. Impatient learning is
-   totally welcome, and if you run into issues, ask questions in #fpm on
-   freenode irc or on fpm-users@googlegroups.com!
-1. [The wiki](https://github.com/jordansissel/fpm/wiki) has explanations and
-   examples. If you run into problems, I welcome you to ask questions in #fpm
-   on freenode irc or on fpm-users@googlegroups.com!
+.. include: docs/installing
 
 ## Things that are in the works or should work:
 
