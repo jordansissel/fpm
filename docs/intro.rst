@@ -1,7 +1,7 @@
 What is FPM?
 ===================
 
-fpm is a tool designed to help you build packages.
+fpm is a command-line program designed to help you build packages.
 
 Building a package might look something like this:
 
