@@ -1,3 +1,4 @@
+# This Dockerfile produces a docker image which is used to build the fpm docs.
 FROM  debian:latest
 RUN   apt-get update
 RUN   DEBIAN_FRONTEND=noninteractive apt-get install -y python-pip 
