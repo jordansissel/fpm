@@ -7,8 +7,9 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
+   :includehidden:
 
    intro
    installing
-   using_fpm
-     type/rpm
+   use-cases
+   packages
