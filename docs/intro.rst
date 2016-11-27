@@ -3,6 +3,28 @@ What is FPM?
 
 fpm is a tool designed to help you build packages.
 
+Building a package might look something like this:
+
+    fpm -s <source type> -t <target type> [list of sources]...
+
+"Source type" is what your package is coming from; a directory (dir), a rubygem
+(gem), an rpm (rpm), a python package (python), a php pear module (pear), etc.
+
+"Target type" is what your output package form should be. Most common are "rpm"
+and "deb" but others exist (solaris, etc)
+
+You have a few options for learning to run FPM:
+
+1. If you're impatient, just scan through `fpm --help`; you'll need various
+   options, and they're reasonably straightforward. Impatient learning is
+   totally welcome, and if you run into issues, ask questions in #fpm on
+   freenode irc or on fpm-users@googlegroups.com!
+2. `The documentation`_ has explanations and examples. If you run into
+   problems, I welcome you to ask questions in #fpm on freenode irc or on
+   fpm-users@googlegroups.com!
+
+.. _The documentation: https://semicomplete.com/projects/fpm/index.html
+
 To give you an idea of what fpm can do, here's a few use cases:
 
 Take a directory and turn it into an RPM::

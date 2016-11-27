@@ -1,7 +1,4 @@
-FPM - Packaging should be easier!
-===============================
-
-Welcome :)
+.. include:: ../README.rst
 
 Contents:
 
