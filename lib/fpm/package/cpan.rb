@@ -309,17 +309,16 @@ class FPM::Package::CPAN < FPM::Package
                  :distribution => distribution,
                  :version => cpan_version)
 
-    # default to latest versionunless we specify one
+    # default to latest version unless we specify one
     if cpan_version.nil?
-      self.version = metadata["version"]
+      self.version = "#{metadata["version"]}"
     else
-      if metadata["version"] =~ /^v\d/
-        self.version = "v#{cpan_version}"
-      else
-        self.version = cpan_version
-      end
+      self.version = "#{cpan_version}"
     end
-
+    
+    # remove 'v' prefix from version if it is there
+    self.version.sub!(/^v/, '')
+    
     # Search metacpan to get download URL for this version of the module
     metacpan_search_url = "http://api.metacpan.org/v0/release/_search"
     metacpan_search_query = '{"query":{"match_all":{}},"filter":{"term":{"release.name":"' + "#{distribution}-#{self.version}" + '"}}}'
