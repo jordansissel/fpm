@@ -14,7 +14,7 @@ report a bug/problem/whatever, I welcome you to do on `the project issue tracker
 
 You can find out how to use fpm in the `documentation`_.
 
-.. _documentation: https://semicomplete.com/projects/fpm/1.6/index.html
+.. _documentation: https://fpm.readthedocs.io/en/latest/
 
 Backstory
 ---------
