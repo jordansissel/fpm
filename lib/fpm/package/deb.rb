@@ -345,7 +345,7 @@ class FPM::Package::Deb < FPM::Package
       when "gz"
         datatar = "data.tar.gz"
         compression = "-z"
-      when "bzip2"
+      when "bzip2","bz2"
         datatar = "data.tar.bz2"
         compression = "-j"
       when "xz"
