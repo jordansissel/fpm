@@ -1,6 +1,17 @@
 Release Notes and Change Log
 ============================
 
+1.7.0 (November 28, 2016)
+^^^^^^^^^^^^^^^^^^^^^^^^^
+* virtualenv: Fix a bug where `pip` might be run incorrectly (`#1210`_; Nico Griffiths)
+* FreeBSD: --architecture (-a) flag now sets FreeBSD package ABI (`#1196`_; Matt Sharpe)
+* perl/cpan: Fix bug and now local modules can be packaged (`#1202`_, `#1203`_; liger1978)
+* perl/cpan: Add support for `http_proxy` environment variable and improve how fpm queries CPAN for package information. (`#1206`_, `#1208`_; liger1978)
+* Fix crash for some users (`#1231`_, `#1148`_; Jose Diaz-Gonzalez) 
+* Documentation now published on fpm.readthedocs.io. This is a work-in progress. Contributions welcome! <3 (`#1237`_, Jordan Sissel)
+* deb: Can now read bz2-compressed debian packages. (`#1213`_; shalq)
+* pleaserun: New flag --pleaserun-chdir for setting the working directory of a service. (`#1235`_; Claus F. Strasburger)
+
 1.6.3 (September 15, 2016)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 * Fix bug in fpm's release that accidentally included a few `.pyc` files (`#1191`_)

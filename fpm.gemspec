@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
 
   files << "LICENSE"
   files << "CONTRIBUTORS"
-  files << "CHANGELIST"
+  files << "CHANGELOG.rst"
 
   files = files.reject { |path| path =~ /\.pyc$/ }
 
