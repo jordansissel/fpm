@@ -36,3 +36,6 @@ Gemfile.lock
 
 .rbx
 .vagrant
+
+docs/_build
+docs/.work
