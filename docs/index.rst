@@ -21,3 +21,4 @@ Table of Contents
    use-cases
    packages
    contributing
+   changelog
