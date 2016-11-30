@@ -249,8 +249,7 @@ module FPM::Util
   # wrapper around mknod ffi calls
   def mknod_w(path, mode, dev)
     rc = -1
-    case %x{uname -s}.chomp
-    when 'Linux'
+    if respond_to?(:xmknod)
       # bits/stat.h #define _MKNOD_VER_LINUX  0
       rc = xmknod(0, path, mode, FFI::MemoryPointer.new(dev))
     else
