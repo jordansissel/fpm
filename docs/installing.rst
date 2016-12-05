@@ -13,11 +13,11 @@ Installing things FPM needs
   This section may be imperfect due to the inconsistencies across OS vendors
 
 fpm is written in Ruby, you'll need to provide Ruby. Some operating systems,
-like OSX, come with Ruby already, but most done. Depending on your operating system, you might need to run the following commands:
+like OSX, come with Ruby already, but some do not. Depending on your operating system, you might need to run the following commands:
 
 On OSX/macOS::
 
-    brew install gnu-tar`
+    brew install gnu-tar
 
 On Red Hat systems (Fedora 22 or older, CentOS, etc)::
 
