@@ -30,6 +30,13 @@ class FPM::Package::Virtualenv < FPM::Package
     :multivalued => true, :attribute_name => :virtualenv_pypi_extra_index_urls,
     :default => nil
 
+  option "--setup-install", :flag, "After building virtualenv run setup.py install "\
+  "useful when building a virtualenv for packages and including their requirements from "
+  "requirements.txt"
+
+  option "--system-site-packages", :flag, "Give the virtual environment access to the "\
+  "global site-packages"
+
   private
 
   # Input a package.
@@ -77,7 +84,13 @@ class FPM::Package::Virtualenv < FPM::Package
 
     ::FileUtils.mkdir_p(virtualenv_build_folder)
 
-    safesystem("virtualenv", virtualenv_build_folder)
+    if self.attributes[:virtualenv_system_site_packages?]
+        logger.info("Creating virtualenv with --system-site-packages")
+        safesystem("virtualenv", "--system-site-packages", virtualenv_build_folder)
+    else
+        safesystem("virtualenv", virtualenv_build_folder)
+    end
+
     pip_exe = File.join(virtualenv_build_folder, "bin", "pip")
     python_exe = File.join(virtualenv_build_folder, "bin", "python")
 
@@ -103,6 +116,12 @@ class FPM::Package::Virtualenv < FPM::Package
 
     pip_args = [python_exe, pip_exe, "install", "-i", attributes[:virtualenv_pypi]] << extra_index_url_args << target_args
     safesystem(*pip_args.flatten)
+
+    if attributes[:virtualenv_setup_install?]
+      logger.info("Running PACKAGE setup.py")
+      setup_args = [python_exe, "setup.py", "install"]
+      safesystem(*setup_args.flatten)
+    end
 
     if ! is_requirements_file && package_version.nil?
       frozen = safesystemout(python_exe, pip_exe, "freeze")
