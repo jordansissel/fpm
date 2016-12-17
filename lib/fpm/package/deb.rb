@@ -589,14 +589,15 @@ class FPM::Package::Deb < FPM::Package
 
   def fix_dependency(dep)
     # Deb dependencies are: NAME (OP VERSION), like "zsh (> 3.0)"
-    # Convert anything that looks like 'NAME OP VERSION' to this format.
+    # Convert anything that looks like 'NAME OP VERSION' (even without spaces
+    # around OP) to this format.
     if dep =~ /[\(,\|]/
       # Don't "fix" ones that could appear well formed already.
     else
       # Convert ones that appear to be 'name op version'
-      name, op, version = dep.split(/ +/)
-      if !version.nil?
-        # Convert strings 'foo >= bar' to 'foo (>= bar)'
+      _, name, op, version = dep.match(/([^<>= ]+) *([<>=]*) *(.*)/).to_a
+      if !version.empty?
+        # Convert strings 'foo >= bar' or 'foo>=bar' to 'foo (>= bar)'
         dep = "#{name} (#{debianize_op(op)} #{version})"
       end
     end

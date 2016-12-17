@@ -137,7 +137,7 @@ describe FPM::Package::Deb do
       original.epoch = "5"
       original.architecture = "all"
       original.dependencies << "something > 10"
-      original.dependencies << "hello >= 20"
+      original.dependencies << "hello>=20"
       original.provides << "#{original.name} = #{original.version}"
 
       # Test to cover PR#591 (fix provides names)
@@ -219,7 +219,7 @@ describe FPM::Package::Deb do
       end
 
       it "should have the correct dependencies" do
-        original.dependencies.each do |dep|
+        ["something > 10", "hello >= 20"].each do |dep|
           insist { input.dependencies }.include?(dep)
         end
       end
@@ -253,7 +253,8 @@ describe FPM::Package::Deb do
       end
 
       it "should have the correct dependency list" do
-        # 'something > 10' should convert to 'something (>> 10)', etc.
+        # 'something > 10' should convert to 'something (>> 10)',
+        # 'hello>=20' should convert to 'hello (>= 20)'
         insist { dpkg_field("Depends") } == "something (>> 10), hello (>= 20)"
       end
 
@@ -290,7 +291,7 @@ describe FPM::Package::Deb do
       original.epoch = "5"
       original.architecture = "all"
       original.dependencies << "something > 10"
-      original.dependencies << "hello >= 20"
+      original.dependencies << "hello>=20"
       original.attributes[:no_depends?] = true
       original.output(target)
       input.input(target)
