@@ -15,8 +15,11 @@ class FPM::Package::Virtualenv < FPM::Package
   option "--package-name-prefix", "PREFIX", "Name to prefix the package " \
   "name with.", :default => "virtualenv"
 
-  option "--install-location", "DIRECTORY", "Location to which to " \
-  "install the virtualenv by default.", :default => "/usr/share/python" do |path|
+  option "--install-location", "DIRECTORY", "DEPRECATED: Use --prefix instead." \
+    "  Location to which to install the virtualenv by default.",
+    :default => "/usr/share/python" do |path|
+    logger.warn("Using deprecated flag: --install-location. Please use " \
+                  "--prefix instead.")
     File.expand_path(path)
   end
 
@@ -76,9 +79,14 @@ class FPM::Package::Virtualenv < FPM::Package
                    self.name].join("-")
     end
 
+    # prefix wins over previous virtual_install_location behaviour
     virtualenv_folder =
-      File.join(installdir,
-                virtualenv_name)
+      if self.attributes[:prefix]
+        self.attributes[:prefix]
+      else
+        File.join(installdir,
+                  virtualenv_name)
+      end
 
     virtualenv_build_folder = build_path(virtualenv_folder)
 
@@ -155,7 +163,8 @@ class FPM::Package::Virtualenv < FPM::Package
     # use dir to set stuff up properly, mainly so I don't have to reimplement
     # the chdir/prefix stuff special for tar.
     dir = convert(FPM::Package::Dir)
-
+    # don't double prefix the files
+    dir.attributes[:prefix] = nil
     if attributes[:chdir]
       dir.attributes[:chdir] = File.join(build_path, attributes[:chdir])
     else
