@@ -29,8 +29,7 @@ Create a debian package for your project's python dependencies under `/opt`::
   echo 'paramiko' >> requirements.txt
   echo 'SQLAlchemy' >> requirements.txt
   fpm -s virtualenv -t deb --name myapp-python-libs \
-    --virtualenv-install-location /opt/myapp \
-    requirements.txt
+    --prefix /opt/myapp/virtualenv requirements.txt
 
 Create a debian package from a version 0.9 of an egg kept in your internal
 pypi repository, along with it's external dependencies::
