@@ -1,6 +1,13 @@
 Release Notes and Change Log
 ============================
 
+1.8.0 (December 28, 2016)
+^^^^^^^^^^^^^^^^^^^^^^^^^
+* virtualenv: Add `--virtualenv-setup-install` flag to run `setup.py install` after pip finishes installing things. (`#1218`_; John Stowers)
+* virtualenv: Add `--virtualenv-system-site-package` flag which creates the virtualenv in a way that allows it to use the system python packages. (`#1218`_; John Stowers)
+* cpan: Fix bug preventing some perl modules from being installed (`#1236`_, `#1241`_; Richard Grainger)
+* rpm: Documentation improvements (`#1242`_; Nick Griffiths)
+
 1.7.0 (November 28, 2016)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 * virtualenv: Fix a bug where `pip` might be run incorrectly (`#1210`_; Nico Griffiths)
