@@ -24,9 +24,13 @@
 .. _#1208: https://github.com/jordansissel/fpm/issues/1208
 .. _#1210: https://github.com/jordansissel/fpm/issues/1210
 .. _#1213: https://github.com/jordansissel/fpm/issues/1213
+.. _#1218: https://github.com/jordansissel/fpm/issues/1218
 .. _#1231: https://github.com/jordansissel/fpm/issues/1231
 .. _#1235: https://github.com/jordansissel/fpm/issues/1235
+.. _#1236: https://github.com/jordansissel/fpm/issues/1236
 .. _#1237: https://github.com/jordansissel/fpm/issues/1237
+.. _#1241: https://github.com/jordansissel/fpm/issues/1241
+.. _#1242: https://github.com/jordansissel/fpm/issues/1242
 .. _#171: https://github.com/jordansissel/fpm/issues/171
 .. _#185: https://github.com/jordansissel/fpm/issues/185
 .. _#186: https://github.com/jordansissel/fpm/issues/186
