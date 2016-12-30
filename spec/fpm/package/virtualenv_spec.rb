@@ -145,13 +145,12 @@ describe FPM::Package::Virtualenv, :if => virtualenv_usable? do
 
     it "takes precedence over other folder options" do
       subject.attributes[:prefix] = '/opt/foo'
-      subject.attributes[:install_location]
+      subject.attributes[:install_location] = '/usr/local/foo'
       subject.input('absolute')
 
       activate_path = File.join(subject.staging_path, '/opt/foo/bin/activate')
 
       expect(File.exists?(activate_path)).to(be_truthy)
-      --virtualenv-install-location
     end
   end
 end
