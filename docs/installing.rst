@@ -59,8 +59,8 @@ You should see output that looks like this::
     Successfully installed ffi-1.9.14
     Fetching: childprocess-0.5.9.gem (100%)
     Successfully installed childprocess-0.5.9
-    Fetching: archive-tar-minitar-0.5.2.gem (100%)
-    Successfully installed archive-tar-minitar-0.5.2
+    Fetching: minitar-0.5.4.gem (100%)
+    Successfully installed minitar-0.5.4
     Fetching: io-like-0.3.0.gem (100%)
     Successfully installed io-like-0.3.0
     Fetching: ruby-xz-0.2.3.gem (100%)
