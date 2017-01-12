@@ -79,6 +79,8 @@ class FPM::Package::Dir < FPM::Package
         "Cannot chdir to '#{chdir}'. Does it exist?"
     end
 
+    exclude_from(destination)
+
     # Set some defaults. This is useful because other package types
     # can include license data from themselves (rpms, gems, etc),
     # but to make sure a simple dir -> rpm works without having
@@ -216,6 +218,10 @@ class FPM::Package::Dir < FPM::Package
 
     copy_metadata(source, destination)
   end # def copy
+
+  def exclude
+    # noop - do it during input via exclude_from
+  end
 
   public(:input, :output)
 end # class FPM::Package::Dir
