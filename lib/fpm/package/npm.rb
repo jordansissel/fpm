@@ -17,6 +17,30 @@ class FPM::Package::NPM < FPM::Package
   option "--registry", "NPM_REGISTRY",
     "The npm registry to use instead of the default."
 
+  option "--nodeps", :flag, "Should the target package include dependencies",
+    :default => false
+    
+  option "--set-dependencies", :flag, "Set dependencies on the target package",
+    :default => false
+    
+  option "--dependencies-op", "OPERATOR", "Operator to use for dependencies version matching",
+    :default => "="
+
+  def remove_depends(base, parent, name, info)
+  
+    logger.info("Removing dependency of " + parent + " => " + name)
+    FileUtils.rmtree base+name
+  
+    info['dependencies'].each do |depends|
+      
+      # TODO rollup this directory as another package
+      # take from parent package
+      remove_depends(base, name, depends[0], depends[1])
+      
+    end
+    
+  end
+    
   private
   def input(package)
     # Notes:
@@ -87,17 +111,48 @@ class FPM::Package::NPM < FPM::Package
       end
     end
 
+    
     # npm installs dependencies in the module itself, so if you do
     # 'npm install express' it installs dependencies (like 'connect')
     # to: node_modules/express/node_modules/connect/...
     #
-    # To that end, I don't think we necessarily need to include
-    # any automatic dependency information since every 'npm install'
-    # is fully self-contained. That's why you don't see any bother, yet,
-    # to include the package's dependencies in here.
-    #
-    # It's possible someone will want to decouple that in the future,
-    # but I will wait for that feature request.
+    # Since every 'npm install' is fully self-contained, allow the 
+    # package maintainer to decide how dependencies are handled
+    # eg. package has all dependencies contained
+    # eg. package has no dependencies contained, with the caveat that
+    #     additional packages would need to be created for the module
+    #     to work correctly
+    
+    if attributes[:npm_set_dependencies?]
+      info['dependencies'].each do |depends|
+        depstring = [attributes[:npm_package_name_prefix], depends[0]].join("-") + " " + attributes[:npm_dependencies_op].to_s + " " + depends[1].fetch("version", "0.0.0")
+        logger.info("Registering dependency " + depstring)
+        self.dependencies.push(depstring)
+      end
+    end
+    
+    if attributes[:npm_nodeps?]
+    
+      # remove extra directories from dependencies, what else?
+      FileUtils.rmtree [settings["prefix"]+"/lib/node_modules/"+name+"/node_modules/.bin"]
+      
+      info['dependencies'].each do |depends|
+        remove_depends(settings["prefix"]+"/lib/node_modules/"+name+"/node_modules/", name, depends[0], depends[1])
+      end
+      
+      remain = ::Dir.entries(settings["prefix"]+"/lib/node_modules/"+name+"/node_modules/")
+      remain.delete('.')
+      remain.delete('..')
+      
+      if remain.length != 0
+        raise FPM::InvalidPackageConfiguration, "Could not remove all dependencies! " + remain.length.to_s + " remain: " + remain.join(",")
+      else
+        FileUtils.rmtree [settings["prefix"]+"/lib/node_modules/"+name+"/node_modules"]
+        logger.info("All dependencies have been accounted for")
+      end
+      
+    end
+    
   end
 
   def set_default_prefix
