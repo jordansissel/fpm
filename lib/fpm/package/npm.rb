@@ -132,23 +132,26 @@ class FPM::Package::NPM < FPM::Package
     end
     
     if attributes[:npm_nodeps?]
-    
-      # remove extra directories from dependencies, what else?
-      FileUtils.rmtree [settings["prefix"]+"/lib/node_modules/"+name+"/node_modules/.bin"]
+      if ::Dir.exists?(settings["prefix"]+"/lib/node_modules/"+name+"/node_modules/")
       
-      info['dependencies'].each do |depends|
-        remove_depends(settings["prefix"]+"/lib/node_modules/"+name+"/node_modules/", name, depends[0], depends[1])
-      end
+        # remove extra directories from dependencies, what else?
+        FileUtils.rmtree [settings["prefix"]+"/lib/node_modules/"+name+"/node_modules/.bin"]
+        
+        info['dependencies'].each do |depends|
+          remove_depends(settings["prefix"]+"/lib/node_modules/"+name+"/node_modules/", name, depends[0], depends[1])
+        end
+        
+        remain = ::Dir.entries(settings["prefix"]+"/lib/node_modules/"+name+"/node_modules/")
+        remain.delete('.')
+        remain.delete('..')
+        
+        if remain.length != 0
+          raise FPM::InvalidPackageConfiguration, "Could not remove all dependencies! " + remain.length.to_s + " remain: " + remain.join(",")
+        else
+          FileUtils.rmtree [settings["prefix"]+"/lib/node_modules/"+name+"/node_modules"]
+          logger.info("All dependencies have been accounted for")
+        end
       
-      remain = ::Dir.entries(settings["prefix"]+"/lib/node_modules/"+name+"/node_modules/")
-      remain.delete('.')
-      remain.delete('..')
-      
-      if remain.length != 0
-        raise FPM::InvalidPackageConfiguration, "Could not remove all dependencies! " + remain.length.to_s + " remain: " + remain.join(",")
-      else
-        FileUtils.rmtree [settings["prefix"]+"/lib/node_modules/"+name+"/node_modules"]
-        logger.info("All dependencies have been accounted for")
       end
       
     end
