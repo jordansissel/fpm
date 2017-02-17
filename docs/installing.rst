@@ -29,7 +29,7 @@ On Fedora 23 or newer::
 
 On Debian-derived systems (Debian, Ubuntu, etc)::
 
-    apt-get install ruby ruby-dev rubygems gcc make
+    apt-get install ruby ruby-dev rubygems build-essentials
 
 Installing FPM
 --------------
