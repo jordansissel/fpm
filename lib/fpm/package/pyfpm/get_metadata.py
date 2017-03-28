@@ -47,6 +47,11 @@ class get_metadata(Command):
 
     def process_dep(self, dep):
         deps = []
+        if hasattr(dep, 'marker') and dep.marker:
+            # PEP0508 marker present
+            if not dep.marker.evaluate():
+                return deps
+
         if dep.specs:
             for operator, version in dep.specs:
                 deps.append("%s %s %s" % (dep.project_name,
