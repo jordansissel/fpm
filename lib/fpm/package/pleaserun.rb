@@ -10,7 +10,7 @@ require "pleaserun/cli"
 # This does not currently support 'output'
 class FPM::Package::PleaseRun < FPM::Package
   # TODO(sissel): Implement flags.
-  
+
   require "pleaserun/platform/systemd"
   require "pleaserun/platform/upstart"
   require "pleaserun/platform/launchd"
@@ -28,6 +28,10 @@ class FPM::Package::PleaseRun < FPM::Package
       ::PleaseRun::Platform::Launchd.new("10.9"), # OS X
       ::PleaseRun::Platform::SYSV.new("lsb-3.1") # Ancient stuff
     ]
+    pleaserun_attributes = [ "chdir", "user", "group", "umask", "chroot", "nice", "limit_coredump",
+                             "limit_cputime", "limit_data", "limit_file_size", "limit_locked_memory",
+                             "limit_open_files", "limit_user_processes", "limit_physical_memory", "limit_stack_size",
+                             "log_directory", "log_file_stderr", "log_file_stdout"]
 
     attributes[:pleaserun_name] ||= File.basename(command.first)
     attributes[:prefix] ||= "/usr/share/pleaserun/#{attributes[:pleaserun_name]}"
@@ -37,12 +41,18 @@ class FPM::Package::PleaseRun < FPM::Package
       platform.program = command.first
       platform.name = attributes[:pleaserun_name]
       platform.args = command[1..-1]
-      platform.chdir = attributes[:pleaserun_chdir] if attributes[:pleaserun_chdir]
       platform.description = if attributes[:description_given?]
         attributes[:description]
       else
         platform.name
       end
+      pleaserun_attributes.each do |attribute_name|
+        attribute = "pleaserun_#{attribute_name}".to_sym
+        if attributes.has_key?(attribute) and not attributes[attribute].nil?
+          platform.send("#{attribute_name}=", attributes[attribute])
+        end
+      end
+
       base = staging_path(File.join(attributes[:prefix], "#{platform.platform}/#{platform.target_version || "default"}"))
       target = File.join(base, "files")
       actions_script = File.join(base, "install_actions.sh")
