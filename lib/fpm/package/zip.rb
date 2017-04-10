@@ -41,7 +41,7 @@ class FPM::Package::Zip < FPM::Package
     output_check(output_path)
     realpath = Pathname.new(output_path).realdirpath.to_s
     ::Dir.chdir(staging_path) do
-      safesystem("zip", "-9ry", realpath, ".")
+      safesystem("zip", "-9r", realpath, ".")
     end
   end # def output
 end # class FPM::Package::Tar
