@@ -494,6 +494,7 @@ class FPM::Package::Deb < FPM::Package
 
     attributes.fetch(:deb_upstart_list, []).each do |upstart|
       name = File.basename(upstart, ".upstart")
+      dest_init = staging_path("etc/init.d/#{name}")
       name = "#{name}.conf" if !(name =~ /\.conf$/)
       dest_upstart = staging_path("etc/init/#{name}")
       mkdir_p(File.dirname(dest_upstart))
@@ -501,7 +502,6 @@ class FPM::Package::Deb < FPM::Package
       File.chmod(0644, dest_upstart)
 
       # Install an init.d shim that calls upstart
-      dest_init = staging_path("etc/init.d/#{name}")
       mkdir_p(File.dirname(dest_init))
       FileUtils.ln_s("/lib/init/upstart-job", dest_init)
     end
