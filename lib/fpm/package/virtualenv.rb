@@ -102,11 +102,11 @@ class FPM::Package::Virtualenv < FPM::Package
     pip_exe = File.join(virtualenv_build_folder, "bin", "pip")
     python_exe = File.join(virtualenv_build_folder, "bin", "python")
 
-    # Why is this hack here? It looks important, so I'll keep it in.
     safesystem(python_exe, pip_exe, "install", "-U", "-i",
                attributes[:virtualenv_pypi],
-               "pip", "distribute")
-    safesystem(python_exe, pip_exe, "uninstall", "-y", "distribute")
+               "pip", "setuptools")
+    # Uninstall pip
+    safesystem(python_exe, pip_exe, "uninstall", "-y", "setuptools")
 
     extra_index_url_args = []
     if attributes[:virtualenv_pypi_extra_index_urls]
