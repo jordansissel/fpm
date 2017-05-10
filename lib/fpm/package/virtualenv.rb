@@ -34,7 +34,7 @@ class FPM::Package::Virtualenv < FPM::Package
     :default => nil
 
   option "--setup-install", :flag, "After building virtualenv run setup.py install "\
-  "useful when building a virtualenv for packages and including their requirements from "
+  "useful when building a virtualenv for packages and including their requirements from "\
   "requirements.txt"
 
   option "--system-site-packages", :flag, "Give the virtual environment access to the "\
