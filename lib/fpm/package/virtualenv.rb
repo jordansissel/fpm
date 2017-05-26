@@ -40,6 +40,12 @@ class FPM::Package::Virtualenv < FPM::Package
   option "--system-site-packages", :flag, "Give the virtual environment access to the "\
   "global site-packages"
 
+  option "--find-links", "PIP_FIND_LINKS", "If a url or path to an html file, then parse for "\
+    "links to archives. If a local path or file:// url that's a directory, then look "\
+    "for archives in the directory listing.",
+    :multivalued => true, :attribute_name => :virtualenv_find_links_urls,
+    :default => nil
+
   private
 
   # Input a package.
@@ -115,6 +121,13 @@ class FPM::Package::Virtualenv < FPM::Package
       end
     end
 
+    find_links_url_args = []
+    if attributes[:virtualenv_find_links_urls]
+      attributes[:virtualenv_find_links_urls].each do |links_url|
+        find_links_url_args << "--find-links" << links_url
+      end
+    end
+
     target_args = []
     if is_requirements_file
       target_args << "-r" << package
@@ -122,7 +135,7 @@ class FPM::Package::Virtualenv < FPM::Package
       target_args << package
     end
 
-    pip_args = [python_exe, pip_exe, "install", "-i", attributes[:virtualenv_pypi]] << extra_index_url_args << target_args
+    pip_args = [python_exe, pip_exe, "install", "-i", attributes[:virtualenv_pypi]] << extra_index_url_args << find_links_url_args << target_args
     safesystem(*pip_args.flatten)
 
     if attributes[:virtualenv_setup_install?]
