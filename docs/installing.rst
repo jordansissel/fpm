@@ -21,7 +21,7 @@ On OSX/macOS::
 
 On Red Hat systems (Fedora 22 or older, CentOS, etc)::
 
-    yum install ruby-devel gcc make rpm-build
+    yum install ruby-devel gcc make rpm-build rubygems
 
 On Fedora 23 or newer::
 
