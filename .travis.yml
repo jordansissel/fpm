@@ -12,6 +12,8 @@ rvm:
   - 2.0.0
   - 2.1.1
   - 2.2.1
+  - 2.3.1
+  - 2.4.0
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update           ; fi
     # dpkg has also gnu-tar and xz as dependencies, these packages are used
