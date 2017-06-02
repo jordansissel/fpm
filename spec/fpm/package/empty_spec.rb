@@ -17,4 +17,4 @@ describe FPM::Package::Empty do
       expect(subject.to_s nil).to(be == "")
     end
   end # describe to_s
-end # describe FPM::Package::Deb
+end # describe FPM::Package::Empty
