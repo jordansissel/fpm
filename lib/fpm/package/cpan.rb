@@ -316,9 +316,6 @@ class FPM::Package::CPAN < FPM::Package
       self.version = "#{cpan_version}"
     end
     
-    # remove 'v' prefix from version if it is there
-    self.version.sub!(/^v/, '')
-    
     # Search metacpan to get download URL for this version of the module
     metacpan_search_url = "http://api.metacpan.org/v0/release/_search"
     metacpan_search_query = '{"query":{"match_all":{}},"filter":{"term":{"release.name":"' + "#{distribution}-#{self.version}" + '"}}}'
