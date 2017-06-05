@@ -320,8 +320,8 @@ class FPM::Package::CPAN < FPM::Package
     self.version.sub!(/^v/, '')
     
     # Search metacpan to get download URL for this version of the module
-    metacpan_search_url = "http://api.metacpan.org/v0/release/_search"
-    metacpan_search_query = '{"query":{"match_all":{}},"filter":{"term":{"release.name":"' + "#{distribution}-#{self.version}" + '"}}}'
+    metacpan_search_url = "https://fastapi.metacpan.org/v1/release/_search"
+    metacpan_search_query = '{"fields":["download_url"],"filter":{"term":{"name":"' + "#{distribution}-#{self.version}" + '"}}}'
     begin
       search_response = httppost(metacpan_search_url,metacpan_search_query)
     rescue Net::HTTPServerException => e
@@ -333,7 +333,7 @@ class FPM::Package::CPAN < FPM::Package
     data = search_response.body
     release_metadata = JSON.parse(data)
 
-    download_url = release_metadata['hits']['hits'][0]['_source']['download_url']
+    download_url = release_metadata['hits']['hits'][0]['fields']['download_url']
     download_path = URI.parse(download_url).path
     tarball = File.basename(download_path)
 
@@ -361,7 +361,7 @@ class FPM::Package::CPAN < FPM::Package
 
   def search(package)
     logger.info("Asking metacpan about a module", :module => package)
-    metacpan_url = "http://api.metacpan.org/v0/module/" + package
+    metacpan_url = "https://fastapi.metacpan.org/v1/module/" + package
     begin
       response = httpfetch(metacpan_url)
     rescue Net::HTTPServerException => e
@@ -394,6 +394,7 @@ class FPM::Package::CPAN < FPM::Package
     else
       http = Net::HTTP.new(uri.host, uri.port)
     end
+    http.use_ssl = uri.scheme == 'https'
     response = http.request(Net::HTTP::Get.new(uri.request_uri))
     case response
       when Net::HTTPSuccess; return response
@@ -410,6 +411,7 @@ class FPM::Package::CPAN < FPM::Package
     else
       http = Net::HTTP.new(uri.host, uri.port)
     end
+    http.use_ssl = uri.scheme == 'https'
     response = http.post(uri.request_uri, body)
     case response
       when Net::HTTPSuccess; return response
