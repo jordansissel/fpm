@@ -99,7 +99,7 @@ class FPM::Package::CPAN < FPM::Package
       self.name = fix_name(metadata["name"])
     end
     metadata["module"].each do |m|
-      self.provides << cap_name(m["name"]) + " = " + self.version
+      self.provides << cap_name(m["name"]) + " = #{self.version}"
     end
 
     # author is not always set or it may be a string instead of an array
