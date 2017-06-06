@@ -154,7 +154,7 @@ class FPM::Package::Dir < FPM::Package
         copy(source, destination)
       end
     elsif fileinfo.symlink?
-      copy(source, File.join(destination, source))
+      copy(source, destination)
     else
       # Copy all files from 'path' into staging_path
       Find.find(source) do |path|
