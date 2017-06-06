@@ -79,3 +79,5 @@ Targets:
 * pacman (ArchLinux) packages
 
 .. include: docs/contributing
+
+Trivial change for testing.
