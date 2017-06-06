@@ -246,6 +246,10 @@ fi
 <% directories.each do |path| -%>
 %dir <%= rpm_file_entry(path) %>
 <% end -%>
+<%# list file with attr  %>
+<% attrs.each do |path,attribute| -%>
+<%= rpm_file_entry(path) %>
+<% end -%>
 <%# list only files, not directories? -%>
 # Reject config files already listed or parent directories, then prefix files
 # with "/", then make sure paths with spaces are quoted. I hate rpm so much.
@@ -253,6 +257,7 @@ fi
 <%   path = "/#{path}" -%>
 <%   next if config_files.include?(path)-%>
 <%   next if directories.include?(path)-%>
+<%   next if attrs[path] -%>
 <%= rpm_file_entry(path) %>
 <% end -%>
 

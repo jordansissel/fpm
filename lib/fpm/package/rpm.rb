@@ -195,7 +195,7 @@ class FPM::Package::RPM < FPM::Package
 
       if attrs[file].nil?
         return file
-      else
+      elsif files.include?(file)
         return sprintf("%%attr(%s) %s\n", attrs[file], file)
       end
     end
