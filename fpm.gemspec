@@ -22,7 +22,11 @@ Gem::Specification.new do |spec|
 
   # For parsing JSON (required for some Python support, etc)
   # http://flori.github.com/json/doc/index.html
-  spec.add_dependency("json", ">= 1.7.7", "< 2.0") # license: Ruby License
+  if Gem::Requirement.new("~> 2.0".freeze).satisfied_by?(Gem.ruby_version)
+    spec.add_dependency("json", "~> 2.0") # license: Ruby License
+  else
+    spec.add_dependency("json", ">= 1.7.7", "< 2.0") # license: Ruby License
+  end
 
   # For logging
   # https://github.com/jordansissel/ruby-cabin
