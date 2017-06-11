@@ -298,8 +298,8 @@ module FPM::Util
       if known_entry
         FileUtils.ln(known_entry, dst)
       else
-        FileUtils.copy_entry(src, dst, preserve=preserve,
-                             remove_destination=remove_destination)
+        FileUtils.copy_entry(src, dst, preserve, false,
+                             remove_destination)
         copied_entries[[st.dev, st.ino]] = dst
       end
     end # else...
