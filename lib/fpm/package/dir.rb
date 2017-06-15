@@ -108,8 +108,6 @@ class FPM::Package::Dir < FPM::Package
       out = File.join(scripts_path, name.to_s)
       logger.debug("Writing script", :source => name, :target => out)
       File.write(out, script(name))
-      require "pry"
-      binding.pry
       File.chmod(0755, out)
     end
 
