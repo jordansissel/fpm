@@ -153,6 +153,10 @@ class FPM::Package::CPAN < FPM::Package
        found_dependencies.each do |dep_name, version|
           # Special case for representing perl core as a version.
           if dep_name == "perl"
+            m = version.match(/^(\d)\.(\d{3})(\d{3})$/)
+            if m
+               version = m[1] + '.' + m[2].sub(/^0*/, '') + '.' + m[3].sub(/^0*/, '')
+            end
             self.dependencies << "#{dep_name} >= #{version}"
             next
           end
