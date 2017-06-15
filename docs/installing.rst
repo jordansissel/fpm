@@ -25,7 +25,7 @@ On Red Hat systems (Fedora 22 or older, CentOS, etc)::
 
 On Fedora 23 or newer::
 
-    dnf install ruby-devel gcc make rpm-build
+    dnf install ruby-devel gcc make rpm-build libffi-devel
 
 On Debian-derived systems (Debian, Ubuntu, etc)::
 
