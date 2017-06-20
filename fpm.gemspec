@@ -47,9 +47,6 @@ Gem::Specification.new do |spec|
 
   spec.add_development_dependency("rake", "~> 10") # license: MIT
 
-  # For creating tar archives (many packages are just tar archives)
-  spec.add_dependency("archive-tar-minitar", "0.5.2") # license: GPL2+
-
   # For creating FreeBSD package archives (xz-compressed tars)
   spec.add_dependency("ruby-xz") # license: MIT
 
