@@ -239,7 +239,7 @@ class FPM::Package::Gem < FPM::Package
       # different output on successive runs.
       Find.find(installdir) do |path|
         if path =~ /.*(gem_make.out|Makefile)$/
-          logger.info("Removing %s" % path)
+          logger.info("Removing build file %s to reduce nondeterminism" % path)
           File.unlink(path)
         end
       end
