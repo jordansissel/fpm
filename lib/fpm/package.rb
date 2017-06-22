@@ -143,13 +143,6 @@ class FPM::Package
       attributes[attribute] = value
     end
 
-    # Obey Reproducible Builds spec, see https://reproducible-builds.org/
-    # If set, individual package formats should set all timestamps to it
-    # and be extra-careful to avoid randomness in output.
-    if ENV.include?('SOURCE_DATE_EPOCH')
-      attributes[:source_date_epoch] = ENV['SOURCE_DATE_EPOCH']
-    end
-
     @name = nil
     @architecture = "native"
     @description = "no description given"
@@ -258,10 +251,11 @@ class FPM::Package
   end # def output
 
   def temporary_directory(path)
-    if attributes[:source_date_epoch].nil?
-      return Stud::Temporary.directory("package-#{type}-staging")
+    if attributes[:source_date_epoch].nil? or not attributes[:build_path_prefix_map].nil?
+      # Normal, secure case
+      return Stud::Temporary.directory(path)
     else
-      # Choose a predictable build path; see https://reproducible-builds.org/docs/build-path/
+      # Remove this case once compilers implement https://wiki.debian.org/ReproducibleBuilds/BuildPathProposal
       root = ENV["TMP"] || ENV["TMPDIR"] || ENV["TEMP"] || "/tmp"
       dir = File.join(root, 'fpm', 'reproducible-builds.org', attributes[:source_date_epoch], path)
       FileUtils.mkdir_p(dir, :mode => 0700)

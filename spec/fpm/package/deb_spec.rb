@@ -341,9 +341,8 @@ describe FPM::Package::Deb do
 
     let(:package) {
        # Turn on reproducible build behavior by setting SOURCE_DATE_EPOCH like user would
-       ENV['SOURCE_DATE_EPOCH'] = '12345'
        val = FPM::Package::Deb.new
-       ENV.delete('SOURCE_DATE_EPOCH')
+       val.attributes[:source_date_epoch] = '12345'
        val
     }
 
