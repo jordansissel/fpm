@@ -337,6 +337,43 @@ describe FPM::Package::Deb do
     end
   end # #tar_flags
 
+  describe "#reproducible" do
+
+    let(:package) {
+       # Turn on reproducible build behavior by setting SOURCE_DATE_EPOCH like user would
+       ENV['SOURCE_DATE_EPOCH'] = '12345'
+       val = FPM::Package::Deb.new
+       ENV.delete('SOURCE_DATE_EPOCH')
+       val
+    }
+
+    before :each do
+      package.name = "name"
+      File.unlink(target + '.orig') if File.exist?(target + '.orig')
+    end
+
+    after :each do
+      package.cleanup
+      File.unlink(target + '.orig') if File.exist?(target + '.orig')
+    end # after
+
+    it "it should output bit-for-bit identical packages" do
+      package.output(target)
+      # FIXME: 2nd and later runs create changelog.Debian.gz?!, so throw away output of 1st run
+      FileUtils.rm(target)
+      package.output(target)
+      FileUtils.mv(target, target + '.orig')
+      # Output a second time with a different timestamp; tar format time resolution is 1 second
+      sleep(1)
+      package.output(target)
+      # TODO: get details of differences with diffoscope, if available.
+      #if File.exist? "/usr/bin/diffoscope"
+      #  expect{system('diffoscope %s %s 2>&1' % [target, target + '.orig'])}.to_not output.to_stdout_from_any_process 
+      #end
+      expect(FileUtils.compare_file(target, target + '.orig')).to be true
+    end
+  end # #reproducible
+
   describe "#output with lintian" do
     let(:staging_path) { Stud::Temporary.directory }
     before do

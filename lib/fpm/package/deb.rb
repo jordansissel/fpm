@@ -442,6 +442,9 @@ class FPM::Package::Deb < FPM::Package
     mkdir_p(File.dirname(dest_changelog))
     File.new(dest_changelog, "wb", 0644).tap do |changelog|
       Zlib::GzipWriter.new(changelog, Zlib::BEST_COMPRESSION).tap do |changelog_gz|
+        if not attributes[:source_date_epoch].nil?
+          changelog_gz.mtime = attributes[:source_date_epoch].to_i
+        end
         if attributes[:deb_changelog]
           logger.info("Writing user-specified changelog", :source => attributes[:deb_changelog])
           File.new(attributes[:deb_changelog]).tap do |fd|
@@ -462,6 +465,9 @@ class FPM::Package::Deb < FPM::Package
       File.new(dest_upstream_changelog, "wb", 0644).tap do |changelog|
         Zlib::GzipWriter.new(changelog, Zlib::BEST_COMPRESSION).tap do |changelog_gz|
             logger.info("Writing user-specified upstream changelog", :source => attributes[:deb_upstream_changelog])
+            if not attributes[:source_date_epoch].nil?
+              changelog_gz.mtime = attributes[:source_date_epoch].to_i
+            end
             File.new(attributes[:deb_upstream_changelog]).tap do |fd|
               chunk = nil
               # Ruby 1.8.7 doesn't have IO#copy_stream
@@ -533,6 +539,12 @@ class FPM::Package::Deb < FPM::Package
     end
 
     args = [ tar_cmd, "-C", staging_path, compression ] + data_tar_flags + [ "-cf", datatar, "." ]
+    if not attributes[:source_date_epoch].nil?
+      # Use gnu tar options to force deterministic file order and timestamp
+      args += ["--sort=name", ("--mtime=@%s" % attributes[:source_date_epoch])]
+      # gnu tar obeys GZIP environment variable with options for gzip; -n = forget original filename and date
+      args.unshift({"GZIP" => "-9n"})
+    end
     safesystem(*args)
 
     # pack up the .deb, which is just an 'ar' archive with 3 files
@@ -693,6 +705,12 @@ class FPM::Package::Deb < FPM::Package
 
       args = [ tar_cmd, "-C", control_path, "-zcf", controltar,
         "--owner=0", "--group=0", "--numeric-owner", "." ]
+      if not attributes[:source_date_epoch].nil?
+        # Force deterministic file order and timestamp
+        args += ["--sort=name", ("--mtime=@%s" % attributes[:source_date_epoch])]
+        # gnu tar obeys GZIP environment variable with options for gzip; -n = forget original filename and date
+        args.unshift({"GZIP" => "-9n"})
+      end
       safesystem(*args)
     end
 

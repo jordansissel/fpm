@@ -190,9 +190,14 @@ module FPM::Util
     if args.size == 1
       args = [ default_shell, "-c", args[0] ]
     end
-    program = args[0]
 
-    exit_code = execmd(args)
+    if args[0].kind_of?(Hash)
+      env = args.shift()
+      exit_code = execmd(env, args)
+    else
+      exit_code = execmd(args)
+    end
+    program = args[0]
     success = (exit_code == 0)
 
     if !success
