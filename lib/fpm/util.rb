@@ -236,6 +236,8 @@ module FPM::Util
   # and the recommended options to quickly create/append to an archive
   # without timestamps or uids (if possible).
   def ar_cmd
+    return @@ar_cmd if defined? @@ar_cmd
+
     # FIXME: don't assume current directory writeable
     FileUtils.touch(["fpm-dummy.tmp"])
     ["ar", "gar"].each do |ar|
@@ -246,11 +248,15 @@ module FPM::Util
         # or its table of contents doesn't match the regular expression.
         # Be extra-careful about locale and timezone when matching output.
         system("#{ar} #{ar_create_opts} fpm-dummy.ar.tmp fpm-dummy.tmp 2>/dev/null && env TZ=UTC LANG=C LC_TIME=C #{ar} -tv fpm-dummy.ar.tmp | grep '0/0.*1970' > /dev/null 2>&1")
-        return [ar, ar_create_opts] if $?.exitstatus == 0
+        if $?.exitstatus == 0
+           @@ar_cmd = [ar, ar_create_opts]
+           return @@ar_cmd
+        end
       end
     end
     # If no combination of ar and options omits timestamps, fall back to default.
-    return ["ar", "-qc"]
+    @@ar_cmd = ["ar", "-qc"]
+    return @@ar_cmd
   ensure
     # Clean up
     FileUtils.rm_f(["fpm-dummy.ar.tmp", "fpm-dummy.tmp"])
@@ -258,22 +264,40 @@ module FPM::Util
 
   # Get the recommended 'tar' command for this platform.
   def tar_cmd
-    # Rely on gnu tar for solaris and OSX.
-    case %x{uname -s}.chomp
-    when "SunOS"
-      return "gtar"
-    when "Darwin"
-      # Try running gnutar, it was renamed(??) in homebrew to 'gtar' at some point, I guess? I don't know.
-      ["gnutar", "gtar"].each do |tar|
-        system("#{tar} > /dev/null 2> /dev/null")
-        return tar unless $?.exitstatus == 127
+    return @@tar_cmd if defined? @@tar_cmd
+
+    # FIXME: don't assume current directory writeable
+    FileUtils.touch(["fpm-dummy.tmp"])
+
+    # Prefer tar that supports more of the features we want, stop if we find tar of our dreams
+    best="tar"
+    bestscore=0
+    # GNU Tar, if not the default, is usually on the path as gtar, but
+    # Mac OS X 10.8 and earlier shipped it as /usr/bin/gnutar
+    ["tar", "gtar", "gnutar"].each do |tar|
+      opts=[]
+      score=0
+      ["-sort=name", "--mtime=@0"].each do |opt|
+        system("#{tar} #{opt} -cf fpm-dummy.tar.tmp fpm-dummy.tmp 2>/dev/null")
+        if $?.exitstatus == 0
+          opts << opt
+          score += 1
+          break
+        end
       end
-    when "FreeBSD"
-      # use gnutar instead
-      return "gtar"
-    else
-      return "tar"
+      if score > bestscore
+        best=tar
+        bestscore=score
+        if score == 2
+          break
+        end
+      end
     end
+    @@tar_cmd = best
+    return @@tar_cmd
+  ensure
+    # Clean up
+    FileUtils.rm_f(["fpm-dummy.tar.tmp", "fpm-dummy.tmp"])
   end # def tar_cmd
 
   # wrapper around mknod ffi calls
