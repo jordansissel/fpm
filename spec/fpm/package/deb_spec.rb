@@ -358,13 +358,23 @@ describe FPM::Package::Deb do
 
     it "it should output bit-for-bit identical packages" do
       # Check prerequisites
-      puts("Using " + `which #{tar_cmd}` + `#{tar_cmd} --version`)
-      puts("Exit status of '#{tar_cmd} -cf /dev/null --mtime=@0 --sort=name /dev/null' is #{$?.exitstatus}")
+      # FIXME: ar_cmd and tar_cmd should tell us this
+      puts("Using ar " + `which #{ar_cmd[0]}` + `#{ar_cmd[0]} --version`)
+      FileUtils.rm_f("foo.ar")
+      system("#{ar_cmd.join(' ')} foo.ar /dev/null && env LC_TIME=C TZ=GMT ar tv foo.ar | grep 1970 > /dev/null")
+      FileUtils.rm_f("foo.ar")
+      if $?.exitstatus != 0
+        skip("This system doesn't seem to have an ar that can omit timestamps")
+        return
+      end
+
+      puts("Using tar " + `which #{tar_cmd}` + `#{tar_cmd} --version`)
       system("#{tar_cmd} -cf /dev/null --mtime=@0 --sort=name /dev/null")
       if $?.exitstatus != 0
         skip("This system doesn't seem to have a tar that supports --mtime=@0 --sort=name")
         return
       end
+
       package.output(target)
       # FIXME: 2nd and later runs create changelog.Debian.gz?!, so throw away output of 1st run
       FileUtils.rm(target)
