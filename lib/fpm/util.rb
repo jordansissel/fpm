@@ -283,7 +283,6 @@ module FPM::Util
           puts("tar_cmd: #{tar} #{opt} succeeded")
           opts << opt
           score += 1
-          break
         end
         puts("tar_cmd: #{tar} #{opt} failed")
       end
