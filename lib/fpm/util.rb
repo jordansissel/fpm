@@ -277,7 +277,7 @@ module FPM::Util
     ["tar", "gtar", "gnutar"].each do |tar|
       opts=[]
       score=0
-      ["-sort=name", "--mtime=@0"].each do |opt|
+      ["--sort=name", "--mtime=@0"].each do |opt|
         system("#{tar} #{opt} -cf fpm-dummy.tar.tmp fpm-dummy.tmp > /dev/null 2>&1")
         if $?.exitstatus == 0
           puts("tar_cmd: #{tar} #{opt} succeeded")
