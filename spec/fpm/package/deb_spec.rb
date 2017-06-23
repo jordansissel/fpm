@@ -357,6 +357,12 @@ describe FPM::Package::Deb do
     end # after
 
     it "it should output bit-for-bit identical packages" do
+      # Check prerequisites
+      system("#{tar_cmd} -cf /dev/null --mtime=@0 --sort=name /dev/null 2> /dev/null")
+      if $?.exitstatus != 0
+        skip("This system doesn't seem to have a tar that supports --mtime=@0 --sort=name")
+        return
+      end
       package.output(target)
       # FIXME: 2nd and later runs create changelog.Debian.gz?!, so throw away output of 1st run
       FileUtils.rm(target)
