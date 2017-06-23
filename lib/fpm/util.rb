@@ -1,6 +1,7 @@
 require "fpm/namespace"
 require "childprocess"
 require "ffi"
+require "fileutils"
 
 # Some utility functions
 module FPM::Util
@@ -230,6 +231,30 @@ module FPM::Util
     end
     return stdout_r_str
   end # def safesystemout
+
+  # Get an array containing the recommended 'ar' command for this platform
+  # and the recommended options to quickly create/append to an archive
+  # without timestamps or uids (if possible).
+  def ar_cmd
+    # FIXME: don't assume current directory writeable
+    FileUtils.touch(["fpm-dummy.tmp"])
+    ["ar", "gar"].each do |ar|
+      ["-qc", "-qcD"].each do |ar_create_opts|
+        FileUtils.rm_f(["fpm-dummy.ar.tmp"])
+        # Return this combination if it creates archives without uids or timestamps.
+        # Exitstatus will be nonzero if the archive can't be created,
+        # or its table of contents doesn't match the regular expression.
+        # Be extra-careful about locale and timezone when matching output.
+        system("#{ar} #{ar_create_opts} fpm-dummy.ar.tmp fpm-dummy.tmp 2>/dev/null && env TZ=UTC LANG=C LC_TIME=C #{ar} -tv fpm-dummy.ar.tmp | grep '0/0.*1970' > /dev/null 2>&1")
+        return [ar, ar_create_opts] if $?.exitstatus == 0
+      end
+    end
+    # If no combination of ar and options omits timestamps, fall back to default.
+    return ["ar", "-qc"]
+  ensure
+    # Clean up
+    FileUtils.rm_f(["fpm-dummy.ar.tmp", "fpm-dummy.tmp"])
+  end # def ar_cmd
 
   # Get the recommended 'tar' command for this platform.
   def tar_cmd

@@ -547,11 +547,20 @@ class FPM::Package::Deb < FPM::Package
     end
     safesystem(*args)
 
+    if attributes[:source_date_epoch].nil?
+      ar, ar_create_opts = ["ar", "-qc"]
+    else
+      # We need ar to use the D modifier (i.e. zero uids and timestamps).
+      # Really recent BSD and gnu binutils turn that on by default.
+      # Slightly older ones support it, but don't make it the default.
+      ar, ar_create_opts = ar_cmd
+    end
+
     # pack up the .deb, which is just an 'ar' archive with 3 files
     # the 'debian-binary' file has to be first
     File.expand_path(output_path).tap do |output_path|
       ::Dir.chdir(build_path) do
-        safesystem("ar", "-qc", output_path, "debian-binary", "control.tar.gz", datatar)
+        safesystem(ar, ar_create_opts, output_path, "debian-binary", "control.tar.gz", datatar)
       end
     end
   end # def output
