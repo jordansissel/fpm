@@ -358,7 +358,9 @@ describe FPM::Package::Deb do
 
     it "it should output bit-for-bit identical packages" do
       # Check prerequisites
-      system("#{tar_cmd} -cf /dev/null --mtime=@0 --sort=name /dev/null 2> /dev/null")
+      puts("Using " + `which #{tar_cmd}` + `#{tar_cmd} --version`)
+      puts("Exit status of '#{tar_cmd} -cf /dev/null --mtime=@0 --sort=name /dev/null' is #{$?.exitstatus}")
+      system("#{tar_cmd} -cf /dev/null --mtime=@0 --sort=name /dev/null")
       if $?.exitstatus != 0
         skip("This system doesn't seem to have a tar that supports --mtime=@0 --sort=name")
         return

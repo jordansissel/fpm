@@ -278,12 +278,14 @@ module FPM::Util
       opts=[]
       score=0
       ["-sort=name", "--mtime=@0"].each do |opt|
-        system("#{tar} #{opt} -cf fpm-dummy.tar.tmp fpm-dummy.tmp 2>/dev/null")
+        system("#{tar} #{opt} -cf fpm-dummy.tar.tmp fpm-dummy.tmp > /dev/null 2>&1")
         if $?.exitstatus == 0
+          puts("tar_cmd: #{tar} #{opt} succeeded")
           opts << opt
           score += 1
           break
         end
+        puts("tar_cmd: #{tar} #{opt} failed")
       end
       if score > bestscore
         best=tar
