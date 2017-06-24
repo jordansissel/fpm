@@ -357,21 +357,11 @@ describe FPM::Package::Deb do
     end # after
 
     it "it should output bit-for-bit identical packages" do
-      # Check prerequisites
-      # FIXME: ar_cmd and tar_cmd should tell us this
-      puts("Using ar " + `which #{ar_cmd[0]}` + `#{ar_cmd[0]} --version`)
-      FileUtils.rm_f("foo.ar")
-      system("#{ar_cmd.join(' ')} foo.ar /dev/null && env LC_TIME=C TZ=GMT ar tv foo.ar | grep 1970 > /dev/null")
-      FileUtils.rm_f("foo.ar")
-      if $?.exitstatus != 0
-        skip("This system doesn't seem to have an ar that can omit timestamps")
-        return
-      end
-
-      puts("Using tar " + `which #{tar_cmd}` + `#{tar_cmd} --version`)
-      system("#{tar_cmd} -cf /dev/null --mtime=@0 --sort=name /dev/null")
-      if $?.exitstatus != 0
-        skip("This system doesn't seem to have a tar that supports --mtime=@0 --sort=name")
+      lamecmds = []
+      lamecmds << "ar" if not ar_cmd_deterministic?
+      lamecmds << "tar" if not tar_cmd_deterministic?
+      if lamecmds != ""
+        skip("fpm searched for variants of #{lamecmds.join(", ")} that support(s) deterministic archives, but found none, so can't test reproducibility.")
         return
       end
 

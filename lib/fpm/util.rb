@@ -238,6 +238,8 @@ module FPM::Util
   def ar_cmd
     return @@ar_cmd if defined? @@ar_cmd
 
+    @@ar_cmd_deterministic = FALSE
+
     # FIXME: don't assume current directory writeable
     FileUtils.touch(["fpm-dummy.tmp"])
     ["ar", "gar"].each do |ar|
@@ -250,6 +252,7 @@ module FPM::Util
         system("#{ar} #{ar_create_opts} fpm-dummy.ar.tmp fpm-dummy.tmp 2>/dev/null && env TZ=UTC LANG=C LC_TIME=C #{ar} -tv fpm-dummy.ar.tmp | grep '0/0.*1970' > /dev/null 2>&1")
         if $?.exitstatus == 0
            @@ar_cmd = [ar, ar_create_opts]
+           @@ar_cmd_deterministic = TRUE
            return @@ar_cmd
         end
       end
@@ -262,6 +265,12 @@ module FPM::Util
     FileUtils.rm_f(["fpm-dummy.ar.tmp", "fpm-dummy.tmp"])
   end # def ar_cmd
 
+  # Return whether the command returned by ar_cmd can create deterministic archives
+  def ar_cmd_deterministic?
+    ar_cmd if not defined? @@ar_cmd_deterministic
+    return @@ar_cmd_deterministic
+  end
+
   # Get the recommended 'tar' command for this platform.
   def tar_cmd
     return @@tar_cmd if defined? @@tar_cmd
@@ -272,6 +281,7 @@ module FPM::Util
     # Prefer tar that supports more of the features we want, stop if we find tar of our dreams
     best="tar"
     bestscore=0
+    @@tar_cmd_deterministic = FALSE
     # GNU Tar, if not the default, is usually on the path as gtar, but
     # Mac OS X 10.8 and earlier shipped it as /usr/bin/gnutar
     ["tar", "gtar", "gnutar"].each do |tar|
@@ -290,6 +300,7 @@ module FPM::Util
         best=tar
         bestscore=score
         if score == 2
+          @@tar_cmd_deterministic = TRUE
           break
         end
       end
@@ -300,6 +311,12 @@ module FPM::Util
     # Clean up
     FileUtils.rm_f(["fpm-dummy.tar.tmp", "fpm-dummy.tmp"])
   end # def tar_cmd
+
+  # Return whether the command returned by tar_cmd can create deterministic archives
+  def tar_cmd_deterministic?
+    tar_cmd if not defined? @@tar_cmd_deterministic
+    return @@tar_cmd_deterministic
+  end
 
   # wrapper around mknod ffi calls
   def mknod_w(path, mode, dev)

@@ -367,6 +367,12 @@ class FPM::Package::Deb < FPM::Package
     output_check(output_path)
     # Abort if the target path already exists.
 
+    # Abort if we want reproducibility, but can't deliver it.
+    if not attributes[:source_date_epoch].nil?
+      logger.fatal("SOURCE_DATE_EPOCH specified, but deterministic ar not found") if not ar_cmd_deterministic?
+      logger.fatal("SOURCE_DATE_EPOCH specified, but deterministic tar not found") if not tar_cmd_deterministic?
+    end
+
     # create 'debian-binary' file, required to make a valid debian package
     File.write(build_path("debian-binary"), "2.0\n")
 
