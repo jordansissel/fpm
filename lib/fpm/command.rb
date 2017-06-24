@@ -233,6 +233,17 @@ class FPM::Command < Clamp::Command
     "copying, downloading, etc. Roughly any scratch space fpm needs to build " \
     "your package.", :default => Dir.tmpdir
 
+  option "--source-date-epoch", "SOURCE_DATE_EPOCH",
+    "Integer unix timestamp to use for generated files. " \
+    "See https://reproducible-builds.org/specs/source-date-epoch",
+    :environment_variable => "SOURCE_DATE_EPOCH"
+
+  option "--build-path-prefix-map", "BUILD_PATH_PREFIX_MAP",
+    "If SOURCE_DATE_EPOCH is given without BUILD_PATH_PREFIX_MAP, " \
+    "use a fixed package build directory to avoid nondeterminism. " \
+    "See https://reproducible-builds.org/specs/build-path-prefix-map",
+    :environment_variable => "BUILD_PATH_PREFIX_MAP"
+
   parameter "[ARGS] ...",
     "Inputs to the source package type. For the 'dir' type, this is the files" \
     " and directories you want to include in the package. For others, like " \

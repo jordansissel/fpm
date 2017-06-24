@@ -1,6 +1,7 @@
 require "fpm/namespace" # local
 require "fpm/util" # local
 require "pathname" # stdlib
+require "fileutils"
 require "find"
 require "tmpdir" # stdlib
 require "backports" # gem 'backports'
@@ -249,8 +250,21 @@ class FPM::Package
                                   "creating #{self.type} packages")
   end # def output
 
+  def temporary_directory(path)
+    if attributes[:source_date_epoch].nil? or not attributes[:build_path_prefix_map].nil?
+      # Normal, secure case
+      return Stud::Temporary.directory(path)
+    else
+      # Remove this case once compilers implement https://wiki.debian.org/ReproducibleBuilds/BuildPathProposal
+      root = ENV["TMP"] || ENV["TMPDIR"] || ENV["TEMP"] || "/tmp"
+      dir = File.join(root, 'fpm', 'reproducible-builds.org', attributes[:source_date_epoch], path)
+      FileUtils.mkdir_p(dir, :mode => 0700)
+      return dir
+    end
+  end
+
   def staging_path(path=nil)
-    @staging_path ||= Stud::Temporary.directory("package-#{type}-staging")
+    @staging_path ||= temporary_directory("package-#{type}-staging")
 
     if path.nil?
       return @staging_path
@@ -260,7 +274,7 @@ class FPM::Package
   end # def staging_path
 
   def build_path(path=nil)
-    @build_path ||= Stud::Temporary.directory("package-#{type}-build")
+    @build_path ||= temporary_directory("package-#{type}-build")
 
     if path.nil?
       return @build_path

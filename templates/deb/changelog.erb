@@ -2,4 +2,4 @@
 
   * Package created with FPM.
 
- -- <%= maintainer %>  <%= Time.now.strftime("%a, %d %b %Y %T %z") %>
+ -- <%= maintainer %>  <%= (if attributes[:source_date_epoch].nil? then Time.now() else Time.at(attributes[:source_date_epoch].to_i) end).strftime("%a, %d %b %Y %T %z") %>

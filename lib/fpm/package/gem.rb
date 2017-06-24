@@ -2,6 +2,7 @@ require "fpm/namespace"
 require "fpm/package"
 require "rubygems"
 require "fileutils"
+require "find"
 require "fpm/util"
 require "yaml"
 
@@ -229,6 +230,18 @@ class FPM::Package::Gem < FPM::Package
     if attributes[:gem_version_bins?] and File.directory?(bin_path)
       (::Dir.entries(bin_path) - ['.','..']).each do |bin|
         FileUtils.mv("#{bin_path}/#{bin}", "#{bin_path}/#{bin}-#{self.version}")
+      end
+    end
+
+    if not attributes[:source_date_epoch].nil?
+      # Remove generated Makefile and gem_make.out files, if any; they
+      # are not needed, and may contain generated paths that cause
+      # different output on successive runs.
+      Find.find(installdir) do |path|
+        if path =~ /.*(gem_make.out|Makefile)$/
+          logger.info("Removing build file %s to reduce nondeterminism" % path)
+          File.unlink(path)
+        end
       end
     end
   end # def install_to_staging

@@ -367,6 +367,12 @@ class FPM::Package::Deb < FPM::Package
     output_check(output_path)
     # Abort if the target path already exists.
 
+    # Abort if we want reproducibility, but can't deliver it.
+    if not attributes[:source_date_epoch].nil?
+      logger.fatal("SOURCE_DATE_EPOCH specified, but deterministic ar not found") if not ar_cmd_deterministic?
+      logger.fatal("SOURCE_DATE_EPOCH specified, but deterministic tar not found") if not tar_cmd_deterministic?
+    end
+
     # create 'debian-binary' file, required to make a valid debian package
     File.write(build_path("debian-binary"), "2.0\n")
 
@@ -442,6 +448,9 @@ class FPM::Package::Deb < FPM::Package
     mkdir_p(File.dirname(dest_changelog))
     File.new(dest_changelog, "wb", 0644).tap do |changelog|
       Zlib::GzipWriter.new(changelog, Zlib::BEST_COMPRESSION).tap do |changelog_gz|
+        if not attributes[:source_date_epoch].nil?
+          changelog_gz.mtime = attributes[:source_date_epoch].to_i
+        end
         if attributes[:deb_changelog]
           logger.info("Writing user-specified changelog", :source => attributes[:deb_changelog])
           File.new(attributes[:deb_changelog]).tap do |fd|
@@ -462,6 +471,9 @@ class FPM::Package::Deb < FPM::Package
       File.new(dest_upstream_changelog, "wb", 0644).tap do |changelog|
         Zlib::GzipWriter.new(changelog, Zlib::BEST_COMPRESSION).tap do |changelog_gz|
             logger.info("Writing user-specified upstream changelog", :source => attributes[:deb_upstream_changelog])
+            if not attributes[:source_date_epoch].nil?
+              changelog_gz.mtime = attributes[:source_date_epoch].to_i
+            end
             File.new(attributes[:deb_upstream_changelog]).tap do |fd|
               chunk = nil
               # Ruby 1.8.7 doesn't have IO#copy_stream
@@ -533,13 +545,28 @@ class FPM::Package::Deb < FPM::Package
     end
 
     args = [ tar_cmd, "-C", staging_path, compression ] + data_tar_flags + [ "-cf", datatar, "." ]
+    if not attributes[:source_date_epoch].nil?
+      # Use gnu tar options to force deterministic file order and timestamp
+      args += ["--sort=name", ("--mtime=@%s" % attributes[:source_date_epoch])]
+      # gnu tar obeys GZIP environment variable with options for gzip; -n = forget original filename and date
+      args.unshift({"GZIP" => "-9n"})
+    end
     safesystem(*args)
+
+    if attributes[:source_date_epoch].nil?
+      ar, ar_create_opts = ["ar", "-qc"]
+    else
+      # We need ar to use the D modifier (i.e. zero uids and timestamps).
+      # Really recent BSD and gnu binutils turn that on by default.
+      # Slightly older ones support it, but don't make it the default.
+      ar, ar_create_opts = ar_cmd
+    end
 
     # pack up the .deb, which is just an 'ar' archive with 3 files
     # the 'debian-binary' file has to be first
     File.expand_path(output_path).tap do |output_path|
       ::Dir.chdir(build_path) do
-        safesystem("ar", "-qc", output_path, "debian-binary", "control.tar.gz", datatar)
+        safesystem(ar, ar_create_opts, output_path, "debian-binary", "control.tar.gz", datatar)
       end
     end
   end # def output
@@ -693,6 +720,12 @@ class FPM::Package::Deb < FPM::Package
 
       args = [ tar_cmd, "-C", control_path, "-zcf", controltar,
         "--owner=0", "--group=0", "--numeric-owner", "." ]
+      if not attributes[:source_date_epoch].nil?
+        # Force deterministic file order and timestamp
+        args += ["--sort=name", ("--mtime=@%s" % attributes[:source_date_epoch])]
+        # gnu tar obeys GZIP environment variable with options for gzip; -n = forget original filename and date
+        args.unshift({"GZIP" => "-9n"})
+      end
       safesystem(*args)
     end
 
