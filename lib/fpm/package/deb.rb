@@ -243,7 +243,7 @@ class FPM::Package::Deb < FPM::Package
     build_path("control").tap do |path|
       FileUtils.mkdir(path) if !File.directory?(path)
       # Unpack the control tarball
-      safesystem("ar p #{package} control.tar.gz | tar -zxf - -C #{path}")
+      safesystem(ar_cmd[0] + " p #{package} control.tar.gz | tar -zxf - -C #{path}")
 
       control = File.read(File.join(path, "control"))
 
@@ -340,7 +340,7 @@ class FPM::Package::Deb < FPM::Package
 
   def extract_files(package)
     # Find out the compression type
-    compression = `ar t #{package}`.split("\n").grep(/data.tar/).first.split(".").last
+    compression = `#{ar_cmd[0]} t #{package}`.split("\n").grep(/data.tar/).first.split(".").last
     case compression
       when "gz"
         datatar = "data.tar.gz"
@@ -358,7 +358,7 @@ class FPM::Package::Deb < FPM::Package
     end
 
     # unpack the data.tar.{gz,bz2,xz} from the deb package into staging_path
-    safesystem("ar p #{package} #{datatar} " \
+    safesystem(ar_cmd[0] + " p #{package} #{datatar} " \
                "| tar #{compression} -xf - -C #{staging_path}")
   end # def extract_files
 
@@ -385,6 +385,22 @@ class FPM::Package::Deb < FPM::Package
                      "ldconfig to update the system library cache")
         scripts[:after_remove] = template("deb/ldconfig.sh.erb").result(binding)
       end
+    end
+
+    if attributes[:source_date_epoch].nil? and not attributes[:source_date_epoch_default].nil?
+      attributes[:source_date_epoch] = attributes[:source_date_epoch_default]
+    end
+    if attributes[:source_date_epoch] == "0"
+      logger.error("Alas, ruby's Zlib::GzipWriter does not support setting an mtime of zero.  Aborting.")
+      raise "#{name}: source_date_epoch of 0 not supported."
+    end
+    if not attributes[:source_date_epoch].nil? and not ar_cmd_deterministic?
+      logger.error("Alas, could not find an ar that can handle -D option. Try installing recent gnu binutils. Aborting.")
+      raise "#{name}: ar is insufficient to support source_date_epoch."
+    end
+    if not attributes[:source_date_epoch].nil? and not tar_cmd_supports_sort_names_and_set_mtime?
+      logger.error("Alas, could not find a tar that can set mtime and sort.  Try installing recent gnu tar. Aborting.")
+      raise "#{name}: tar is insufficient to support source_date_epoch."
     end
 
     attributes.fetch(:deb_systemd_list, []).each do |systemd|
@@ -424,6 +440,9 @@ class FPM::Package::Deb < FPM::Package
     mkdir_p(File.dirname(dest_changelog))
     File.new(dest_changelog, "wb", 0644).tap do |changelog|
       Zlib::GzipWriter.new(changelog, Zlib::BEST_COMPRESSION).tap do |changelog_gz|
+        if not attributes[:source_date_epoch].nil?
+          changelog_gz.mtime = attributes[:source_date_epoch].to_i
+        end
         if attributes[:deb_changelog]
           logger.info("Writing user-specified changelog", :source => attributes[:deb_changelog])
           File.new(attributes[:deb_changelog]).tap do |fd|
@@ -443,6 +462,9 @@ class FPM::Package::Deb < FPM::Package
     if attributes[:deb_upstream_changelog]
       File.new(dest_upstream_changelog, "wb", 0644).tap do |changelog|
         Zlib::GzipWriter.new(changelog, Zlib::BEST_COMPRESSION).tap do |changelog_gz|
+            if not attributes[:source_date_epoch].nil?
+              changelog_gz.mtime = attributes[:source_date_epoch].to_i
+            end
             logger.info("Writing user-specified upstream changelog", :source => attributes[:deb_upstream_changelog])
             File.new(attributes[:deb_upstream_changelog]).tap do |fd|
               chunk = nil
@@ -515,13 +537,19 @@ class FPM::Package::Deb < FPM::Package
     end
 
     args = [ tar_cmd, "-C", staging_path, compression ] + data_tar_flags + [ "-cf", datatar, "." ]
+    if tar_cmd_supports_sort_names_and_set_mtime? and not attributes[:source_date_epoch].nil?
+      # Use gnu tar options to force deterministic file order and timestamp
+      args += ["--sort=name", ("--mtime=@%s" % attributes[:source_date_epoch])]
+      # gnu tar obeys GZIP environment variable with options for gzip; -n = forget original filename and date
+      args.unshift({"GZIP" => "-9n"})
+    end
     safesystem(*args)
 
     # pack up the .deb, which is just an 'ar' archive with 3 files
     # the 'debian-binary' file has to be first
     File.expand_path(output_path).tap do |output_path|
       ::Dir.chdir(build_path) do
-        safesystem("ar", "-qc", output_path, "debian-binary", "control.tar.gz", datatar)
+        safesystem(*ar_cmd, output_path, "debian-binary", "control.tar.gz", datatar)
       end
     end
   end # def output
@@ -675,6 +703,12 @@ class FPM::Package::Deb < FPM::Package
 
       args = [ tar_cmd, "-C", control_path, "-zcf", controltar,
         "--owner=0", "--group=0", "--numeric-owner", "." ]
+      if tar_cmd_supports_sort_names_and_set_mtime? and not attributes[:source_date_epoch].nil?
+        # Force deterministic file order and timestamp
+        args += ["--sort=name", ("--mtime=@%s" % attributes[:source_date_epoch])]
+        # gnu tar obeys GZIP environment variable with options for gzip; -n = forget original filename and date
+        args.unshift({"GZIP" => "-9n"})
+      end
       safesystem(*args)
     end
 
