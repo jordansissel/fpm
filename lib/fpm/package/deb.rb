@@ -121,6 +121,18 @@ class FPM::Package::Deb < FPM::Package
     next @activated_triggers
   end
 
+  option "--interest-noawait", "EVENT", "Package is interested in EVENT trigger without awaiting" do |event|
+    @interested_noawait_triggers ||= []
+    @interested_noawait_triggers << event
+    next @interested_noawait_triggers
+  end
+
+  option "--activate-noawait", "EVENT", "Package activates EVENT trigger" do |event|
+    @activated_noawait_triggers ||= []
+    @activated_noawait_triggers << event
+    next @activated_noawait_triggers
+  end
+
   option "--field", "'FIELD: VALUE'", "Add custom field to the control file" do |fv|
     @custom_fields ||= {}
     field, value = fv.split(/: */, 2)
@@ -865,7 +877,10 @@ class FPM::Package::Deb < FPM::Package
 
   def write_triggers
     lines = [['interest', :deb_interest],
-             ['activate', :deb_activate]].map { |label, attr|
+             ['activate', :deb_activate],
+             ['interest-noawait', :deb_interest_noawait],
+             ['activate-noawait', :deb_activate_noawait],
+             ].map { |label, attr|
       (attributes[attr] || []).map { |e| "#{label} #{e}\n" }
     }.flatten.join('')
 
