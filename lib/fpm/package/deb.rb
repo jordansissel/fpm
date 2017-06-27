@@ -414,24 +414,6 @@ class FPM::Package::Deb < FPM::Package
       end
     end
 
-    write_control_tarball
-
-    # Tar up the staging_path into data.tar.{compression type}
-    case self.attributes[:deb_compression]
-      when "gz", nil
-        datatar = build_path("data.tar.gz")
-        compression = "-z"
-      when "bzip2"
-        datatar = build_path("data.tar.bz2")
-        compression = "-j"
-      when "xz"
-        datatar = build_path("data.tar.xz")
-        compression = "-J"
-      else
-        raise FPM::InvalidPackageConfiguration,
-          "Unknown compression type '#{self.attributes[:deb_compression]}'"
-    end
-
     # There are two changelogs that may appear:
     #   - debian-specific changelog, which should be archived as changelog.Debian.gz
     #   - upstream changelog, which should be archived as changelog.gz
