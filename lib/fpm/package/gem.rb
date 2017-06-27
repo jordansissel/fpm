@@ -275,33 +275,44 @@ class FPM::Package::Gem < FPM::Package
   # Supports formats suggested by http://keepachangelog.com and https://github.com/tech-angels/vandamme
   # as well as other similar formats that actually occur in the wild.
   # Build it in pieces for readability, and allow version and date in either order.
+  # Whenever you change this, add a row to the test case in spec/fpm/package/gem_spec.rb.
+  # Don't even try to handle dates that lack four-digit years.
   # Building blocks:
   P_RE_LEADIN    = '^[#=]{0,3}\s?'
   P_RE_VERSION_  = '[\w\.-]+\.[\w\.-]+[a-zA-Z0-9]'
   P_RE_SEPARATOR = '\s[-=/(]?\s?'
-  P_RE_DATE      = '(?<date>\w+ \d{1,2}(?:st|nd|rd|th)?,\s\d{4}|\d{4}-\d{2}-\d{2})'
-  P_RE_VERSION      = "\\[?(?:Version |v)?(?<version>#{P_RE_VERSION_})\\]?"
+  P_RE_DATE1     = '\d{4}-\d{2}-\d{2}'
+  P_RE_DATE2     = '\w+ \d{1,2}(?:st|nd|rd|th)?,\s\d{4}'
+  P_RE_DATE3     = '\w+\s+\w+\s+\d{1,2},\s\d{4}'
+  P_RE_DATE      = "(?<date>#{P_RE_DATE1}|#{P_RE_DATE2}|#{P_RE_DATE3})"
+  P_RE_URL       = '\(https?:[-\w/.%]*\)'    # In parens, per markdown
+  P_RE_GTMAGIC   = '\[\]'                    # github magic version diff, per chandler
+  P_RE_VERSION   = "\\[?(?:Version |v)?(?<version>#{P_RE_VERSION_})\\]?(?:#{P_RE_URL}|#{P_RE_GTMAGIC})?"
   # The final RE's:
   P_RE_VERSION_DATE = "#{P_RE_LEADIN}#{P_RE_VERSION}#{P_RE_SEPARATOR}#{P_RE_DATE}"
   P_RE_DATE_VERSION = "#{P_RE_LEADIN}#{P_RE_DATE}#{P_RE_SEPARATOR}#{P_RE_VERSION}"
 
-  # Examples:
-  # Sinatra: "= 1.4.7 / 2016-01-24"
-
   # Detect release date, if found, store in attributes[:source_date_epoch]
   def detect_source_date_from_changelog(installdir)
     name = self.name.sub("rubygem-", "") + "-" + self.version
+    changelog = nil
     datestr = nil
     r1 = Regexp.new(P_RE_VERSION_DATE)
     r2 = Regexp.new(P_RE_DATE_VERSION)
 
     # Changelog doesn't have a standard name, so check all common variations
-    [ "CHANGELIST", "ChangeLog", "CHANGELOG", "CHANGELOG.asciidoc", "changelog.md",
-      "CHANGELOG.md", "CHANGELOG.rdoc", "CHANGELOG.rst", "CHANGES.md", "CHANGES.txt",
-      "CHANGES"
+    # Sort this list using LANG=C, i.e. caps first
+    [
+      "CHANGELIST",
+      "CHANGELOG", "CHANGELOG.asciidoc", "CHANGELOG.md", "CHANGELOG.rdoc", "CHANGELOG.rst", "CHANGELOG.txt",
+      "CHANGES",   "CHANGES.md",   "CHANGES.txt",
+      "ChangeLog", "ChangeLog.md", "ChangeLog.txt",
+      "Changelog", "Changelog.md", "Changelog.txt",
+      "changelog", "changelog.md", "changelog.txt",
     ].each do |changelogname|
       path = File.join(installdir, "gems", name, changelogname)
       if File.exist?(path)
+        changelog = path
         File.open path do |file|
           file.each_line do |line|
             if line =~ /#{self.version}/
@@ -321,8 +332,10 @@ class FPM::Package::Gem < FPM::Package
       sec = date.strftime("%s")
       attributes[:source_date_epoch] = sec
       logger.debug("Gem %s has changelog date %s, setting source_date_epoch to %s" % [name, datestr, sec])
+    elsif changelog
+      logger.debug("Gem %s changelog %s did not have recognizable date for release %s" % [name, changelog, self.version])
     else
-      logger.debug("Gem %s did not have changelog with recognizable date for release %s" % [name, self.version])
+      logger.debug("Gem %s did not have changelog with recognized name" % [name])
       # FIXME: check rubygems.org?
     end
   end # detect_source_date_from_changelog
