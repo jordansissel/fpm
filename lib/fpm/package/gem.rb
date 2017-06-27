@@ -47,6 +47,22 @@ class FPM::Package::Gem < FPM::Package
 
   option "--version-bins", :flag, "Append the version to the bins", :default => false
 
+  option "--stagingdir", "STAGINGDIR",
+    "The directory where fpm installs the gem temporarily before conversion. " \
+    "Normally a random subdirectory of workdir."
+
+  # Override parent method
+  def staging_path(path=nil)
+    @gem_staging_path ||= attributes[:gem_stagingdir] || Stud::Temporary.directory("package-#{type}-staging")
+    @staging_path = @gem_staging_path
+
+    if path.nil?
+      return @staging_path
+    else
+      return File.join(@staging_path, path)
+    end
+  end # def staging_path
+
   def input(gem)
     # 'arg'  is the name of the rubygem we should unpack.
     path_to_gem = download_if_necessary(gem, version)
@@ -231,6 +247,21 @@ class FPM::Package::Gem < FPM::Package
         FileUtils.mv("#{bin_path}/#{bin}", "#{bin_path}/#{bin}-#{self.version}")
       end
     end
+
+    if attributes[:source_date_epoch_from_changelog?]
+      detect_source_date_from_changelog(installdir)
+    end
+
+    # Remove generated Makefile and gem_make.out files, if any; they
+    # are not needed, and may contain generated paths that cause
+    # different output on successive runs.
+    Find.find(installdir) do |path|
+      if path =~ /.*(gem_make.out|Makefile)$/
+        logger.info("Removing no longer needed file %s to reduce nondeterminism" % path)
+        File.unlink(path)
+      end
+    end
+
   end # def install_to_staging
 
   # Sanitize package name.
@@ -239,5 +270,62 @@ class FPM::Package::Gem < FPM::Package
   def fix_name(name)
     return [attributes[:gem_package_name_prefix], name].join("-")
   end # def fix_name
+
+  # Regular expression to accept a gem changelog line, and store date & version, if any, in named capture groups.
+  # Supports formats suggested by http://keepachangelog.com and https://github.com/tech-angels/vandamme
+  # as well as other similar formats that actually occur in the wild.
+  # Build it in pieces for readability, and allow version and date in either order.
+  # Building blocks:
+  P_RE_LEADIN    = '^[#=]{0,3}\s?'
+  P_RE_VERSION_  = '[\w\.-]+\.[\w\.-]+[a-zA-Z0-9]'
+  P_RE_SEPARATOR = '\s[-=/(]?\s?'
+  P_RE_DATE      = '(?<date>\w+ \d{1,2}(?:st|nd|rd|th)?,\s\d{4}|\d{4}-\d{2}-\d{2})'
+  P_RE_VERSION      = "\\[?(?:Version |v)?(?<version>#{P_RE_VERSION_})\\]?"
+  # The final RE's:
+  P_RE_VERSION_DATE = "#{P_RE_LEADIN}#{P_RE_VERSION}#{P_RE_SEPARATOR}#{P_RE_DATE}"
+  P_RE_DATE_VERSION = "#{P_RE_LEADIN}#{P_RE_DATE}#{P_RE_SEPARATOR}#{P_RE_VERSION}"
+
+  # Examples:
+  # Sinatra: "= 1.4.7 / 2016-01-24"
+
+  # Detect release date, if found, store in attributes[:source_date_epoch]
+  def detect_source_date_from_changelog(installdir)
+    name = self.name.sub("rubygem-", "") + "-" + self.version
+    datestr = nil
+    r1 = Regexp.new(P_RE_VERSION_DATE)
+    r2 = Regexp.new(P_RE_DATE_VERSION)
+
+    # Changelog doesn't have a standard name, so check all common variations
+    [ "CHANGELIST", "ChangeLog", "CHANGELOG", "CHANGELOG.asciidoc", "changelog.md",
+      "CHANGELOG.md", "CHANGELOG.rdoc", "CHANGELOG.rst", "CHANGES.md", "CHANGES.txt",
+      "CHANGES"
+    ].each do |changelogname|
+      path = File.join(installdir, "gems", name, changelogname)
+      if File.exist?(path)
+        File.open path do |file|
+          file.each_line do |line|
+            if line =~ /#{self.version}/
+              [r1, r2].each do |r|
+                if r.match(line)
+                  datestr = $~[:date]
+                  break
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+    if datestr
+      date = Date.parse(datestr)
+      sec = date.strftime("%s")
+      attributes[:source_date_epoch] = sec
+      logger.debug("Gem %s has changelog date %s, setting source_date_epoch to %s" % [name, datestr, sec])
+    else
+      logger.debug("Gem %s did not have changelog with recognizable date for release %s" % [name, self.version])
+      # FIXME: check rubygems.org?
+    end
+  end # detect_source_date_from_changelog
+
   public(:input, :output)
 end # class FPM::Package::Gem
