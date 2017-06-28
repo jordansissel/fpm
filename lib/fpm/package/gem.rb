@@ -256,7 +256,7 @@ class FPM::Package::Gem < FPM::Package
     # are not needed, and may contain generated paths that cause
     # different output on successive runs.
     Find.find(installdir) do |path|
-      if path =~ /.*(gem_make.out|Makefile)$/
+      if path =~ /.*(gem_make.out|Makefile|mkmf.log)$/
         logger.info("Removing no longer needed file %s to reduce nondeterminism" % path)
         File.unlink(path)
       end
