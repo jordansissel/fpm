@@ -412,17 +412,19 @@ describe FPM::Package::Deb do
       # Output a second time with a different timestamp; tar format time resolution is 1 second
       sleep(1)
       package.output(target)
-      if File.exist? "/usr/bin/diffoscope"
-        tmp = ENV['TMP'] || "/tmp"
-        log = File.join(tmp, "diffoscope.log.tmp")
-        system('diffoscope %s %s 2>&1 > %s' % [target, target + '.orig', log])
-        diffoscope_diff_length = File.size(log)
-        if (diffoscope_diff_length > 0)
-           puts("\nDiffoscope reports:")
-           puts(File.read(log))
-        end
-        expect(diffoscope_diff_length).to(be == 0)
+
+      # Show detailed differences, if diffoscope is on PATH; else do nothing
+      tmp = ENV['TMP'] || "/tmp"
+      log = File.join(tmp, "diffoscope.log.tmp")
+      system('diffoscope %s %s > %s 2> /dev/null' % [target, target + '.orig', log])
+      diffoscope_diff_length = File.size(log)
+      if (diffoscope_diff_length > 0)
+         puts("\nDiffoscope reports:")
+         puts(File.read(log))
       end
+      expect(diffoscope_diff_length).to(be == 0)
+      File.unlink(log)
+
       expect(FileUtils.compare_file(target, target + '.orig')).to be true
     end
   end # #reproducible
