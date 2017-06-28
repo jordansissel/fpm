@@ -182,3 +182,55 @@ Nice, eh? Now, let's show what happens after these packages are installed::
 You can put these .deb files in your apt repo (assuming you have a local apt
 repo, right?) and easily install them with 'apt-get' like: 'apt-get install
 rubygem-cucumber' and expect dependencies to work nicely.
+
+Deterministic output
+--------------------
+
+If convert a gem to a deb twice, you'll get different output even though the inputs didn't change:
+
+    % fpm -s gem -t deb json
+    % mkdir run1; mv *.deb run1
+    % sleep 1
+    % fpm -s gem -t deb json
+    % mkdir run2; mv *.deb run2
+    % cmp run1/*.deb run2/*.deb
+    run1/rubygem-json_2.1.0_amd64.deb run2/rubygem-json_2.1.0_amd64.deb differ: byte 124, line 4
+
+This can be a pain if you're uploading packages to an apt repository
+which refuses reuploads that differ in content, or if you're trying
+to verify that packages have not been infected.
+There are several sources of nondeterminism; use 'diffoscope run1/*.deb run2/*.deb' if you
+want the gory details.  See http://reproducible-builds.org for the whole story.
+
+To remove nondeterminism due to differing timestamps,
+use the option --source-date-epoch-from-changelog; that will use the timestamp from
+the gem's changelog.
+
+In case the gem doesn't have a standard changelog (and most don't, alas),
+use --source-date-epoch-default to set a default integer Unix timestamp.
+(This will also be read from the environment variable SOURCE_DATE_EPOCH if set.)
+
+Gems that include native extensions may have nondeterministic output
+because of how the extensions get built (at least until fpm and
+compilers finish implementing the reproducible-builds.org
+recommendations).  If this happens, use the option --gem-stagingdir=/tmp/foo.
+
+For instance, picking the timestamp 1234 seconds after the Unix epoch:
+
+    % fpm -s gem -t deb --source-date-epoch-default=1234 --gem-stagingdir=/tmp/foo json
+    % mkdir run1; mv *.deb run1
+    % sleep 1
+    % fpm -s gem -t deb --source-date-epoch-default=1234 --gem-stagingdir=/tmp/foo json
+    % mkdir run2; mv *.deb run2
+    % cmp run1/*.deb run2/*.deb
+    % dpkg-deb -c run1/*.deb
+    ...
+    -rw-rw-r-- 0/0           17572 1969-12-31 16:20 ./var/lib/gems/2.3.0/gems/json-2.1.0/CHANGES.md
+    % date --date @1234
+    Wed Dec 31 16:20:34 PST 1969
+
+If after using those three options, the files are still different,
+you may have found a bug; we might not have plugged all the sources
+of nondeterminism yet.  As of this writing, these options are only
+implemented for reading gems and writing debs, and only verified
+to produce identical output when run twice on the same Linux system.
