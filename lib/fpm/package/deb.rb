@@ -18,6 +18,7 @@ class FPM::Package::Deb < FPM::Package
     :after_install      => "postinst",
     :before_remove      => "prerm",
     :after_remove       => "postrm",
+    :after_purge        => "postrm",
   } unless defined?(SCRIPT_MAP)
 
   # The list of supported compression types. Default is gz (gzip)
@@ -175,6 +176,12 @@ class FPM::Package::Deb < FPM::Package
   end
 
   option "--systemd-restart-after-upgrade", :flag , "Restart service after upgrade", :default => true
+
+  option "--after-purge", "FILE",
+    "A script to be run after package removal to purge remaining (config) files " \
+    "(a.k.a. postrm purge within apt-get purge)" do |val|
+    File.expand_path(val) # Get the full path to the script
+  end # --after-purge
 
   def initialize(*args)
     super(*args)
@@ -439,6 +446,9 @@ class FPM::Package::Deb < FPM::Package
       end
       if script?(:after_remove)
         scripts[:after_remove] = template("deb/postrm_upgrade.sh.erb").result(binding)
+      end
+      if script?(:after_purge)
+        scripts[:after_purge] = template("deb/postrm_upgrade.sh.erb").result(binding)
       end
     end
 

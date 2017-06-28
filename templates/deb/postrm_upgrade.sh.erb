@@ -9,6 +9,16 @@ after_remove() {
 <% end -%>
 }
 
+after_purge() {
+<%# Making sure that at least one command is in the function -%>
+<%# avoids a lot of potential errors, including the case that -%>
+<%# the script is non-empty, but just whitespace and/or comments -%>
+    :
+<% if script?(:after_purge) -%>
+<%=  script(:after_purge) %>
+<% end -%>
+}
+
 dummy() {
     :
 }
@@ -25,11 +35,8 @@ elif [ "${1}" = "purge" -a -z "${2}" ]
 then
     # like "on remove", but executes after dpkg deletes config files
     # 'apt-get purge' runs 'on remove' section, then this section.
-    # Maybe we ignore this; it seems really fine-grained.
-    # There is no equivalent in RPM or ARCH. A debian-specific argument
-    # might perhaps be used here, but most people
-    # probably don't need it.
-    dummy
+    # There is no equivalent in RPM or ARCH.
+    after_purge
 elif [ "${1}" = "upgrade" ]
 then
     # This represents the case where the old package's postrm is called after
