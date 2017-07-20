@@ -48,9 +48,8 @@ Install the package, test it out::
 
 Package up the manpages (create nodejs-doc)
 -------------------------------------------
-
-Package up the manpages via::
-
+Now, create a package for the node manpage::
+    
     # Create a package of the node manpage
     % fpm -s dir -t deb -p nodejs-doc_VERSION_ARCH.deb -n nodejs-doc -v 0.6.0 -C /tmp/installdir usr/share/man
 
@@ -61,6 +60,7 @@ Look in the nodejs-doc package::
 
 Package up the headers (create nodejs-dev)
 ------------------------------------------
+Lastly, package the headers for development::
 
 Package up the headers via::
 
