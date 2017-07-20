@@ -238,7 +238,7 @@ module FPM::Util
   def ar_cmd
     return @@ar_cmd if defined? @@ar_cmd
 
-    @@ar_cmd_deterministic = FALSE
+    @@ar_cmd_deterministic = false
 
     # FIXME: don't assume current directory writeable
     FileUtils.touch(["fpm-dummy.tmp"])
@@ -252,7 +252,7 @@ module FPM::Util
         system("#{ar} #{ar_create_opts} fpm-dummy.ar.tmp fpm-dummy.tmp 2>/dev/null && env TZ=UTC LANG=C LC_TIME=C #{ar} -tv fpm-dummy.ar.tmp | grep '0/0.*1970' > /dev/null 2>&1")
         if $?.exitstatus == 0
            @@ar_cmd = [ar, ar_create_opts]
-           @@ar_cmd_deterministic = TRUE
+           @@ar_cmd_deterministic = true
            return @@ar_cmd
         end
       end
@@ -281,7 +281,7 @@ module FPM::Util
     # Prefer tar that supports more of the features we want, stop if we find tar of our dreams
     best="tar"
     bestscore=0
-    @@tar_cmd_deterministic = FALSE
+    @@tar_cmd_deterministic = false
     # GNU Tar, if not the default, is usually on the path as gtar, but
     # Mac OS X 10.8 and earlier shipped it as /usr/bin/gnutar
     ["tar", "gtar", "gnutar"].each do |tar|
@@ -298,7 +298,7 @@ module FPM::Util
         best=tar
         bestscore=score
         if score == 2
-          @@tar_cmd_deterministic = TRUE
+          @@tar_cmd_deterministic = true
           break
         end
       end
