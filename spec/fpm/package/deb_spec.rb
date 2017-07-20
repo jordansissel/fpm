@@ -161,6 +161,8 @@ describe FPM::Package::Deb do
 
       original.attributes[:deb_interest] = ['asdf', 'hjkl']
       original.attributes[:deb_activate] = ['qwer', 'uiop']
+      original.attributes[:deb_interest_noawait] = ['aqwx', 'zsxc']
+      original.attributes[:deb_activate_noawait] = ['edcv', 'rfvb']
 
       original.output(target)
       input.input(target)
@@ -193,6 +195,10 @@ describe FPM::Package::Deb do
         reject { triggers =~ /^interest hjkl$/ }.nil?
         reject { triggers =~ /^activate qwer$/ }.nil?
         reject { triggers =~ /^activate uiop$/ }.nil?
+        reject { triggers =~ /^interest-noawait aqwx$/ }.nil?
+        reject { triggers =~ /^interest-noawait zsxc$/ }.nil?
+        reject { triggers =~ /^activate-noawait edcv$/ }.nil?
+        reject { triggers =~ /^activate-noawait rfvb$/ }.nil?
         insist { triggers[-1] } == "\n"
       end
 
