@@ -26,7 +26,7 @@ describe FPM::Package::Tar do
     end
 
     it "doesn't include a .scripts folder" do
-      insist { Dir.exists?(File.join(output_dir, '.scripts')) } == FALSE
+      insist { Dir.exists?(File.join(output_dir, '.scripts')) } == false
     end
 
     after do
