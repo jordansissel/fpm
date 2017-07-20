@@ -175,8 +175,8 @@ class FPM::Package
     @directories = []
     @attrs = {}
 
-    staging_path
     build_path
+    # Dont' initialize staging_path just yet, do it lazily so subclass can get a word in.
   end # def initialize
 
   # Get the 'type' for this instance.

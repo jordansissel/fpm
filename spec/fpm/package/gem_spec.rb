@@ -99,4 +99,40 @@ describe FPM::Package::Gem, :if => have_gem do
       insist { File.readlines(file_path).grep("#!/opt/special/bin/ruby\n").any? } == true
     end
   end
+
+  context "when confronted with a multiplicity of changelog formats" do
+    # FIXME: don't expose RE's, provide a more stable interface
+
+    it 'should recognize these formats' do
+      r1 = Regexp.new(FPM::Package::Gem::P_RE_VERSION_DATE)
+      r2 = Regexp.new(FPM::Package::Gem::P_RE_DATE_VERSION)
+      [
+        [ "cabin",       "v0.1.7 (2011-11-07)",       "0.1.7", "2011-11-07",       "1320624000" ],
+        [ "chandler",    "## [0.7.0][] (2016-12-23)", "0.7.0", "2016-12-23",       "1482451200" ],
+        [ "domain_name", "## [v0.5.20170404](https://github.com/knu/ruby-domain_name/tree/v0.5.20170404) (2017-04-04)", "0.5.20170404", "2017-04-04", "1491264000" ],
+        [ "parseconfig", "Mon Jan 25, 2016 - v1.0.8", "1.0.8", "Mon Jan 25, 2016", "1453680000" ],
+        [ "rack_csrf",   "# v2.6.0 (2016-12-31)",     "2.6.0", "2016-12-31",       "1483142400" ],
+        [ "sinatra",     "= 1.4.7 / 2016-01-24",      "1.4.7", "2016-01-24",       "1453593600" ],
+      ].each do |gem, line, version, date, unixdate|
+        v = ""
+        d = ""
+        [r1, r2].each do |r|
+          if r.match(line)
+            d = $~[:date]
+            v = $~[:version]
+            break
+          end
+        end
+        if (d == "")
+           puts("RE failed to match for gem #{gem}, #{line}")
+        end
+        e = Date.parse(d)
+        u = e.strftime("%s")
+        insist { v } == version
+        insist { d } == date
+        insist { u } == unixdate
+      end
+    end
+  end
+
 end # describe FPM::Package::Gem
