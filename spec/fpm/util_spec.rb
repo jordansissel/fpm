@@ -12,6 +12,24 @@ describe FPM::Util do
   end
 
   context "#copy_entry" do
+    context "when copying a device" do
+      let(:out) { Stud::Temporary.pathname }
+
+      it "should raise Errno::EPERM if user is not root" do
+        expect {
+          subject.copy_entry("/dev/tty", out)
+        }.to raise_error(Errno::EPERM)
+      end
+
+      it "should raise Errno::EPERM with the source path in the message" do
+        begin
+          subject.copy_entry("/dev/tty", out)
+        rescue Errno::EPERM => e
+          expect(e.message).to include("/dev/tty")
+        end
+      end
+    end
+
     context "when given files that are hardlinks" do
       it "should keep those files as hardlinks" do
         Stud::Temporary.directory do |path|
