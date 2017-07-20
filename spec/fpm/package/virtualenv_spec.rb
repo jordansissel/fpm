@@ -97,20 +97,6 @@ describe FPM::Package::Virtualenv, :if => virtualenv_usable? do
       egg_path =  File.join(subject.build_path, '/setup.py')
       expect(File.exists?(egg_path)).to(be_truthy)
     end
-
-    # not sure if this is correct behaviour, but it's what it is doing
-    it "ignores the prefix" do
-      subject.attributes[:prefix] = '/usr'
-      subject.attributes[:virtualenv_other_files_dir] =  File.expand_path("../../fixtures/python/", File.dirname(__FILE__))
-      subject.input("pip==8.1.2")
-
-      activate_path = File.join(subject.build_path, '/usr/share/python/pip/bin/activate')
-      expect(File.exists?(activate_path)).to(be_truthy)
-
-      egg_path =  File.join(subject.build_path, '/setup.py')
-
-      expect(File.exists?(egg_path)).to(be_truthy)
-    end
   end
 
   context "input is a requirements.txt file" do
@@ -144,6 +130,27 @@ describe FPM::Package::Virtualenv, :if => virtualenv_usable? do
 
         expect(subject.name).to eq("virtualenv-foo")
       end
+    end
+  end
+
+  context "new --prefix behaviour" do
+    it "--prefix puts virtualenv under the prefix" do
+      subject.attributes[:prefix] = '/opt/foo'
+      subject.input('absolute')
+
+      activate_path = File.join(subject.staging_path, '/opt/foo/bin/activate')
+
+      expect(File.exists?(activate_path)).to(be_truthy)
+    end
+
+    it "takes precedence over other folder options" do
+      subject.attributes[:prefix] = '/opt/foo'
+      subject.attributes[:install_location] = '/usr/local/foo'
+      subject.input('absolute')
+
+      activate_path = File.join(subject.staging_path, '/opt/foo/bin/activate')
+
+      expect(File.exists?(activate_path)).to(be_truthy)
     end
   end
 end

@@ -21,15 +21,15 @@ On OSX/macOS::
 
 On Red Hat systems (Fedora 22 or older, CentOS, etc)::
 
-    yum install ruby-devel gcc make rpm-build
+    yum install ruby-devel gcc make rpm-build rubygems
 
 On Fedora 23 or newer::
 
-    dnf install ruby-devel gcc make rpm-build
+    dnf install ruby-devel gcc make rpm-build libffi-devel
 
 On Debian-derived systems (Debian, Ubuntu, etc)::
 
-    apt-get install ruby ruby-dev rubygems gcc make
+    apt-get install ruby ruby-dev rubygems build-essential
 
 Installing FPM
 --------------

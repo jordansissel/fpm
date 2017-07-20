@@ -47,19 +47,17 @@ Gem::Specification.new do |spec|
 
   spec.add_development_dependency("rake", "~> 10") # license: MIT
 
-  # For creating tar archives (many packages are just tar archives)
-  spec.add_dependency("archive-tar-minitar") # license: GPL2+
-
   # For creating FreeBSD package archives (xz-compressed tars)
   spec.add_dependency("ruby-xz") # license: MIT
 
   # For sourcing from pleaserun 
   spec.add_dependency("pleaserun", "~> 0.0.24") # license: Apache 2
 
+  spec.add_dependency("stud")
+
   spec.add_development_dependency("rspec", "~> 3.0.0") # license: MIT (according to wikipedia)
   spec.add_development_dependency("insist", "~> 1.0.0") # license: Apache 2
   spec.add_development_dependency("pry")
-  spec.add_development_dependency("stud")
 
   spec.files = files
   spec.require_paths << "lib"

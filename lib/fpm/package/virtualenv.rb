@@ -15,8 +15,11 @@ class FPM::Package::Virtualenv < FPM::Package
   option "--package-name-prefix", "PREFIX", "Name to prefix the package " \
   "name with.", :default => "virtualenv"
 
-  option "--install-location", "DIRECTORY", "Location to which to " \
-  "install the virtualenv by default.", :default => "/usr/share/python" do |path|
+  option "--install-location", "DIRECTORY", "DEPRECATED: Use --prefix instead." \
+    "  Location to which to install the virtualenv by default.",
+    :default => "/usr/share/python" do |path|
+    logger.warn("Using deprecated flag: --install-location. Please use " \
+                  "--prefix instead.")
     File.expand_path(path)
   end
 
@@ -36,6 +39,12 @@ class FPM::Package::Virtualenv < FPM::Package
 
   option "--system-site-packages", :flag, "Give the virtual environment access to the "\
   "global site-packages"
+
+  option "--find-links", "PIP_FIND_LINKS", "If a url or path to an html file, then parse for "\
+    "links to archives. If a local path or file:// url that's a directory, then look "\
+    "for archives in the directory listing.",
+    :multivalued => true, :attribute_name => :virtualenv_find_links_urls,
+    :default => nil
 
   private
 
@@ -76,9 +85,14 @@ class FPM::Package::Virtualenv < FPM::Package
                    self.name].join("-")
     end
 
+    # prefix wins over previous virtual_install_location behaviour
     virtualenv_folder =
-      File.join(installdir,
-                virtualenv_name)
+      if self.attributes[:prefix]
+        self.attributes[:prefix]
+      else
+        File.join(installdir,
+                  virtualenv_name)
+      end
 
     virtualenv_build_folder = build_path(virtualenv_folder)
 
@@ -107,6 +121,13 @@ class FPM::Package::Virtualenv < FPM::Package
       end
     end
 
+    find_links_url_args = []
+    if attributes[:virtualenv_find_links_urls]
+      attributes[:virtualenv_find_links_urls].each do |links_url|
+        find_links_url_args << "--find-links" << links_url
+      end
+    end
+
     target_args = []
     if is_requirements_file
       target_args << "-r" << package
@@ -114,7 +135,7 @@ class FPM::Package::Virtualenv < FPM::Package
       target_args << package
     end
 
-    pip_args = [python_exe, pip_exe, "install", "-i", attributes[:virtualenv_pypi]] << extra_index_url_args << target_args
+    pip_args = [python_exe, pip_exe, "install", "-i", attributes[:virtualenv_pypi]] << extra_index_url_args << find_links_url_args << target_args
     safesystem(*pip_args.flatten)
 
     if attributes[:virtualenv_setup_install?]
@@ -155,7 +176,8 @@ class FPM::Package::Virtualenv < FPM::Package
     # use dir to set stuff up properly, mainly so I don't have to reimplement
     # the chdir/prefix stuff special for tar.
     dir = convert(FPM::Package::Dir)
-
+    # don't double prefix the files
+    dir.attributes[:prefix] = nil
     if attributes[:chdir]
       dir.attributes[:chdir] = File.join(build_path, attributes[:chdir])
     else

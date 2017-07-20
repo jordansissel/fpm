@@ -1,6 +1,7 @@
 require "fpm/namespace"
 require "childprocess"
 require "ffi"
+require "fileutils"
 
 # Some utility functions
 module FPM::Util
@@ -190,9 +191,14 @@ module FPM::Util
     if args.size == 1
       args = [ default_shell, "-c", args[0] ]
     end
-    program = args[0]
 
-    exit_code = execmd(args)
+    if args[0].kind_of?(Hash)
+      env = args.shift()
+      exit_code = execmd(env, args)
+    else
+      exit_code = execmd(args)
+    end
+    program = args[0]
     success = (exit_code == 0)
 
     if !success
@@ -226,25 +232,89 @@ module FPM::Util
     return stdout_r_str
   end # def safesystemout
 
+  # Get an array containing the recommended 'ar' command for this platform
+  # and the recommended options to quickly create/append to an archive
+  # without timestamps or uids (if possible).
+  def ar_cmd
+    return @@ar_cmd if defined? @@ar_cmd
+
+    @@ar_cmd_deterministic = false
+
+    # FIXME: don't assume current directory writeable
+    FileUtils.touch(["fpm-dummy.tmp"])
+    ["ar", "gar"].each do |ar|
+      ["-qc", "-qcD"].each do |ar_create_opts|
+        FileUtils.rm_f(["fpm-dummy.ar.tmp"])
+        # Return this combination if it creates archives without uids or timestamps.
+        # Exitstatus will be nonzero if the archive can't be created,
+        # or its table of contents doesn't match the regular expression.
+        # Be extra-careful about locale and timezone when matching output.
+        system("#{ar} #{ar_create_opts} fpm-dummy.ar.tmp fpm-dummy.tmp 2>/dev/null && env TZ=UTC LANG=C LC_TIME=C #{ar} -tv fpm-dummy.ar.tmp | grep '0/0.*1970' > /dev/null 2>&1")
+        if $?.exitstatus == 0
+           @@ar_cmd = [ar, ar_create_opts]
+           @@ar_cmd_deterministic = true
+           return @@ar_cmd
+        end
+      end
+    end
+    # If no combination of ar and options omits timestamps, fall back to default.
+    @@ar_cmd = ["ar", "-qc"]
+    return @@ar_cmd
+  ensure
+    # Clean up
+    FileUtils.rm_f(["fpm-dummy.ar.tmp", "fpm-dummy.tmp"])
+  end # def ar_cmd
+
+  # Return whether the command returned by ar_cmd can create deterministic archives
+  def ar_cmd_deterministic?
+    ar_cmd if not defined? @@ar_cmd_deterministic
+    return @@ar_cmd_deterministic
+  end
+
   # Get the recommended 'tar' command for this platform.
   def tar_cmd
-    # Rely on gnu tar for solaris and OSX.
-    case %x{uname -s}.chomp
-    when "SunOS"
-      return "gtar"
-    when "Darwin"
-      # Try running gnutar, it was renamed(??) in homebrew to 'gtar' at some point, I guess? I don't know.
-      ["gnutar", "gtar"].each do |tar|
-        system("#{tar} > /dev/null 2> /dev/null")
-        return tar unless $?.exitstatus == 127
+    return @@tar_cmd if defined? @@tar_cmd
+
+    # FIXME: don't assume current directory writeable
+    FileUtils.touch(["fpm-dummy.tmp"])
+
+    # Prefer tar that supports more of the features we want, stop if we find tar of our dreams
+    best="tar"
+    bestscore=0
+    @@tar_cmd_deterministic = false
+    # GNU Tar, if not the default, is usually on the path as gtar, but
+    # Mac OS X 10.8 and earlier shipped it as /usr/bin/gnutar
+    ["tar", "gtar", "gnutar"].each do |tar|
+      opts=[]
+      score=0
+      ["--sort=name", "--mtime=@0"].each do |opt|
+        system("#{tar} #{opt} -cf fpm-dummy.tar.tmp fpm-dummy.tmp > /dev/null 2>&1")
+        if $?.exitstatus == 0
+          opts << opt
+          score += 1
+        end
       end
-    when "FreeBSD"
-      # use gnutar instead
-      return "gtar"
-    else
-      return "tar"
+      if score > bestscore
+        best=tar
+        bestscore=score
+        if score == 2
+          @@tar_cmd_deterministic = true
+          break
+        end
+      end
     end
+    @@tar_cmd = best
+    return @@tar_cmd
+  ensure
+    # Clean up
+    FileUtils.rm_f(["fpm-dummy.tar.tmp", "fpm-dummy.tmp"])
   end # def tar_cmd
+
+  # Return whether the command returned by tar_cmd can create deterministic archives
+  def tar_cmd_supports_sort_names_and_set_mtime?
+    tar_cmd if not defined? @@tar_cmd_deterministic
+    return @@tar_cmd_deterministic
+  end
 
   # wrapper around mknod ffi calls
   def mknod_w(path, mode, dev)
@@ -298,8 +368,8 @@ module FPM::Util
       if known_entry
         FileUtils.ln(known_entry, dst)
       else
-        FileUtils.copy_entry(src, dst, preserve=preserve,
-                             remove_destination=remove_destination)
+        FileUtils.copy_entry(src, dst, preserve, false,
+                             remove_destination)
         copied_entries[[st.dev, st.ino]] = dst
       end
     end # else...

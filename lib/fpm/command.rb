@@ -233,6 +233,20 @@ class FPM::Command < Clamp::Command
     "copying, downloading, etc. Roughly any scratch space fpm needs to build " \
     "your package.", :default => Dir.tmpdir
 
+  option "--source-date-epoch-from-changelog", :flag,
+    "Use release date from changelog as timestamp on generated files to reduce nondeterminism. " \
+    "Experimental; only implemented for gem so far. ",
+    :default => false
+
+  option "--source-date-epoch-default", "SOURCE_DATE_EPOCH_DEFAULT",
+    "If no release date otherwise specified, use this value as timestamp on generated files to reduce nondeterminism. " \
+    "Reproducible build environments such as dpkg-dev and rpmbuild set this via envionment variable SOURCE_DATE_EPOCH " \
+    "variable to the integer unix timestamp to use in generated archives, " \
+    "and expect tools like fpm to use it as a hint to avoid nondeterministic output. " \
+    "This is a Unix timestamp, i.e. number of seconds since 1 Jan 1970 UTC. " \
+    "See https://reproducible-builds.org/specs/source-date-epoch ",
+    :environment_variable => "SOURCE_DATE_EPOCH"
+
   parameter "[ARGS] ...",
     "Inputs to the source package type. For the 'dir' type, this is the files" \
     " and directories you want to include in the package. For others, like " \

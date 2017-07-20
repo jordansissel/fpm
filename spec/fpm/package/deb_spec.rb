@@ -161,6 +161,8 @@ describe FPM::Package::Deb do
 
       original.attributes[:deb_interest] = ['asdf', 'hjkl']
       original.attributes[:deb_activate] = ['qwer', 'uiop']
+      original.attributes[:deb_interest_noawait] = ['aqwx', 'zsxc']
+      original.attributes[:deb_activate_noawait] = ['edcv', 'rfvb']
 
       original.output(target)
       input.input(target)
@@ -174,7 +176,7 @@ describe FPM::Package::Deb do
     context "when the deb's control section is extracted" do
       let(:control_dir) { Stud::Temporary.directory }
       before do
-        system("ar p '#{target}' control.tar.gz | tar -zx -C '#{control_dir}' -f -")
+        system(ar_cmd[0] + " p '#{target}' control.tar.gz | tar -zx -C '#{control_dir}' -f -")
         raise "couldn't extract test deb" unless $CHILD_STATUS.success?
       end
 
@@ -193,6 +195,10 @@ describe FPM::Package::Deb do
         reject { triggers =~ /^interest hjkl$/ }.nil?
         reject { triggers =~ /^activate qwer$/ }.nil?
         reject { triggers =~ /^activate uiop$/ }.nil?
+        reject { triggers =~ /^interest-noawait aqwx$/ }.nil?
+        reject { triggers =~ /^interest-noawait zsxc$/ }.nil?
+        reject { triggers =~ /^activate-noawait edcv$/ }.nil?
+        reject { triggers =~ /^activate-noawait rfvb$/ }.nil?
         insist { triggers[-1] } == "\n"
       end
 
@@ -375,4 +381,57 @@ describe FPM::Package::Deb do
       end
     end
   end
+
+  describe "#reproducible" do
+
+    let(:package) {
+       # Turn on reproducible build behavior by setting SOURCE_DATE_EPOCH like user would
+       val = FPM::Package::Deb.new
+       val.attributes[:source_date_epoch] = '1'  # one second into Jan 1 1970 UTC... '0' not supported by zlib binding :-(
+       val
+    }
+
+    before :each do
+      package.name = "name"
+      File.unlink(target + '.orig') if File.exist?(target + '.orig')
+    end
+
+    after :each do
+      package.cleanup
+      File.unlink(target + '.orig') if File.exist?(target + '.orig')
+    end # after
+
+    it "it should output bit-for-bit identical packages" do
+      lamecmds = []
+      lamecmds << "ar" if not ar_cmd_deterministic?
+      lamecmds << "tar" if not tar_cmd_supports_sort_names_and_set_mtime?
+      if not lamecmds.empty?
+        skip("fpm searched for variants of #{lamecmds.join(", ")} that support(s) deterministic archives, but found none, so can't test reproducibility.")
+        return
+      end
+
+      package.output(target)
+      # FIXME: 2nd and later runs create changelog.Debian.gz?!, so throw away output of 1st run
+      FileUtils.rm(target)
+      package.output(target)
+      FileUtils.mv(target, target + '.orig')
+      # Output a second time with a different timestamp; tar format time resolution is 1 second
+      sleep(1)
+      package.output(target)
+
+      # Show detailed differences, if diffoscope is on PATH; else do nothing
+      tmp = ENV['TMP'] || "/tmp"
+      log = File.join(tmp, "diffoscope.log.tmp")
+      system('diffoscope %s %s > %s 2> /dev/null' % [target, target + '.orig', log])
+      diffoscope_diff_length = File.size(log)
+      if (diffoscope_diff_length > 0)
+         puts("\nDiffoscope reports:")
+         puts(File.read(log))
+      end
+      expect(diffoscope_diff_length).to(be == 0)
+      File.unlink(log)
+
+      expect(FileUtils.compare_file(target, target + '.orig')).to be true
+    end
+  end # #reproducible
 end # describe FPM::Package::Deb

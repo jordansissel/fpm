@@ -175,8 +175,8 @@ class FPM::Package
     @directories = []
     @attrs = {}
 
-    staging_path
     build_path
+    # Dont' initialize staging_path just yet, do it lazily so subclass can get a word in.
   end # def initialize
 
   # Get the 'type' for this instance.
@@ -492,6 +492,22 @@ class FPM::Package
     return scripts.include?(name)
   end # def script?
 
+  # write all scripts to .scripts (tar and dir)
+  def write_scripts
+    scripts_path = File.join(staging_path, ".scripts")
+    target_scripts = [:before_install, :after_install, :before_remove, :after_remove]
+    if target_scripts.any? {|name| script?(name)}
+      ::Dir.mkdir(scripts_path)
+      target_scripts.each do |name|
+        next unless script?(name)
+        out = File.join(scripts_path, name.to_s)
+        logger.debug('Writing script', :source => name, :target => out)
+        File.write(out, script(name))
+        File.chmod(0755, out)
+      end
+    end
+  end
+  
   # Get the contents of the script by a given name.
   #
   # If template_scripts? is set in attributes (often by the --template-scripts

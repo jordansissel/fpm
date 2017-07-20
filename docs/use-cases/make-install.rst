@@ -62,6 +62,8 @@ Package up the headers (create nodejs-dev)
 ------------------------------------------
 Lastly, package the headers for development::
 
+Package up the headers via::
+
     % fpm -s dir -t deb -p nodejs-dev_VERSION_ARCH.deb -n nodejs-dev -v 0.6.0 -C /tmp/installdir usr/include  
     % dpkg -c nodejs-dev_0.6.0-1_amd64.deb | grep -F .h 
     -rw-r--r-- root/root     14359 2011-01-02 18:33 usr/include/node/eio.h

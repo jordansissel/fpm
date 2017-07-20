@@ -101,18 +101,7 @@ class FPM::Package::Dir < FPM::Package
     end
 
     # Write the scripts, too.
-    scripts_path = File.join(output_path, ".scripts")
-    ::Dir.mkdir(scripts_path)
-    [:before_install, :after_install, :before_remove, :after_remove].each do |name|
-      next unless script?(name)
-      out = File.join(scripts_path, name.to_s)
-      logger.debug("Writing script", :source => name, :target => out)
-      File.write(out, script(name))
-      require "pry"
-      binding.pry
-      File.chmod(0755, out)
-    end
-
+    write_scripts
   ensure
     logger.remove("method")
   end # def output
@@ -147,14 +136,19 @@ class FPM::Package::Dir < FPM::Package
 
     # For single file copies, permit file destinations
     fileinfo = File.lstat(source)
-    if fileinfo.file? && !File.directory?(destination)
+    destination_is_directory = File.directory?(destination)
+    if fileinfo.file? && !destination_is_directory
       if destination[-1,1] == "/"
         copy(source, File.join(destination, source))
       else
         copy(source, destination)
       end
     elsif fileinfo.symlink?
-      copy(source, File.join(destination, source))
+      if destination_is_directory
+        copy(source, File.join(destination, source))
+      else
+        copy(source, destination)
+      end
     else
       # Copy all files from 'path' into staging_path
       Find.find(source) do |path|

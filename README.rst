@@ -16,6 +16,11 @@ You can find out how to use fpm in the `documentation`_.
 
 .. _documentation: https://fpm.readthedocs.io/en/latest/
 
+You can learn how to install fpm on your platform in the `installation guide`_.
+
+.. _installation guide: http://fpm.readthedocs.io/en/latest/installing.html
+
+
 Backstory
 ---------
 

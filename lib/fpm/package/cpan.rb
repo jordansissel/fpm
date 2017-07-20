@@ -99,6 +99,12 @@ class FPM::Package::CPAN < FPM::Package
       self.name = fix_name(metadata["name"])
     end
 
+    unless metadata["module"].nil?
+      metadata["module"].each do |m|
+        self.provides << cap_name(m["name"]) + " = #{self.version}"
+      end
+    end
+
     # author is not always set or it may be a string instead of an array
     self.vendor = case metadata["author"]
       when String; metadata["author"]
@@ -150,16 +156,16 @@ class FPM::Package::CPAN < FPM::Package
        found_dependencies.each do |dep_name, version|
           # Special case for representing perl core as a version.
           if dep_name == "perl"
+            m = version.match(/^(\d)\.(\d{3})(\d{3})$/)
+            if m
+               version = m[1] + '.' + m[2].sub(/^0*/, '') + '.' + m[3].sub(/^0*/, '')
+            end
             self.dependencies << "#{dep_name} >= #{version}"
             next
           end
           dep = search(dep_name)
 
-          if dep.include?("distribution")
-            name = fix_name(dep["distribution"])
-          else
-            name = fix_name(dep_name)
-          end
+          name = cap_name(dep_name)
 
           if version.to_s == "0"
             # Assume 'Foo = 0' means any version?
@@ -167,12 +173,14 @@ class FPM::Package::CPAN < FPM::Package
           else
             # The 'version' string can be something complex like:
             #   ">= 0, != 1.0, != 1.2"
+            # If it is not specified explicitly, require the given
+            # version or newer, as that is all CPAN itself enforces
             if version.is_a?(String)
               version.split(/\s*,\s*/).each do |v|
                 if v =~ /\s*[><=]/
                   self.dependencies << "#{name} #{v}"
                 else
-                  self.dependencies << "#{name} = #{v}"
+                  self.dependencies << "#{name} >= #{v}"
                 end
               end
             else
@@ -316,12 +324,9 @@ class FPM::Package::CPAN < FPM::Package
       self.version = "#{cpan_version}"
     end
     
-    # remove 'v' prefix from version if it is there
-    self.version.sub!(/^v/, '')
-    
     # Search metacpan to get download URL for this version of the module
-    metacpan_search_url = "http://api.metacpan.org/v0/release/_search"
-    metacpan_search_query = '{"query":{"match_all":{}},"filter":{"term":{"release.name":"' + "#{distribution}-#{self.version}" + '"}}}'
+    metacpan_search_url = "https://fastapi.metacpan.org/v1/release/_search"
+    metacpan_search_query = '{"fields":["download_url"],"filter":{"term":{"name":"' + "#{distribution}-#{self.version}" + '"}}}'
     begin
       search_response = httppost(metacpan_search_url,metacpan_search_query)
     rescue Net::HTTPServerException => e
@@ -333,7 +338,7 @@ class FPM::Package::CPAN < FPM::Package
     data = search_response.body
     release_metadata = JSON.parse(data)
 
-    download_url = release_metadata['hits']['hits'][0]['_source']['download_url']
+    download_url = release_metadata['hits']['hits'][0]['fields']['download_url']
     download_path = URI.parse(download_url).path
     tarball = File.basename(download_path)
 
@@ -361,7 +366,7 @@ class FPM::Package::CPAN < FPM::Package
 
   def search(package)
     logger.info("Asking metacpan about a module", :module => package)
-    metacpan_url = "http://api.metacpan.org/v0/module/" + package
+    metacpan_url = "https://fastapi.metacpan.org/v1/module/" + package
     begin
       response = httpfetch(metacpan_url)
     rescue Net::HTTPServerException => e
@@ -379,6 +384,10 @@ class FPM::Package::CPAN < FPM::Package
     return metadata
   end # def metadata
 
+  def cap_name(name)
+    return "perl(" + name.gsub("-", "::") + ")"
+  end # def cap_name
+
   def fix_name(name)
     case name
       when "perl"; return "perl"
@@ -394,6 +403,7 @@ class FPM::Package::CPAN < FPM::Package
     else
       http = Net::HTTP.new(uri.host, uri.port)
     end
+    http.use_ssl = uri.scheme == 'https'
     response = http.request(Net::HTTP::Get.new(uri.request_uri))
     case response
       when Net::HTTPSuccess; return response
@@ -410,6 +420,7 @@ class FPM::Package::CPAN < FPM::Package
     else
       http = Net::HTTP.new(uri.host, uri.port)
     end
+    http.use_ssl = uri.scheme == 'https'
     response = http.post(uri.request_uri, body)
     case response
       when Net::HTTPSuccess; return response

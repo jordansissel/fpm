@@ -1,6 +1,10 @@
 Release Notes and Change Log
 ============================
 
+1.8.1 (February 7, 2017)
+^^^^^^^^^^^^^^^^^^^^^^^^
+* Pin archive-tar-minitar library to version 0.5.2 to work around a problem breaking `gem install fpm`
+
 1.8.0 (December 28, 2016)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 * virtualenv: Add `--virtualenv-setup-install` flag to run `setup.py install` after pip finishes installing things. (`#1218`_; John Stowers)
