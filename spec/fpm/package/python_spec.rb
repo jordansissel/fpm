@@ -192,4 +192,24 @@ describe FPM::Package::Python, :if => python_usable? do
       insist { topline.chomp } == "#!fancypants"
     end
   end
+
+  context "with other files dir" do
+    before :each do
+      subject.attributes[:python_other_files_dir] = File.expand_path("../../fixtures/deb/staging/", File.dirname(__FILE__))
+      subject.input("django")
+    end
+
+    it "includes the other files in the package" do
+      other_file_path =  File.join(subject.staging_path, '/etc/init.d/test')
+      expect(File.exists?(other_file_path)).to(be_truthy)
+    end
+
+    # not sure if this is correct behaviour, but it's what it is doing
+    it "ignores the prefix" do
+      subject.attributes[:prefix] = '/usr'
+
+      other_file_path = File.join(subject.staging_path, '/etc/init.d/test')
+      expect(File.exists?(other_file_path)).to(be_truthy)
+    end
+  end
 end # describe FPM::Package::Python

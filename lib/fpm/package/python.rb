@@ -73,6 +73,10 @@ class FPM::Package::Python < FPM::Package
     "The python package name to remove from dependency list",
     :multivalued => true, :attribute_name => :python_disable_dependency,
     :default => []
+  option "--other-files-dir", "DIRECTORY", "Optionally, the contents of the " \
+    "specified directory may be added to the package. This is useful if the " \
+    "package needs configuration files, etc.",
+    :default => nil
 
   private
 
@@ -99,6 +103,16 @@ class FPM::Package::Python < FPM::Package
 
     load_package_info(setup_py)
     install_to_staging(setup_py)
+
+    if !attributes[:python_other_files_dir].nil?
+      # Copy all files from other dir to build_path
+      Find.find(attributes[:python_other_files_dir]) do |path|
+        src = path.gsub(/^#{attributes[:python_other_files_dir]}/, '')
+        dst = File.join(staging_path, src)
+        copy_entry(path, dst, preserve=true, remove_destination=true)
+        copy_metadata(path, dst)
+      end
+    end
   end # def input
 
   # Download the given package if necessary. If version is given, that version
