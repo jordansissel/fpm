@@ -30,7 +30,7 @@ A simple example of this can be shown with redis. Redis has a config file
   # install src/redis-server into /usr/bin/
   # install redis.conf into /etc/redis/
   % fpm -s dir -t deb -n redis --config-files /etc/redis/redis.conf -v 2.6.10 \
-    src/redis-server=/usr/bin \
+    src/redis-server=/usr/bin/ \
     redis.conf=/etc/redis/
   Created deb package {:path=>"redis_2.6.10_amd64.deb"}
 
