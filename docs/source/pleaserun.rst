@@ -19,7 +19,7 @@ that installs a service.
 * launchd (OS X)
 
 Automatic Platform Detection
-============================
+----------------------------
 
 Targeting multiple platforms with a single package is hard. What init system is used? Can you predict?
 
@@ -38,7 +38,7 @@ The output looks like this::
   Created package {:path=>"redis-service-1.0-1.x86_64.rpm"}
 
 .. note::
-  You do not need to tell `fpm` which service platform you are targeting! Watch below :)
+  Your package will detect the service platform (systemd, upstart, etc) automatically upon installation :)
 
 Let's see what happens when I install this on Fedora 25 (which uses systemd)::
 

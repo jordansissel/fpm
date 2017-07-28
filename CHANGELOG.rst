@@ -1,6 +1,40 @@
 Release Notes and Change Log
 ============================
 
+1.9.0 (July 28, 2017) happy sysadmin day!
+^^^^^^^^^^^^^^^^^^^^^
+
+* Documentation improvements: `#1291`_; Pablo Castellano. `#1321`_; ge-fa. `#1309`_; jesusbagpuss. `#1349`_; Perry Stole. `#1352`_, Jordan Sissel. `#1384`_; Justin Kolberg.
+* Testing improvements: `#1320`_; Rob Young. `#1266`_; Ryan Parman. `#1374`_; Thiago Figueiró.
+* Fix bug so fpm can now copy symlinks correctly (`#1348`_; ServiusHack)
+* apk: Improve performance (`#1358`_; Jan Delgado)
+* cpan: Fix crash when CPAN query returns a version value that was a number and fpm was expecting a string. (`#1344`_, `#1343`_; liger1978)
+* cpan: Fix MetaCPAN searches to use v1 of MetaCPAN's API. The v0 API is no longer provided by MetaCPAN. (`#1341`_, `#1339`; Bob Bell)
+* cpan: Have perl modules implicitly "provide" (`--provides`) capabilities. (`#1340`_; Bob Bell. `#1345`_; liger1978)
+* cpan: Now transforms perl version values like "5.008001" to "5.8.1" (`#1342`_; Bob Bell)
+* cpan: Use `>=` ("this version or newer") for package dependencies instead of `=` ("exactly this version"). (`#1338`_; Bob Bell)
+* deb: Add `--deb-after-purge` flag for running a script after `apt-get purge` is run. (Alexander Weidinger)
+* deb: fix bug when using `--deb-upstart` would use the wrong file name (`#1325`_, `#1287`_; vbakayev)
+* deb: New flags `--deb-interest-noawait` and `--deb-activate-nowait`. (`#1225`_, `#1359`_; Philippe Poilbarbe)
+* dir: Remove a debug statement that would put fpm into a debug prompt (`#1293`_, `#1259`_; Joseph Anthony Pasquale Holsten)
+* dir: When using `path mapping`_ (`a=b` syntax), and `a` is a symlink, use the path `b` as the symlink, not `b/a` (`#1253`_, Nemanja Boric)
+* gem: Can now make reproducible_builds_ when building a deb (`-s gem -t deb`). See the `Deterministic output`_ docs.
+* gem: Add `--gem-embed-dependencies` flag to include in the output package all dependent gems of the target. For example, `fpm -s gem -t rpm --gem-embed-dependencies rails` will create a single `rails` rpm that includes active_support, active_record, etc.
+* pleaserun: Add more flags (`--pleaserun-chdir`, `--pleaserun-user`, etc) to allow more customization of pleaserun services. (`#1311`_; Paulo Sousa)
+* python: Add `--python-setup-py-arguments` flag for passing arbitrary flags to `python setup.py install` (`#1120`_, `#1376`_; Ward Vandewege, Joseph Anthony Pasquale Holsten)
+* rpm: --config-files can now copy files from outside of the package source. This means you can do things like `fpm -s gem -t rpm --config-files etc/my/config` and have `etc/my/config` come from the local filesystem. (`#860`_, `#1379`_; jakerobinson, Joseph Anthony Pasquale Holsten)
+* tar: Only create `.scripts` directory if there are scripts to include (`#1123`_, `#1374`_; Thiago Figueiró)
+* virtualenv: Add `--virtualenv-find-links` flag which appends `--find-links` to the `pip install` command.
+* virtualenv: documentation improvements (Nick Griffiths)
+* virtualenv: Make `--prefix` useful and deprecate `--virtualenv-install-location` (`#1262`_; Nick Griffiths)
+* zip: fix bug in output where the temporary directory would be included in the file listing (`#1313`_, `#1314`_; Bob Vincent)
+* Other: Remove unused archive-tar-minitar as a dependency of fpm (`#1355`_; Diego Martins)
+* Other: Add stud as a runtime dependency (`#1354`_; Elan Ruusamäe)
+
+.. _reproducible_builds:: https://reproducible-builds.org/
+.. _path mapping:: http://fpm.readthedocs.io/en/latest/source/dir.html#path-mapping
+.. _Deterministic output:: http://fpm.readthedocs.io/en/latest/source/gem.html
+
 1.8.1 (February 7, 2017)
 ^^^^^^^^^^^^^^^^^^^^^^^^
 * Pin archive-tar-minitar library to version 0.5.2 to work around a problem breaking `gem install fpm`
