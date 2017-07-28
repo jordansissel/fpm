@@ -1,7 +1,7 @@
 Release Notes and Change Log
 ============================
 
-1.9.0 (July 28, 2017) happy sysadmin day!
+1.9.1 (July 28, 2017) happy sysadmin day!
 ^^^^^^^^^^^^^^^^^^^^^
 
 * Documentation improvements: `#1291`_; Pablo Castellano. `#1321`_; ge-fa. `#1309`_; jesusbagpuss. `#1349`_; Perry Stole. `#1352`_, Jordan Sissel. `#1384`_; Justin Kolberg.
@@ -34,6 +34,11 @@ Release Notes and Change Log
 .. _reproducible_builds:: https://reproducible-builds.org/
 .. _path mapping:: http://fpm.readthedocs.io/en/latest/source/dir.html#path-mapping
 .. _Deterministic output:: http://fpm.readthedocs.io/en/latest/source/gem.html
+
+1.9.0 (July 28, 2017)
+^^^^^^^^^^^^^^^^^^^^^
+
+Yanked offline. I forgot some dependency changes. Hi.
 
 1.8.1 (February 7, 2017)
 ^^^^^^^^^^^^^^^^^^^^^^^^
