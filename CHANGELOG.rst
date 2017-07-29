@@ -1,6 +1,11 @@
 Release Notes and Change Log
 ============================
 
+1.9.2 (July 29, 2017)
+^^^^^^^^^^^^^^^^^^^^^
+
+* rpm: Fix `--config-files` handling (`#1390`_, `#1391`_; Jordan Sissel)
+
 1.9.1 (July 28, 2017) happy sysadmin day!
 ^^^^^^^^^^^^^^^^^^^^^
 
