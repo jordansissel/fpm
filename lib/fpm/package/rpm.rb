@@ -474,11 +474,18 @@ class FPM::Package::RPM < FPM::Package
 
     # include external config files
     (attributes[:config_files] or []).each do |conf|
-      path = conf
-      dest_conf = File.join(staging_path, path)
-      FileUtils.mkdir_p(File.dirname(dest_conf))
-      FileUtils.cp_r conf, dest_conf
-      File.chmod(0755, dest_conf)
+      dest_conf = File.join(staging_path, conf)
+
+      if File.exist?(dest_conf)
+        logger.debug("Using --config-file from staging area", :path => conf)
+      elsif File.exist?(conf)
+        logger.info("Copying --config-file from local path", :path => conf)
+        FileUtils.mkdir_p(File.dirname(dest_conf))
+        FileUtils.cp_r conf, dest_conf
+      else
+        logger.error("Failed to find given --config-file", :path => conf)
+        raise "Could not find config file '#{conf}' in staging area or on host. This can happen if you specify `--config-file '#{conf}'` but this file does not exist in the source package and also does not exist in filesystem."
+      end
     end
 
     # scan all conf file paths for files and add them
