@@ -66,8 +66,8 @@ describe FPM::Package::Deb do
   end
 
   describe "priority" do
-    it "should default to 'extra'" do
-      expect(subject.attributes[:deb_priority]).to(be == "extra")
+    it "should default to 'optional'" do
+      expect(subject.attributes[:deb_priority]).to(be == "optional")
     end
   end
 
