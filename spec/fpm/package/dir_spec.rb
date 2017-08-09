@@ -155,6 +155,19 @@ describe FPM::Package::Dir do
     end
   end
 
+  context "symlink=dest_directory/" do
+    it "Should allow source=destination/ for symlinks" do
+      filepath = File.join(tmpdir, "target")
+      File.write(filepath, "hello!");
+      symlinkpath = File.join(tmpdir, "properlink.so")
+      File.symlink(filepath, symlinkpath);
+
+      subject.input(symlinkpath + "=" + "/a/b/")
+      subject.output(output)
+      insist { File.read(File.join(output, "/a/b/properlink.so")) } == "hello!"
+    end
+  end
+
   context "symlink=dest_dir/" do
     it "Should put the symlink into directory with link syntax" do
       filepath = File.join(tmpdir, "target")
