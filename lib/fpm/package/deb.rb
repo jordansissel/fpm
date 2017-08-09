@@ -75,7 +75,7 @@ class FPM::Package::Deb < FPM::Package
   end
 
   option "--priority", "PRIORITY",
-    "The debian package 'priority' value.", :default => "extra"
+    "The debian package 'priority' value.", :default => "optional"
 
   option "--use-file-permissions", :flag,
     "Use existing file permissions when defining ownership and modes"
@@ -185,7 +185,7 @@ class FPM::Package::Deb < FPM::Package
 
   def initialize(*args)
     super(*args)
-    attributes[:deb_priority] = "extra"
+    attributes[:deb_priority] = "optional"
   end # def initialize
 
   private
