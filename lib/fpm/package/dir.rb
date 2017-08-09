@@ -144,7 +144,8 @@ class FPM::Package::Dir < FPM::Package
         copy(source, destination)
       end
     elsif fileinfo.symlink?
-      if destination_is_directory
+      # Treat them same as files
+      if destination[-1,1] == "/"
         copy(source, File.join(destination, source))
       else
         copy(source, destination)
