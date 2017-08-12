@@ -205,7 +205,8 @@ class FPM::Package
     ivars.each do |ivar|
       #logger.debug("Copying ivar", :ivar => ivar, :value => instance_variable_get(ivar),
                     #:from => self.type, :to => pkg.type)
-      pkg.instance_variable_set(ivar, instance_variable_get(ivar))
+      ival = instance_variable_get(ivar)
+      pkg.instance_variable_set(ivar, ival.empty ? nil : ival )
     end
 
     # Attributes are special! We do not want to remove the default values of
