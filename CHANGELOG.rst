@@ -1,6 +1,11 @@
 Release Notes and Change Log
 ============================
 
+1.9.3 (September 11, 2017)
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* fix a bug when coyping a symlink using path mapping would result in the link creating a directory to hold think. (`#1395`_; Nemanja Boric)
+
 1.9.2 (July 29, 2017)
 ^^^^^^^^^^^^^^^^^^^^^
 
