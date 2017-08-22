@@ -119,6 +119,11 @@ class FPM::Package::RPM < FPM::Package
     next File.expand_path(file)
   end
 
+  option "--systemd", "FILEPATH", "Add FILEPATH as a systemd script",
+	:multivalued => true do |file|
+    next File.expand_path(file)
+  end
+
   rpmbuild_filter_from_provides = []
   option "--filter-from-provides", "REGEX",
     "Set %filter_from_provides to the supplied REGEX." do |filter_from_provides|
@@ -229,6 +234,27 @@ class FPM::Package::RPM < FPM::Package
     end
   end
 
+  def rpm_systemd_macro(scriptlet, path = nil)
+    map = {
+      "post" => "post",
+      "preun" => "preun",
+      "postun" => "postun_with_restart"
+    }
+
+    unless map.key?(scriptlet)
+      return
+    end
+
+    macro = "%systemd_#{map[scriptlet]}"
+
+    if path.nil?
+      return macro
+    end
+
+    name = File.basename(path, ".service")
+
+    return "#{macro} #{name}.service"
+  end
 
   # Handle any architecture naming conversions.
   # For example, debian calls amd64 what redhat calls x86_64, this
@@ -522,6 +548,14 @@ class FPM::Package::RPM < FPM::Package
       FileUtils.mkdir_p(File.dirname(dest_init))
       FileUtils.cp init, dest_init
       File.chmod(0755, dest_init)
+    end
+
+    attributes.fetch(:rpm_systemd_list, []).each do |systemd|
+      name = File.basename(systemd, ".service")
+      dest_systemd = File.join(staging_path, "lib/systemd/system/#{name}.service")
+      FileUtils.mkdir_p(File.dirname(dest_systemd))
+      FileUtils.cp(systemd, dest_systemd)
+      File.chmod(0644, dest_systemd)
     end
 
     (attributes[:rpm_rpmbuild_define] or []).each do |define|
