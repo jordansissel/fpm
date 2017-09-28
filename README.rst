@@ -92,7 +92,7 @@ Targets:
 
 .. |Build| image:: https://img.shields.io/travis/jordansissel/fpm.svg
    :target: https://travis-ci.org/jordansissel/fpm
-.. |Chat| image:: https://img.shields.io/gitter/room/jordansissel/fpm.svg
-   :target: https://gitter.im/jordansissel/fpm
+.. |Chat| image:: https://img.shields.io/badge/irc-%23fpm%20on%20freenode-brightgreen.svg
+   :target: https://webchat.freenode.net/?channels=fpm
 .. |Gem| image:: https://img.shields.io/gem/v/fpm.svg
    :target: https://rubygems.org/gems/fpm
