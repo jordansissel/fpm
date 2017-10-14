@@ -144,9 +144,9 @@ class FPM::Package::APK< FPM::Package
     scripts = {}
 
     scripts = register_script('post-install',   :after_install,   scripts)
-    scripts = register_script('post-install',   :before_install,  scripts)
-    scripts = register_script('post-install',   :before_upgrade,  scripts)
-    scripts = register_script('post-install',   :after_upgrade,  scripts)
+    scripts = register_script('pre-install',   :before_install,  scripts)
+    scripts = register_script('pre-upgrade',   :before_upgrade,  scripts)
+    scripts = register_script('post-upgrade',   :after_upgrade,  scripts)
     scripts = register_script('pre-deinstall',  :before_remove,   scripts)
     scripts = register_script('post-deinstall', :after_remove,    scripts)
 
