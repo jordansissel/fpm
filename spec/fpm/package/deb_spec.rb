@@ -138,7 +138,6 @@ describe FPM::Package::Deb do
       original.architecture = "all"
       original.dependencies << "something > 10"
       original.dependencies << "hello >= 20"
-      original.dependencies << "semver ~> 3"
       original.provides << "#{original.name} = #{original.version}"
 
       # Test to cover PR#591 (fix provides names)
