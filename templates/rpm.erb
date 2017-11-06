@@ -133,7 +133,7 @@ upgrade() {
 <%=      script(:before_upgrade) %>
 <%     end -%>
 }
-install() {
+_install() {
 <%# Making sure that at least one command is in the function -%>
 <%# avoids a lot of potential errors, including the case that -%>
 <%# the script is non-empty, but just whitespace and/or comments -%>
@@ -145,7 +145,7 @@ install() {
 if [ "${1}" -eq 1 ]
 then
     # "before install" goes here
-    install
+    _install
 elif [ "${1}" -gt 1 ]
 then
     # "before upgrade" goes here
@@ -163,7 +163,7 @@ upgrade() {
 <%=      script(:after_upgrade) %>
 <%     end -%>
 }
-install() {
+_install() {
 <%# Making sure that at least one command is in the function -%>
 <%# avoids a lot of potential errors, including the case that -%>
 <%# the script is non-empty, but just whitespace and/or comments -%>
@@ -175,7 +175,7 @@ install() {
 if [ "${1}" -eq 1 ]
 then
     # "after install" goes here
-    install
+    _install
 elif [ "${1}" -gt 1 ]
 then
     # "after upgrade" goes here
