@@ -1,7 +1,7 @@
 The goal of fpm is to make it easy and quick to build packages such as rpms,
 debs, OSX packages, etc.
 
-fpm, as a project, exists with the following principles in mind:
+fpm, as a project, exists to help you build packages, therefore:
 
 * If fpm is not helping you make packages easily, then there is a bug in fpm.
 * If you are having a bad time with fpm, then there is a bug in fpm.
@@ -19,6 +19,13 @@ You can find out how to use fpm in the `documentation`_.
 You can learn how to install fpm on your platform in the `installation guide`_.
 
 .. _installation guide: http://fpm.readthedocs.io/en/latest/installing.html
+
+Project Principles
+------------------
+
+* Community: If a newbie has a bad time, it's a bug.
+* Engineering: Make it work, then make it right, then make it fast.
+* Capabilities: If it doesn't do a thing today, we can make it do it tomorrow.
 
 
 Backstory
