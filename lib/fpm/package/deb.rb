@@ -836,6 +836,11 @@ class FPM::Package::Deb < FPM::Package
         if !cfe
           raise FPM::InvalidPackageConfiguration,
             "Error trying to use '#{path}' as a config file in the package. Does it exist?"
+        else
+          logger.debug("Adding config file #{path} to Staging area #{staging_path}")
+          dcl = File.join(staging_path, path)
+          FileUtils.mkdir_p(File.dirname(dcl))
+          FileUtils.cp_r path, dcl
         end
       end
     end
