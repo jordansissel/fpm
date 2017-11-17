@@ -28,7 +28,7 @@ Build-Depends: <%= attributes[:deb_build_depends].collect { |d| fix_dependency(d
 Provides: <%= provides.map {|p| p.split(" ").first}.join ", " %>
 <% end -%>
 <% if !replaces.empty? -%>
-Replaces: <%= replaces.join(", ") %>
+Replaces: <%= replaces.collect { |d| fix_dependency(d) }.flatten.join(", ") %>
 <% end -%>
 <% if attributes[:deb_recommends] and !attributes[:deb_recommends].empty? -%>
 Recommends: <%= attributes[:deb_recommends].collect { |d| fix_dependency(d) }.flatten.join(", ") %>
