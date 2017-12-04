@@ -1,7 +1,6 @@
 os:
   - linux
-# FIXME: osx tests are failing
-#  - osx
+  - osx
 language: ruby
 sudo: false
 rvm:
