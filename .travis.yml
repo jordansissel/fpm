@@ -17,15 +17,11 @@ rvm:
   - 2.3.3
   - 2.4.0
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update           ; fi
-    # dpkg has also gnu-tar and xz as dependencies, these packages are used
-    # by pacman.rb, for example.
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install dpkg ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update && brew bundle; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which dpkg-deb || 'dpkg-deb not found'; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which lintian || echo 'lintian not found'; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which python || brew install python; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which easy_install || echo 'easy_install not found'; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which rpm || brew install rpm ; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which virtualenv || pip install --user virtualenv ; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then which virtualenv-tools || pip install --user virtualenv virtualenv-tools ; fi
   - virtualenv ${HOME}/.venv
