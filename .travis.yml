@@ -16,6 +16,12 @@ rvm:
   - 2.2.5
   - 2.3.3
   - 2.4.0
+matrix:
+  exclude:
+    - os: osx
+      rvm: 1.9.3
+    - os: osx
+      rvm: 2.0.0
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update && brew bundle; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which dpkg-deb || 'dpkg-deb not found'; fi
