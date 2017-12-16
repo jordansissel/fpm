@@ -20,6 +20,8 @@ Gem::Specification.new do |spec|
     "management without wasting pointless hours debugging bad rpm specs!"
   spec.license = "MIT-like"
 
+  spec.required_ruby_version = '>= 1.9.3'
+
   # For parsing JSON (required for some Python support, etc)
   # http://flori.github.com/json/doc/index.html
   spec.add_dependency("json", ">= 1.7.7", "< 2.0") # license: Ruby License
