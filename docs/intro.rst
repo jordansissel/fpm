@@ -8,7 +8,10 @@ Building a package might look something like this:
     fpm -s <source type> -t <target type> [list of sources]...
 
 "Source type" is what your package is coming from; a directory (dir), a rubygem
-(gem), an rpm (rpm), a python package (python), a php pear module (pear), etc.
+(gem), an rpm (rpm), a python package (python), a php pear module (pear), see
+the `full list`_.
+
+.. _full list: https://fpm.readthedocs.io/en/latest/packages.html
 
 "Target type" is what your output package form should be. Most common are "rpm"
 and "deb" but others exist (solaris, etc)
