@@ -119,7 +119,10 @@ class FPM::Package
 
   def initialize
     # Attributes for this specific package
-    @attributes = {}
+    @attributes = {
+      # Default work location
+      :workdir => ::Dir.tmpdir
+    }
 
     # Reference
     # http://www.debian.org/doc/manuals/maint-guide/first.en.html
