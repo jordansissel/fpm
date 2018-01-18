@@ -532,14 +532,6 @@ class FPM::Package::Deb < FPM::Package
       FileUtils.ln_s("/lib/init/upstart-job", dest_init)
     end
 
-    attributes.fetch(:deb_systemd_list, []).each do |systemd|
-      name = File.basename(systemd, ".service")
-      dest_systemd = staging_path("lib/systemd/system/#{name}.service")
-      mkdir_p(File.dirname(dest_systemd))
-      FileUtils.cp(systemd, dest_systemd)
-      File.chmod(0644, dest_systemd)
-    end
-
     write_control_tarball
 
     # Tar up the staging_path into data.tar.{compression type}
