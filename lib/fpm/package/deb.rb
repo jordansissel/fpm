@@ -423,14 +423,21 @@ class FPM::Package::Deb < FPM::Package
     end
 
     attributes.fetch(:deb_systemd_list, []).each do |systemd|
-      name = File.basename(systemd, ".service")
-      dest_systemd = staging_path("lib/systemd/system/#{name}.service")
+      # all standard unit types from systemd.unit(5) except for service
+      if systemd.end_with?(".socket", ".device", ".mount", ".automount", ".swap", ".target", ".path", ".timer", ".slice", ".scope")
+        name = File.basename(systemd)
+      else
+        systemd_name = File.basename(systemd, ".service")
+        # set the attribute with the systemd service name
+        attributes[:deb_systemd] = systemd_name
+
+        name = "#{systemd_name}.service"
+      end
+
+      dest_systemd = staging_path("lib/systemd/system/#{name}")
       mkdir_p(File.dirname(dest_systemd))
       FileUtils.cp(systemd, dest_systemd)
       File.chmod(0644, dest_systemd)
-
-      # set the attribute with the systemd service name
-      attributes[:deb_systemd] = name
     end
 
     if script?(:before_upgrade) or script?(:after_upgrade) or attributes[:deb_systemd]
