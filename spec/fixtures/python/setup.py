@@ -8,6 +8,10 @@ setup(name="Example",
       url="sample url",
       packages=[],
       package_dir={},
-      install_requires=["Dependency1", "dependency2"],
+      install_requires=[
+          "Dependency1", "dependency2",
+           'rtxt-dep3; python_version == "2.0"',
+           'rtxt-dep4; python_version > "2.0"',
+           ],
       )
 
