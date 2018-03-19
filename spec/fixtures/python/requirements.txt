@@ -1,2 +1,4 @@
 rtxt-dep1 > 0.1
 rtxt-dep2 == 0.1
+rtxt-dep3; python_version == "2.0"
+rtxt-dep4; python_version > "2.0"
