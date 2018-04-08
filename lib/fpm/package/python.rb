@@ -229,7 +229,7 @@ class FPM::Package::Python < FPM::Package
 
     if !attributes[:no_auto_depends?] and attributes[:python_dependencies?]
       metadata["dependencies"].each do |dep|
-        dep_re = /^([^<>!= ]+)\s*(?:([<>!=]{1,2})\s*(.*))?$/
+        dep_re = /^([^<>!= ]+)\s*(?:([~<>!=]{1,2})\s*(.*))?$/
         match = dep_re.match(dep)
         if match.nil?
           logger.error("Unable to parse dependency", :dependency => dep)
