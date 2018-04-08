@@ -240,7 +240,7 @@ class FPM::Package::Python < FPM::Package
         next if attributes[:python_disable_dependency].include?(name)
 
         # convert == to =
-        if cmp == "=="
+        if cmp == "==" or cmp == "~="
           logger.info("Converting == dependency requirement to =", :dependency => dep )
           cmp = "="
         end
