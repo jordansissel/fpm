@@ -23,6 +23,12 @@ class FPM::Package::Virtualenv < FPM::Package
     File.expand_path(path)
   end
 
+  option "--bin", "VIRTUALENV_EXECUTABLE",
+  "The path to the virtualenv executable you wish to run.", :default => "virtualenv"
+  
+  option "--python", "VIRTUALENV_PYTHON",
+  "The version of python to create the virtualenv with", :default => "python"
+
   option "--fix-name", :flag, "Should the target package name be prefixed?",
   :default => true
   option "--other-files-dir", "DIRECTORY", "Optionally, the contents of the " \
@@ -45,12 +51,6 @@ class FPM::Package::Virtualenv < FPM::Package
     "for archives in the directory listing.",
     :multivalued => true, :attribute_name => :virtualenv_find_links_urls,
     :default => nil
-
-  option "--bin", "VIRTUALENV_EXECUTABLE",
-  "The path to the virtualenv executable you wish to run.", :default => "virtualenv"
-  
-  option "--python", "VIRTUALENV_PYTHON",
-  "The version of python to create the virtualenv with", :default => "python2.7"
 
   private
 
