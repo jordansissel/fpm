@@ -19,7 +19,7 @@ Example uses:
 
 Build an rpm package for ansible::
 
-  fpm -s virtualenv -t deb ansible
+  fpm -s virtualenv -t rpm ansible
   yum install virtualenv-ansible*.rpm
   which ansible # /usr/share/python/ansible/bin/ansible
 
