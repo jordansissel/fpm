@@ -901,7 +901,7 @@ class FPM::Package::Deb < FPM::Package
 
     if attributes[:deb_templates]
       FileUtils.cp(attributes[:deb_templates], control_path("templates"))
-      File.chmod(0755, control_path("templates"))
+      File.chmod(0644, control_path("templates"))
     end
   end # def write_debconf
 
