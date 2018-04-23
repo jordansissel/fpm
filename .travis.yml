@@ -40,3 +40,4 @@ addons:
       - lintian
       - python-setuptools
       - python-pip
+      - squashfs-tools
