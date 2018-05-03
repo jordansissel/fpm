@@ -12,6 +12,7 @@ RUN apk add --update \
         libffi-dev \
         make \
         libc-dev \
+	tar \
         rpm && \
         gem install --no-ri --no-rdoc fpm
 
