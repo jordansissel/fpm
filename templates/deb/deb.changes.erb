@@ -1,0 +1,31 @@
+Format: 1.8
+Date: <%= (if attributes[:source_date_epoch].nil? then Time.now() else Time.at(attributes[:source_date_epoch].to_i) end).strftime("%a, %d %b %Y %T %z") %>
+Source: <%= name %>
+Binary: <%= name %>
+Architecture: <%= architecture %>
+Version: <%= "#{epoch}:" if epoch %><%= version %><%= "-" + iteration.to_s if iteration %>
+Distribution: <%= distribution %>
+Urgency: medium
+Maintainer: <%= maintainer %>
+<% lines = (description or "no description given").split("\n") -%>
+<% firstline, *remainder = lines -%>
+Description: <%= firstline %>
+<% if remainder.any? -%>
+<%= remainder.collect { |l| l =~ /^ *$/ ? " ." : " #{l}" }.join("\n") %>
+<% end -%>
+Changes:
+<%= name %> (<%= "#{epoch}:" if epoch %><%= version %><%= "-" + iteration.to_s if iteration %>) whatever; urgency=medium
+ .
+   * Package created with FPM.
+Checksums-Sha1:
+<% changes_files.each do |file| -%>
+ <%= file[:sha1sum] %> <%= file[:size] %> <%= file[:name] %>
+<% end -%>
+Checksums-Sha256:
+<% changes_files.each do |file| -%>
+ <%= file[:sha256sum] %> <%= file[:size] %> <%= file[:name] %>
+<% end -%>
+Files:
+<% changes_files.each do |file| -%>
+ <%= file[:md5sum] %> <%= file[:size] %> default <%= attributes[:deb_priority] %> <%= file[:name] %>
+<% end -%>

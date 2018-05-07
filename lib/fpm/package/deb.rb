@@ -50,6 +50,8 @@ class FPM::Package::Deb < FPM::Package
     value
   end
 
+  option "--dist", "DIST-TAG", "Set the deb distribution."
+
   # Take care about the case when we want custom control file but still use fpm ...
   option "--custom-control", "FILEPATH",
     "Custom version of the Debian control file." do |control|
@@ -87,6 +89,10 @@ class FPM::Package::Deb < FPM::Package
   option "--changelog", "FILEPATH", "Add FILEPATH as debian changelog" do |file|
     File.expand_path(file)
   end
+
+  option "--generate-changes", :flag,
+    "Generate PACKAGENAME.changes file.",
+    :default => false
 
   option "--upstream-changelog", "FILEPATH", "Add FILEPATH as upstream changelog" do |file|
     File.expand_path(file)
@@ -574,6 +580,30 @@ class FPM::Package::Deb < FPM::Package
         safesystem(*ar_cmd, output_path, "debian-binary", "control.tar.gz", datatar)
       end
     end
+
+    # if a PACKAGENAME.changes file is to be created
+    if self.attributes[:deb_generate_changes?]
+      distribution = self.attributes[:deb_dist] ? "#{self.attributes[:deb_dist]}" : "unstable";
+
+      # gather information about the files to distribute
+      files = [ output_path ]
+      changes_files = []
+      files.each do |path|
+        changes_files.push({
+          :name => path,
+          :size => File.size?(path),
+          :md5sum => Digest::MD5.file(path).hexdigest,
+          :sha1sum => Digest::SHA1.file(path).hexdigest,
+          :sha256sum => Digest::SHA2.file(path).hexdigest,
+        })
+      end
+
+      # write change infos to .changes file
+      changes_path = File.basename(output_path, '.deb') + '.changes'
+      changes_data = template("deb/deb.changes.erb").result(binding)
+      File.write(changes_path, changes_data)
+      logger.log("Created changes", :path => changes_path)
+    end # if deb_generate_changes
   end # def output
 
   def converted_from(origin)
