@@ -50,7 +50,7 @@ class FPM::Package::Deb < FPM::Package
     value
   end
 
-  option "--dist", "DIST-TAG", "Set the deb distribution."
+  option "--dist", "DIST-TAG", "Set the deb distribution.", :default => "unstable"
 
   # Take care about the case when we want custom control file but still use fpm ...
   option "--custom-control", "FILEPATH",
@@ -583,7 +583,7 @@ class FPM::Package::Deb < FPM::Package
 
     # if a PACKAGENAME.changes file is to be created
     if self.attributes[:deb_generate_changes?]
-      distribution = self.attributes[:deb_dist] ? "#{self.attributes[:deb_dist]}" : "unstable";
+      distribution = self.attributes[:deb_dist]
 
       # gather information about the files to distribute
       files = [ output_path ]
