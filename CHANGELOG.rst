@@ -1,6 +1,23 @@
 Release Notes and Change Log
 ============================
 
+1.10.0 (May 21, 2018)
+^^^^^^^^^^^^^^^^^^^^
+
+* Pin `ruby-xz` dependency to one which allows Ruby versions older than 2.3.0 (`#1494`_; Marat Sharafutdinov)
+* Documentation improvements: `#1488`_; Arthur Burkart. `#1384`_; Justin Kolberg. `#1452`_; Anatoli Babenia.
+* python: Improve support for the `~=` dependency comparison. (`#1482`_; Roman Vasilyev)
+* deb: Add `--deb-generate-changes` flag to have fpm output a `.changes` file (`#1492`_; Spida)
+* deb: Add `--deb-dist` flag to set the target distribution (similar to `--rpm-dist`). (`#1492`_; Spida)
+* apk: Make --before-install, --before-upgrade, and --after-upgrade work correctly. (`#1422`_; Charles R. Portwood II)
+* rpm: add `xzmt` for multithreaded xz compression (Amnon BC)
+* rpm: fix shell function name `install` conflicting with `install` program. In
+  postinst (after-install), the function is now called `_install` to avoid
+  conflicting with `/usr/bin/install` (`#1434`_; Torsten Schmidt)
+* - deb: --config-files ? (`#1440`_, `#1443`_; NoBodyCam)
+* FPM source repo now contains a Brewfile for use with Homebrew.
+* FPM source repo has a Dockerfile for invoking fpm with docker. (`#1484`_, ;Allan Lewis
+
 1.9.3 (September 11, 2017)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
