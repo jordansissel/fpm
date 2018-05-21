@@ -50,7 +50,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency("rake", "~> 10") # license: MIT
 
   # For creating FreeBSD package archives (xz-compressed tars)
-  spec.add_dependency("ruby-xz") # license: MIT
+  spec.add_dependency("ruby-xz", "~> 0.2.3") # license: MIT
 
   # For sourcing from pleaserun
   spec.add_dependency("pleaserun", "~> 0.0.29") # license: Apache 2
