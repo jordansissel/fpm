@@ -10,13 +10,18 @@ after_upgrade() {
 
 <% if attributes[:deb_systemd] -%>
 systemctl --system daemon-reload >/dev/null || true
+sysctl=$(command -v deb-systemd-invoke || echo systemctl)
 if ! systemctl is-enabled <%= attributes[:deb_systemd] %> >/dev/null 
 then
+<% if attributes[:deb_systemd_enable?]-%>
     systemctl enable <%= attributes[:deb_systemd] %> >/dev/null || true
-    systemctl start <%= attributes[:deb_systemd] %> >/dev/null || true
+<% end -%>
+<% if attributes[:deb_systemd_auto_start?]-%>
+    $sysctl start <%= attributes[:deb_systemd] %> >/dev/null || true
+<% end -%>
 <% if attributes[:deb_systemd_restart_after_upgrade?] -%>
 else
-    systemctl restart <%= attributes[:deb_systemd] %> >/dev/null || true
+    $sysctl restart <%= attributes[:deb_systemd] %> >/dev/null || true
 <% end -%>
 fi
 <% end -%>
@@ -33,8 +38,13 @@ after_install() {
 
 <% if attributes[:deb_systemd] -%>
 systemctl --system daemon-reload >/dev/null || true
+sysctl=$(command -v deb-systemd-invoke || echo systemctl)
+<% if attributes[:deb_systemd_enable?]-%>
 systemctl enable <%= attributes[:deb_systemd] %> >/dev/null || true
-systemctl start <%= attributes[:deb_systemd] %> >/dev/null || true
+<% end -%>
+<% if attributes[:deb_systemd_auto_start?]-%>
+$sysctl start <%= attributes[:deb_systemd] %> >/dev/null || true
+<% end -%>
 <% end -%>
 }
 
