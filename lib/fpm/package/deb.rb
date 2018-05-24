@@ -181,6 +181,10 @@ class FPM::Package::Deb < FPM::Package
     next File.expand_path(file)
   end
 
+  option "--systemd-enable", :flag , "Enable service on install or upgrade", :default => true
+
+  option "--systemd-auto-start", :flag , "Start service after install or upgrade", :default => true
+
   option "--systemd-restart-after-upgrade", :flag , "Restart service after upgrade", :default => true
 
   option "--after-purge", "FILE",
