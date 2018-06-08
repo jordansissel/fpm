@@ -432,6 +432,7 @@ class FPM::Package::Deb < FPM::Package
       raise "#{name}: tar is insufficient to support source_date_epoch."
     end
 
+    attributes[:deb_systemd] = []
     attributes.fetch(:deb_systemd_list, []).each do |systemd|
       name = File.basename(systemd, ".service")
       dest_systemd = staging_path("lib/systemd/system/#{name}.service")
@@ -439,19 +440,19 @@ class FPM::Package::Deb < FPM::Package
       FileUtils.cp(systemd, dest_systemd)
       File.chmod(0644, dest_systemd)
 
-      # set the attribute with the systemd service name
-      attributes[:deb_systemd] = name
+      # add systemd service name to attribute
+      attributes[:deb_systemd] << name
     end
 
-    if script?(:before_upgrade) or script?(:after_upgrade) or attributes[:deb_systemd]
+    if script?(:before_upgrade) or script?(:after_upgrade) or not attributes[:deb_systemd].empty?
       puts "Adding action files"
       if script?(:before_install) or script?(:before_upgrade)
         scripts[:before_install] = template("deb/preinst_upgrade.sh.erb").result(binding)
       end
-      if script?(:before_remove) or attributes[:deb_systemd]
+      if script?(:before_remove) or not attributes[:deb_systemd].empty?
         scripts[:before_remove] = template("deb/prerm_upgrade.sh.erb").result(binding)
       end
-      if script?(:after_install) or script?(:after_upgrade) or attributes[:deb_systemd]
+      if script?(:after_install) or script?(:after_upgrade) or not attributes[:deb_systemd].empty?
         scripts[:after_install] = template("deb/postinst_upgrade.sh.erb").result(binding)
       end
       if script?(:after_remove)
