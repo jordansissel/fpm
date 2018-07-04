@@ -163,17 +163,19 @@ module FPM::Util
     stdout_w.close; stderr_w.close
     logger.info("Process is running", :pid => process.pid)
     if block_given?
+#    if false  # allows output & cures gcc/as hang, but re-introduces Inline::CPP interactive build hang
       args3 = []
       args3.push(process)           if opts[:process]
       args3.push(process.io.stdin)  if opts[:stdin]
-      args3.push(stdout_r)          if opts[:stdout]
-      args3.push(stderr_r)          if opts[:stderr]
+#      args3.push(stdout_r)          if opts[:stdout]
+#      args3.push(stderr_r)          if opts[:stderr]
 
       yield(*args3)
 
-      process.io.stdin.close        if opts[:stdin] and not process.io.stdin.closed?
-      stdout_r.close                unless stdout_r.closed?
-      stderr_r.close                unless stderr_r.closed?
+#      process.io.stdin.close        if opts[:stdin] and not process.io.stdin.closed?
+#      stdout_r.close                unless stdout_r.closed?
+#      stderr_r.close                unless stderr_r.closed?
+      logger.pipe(stdout_r => :info, stderr_r => :info)
     else
       # Log both stdout and stderr as 'info' because nobody uses stderr for
       # actually reporting errors and as a result 'stderr' is a misnomer.
@@ -249,9 +251,9 @@ module FPM::Util
         logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 122 ]]]")
         stdin.close
         logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 123 ]]]")
-        stdout_r_str = stdout.read
+#        stdout_r_str = stdout.read
         logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 124 ]]]")
-        stderr_r_str = stderr.read
+#        stderr_r_str = stderr.read
         logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 125 ]]]")
       end
       logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 126 ]]]")
