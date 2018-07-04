@@ -101,6 +101,7 @@ module FPM::Util
   #   :stderr  (default: true)  -- pass stderr object of the child process to the block for reading,
   #
   def execmd(*args)
+    logger.info("[[[ DEBUG CHECKPOINT, execmd(), 700 ]]]")
     i = 0
     if i < args.size
       if args[i].kind_of?(Hash)
@@ -142,7 +143,7 @@ module FPM::Util
       raise ExecutableNotFound.new(program)
     end
 
-    logger.debug("Running command", :args => args2)
+    logger.info("Running command: " + args2.join(" "))
 
     stdout_r, stdout_w = IO.pipe
     stderr_r, stderr_w = IO.pipe
@@ -160,7 +161,7 @@ module FPM::Util
     process.start
 
     stdout_w.close; stderr_w.close
-    logger.debug("Process is running", :pid => process.pid)
+    logger.info("Process is running", :pid => process.pid)
     if block_given?
       args3 = []
       args3.push(process)           if opts[:process]
@@ -186,6 +187,7 @@ module FPM::Util
 
   # Run a command safely in a way that gets reports useful errors.
   def safesystem(*args)
+    logger.info("[[[ DEBUG, FULL COMMAND ]]]  in safesystem(), received args =\n" + args.join(" "))
     # ChildProcess isn't smart enough to run a $SHELL if there's
     # spaces in the first arg and there's only 1 arg.
     if args.size == 1
@@ -210,6 +212,7 @@ module FPM::Util
 
   # Run a command safely in a way that pushes stdin to command
   def safesystemin(*args)
+    logger.info("[[[ DEBUG, FULL COMMAND ]]]  in safesystemin(), received args =\n" + args.join(" "))
     logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 100 ]]]")
     # Our first argument is our stdin
     safe_stdin = args.shift()
@@ -238,6 +241,8 @@ module FPM::Util
       logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 117 ]]]")
     else
       logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 120 ]]]")
+#      args.push(" | tee /tmp/execmd.out")   # NO, runs but does not create output file
+#      args.push(" > /tmp/execmd.out 2>&1 ") # NO, runs but does not create output file
       exit_code = execmd(args) do |stdin,stdout,stderr|
         logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 121 ]]]")
         stdin.write(safe_stdin)
@@ -260,7 +265,7 @@ module FPM::Util
     if !success
       logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 133 ]]]")
       raise ProcessFailed.new("#{program} failed (exit code #{exit_code})" \
-                              ". Full command was:#{args.inspect}")
+                              ". Full command was:\n" + args.join(" "))
     end
     logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 134 ]]]")
     return success
@@ -269,6 +274,7 @@ module FPM::Util
 
   # Run a command safely in a way that captures output and status.
   def safesystemout(*args)
+    logger.info("[[[ DEBUG, FULL COMMAND ]]]  in safesystemout(), received args =\n" + args.join(" "))
     if args.size == 1
       args = [ ENV["SHELL"], "-c", args[0] ]
     end
@@ -286,7 +292,7 @@ module FPM::Util
 
     if !success
       raise ProcessFailed.new("#{program} failed (exit code #{exit_code})" \
-                              ". Full command was:#{args.inspect}")
+                              ". Full command was:\n" + args.join(" "))
     end
     return stdout_r_str
   end # def safesystemout
