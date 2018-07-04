@@ -25,6 +25,9 @@ class FPM::Package::CPAN < FPM::Package
   option "--test", :flag,
     "Run the tests before packaging?", :default => true
 
+  option "--verbose", :flag,
+    "Produce verbose output from cpanm?", :default => true
+
   option "--perl-lib-path", "PERL_LIB_PATH",
     "Path of target Perl Libraries"
 
@@ -137,6 +140,7 @@ class FPM::Package::CPAN < FPM::Package
     cpanm_flags += ["--mirror", "#{attributes[:cpan_mirror]}"] if !attributes[:cpan_mirror].nil?
     cpanm_flags += ["--mirror-only"] if attributes[:cpan_mirror_only?] && !attributes[:cpan_mirror].nil?
     cpanm_flags += ["--force"] if attributes[:cpan_cpanm_force?]
+    cpanm_flags += ["--verbose"] if attributes[:cpan_verbose?]
 
     safesystem(attributes[:cpan_cpanm_bin], *cpanm_flags)
 
@@ -241,11 +245,7 @@ class FPM::Package::CPAN < FPM::Package
                      # Empty install_base to avoid local::lib being used.
                      "INSTALL_BASE=")
         end
-        if attributes[:cpan_test?]
-          make = [ "env", "PERL5LIB=#{build_path("cpan/lib/perl5")}", "make" ]
-        else
-          make = [ "make" ]
-        end
+        make = [ "env", "PERL5LIB=#{build_path("cpan/lib/perl5")}", "make" ]
         safesystem(*make)
         safesystem(*(make + ["test"])) if attributes[:cpan_test?]
         safesystem(*(make + ["DESTDIR=#{staging_path}", "install"]))
