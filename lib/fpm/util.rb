@@ -137,6 +137,7 @@ module FPM::Util
     opts[:stdin]   = true  unless opts.include?(:stdin)
     opts[:stdout]  = true  unless opts.include?(:stdout)
     opts[:stderr]  = true  unless opts.include?(:stderr)
+    opts[:suppress_output] = false unless opts.include?(:suppress_output)
 
     if !program.include?("/") and !program_in_path?(program)
       raise ExecutableNotFound.new(program)
@@ -165,14 +166,14 @@ module FPM::Util
       args3 = []
       args3.push(process)           if opts[:process]
       args3.push(process.io.stdin)  if opts[:stdin]
-      args3.push(stdout_r)          if opts[:stdout]
-      args3.push(stderr_r)          if opts[:stderr]
+      args3.push(stdout_r)          if opts[:stdout] && !opts[:suppress_output]
+      args3.push(stderr_r)          if opts[:stderr] && !opts[:suppress_output]
 
       yield(*args3)
 
       process.io.stdin.close        if opts[:stdin] and not process.io.stdin.closed?
-      stdout_r.close                unless stdout_r.closed?
-      stderr_r.close                unless stderr_r.closed?
+      stdout_r.close                unless stdout_r.closed? || opts[:suppress_output]
+      stderr_r.close                unless stderr_r.closed? || opts[:suppress_output]
     else
       # Log both stdout and stderr as 'info' because nobody uses stderr for
       # actually reporting errors and as a result 'stderr' is a misnomer.
@@ -219,18 +220,16 @@ module FPM::Util
 
     if args[0].kind_of?(Hash)
       env = args.shift()
-      exit_code = execmd(env, args) do |stdin,stdout,stderr|
+      logger.info("foo")
+      exit_code = execmd(env, args, :suppress_output=>true) do |stdin,stdout,stderr|
         stdin.write(safe_stdin)
         stdin.close
-        stdout_r_str = stdout.read
-        stderr_r_str = stderr.read  
       end
     else
-      exit_code = execmd(args) do |stdin,stdout,stderr|
+      logger.info("bar")
+      exit_code = execmd(args, :suppress_output=>true) do |stdin,stdout,stderr|
         stdin.write(safe_stdin)
         stdin.close
-        stdout_r_str = stdout.read
-        stderr_r_str = stderr.read
       end
     end
     program = args[0]
