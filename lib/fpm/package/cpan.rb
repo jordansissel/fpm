@@ -116,6 +116,8 @@ class FPM::Package::CPAN < FPM::Package
     self.vendor = case metadata["author"]
       when String; metadata["author"]
       when Array; metadata["author"].join(", ")
+      # for Class::Data::Inheritable and others with blank 'author' field, fix "Invalid package configuration: Unexpected CPAN 'author' field type: NilClass. This is a bug."
+      when NilClass; "No Vendor Or Author Provided"
       else
         raise FPM::InvalidPackageConfiguration, "Unexpected CPAN 'author' field type: #{metadata["author"].class}. This is a bug."
     end if metadata.include?("author")
