@@ -42,7 +42,7 @@ Release Notes and Change Log
 * Fix bug so fpm can now copy symlinks correctly (`#1348`_; ServiusHack)
 * apk: Improve performance (`#1358`_; Jan Delgado)
 * cpan: Fix crash when CPAN query returns a version value that was a number and fpm was expecting a string. (`#1344`_, `#1343`_; liger1978)
-* cpan: Fix MetaCPAN searches to use v1 of MetaCPAN's API. The v0 API is no longer provided by MetaCPAN. (`#1341`_, `#1339`; Bob Bell)
+* cpan: Fix MetaCPAN searches to use v1 of MetaCPAN's API. The v0 API is no longer provided by MetaCPAN. (`#1341`_, `#1339`_; Bob Bell)
 * cpan: Have perl modules implicitly "provide" (`--provides`) capabilities. (`#1340`_; Bob Bell. `#1345`_; liger1978)
 * cpan: Now transforms perl version values like "5.008001" to "5.8.1" (`#1342`_; Bob Bell)
 * cpan: Use `>=` ("this version or newer") for package dependencies instead of `=` ("exactly this version"). (`#1338`_; Bob Bell)
