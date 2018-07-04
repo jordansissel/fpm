@@ -203,7 +203,7 @@ module FPM::Util
 
     if !success
       raise ProcessFailed.new("#{program} failed (exit code #{exit_code})" \
-                              ". Full command was:#{args.inspect}")
+                              ". Full command was:\n" + args.join(" "))
     end
     return success
   end # def safesystem

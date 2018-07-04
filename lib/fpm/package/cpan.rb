@@ -304,7 +304,8 @@ class FPM::Package::CPAN < FPM::Package
     directory = build_path("module")
     ::Dir.mkdir(directory)
     args = [ "-C", directory, "-zxf", tarball,
-      "--strip-components", "1" ]
+#      "--strip-components", "1" ]       # fails    on removing leading ./Foo/ in tarball paths
+      %q{--transform=s,[./]*[^/]*/,,} ]  # succeeds on removing leading ./Foo/ or /Foo/ or Foo/
     safesystem("tar", *args)
     return directory
   end
