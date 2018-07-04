@@ -137,6 +137,7 @@ module FPM::Util
     opts[:stdin]   = true  unless opts.include?(:stdin)
     opts[:stdout]  = true  unless opts.include?(:stdout)
     opts[:stderr]  = true  unless opts.include?(:stderr)
+    opts[:suppress_output] = false unless opts.include?(:suppress_output)
 
     if !program.include?("/") and !program_in_path?(program)
       raise ExecutableNotFound.new(program)
@@ -165,14 +166,14 @@ module FPM::Util
       args3 = []
       args3.push(process)           if opts[:process]
       args3.push(process.io.stdin)  if opts[:stdin]
-      args3.push(stdout_r)          if opts[:stdout]
-      args3.push(stderr_r)          if opts[:stderr]
+      args3.push(stdout_r)          if opts[:stdout] && !opts[:suppress_output]
+      args3.push(stderr_r)          if opts[:stderr] && !opts[:suppress_output]
 
       yield(*args3)
 
       process.io.stdin.close        if opts[:stdin] and not process.io.stdin.closed?
-      stdout_r.close                unless stdout_r.closed?
-      stderr_r.close                unless stderr_r.closed?
+      stdout_r.close                unless stdout_r.closed? || opts[:suppress_output]
+      stderr_r.close                unless stderr_r.closed? || opts[:suppress_output]
     else
       # Log both stdout and stderr as 'info' because nobody uses stderr for
       # actually reporting errors and as a result 'stderr' is a misnomer.
@@ -207,6 +208,39 @@ module FPM::Util
     end
     return success
   end # def safesystem
+
+  # Run a command safely in a way that pushes stdin to command
+  def safesystemin(*args)
+    # Our first argument is our stdin
+    safe_stdin = args.shift()
+
+    if args.size == 1
+      args = [ default_shell, "-c", args[0] ]
+    end
+
+    if args[0].kind_of?(Hash)
+      env = args.shift()
+      logger.info("foo")
+      exit_code = execmd(env, args, :suppress_output=>true) do |stdin,stdout,stderr|
+        stdin.write(safe_stdin)
+        stdin.close
+      end
+    else
+      logger.info("bar")
+      exit_code = execmd(args, :suppress_output=>true) do |stdin,stdout,stderr|
+        stdin.write(safe_stdin)
+        stdin.close
+      end
+    end
+    program = args[0]
+    success = (exit_code == 0)
+
+    if !success
+      raise ProcessFailed.new("#{program} failed (exit code #{exit_code})" \
+                              ". Full command was:#{args.inspect}")
+    end
+    return success
+  end # def safesystemin
 
   # Run a command safely in a way that captures output and status.
   def safesystemout(*args)
