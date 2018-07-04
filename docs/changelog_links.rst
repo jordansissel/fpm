@@ -82,6 +82,7 @@
 .. _#1494: https://github.com/jordansissel/fpm/issues/1494
 .. _#1509: https://github.com/jordansissel/fpm/issues/1509
 .. _#1511: https://github.com/jordansissel/fpm/issues/1511
+.. _#1515: https://github.com/jordansissel/fpm/issues/1515
 .. _#171: https://github.com/jordansissel/fpm/issues/171
 .. _#185: https://github.com/jordansissel/fpm/issues/185
 .. _#186: https://github.com/jordansissel/fpm/issues/186
