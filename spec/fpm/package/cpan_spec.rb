@@ -16,6 +16,12 @@ describe FPM::Package::CPAN, :if => have_cpanm do
   end
 
   it "should package Digest::MD5" do
+    # Disable testing because we don't really need to run the cpan tests. The
+    # goal is to see the parsed result (name, module description, etc)
+    # Additionally, it fails on my workstation when cpan_test? is enabled due
+    # to not finding `Test.pm`, and it seems like a flakey test if we keep this
+    # enabled.
+    subject.attributes[:cpan_test?] = false
     subject.input("Digest::MD5")
     insist { subject.name } == "perl-Digest-MD5"
     insist { subject.description } == "Perl interface to the MD-5 algorithm"
