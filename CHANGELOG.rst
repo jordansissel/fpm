@@ -1,6 +1,11 @@
 Release Notes and Change Log
 ============================
 
+1.10.2 (July 3, 2018)
+^^^^^^^^^^^^^^^^^^^^^
+
+* cpan: Fix a crash where fpm would crash trying to parse a perl version string (`#1515`_, `#1514`; Jordan Sissel, William N. Braswell, Jr)
+
 1.10.1 (July 3, 2018)
 ^^^^^^^^^^^^^^^^^^^^^
 
