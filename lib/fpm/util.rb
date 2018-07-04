@@ -208,6 +208,41 @@ module FPM::Util
     return success
   end # def safesystem
 
+  # Run a command safely in a way that pushes stdin to command
+  def safesystemin(*args)
+    # Our first argument is our stdin
+    safe_stdin = args.shift()
+
+    if args.size == 1
+      args = [ default_shell, "-c", args[0] ]
+    end
+
+    if args[0].kind_of?(Hash)
+      env = args.shift()
+      exit_code = execmd(env, args) do |stdin,stdout,stderr|
+        stdin.write(safe_stdin)
+        stdin.close
+        stdout_r_str = stdout.read
+        stderr_r_str = stderr.read  
+      end
+    else
+      exit_code = execmd(args) do |stdin,stdout,stderr|
+        stdin.write(safe_stdin)
+        stdin.close
+        stdout_r_str = stdout.read
+        stderr_r_str = stderr.read
+      end
+    end
+    program = args[0]
+    success = (exit_code == 0)
+
+    if !success
+      raise ProcessFailed.new("#{program} failed (exit code #{exit_code})" \
+                              ". Full command was:#{args.inspect}")
+    end
+    return success
+  end # def safesystemin
+
   # Run a command safely in a way that captures output and status.
   def safesystemout(*args)
     if args.size == 1

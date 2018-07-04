@@ -142,8 +142,9 @@ class FPM::Package::CPAN < FPM::Package
     cpanm_flags += ["--force"] if attributes[:cpan_cpanm_force?]
     cpanm_flags += ["--verbose"] if attributes[:cpan_verbose?]
 
-    safesystem(attributes[:cpan_cpanm_bin], *cpanm_flags)
-
+    # Run cpanm with stdin enabled so that ExtUtils::MakeMaker does not prompt user for input
+    safesystemin("", attributes[:cpan_cpanm_bin], *cpanm_flags)
+    
     if !attributes[:no_auto_depends?]
      found_dependencies = {}
      if metadata["requires"]
@@ -233,13 +234,13 @@ class FPM::Package::CPAN < FPM::Package
       elsif File.exist?("Makefile.PL")
         if attributes[:cpan_perl_lib_path]
           perl_lib_path = attributes[:cpan_perl_lib_path]
-          safesystem(attributes[:cpan_perl_bin],
+          safesystemin("", attributes[:cpan_perl_bin],
                      "-Mlocal::lib=#{build_path("cpan")}",
                      "Makefile.PL", "PREFIX=#{prefix}", "LIB=#{perl_lib_path}",
                      # Empty install_base to avoid local::lib being used.
                      "INSTALL_BASE=")
         else
-          safesystem(attributes[:cpan_perl_bin],
+          safesystemin("", attributes[:cpan_perl_bin],
                      "-Mlocal::lib=#{build_path("cpan")}",
                      "Makefile.PL", "PREFIX=#{prefix}",
                      # Empty install_base to avoid local::lib being used.
