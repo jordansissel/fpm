@@ -26,7 +26,7 @@ class FPM::Package::CPAN < FPM::Package
     "Run the tests before packaging?", :default => true
 
   option "--verbose", :flag,
-    "Produce verbose output from cpanm?", :default => true
+    "Produce verbose output from cpanm?", :default => false
 
   option "--perl-lib-path", "PERL_LIB_PATH",
     "Path of target Perl Libraries"
