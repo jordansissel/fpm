@@ -208,6 +208,65 @@ module FPM::Util
     return success
   end # def safesystem
 
+  # Run a command safely in a way that pushes stdin to command
+  def safesystemin(*args)
+    logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 100 ]]]")
+    # Our first argument is our stdin
+    safe_stdin = args.shift()
+    logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 101 ]]]")
+
+    if args.size == 1
+      logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 102 ]]]")
+      args = [ default_shell, "-c", args[0] ]
+    end
+
+    if args[0].kind_of?(Hash)
+      logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 110 ]]]")
+      env = args.shift()
+      logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 111 ]]]")
+      exit_code = execmd(env, args) do |stdin,stdout,stderr|
+        logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 112 ]]]")
+        stdin.write(safe_stdin)
+        logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 113 ]]]")
+        stdin.close
+        logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 114 ]]]")
+        stdout_r_str = stdout.read
+        logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 115 ]]]")
+        stderr_r_str = stderr.read  
+        logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 116 ]]]")
+      end
+      logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 117 ]]]")
+    else
+      logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 120 ]]]")
+      exit_code = execmd(args) do |stdin,stdout,stderr|
+        logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 121 ]]]")
+        stdin.write(safe_stdin)
+        logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 122 ]]]")
+        stdin.close
+        logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 123 ]]]")
+        stdout_r_str = stdout.read
+        logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 124 ]]]")
+        stderr_r_str = stderr.read
+        logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 125 ]]]")
+      end
+      logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 126 ]]]")
+    end
+    logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 130 ]]]")
+    program = args[0]
+    logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 131 ]]]")
+    success = (exit_code == 0)
+
+    logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 132 ]]]")
+    if !success
+      logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 133 ]]]")
+      raise ProcessFailed.new("#{program} failed (exit code #{exit_code})" \
+                              ". Full command was:#{args.inspect}")
+    end
+    logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 134 ]]]")
+    return success
+    logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 135 ]]]")
+  end # def safesystemin
+
   # Run a command safely in a way that captures output and status.
   def safesystemout(*args)
     if args.size == 1
