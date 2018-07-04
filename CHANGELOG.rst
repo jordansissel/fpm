@@ -1,6 +1,12 @@
 Release Notes and Change Log
 ============================
 
+1.10.1 (July 3, 2018)
+^^^^^^^^^^^^^^^^^^^^^
+
+* cpan: Fixes some package building by setting PERL5LIB correctly (`#1509`_, `#1511`_; William N. Braswell, Jr)
+* cpan: Adds `--[no-]cpan-verbose` flag which, when set, runs `cpanm` with the `--verbose` flag (`#1511`_; William N. Braswell, Jr)
+
 1.10.0 (May 21, 2018)
 ^^^^^^^^^^^^^^^^^^^^
 
