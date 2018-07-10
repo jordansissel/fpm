@@ -30,6 +30,10 @@ class FPM::Package::RPM < FPM::Package
     "bzip2" => "w9.bzdio"
   } unless defined?(COMPRESSION_MAP)
 
+  option "--ba", :flag, "Pass --ba to rpmbuild; build both source and binary packages."
+  option "--bb", :flag, "Pass --bb to rpmbuild; build binary package, not source package."
+  option "--bs", :flag, "Pass --bs to rpmbuild; build source package, not binary package."
+
   option "--use-file-permissions", :flag,
       "Use existing file permissions when defining ownership and modes."
 
@@ -419,7 +423,42 @@ class FPM::Package::RPM < FPM::Package
   def output(output_path)
     output_check(output_path)
     %w(BUILD RPMS SRPMS SOURCES SPECS).each { |d| FileUtils.mkdir_p(build_path(d)) }
-    args = ["rpmbuild", "-bb"]
+
+
+
+# THEN START HERE: use option to determine args below
+# THEN START HERE: use option to determine args below
+# THEN START HERE: use option to determine args below
+
+
+    logger.info("[[[ DEBUG ]]] have :rpm_ba", :rpm_ba => attributes[:rpm_ba?])
+    logger.info("[[[ DEBUG ]]] have :rpm_bb", :rpm_bb => attributes[:rpm_bb?])
+    logger.info("[[[ DEBUG ]]] have :rpm_bs", :rpm_bs => attributes[:rpm_bs?])
+
+#    args = ["rpmbuild", "-bb"]  # NEED REMOVE, ORIGINAL
+    args = ["rpmbuild"]
+
+    if attributes[:rpm_ba?]
+      if attributes[:rpm_bb?]
+        raise "RPM build options --rpm-ba and --rpm-bb both provided, must choose only one"
+      elsif attributes[:rpm_bs?]
+        raise "RPM build options --rpm-ba and --rpm-bs both provided, must choose only one"
+      end
+      args += ["--ba"] 
+    elsif attributes[:rpm_bb?]
+      if attributes[:rpm_bs?]
+        raise "RPM build options --rpm-bb and --rpm-bs both provided, must choose only one"
+      end
+      args += ["--bb"] 
+    elsif attributes[:rpm_bs?]
+      args += ["--bs"] 
+    else
+      # default to --bb, build binary packages only
+      args += ["--bb"] 
+    end
+
+
+
 
     if %x{uname -m}.chomp != self.architecture
       rpm_target = self.architecture

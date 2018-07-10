@@ -112,6 +112,8 @@ class FPM::Package::CPAN < FPM::Package
     self.vendor = case metadata["author"]
       when String; metadata["author"]
       when Array; metadata["author"].join(", ")
+      # for Class::Data::Inheritable and others with blank 'author' field, fix "Invalid package configuration: Unexpected CPAN 'author' field type: NilClass. This is a bug."
+      when NilClass; "No Vendor Or Author Provided"
       else
         raise FPM::InvalidPackageConfiguration, "Unexpected CPAN 'author' field type: #{metadata["author"].class}. This is a bug."
     end if metadata.include?("author")
@@ -142,7 +144,9 @@ class FPM::Package::CPAN < FPM::Package
     cpanm_flags += ["--force"] if attributes[:cpan_cpanm_force?]
     cpanm_flags += ["--verbose"] if attributes[:cpan_verbose?]
 
-    safesystem(attributes[:cpan_cpanm_bin], *cpanm_flags)
+    # Run cpanm with stdin enabled so that ExtUtils::MakeMaker does not prompt user for input
+#    safesystem(attributes[:cpan_cpanm_bin], *cpanm_flags)
+    safesystemin("", attributes[:cpan_cpanm_bin], *cpanm_flags)
 
     if !attributes[:no_auto_depends?]
      found_dependencies = {}
@@ -208,15 +212,18 @@ class FPM::Package::CPAN < FPM::Package
       #
       if File.exist?("Build.PL")
         # Module::Build is in use here; different actions required.
-        safesystem(attributes[:cpan_perl_bin],
+#        safesystem(attributes[:cpan_perl_bin],  # hangs on interactive build, waiting for user input
+        safesystemin("", attributes[:cpan_perl_bin],
                    "-Mlocal::lib=#{build_path("cpan")}",
                    "Build.PL")
-        safesystem(attributes[:cpan_perl_bin],
+#        safesystem(attributes[:cpan_perl_bin],  # hangs on interactive build, waiting for user input
+        safesystemin("", attributes[:cpan_perl_bin],
                    "-Mlocal::lib=#{build_path("cpan")}",
                    "./Build")
 
         if attributes[:cpan_test?]
-          safesystem(attributes[:cpan_perl_bin],
+#        safesystem(attributes[:cpan_perl_bin],  # hangs on interactive build, waiting for user input
+          safesystemin("", attributes[:cpan_perl_bin],
                    "-Mlocal::lib=#{build_path("cpan")}",
                    "./Build", "test")
         end
@@ -233,13 +240,15 @@ class FPM::Package::CPAN < FPM::Package
       elsif File.exist?("Makefile.PL")
         if attributes[:cpan_perl_lib_path]
           perl_lib_path = attributes[:cpan_perl_lib_path]
-          safesystem(attributes[:cpan_perl_bin],
+#          safesystem(attributes[:cpan_perl_bin],  # hangs on interactive build, waiting for user input
+          safesystemin("", attributes[:cpan_perl_bin],
                      "-Mlocal::lib=#{build_path("cpan")}",
                      "Makefile.PL", "PREFIX=#{prefix}", "LIB=#{perl_lib_path}",
                      # Empty install_base to avoid local::lib being used.
                      "INSTALL_BASE=")
         else
-          safesystem(attributes[:cpan_perl_bin],
+#          safesystem(attributes[:cpan_perl_bin],  # hangs on interactive build, waiting for user input
+          safesystemin("", attributes[:cpan_perl_bin],
                      "-Mlocal::lib=#{build_path("cpan")}",
                      "Makefile.PL", "PREFIX=#{prefix}",
                      # Empty install_base to avoid local::lib being used.
@@ -304,7 +313,8 @@ class FPM::Package::CPAN < FPM::Package
     directory = build_path("module")
     ::Dir.mkdir(directory)
     args = [ "-C", directory, "-zxf", tarball,
-      "--strip-components", "1" ]
+#      "--strip-components", "1" ]       # fails    on removing leading ./Foo/ in tarball paths
+      %q{--transform=s,[./]*[^/]*/,,} ]  # succeeds on removing leading ./Foo/ or /Foo/ or Foo/
     safesystem("tar", *args)
     return directory
   end
@@ -352,7 +362,7 @@ class FPM::Package::CPAN < FPM::Package
       response = httpfetch(url)
     rescue Net::HTTPServerException => e
       #logger.error("Download failed", :error => response.status_line,
-                    #:url => url)
+                    ##:url => url)
       logger.error("Download failed", :error => e, :url => url)
       raise FPM::InvalidPackageConfiguration, "metacpan query failed"
     end
@@ -371,7 +381,7 @@ class FPM::Package::CPAN < FPM::Package
       response = httpfetch(metacpan_url)
     rescue Net::HTTPServerException => e
       #logger.error("metacpan query failed.", :error => response.status_line,
-                    #:module => package, :url => metacpan_url)
+                    ##:module => package, :url => metacpan_url)
       logger.error("metacpan query failed.", :error => e.message,
                     :module => package, :url => metacpan_url)
       raise FPM::InvalidPackageConfiguration, "metacpan query failed"
