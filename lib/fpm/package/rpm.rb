@@ -424,18 +424,6 @@ class FPM::Package::RPM < FPM::Package
     output_check(output_path)
     %w(BUILD RPMS SRPMS SOURCES SPECS).each { |d| FileUtils.mkdir_p(build_path(d)) }
 
-
-
-# THEN START HERE: use option to determine args below
-# THEN START HERE: use option to determine args below
-# THEN START HERE: use option to determine args below
-
-
-    logger.info("[[[ DEBUG ]]] have :rpm_ba", :rpm_ba => attributes[:rpm_ba?])
-    logger.info("[[[ DEBUG ]]] have :rpm_bb", :rpm_bb => attributes[:rpm_bb?])
-    logger.info("[[[ DEBUG ]]] have :rpm_bs", :rpm_bs => attributes[:rpm_bs?])
-
-#    args = ["rpmbuild", "-bb"]  # NEED REMOVE, ORIGINAL
     args = ["rpmbuild"]
 
     if attributes[:rpm_ba?]
@@ -456,9 +444,6 @@ class FPM::Package::RPM < FPM::Package
       # default to --bb, build binary packages only
       args += ["--bb"] 
     end
-
-
-
 
     if %x{uname -m}.chomp != self.architecture
       rpm_target = self.architecture
