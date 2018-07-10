@@ -54,13 +54,9 @@ class FPM::Package::CPAN < FPM::Package
       moduledir = package
       result = {}
     else
-      logger.info("[[[ DEBUG CHECKPOINT 010 ]]]")
       result = search(package)
-      logger.info("[[[ DEBUG CHECKPOINT 011 ]]]")
       tarball = download(result, version)
-      logger.info("[[[ DEBUG CHECKPOINT 012 ]]]")
       moduledir = unpack(tarball)
-      logger.info("[[[ DEBUG CHECKPOINT 013 ]]]")
     end
 
     # Read package metadata (name, version, etc)
@@ -148,11 +144,9 @@ class FPM::Package::CPAN < FPM::Package
     cpanm_flags += ["--force"] if attributes[:cpan_cpanm_force?]
     cpanm_flags += ["--verbose"] if attributes[:cpan_verbose?]
 
-    logger.info("[[[ DEBUG CHECKPOINT 060 ]]]")
     # Run cpanm with stdin enabled so that ExtUtils::MakeMaker does not prompt user for input
 #    safesystem(attributes[:cpan_cpanm_bin], *cpanm_flags)
     safesystemin("", attributes[:cpan_cpanm_bin], *cpanm_flags)
-    logger.info("[[[ DEBUG CHECKPOINT 061 ]]]")
 
     if !attributes[:no_auto_depends?]
      found_dependencies = {}
@@ -177,19 +171,14 @@ class FPM::Package::CPAN < FPM::Package
             self.dependencies << "#{dep_name} >= #{version}"
             next
           end
-          logger.info("[[[ DEBUG CHECKPOINT 020 ]]]")
           dep = search(dep_name)
-          logger.info("[[[ DEBUG CHECKPOINT 021 ]]]")
 
           name = cap_name(dep_name)
-          logger.info("[[[ DEBUG CHECKPOINT 022 ]]]")
 
           if version.to_s == "0"
-            logger.info("[[[ DEBUG CHECKPOINT 023 ]]]")
             # Assume 'Foo = 0' means any version?
             self.dependencies << "#{name}"
           else
-            logger.info("[[[ DEBUG CHECKPOINT 024 ]]]")
             # The 'version' string can be something complex like:
             #   ">= 0, != 1.0, != 1.2"
             # If it is not specified explicitly, require the given
@@ -206,94 +195,69 @@ class FPM::Package::CPAN < FPM::Package
               self.dependencies << "#{name} >= #{version}"
             end
           end
-          logger.info("[[[ DEBUG CHECKPOINT 025 ]]]")
         end
-        logger.info("[[[ DEBUG CHECKPOINT 026 ]]]")
       end
-       logger.info("[[[ DEBUG CHECKPOINT 027 ]]]")
     end #no_auto_depends
-    logger.info("[[[ DEBUG CHECKPOINT 028 ]]]")
 
     ::Dir.chdir(moduledir) do
       # TODO(sissel): install build and config dependencies to resolve
       # build/configure requirements.
       # META.yml calls it 'configure_requires' and 'build_requires'
       # META.json calls it prereqs/build and prereqs/configure
-      logger.info("[[[ DEBUG CHECKPOINT 030 ]]]")
 
       prefix = attributes[:prefix] || "/usr/local"
       # TODO(sissel): Set default INSTALL path?
-      logger.info("[[[ DEBUG CHECKPOINT 031 ]]]")
 
       # Try Makefile.PL, Build.PL
       #
       if File.exist?("Build.PL")
-        logger.info("[[[ DEBUG CHECKPOINT 040 ]]]")
         # Module::Build is in use here; different actions required.
 #        safesystem(attributes[:cpan_perl_bin],  # hangs on interactive build, waiting for user input
         safesystemin("", attributes[:cpan_perl_bin],
                    "-Mlocal::lib=#{build_path("cpan")}",
                    "Build.PL")
-        logger.info("[[[ DEBUG CHECKPOINT 041 ]]]")
 #        safesystem(attributes[:cpan_perl_bin],  # hangs on interactive build, waiting for user input
         safesystemin("", attributes[:cpan_perl_bin],
                    "-Mlocal::lib=#{build_path("cpan")}",
                    "./Build")
-        logger.info("[[[ DEBUG CHECKPOINT 042 ]]]")
 
         if attributes[:cpan_test?]
 #        safesystem(attributes[:cpan_perl_bin],  # hangs on interactive build, waiting for user input
           safesystemin("", attributes[:cpan_perl_bin],
                    "-Mlocal::lib=#{build_path("cpan")}",
                    "./Build", "test")
-        logger.info("[[[ DEBUG CHECKPOINT 043 ]]]")
         end
         if attributes[:cpan_perl_lib_path]
-          logger.info("[[[ DEBUG CHECKPOINT 044 ]]]")
           perl_lib_path = attributes[:cpan_perl_lib_path]
           safesystem("./Build install --install_path lib=#{perl_lib_path} \
                      --destdir #{staging_path} --prefix #{prefix} --destdir #{staging_path}")
-          logger.info("[[[ DEBUG CHECKPOINT 045 ]]]")
         else
-          logger.info("[[[ DEBUG CHECKPOINT 046 ]]]")
            safesystem("./Build", "install",
                      "--prefix", prefix, "--destdir", staging_path,
                      # Empty install_base to avoid local::lib being used.
                      "--install_base", "")
-          logger.info("[[[ DEBUG CHECKPOINT 047 ]]]")
         end
       elsif File.exist?("Makefile.PL")
-        logger.info("[[[ DEBUG CHECKPOINT 050 ]]]")
         if attributes[:cpan_perl_lib_path]
-          logger.info("[[[ DEBUG CHECKPOINT 051 ]]]")
           perl_lib_path = attributes[:cpan_perl_lib_path]
-          logger.info("[[[ DEBUG CHECKPOINT 052 ]]]")
 #          safesystem(attributes[:cpan_perl_bin],  # hangs on interactive build, waiting for user input
           safesystemin("", attributes[:cpan_perl_bin],
                      "-Mlocal::lib=#{build_path("cpan")}",
                      "Makefile.PL", "PREFIX=#{prefix}", "LIB=#{perl_lib_path}",
                      # Empty install_base to avoid local::lib being used.
                      "INSTALL_BASE=")
-          logger.info("[[[ DEBUG CHECKPOINT 053 ]]]")
         else
-          logger.info("[[[ DEBUG CHECKPOINT 054 ]]]")
 #          safesystem(attributes[:cpan_perl_bin],  # hangs on interactive build, waiting for user input
           safesystemin("", attributes[:cpan_perl_bin],
                      "-Mlocal::lib=#{build_path("cpan")}",
                      "Makefile.PL", "PREFIX=#{prefix}",
                      # Empty install_base to avoid local::lib being used.
                      "INSTALL_BASE=")
-          logger.info("[[[ DEBUG CHECKPOINT 055 ]]]")
         end
-        logger.info("[[[ DEBUG CHECKPOINT 060 ]]]")
         make = [ "env", "PERL5LIB=#{build_path("cpan/lib/perl5")}", "make" ]
-        logger.info("[[[ DEBUG CHECKPOINT 061 ]]]")
         safesystem(*make)
-        logger.info("[[[ DEBUG CHECKPOINT 062 ]]]")
         safesystem(*(make + ["test"])) if attributes[:cpan_test?]
-        logger.info("[[[ DEBUG CHECKPOINT 063 ]]]")
         safesystem(*(make + ["DESTDIR=#{staging_path}", "install"]))
-        logger.info("[[[ DEBUG CHECKPOINT 064 ]]]")
 
 
       else
@@ -413,31 +377,21 @@ class FPM::Package::CPAN < FPM::Package
   def search(package)
     logger.info("Asking metacpan about a module", :module => package)
     metacpan_url = "https://fastapi.metacpan.org/v1/module/" + package
-    logger.info("[[[ DEBUG CHECKPOINT 000 ]]]")
     begin
-      logger.info("[[[ DEBUG CHECKPOINT 001 ]]]")
       response = httpfetch(metacpan_url)
-      logger.info("[[[ DEBUG CHECKPOINT 002 ]]]")
     rescue Net::HTTPServerException => e
-      logger.info("[[[ DEBUG CHECKPOINT 003 ]]]")
       #logger.error("metacpan query failed.", :error => response.status_line,
                     ##:module => package, :url => metacpan_url)
       logger.error("metacpan query failed.", :error => e.message,
                     :module => package, :url => metacpan_url)
-      logger.info("[[[ DEBUG CHECKPOINT 004 ]]]")
       raise FPM::InvalidPackageConfiguration, "metacpan query failed"
-      logger.info("[[[ DEBUG CHECKPOINT 005 ]]]")
     end
-    logger.info("[[[ DEBUG CHECKPOINT 006 ]]]")
 
     #data = ""
     #response.read_body { |c| p c; data << c }
     data = response.body
-    logger.info("[[[ DEBUG CHECKPOINT 007 ]]]")
     metadata = JSON.parse(data)
-    logger.info("[[[ DEBUG CHECKPOINT 008 ]]]")
     return metadata
-    logger.info("[[[ DEBUG CHECKPOINT 009 ]]]")
   end # def metadata
 
   def cap_name(name)

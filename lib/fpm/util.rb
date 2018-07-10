@@ -101,7 +101,6 @@ module FPM::Util
   #   :stderr  (default: true)  -- pass stderr object of the child process to the block for reading,
   #
   def execmd(*args)
-    logger.info("[[[ DEBUG CHECKPOINT, execmd(), 700 ]]]")
     i = 0
     if i < args.size
       if args[i].kind_of?(Hash)
@@ -143,7 +142,7 @@ module FPM::Util
       raise ExecutableNotFound.new(program)
     end
 
-    logger.info("Running command: " + args2.join(" "))
+    logger.debug("Running command: " + args2.join(" "))
 
     stdout_r, stdout_w = IO.pipe
     stderr_r, stderr_w = IO.pipe
@@ -161,9 +160,12 @@ module FPM::Util
     process.start
 
     stdout_w.close; stderr_w.close
-    logger.info("Process is running", :pid => process.pid)
+    logger.debug("Process is running", :pid => process.pid)
+# DEV NOTE: disabliing this entire conditional code block allows output & cures the gcc/as freeze/hang, but re-introduces the Perl CPAN Inline::CPP interactive build hang;
+# the only solution discovered so far is a "hybrid" approach whereby we allow the conditional to execute, but we disable STDOUT & STDERR,
+# as seen with the 5 commented-out lines below and the 1 logger.pipe() line below which was copied directly from the else code block,
+# as well as the 2 commented-out lines stdout.read & stderr.read in safesystemin()
     if block_given?
-#    if false  # allows output & cures gcc/as hang, but re-introduces Inline::CPP interactive build hang
       args3 = []
       args3.push(process)           if opts[:process]
       args3.push(process.io.stdin)  if opts[:stdin]
@@ -189,7 +191,7 @@ module FPM::Util
 
   # Run a command safely in a way that gets reports useful errors.
   def safesystem(*args)
-    logger.info("[[[ DEBUG, FULL COMMAND ]]]  in safesystem(), received args =\n" + args.join(" "))
+    logger.debug("[[[ DEBUG, FULL COMMAND ]]]  in safesystem(), received args =\n" + args.join(" "))
     # ChildProcess isn't smart enough to run a $SHELL if there's
     # spaces in the first arg and there's only 1 arg.
     if args.size == 1
@@ -214,69 +216,43 @@ module FPM::Util
 
   # Run a command safely in a way that pushes stdin to command
   def safesystemin(*args)
-    logger.info("[[[ DEBUG, FULL COMMAND ]]]  in safesystemin(), received args =\n" + args.join(" "))
-    logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 100 ]]]")
+    logger.debug("[[[ DEBUG, FULL COMMAND ]]]  in safesystemin(), received args =\n" + args.join(" "))
     # Our first argument is our stdin
     safe_stdin = args.shift()
-    logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 101 ]]]")
 
     if args.size == 1
-      logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 102 ]]]")
       args = [ default_shell, "-c", args[0] ]
     end
 
     if args[0].kind_of?(Hash)
-      logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 110 ]]]")
       env = args.shift()
-      logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 111 ]]]")
       exit_code = execmd(env, args) do |stdin,stdout,stderr|
-        logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 112 ]]]")
         stdin.write(safe_stdin)
-        logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 113 ]]]")
         stdin.close
-        logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 114 ]]]")
         stdout_r_str = stdout.read
-        logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 115 ]]]")
         stderr_r_str = stderr.read  
-        logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 116 ]]]")
       end
-      logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 117 ]]]")
     else
-      logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 120 ]]]")
-#      args.push(" | tee /tmp/execmd.out")   # NO, runs but does not create output file
-#      args.push(" > /tmp/execmd.out 2>&1 ") # NO, runs but does not create output file
       exit_code = execmd(args) do |stdin,stdout,stderr|
-        logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 121 ]]]")
         stdin.write(safe_stdin)
-        logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 122 ]]]")
         stdin.close
-        logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 123 ]]]")
 #        stdout_r_str = stdout.read
-        logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 124 ]]]")
 #        stderr_r_str = stderr.read
-        logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 125 ]]]")
       end
-      logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 126 ]]]")
     end
-    logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 130 ]]]")
     program = args[0]
-    logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 131 ]]]")
     success = (exit_code == 0)
 
-    logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 132 ]]]")
     if !success
-      logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 133 ]]]")
       raise ProcessFailed.new("#{program} failed (exit code #{exit_code})" \
                               ". Full command was:\n" + args.join(" "))
     end
-    logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 134 ]]]")
     return success
-    logger.info("[[[ DEBUG CHECKPOINT, safesystemin(), 135 ]]]")
   end # def safesystemin
 
   # Run a command safely in a way that captures output and status.
   def safesystemout(*args)
-    logger.info("[[[ DEBUG, FULL COMMAND ]]]  in safesystemout(), received args =\n" + args.join(" "))
+    logger.debug("[[[ DEBUG, FULL COMMAND ]]]  in safesystemout(), received args =\n" + args.join(" "))
     if args.size == 1
       args = [ ENV["SHELL"], "-c", args[0] ]
     end
