@@ -4,6 +4,7 @@ require "cabin" # gem "cabin"
 require "tmpdir" # stdlib
 require "tempfile" # stdlib
 require "fileutils" # stdlib
+require "date" # stdlib
 
 # put "lib" in RUBYLIB
 $: << File.join(File.dirname(File.dirname(__FILE__)), "lib")
