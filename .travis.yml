@@ -16,6 +16,7 @@ rvm:
   - 2.2.5
   - 2.3.3
   - 2.4.0
+  - 2.5.1
 matrix:
   exclude:
     - os: osx
