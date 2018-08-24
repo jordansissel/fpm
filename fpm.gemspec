@@ -39,7 +39,7 @@ Gem::Specification.new do |spec|
 
   # For command-line flag support
   # https://github.com/mdub/clamp/blob/master/README.markdown
-  spec.add_dependency("clamp", "~> 1.0.0") # license: MIT
+  spec.add_dependency("clamp", "~> 1.0.0", "< 1.3.0") # license: MIT
 
   # For starting external processes across various ruby interpreters
   spec.add_dependency("childprocess") # license: ???
