@@ -59,6 +59,9 @@ class FPM::Package::CPAN < FPM::Package
       moduledir = unpack(tarball)
     end
 
+#    logger.info("[[[ DEBUG ]]] Received metadata from metacpan: ", :metadata => result)
+#    logger.info("[[[ DEBUG ]]] in cpan::input(), received result['module'] from metacpan: ", :result_module => result["module"])
+
     # Read package metadata (name, version, etc)
     if File.exist?(File.join(moduledir, "META.json"))
       local_metadata = JSON.parse(File.read(File.join(moduledir, ("META.json"))))
@@ -78,6 +81,9 @@ class FPM::Package::CPAN < FPM::Package
     # local META file.
     metadata = result.merge(local_metadata || {})
 
+#    logger.info("[[[ DEBUG ]]] in cpan::input(), have merged metadata: ", :metadata => metadata)
+#    logger.info("[[[ DEBUG ]]] in cpan::input(), have merged metadata['module'] ", :metadata_module => metadata["module"])
+
     if metadata.empty?
       raise FPM::InvalidPackageConfiguration,
         "Could not find package metadata. Checked for META.json, META.yml, and MetaCPAN API data"
@@ -92,19 +98,30 @@ class FPM::Package::CPAN < FPM::Package
       else; metadata["license"]
     end
 
+    # WBRASWELL 20180827 2018.239: must search by distribution (not by package/module) to find "provides" data
     unless metadata["distribution"].nil?
       logger.info("Setting package name from 'distribution'",
                    :distribution => metadata["distribution"])
       self.name = fix_name(metadata["distribution"])
+      dist_metadata = search_dist(metadata["distribution"])
     else
-      logger.info("Setting package name from 'name'",
-                   :name => metadata["name"])
-      self.name = fix_name(metadata["name"])
+      raise FPM::InvalidPackageConfiguration,
+        "Could not find distribution name in package metadata, must have distribution name to search for 'provides' metadata"
+#      logger.info("Setting package name from 'name'",
+#                   :name => metadata["name"])
+#      self.name = fix_name(metadata["name"])
     end
 
-    unless metadata["module"].nil?
-      metadata["module"].each do |m|
-        self.provides << cap_name(m["name"]) + " = #{self.version}"
+#    logger.info("[[[ DEBUG ]]] in cpan::input(), have distribution metadata: ", :dist_metadata => dist_metadata)
+#    logger.info("[[[ DEBUG ]]] in cpan::input(), have distribution metadata['provides'] ", :dist_metadata_provides => dist_metadata["provides"])
+
+    # WBRASWELL 20180827 2018.239: must search by distribution (not by package/module) to find "provides" data
+#    unless metadata["module"].nil?
+#      metadata["module"].each do |m|
+#        self.provides << cap_name(m["name"]) + " = #{self.version}"
+    unless dist_metadata["provides"].nil?
+      dist_metadata["provides"].each do |m|
+        self.provides << cap_name(m) + " = #{self.version}"
       end
     end
 
@@ -320,6 +337,7 @@ class FPM::Package::CPAN < FPM::Package
   end
 
   def download(metadata, cpan_version=nil)
+
     distribution = metadata["distribution"]
     author = metadata["author"]
 
@@ -375,6 +393,7 @@ class FPM::Package::CPAN < FPM::Package
   end # def download
 
   def search(package)
+
     logger.info("Asking metacpan about a module", :module => package)
     metacpan_url = "https://fastapi.metacpan.org/v1/module/" + package
     begin
@@ -384,6 +403,28 @@ class FPM::Package::CPAN < FPM::Package
                     ##:module => package, :url => metacpan_url)
       logger.error("metacpan query failed.", :error => e.message,
                     :module => package, :url => metacpan_url)
+      raise FPM::InvalidPackageConfiguration, "metacpan query failed"
+    end
+
+    #data = ""
+    #response.read_body { |c| p c; data << c }
+    data = response.body
+    metadata = JSON.parse(data)
+    return metadata
+  end # def metadata
+
+  # WBRASWELL 20180827 2018.239: must search by distribution (not by package/module) to find "provides" data
+  def search_dist(distribution)
+
+    logger.info("Asking metacpan about a distribution", :dist => distribution)
+    metacpan_url = "https://fastapi.metacpan.org/v1/release/" + distribution
+    begin
+      response = httpfetch(metacpan_url)
+    rescue Net::HTTPServerException => e
+      #logger.error("metacpan query failed.", :error => response.status_line,
+                    ##:dist => distribution, :url => metacpan_url)
+      logger.error("metacpan query failed.", :error => e.message,
+                    :dist => distribution, :url => metacpan_url)
       raise FPM::InvalidPackageConfiguration, "metacpan query failed"
     end
 
