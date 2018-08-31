@@ -116,14 +116,30 @@ class FPM::Package::CPAN < FPM::Package
 #    logger.info("[[[ DEBUG ]]] in cpan::input(), have distribution metadata['provides'] ", :dist_metadata_provides => dist_metadata["provides"])
 
     # WBRASWELL 20180827 2018.239: must search by distribution (not by package/module) to find "provides" data
-#    unless metadata["module"].nil?
-#      metadata["module"].each do |m|
-#        self.provides << cap_name(m["name"]) + " = #{self.version}"
     unless dist_metadata["provides"].nil?
       dist_metadata["provides"].each do |m|
-        self.provides << cap_name(m) + " = #{self.version}"
-      end
-    end
+        provides_metadata = search(m)
+#        logger.info("[[[ DEBUG ]]] in cpan::input(), have provides metadata: ", :provides_metadata => provides_metadata)
+        # each .pm module file may contain multiple packages, iterate through each
+        unless provides_metadata["module"].nil?
+          provides_metadata["module"].each do |provides_metadata_module|
+            # only access the package with the correct name
+            if provides_metadata_module["name"] == m
+              # some packages have no version, but are still valid packages
+              if provides_metadata_module["version"].nil?
+                self.provides << cap_name(m)
+              else
+                # use normal stringified "version" rather than "version_numified", which may contain invalid scientific notation or 0 instead of blank
+                provides_metadata_module_version = provides_metadata_module["version"];
+                self.provides << cap_name(m) + " = #{provides_metadata_module_version}"
+              end  # if, provides has version
+              # only one package should have the correct name, break out of do loop when found
+              break
+            end  # if, module name matches
+          end  # do loop, packages in module
+        end  # unless, no packages in module
+      end  # do loop, provides in dist
+    end  # unless, no provides in dist
 
     # author is not always set or it may be a string instead of an array
     self.vendor = case metadata["author"]
