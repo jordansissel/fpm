@@ -115,31 +115,88 @@ class FPM::Package::CPAN < FPM::Package
 #    logger.info("[[[ DEBUG ]]] in cpan::input(), have distribution metadata: ", :dist_metadata => dist_metadata)
 #    logger.info("[[[ DEBUG ]]] in cpan::input(), have distribution metadata['provides'] ", :dist_metadata_provides => dist_metadata["provides"])
 
+#    logger.info("[[[ DEBUG ]]] in cpan::input(), have distribution metadata: ", :dist_metadata => dist_metadata)
+
     # WBRASWELL 20180827 2018.239: must search by distribution (not by package/module) to find "provides" data
     unless dist_metadata["provides"].nil?
-      dist_metadata["provides"].each do |m|
-        provides_metadata = search(m)
-#        logger.info("[[[ DEBUG ]]] in cpan::input(), have provides metadata: ", :provides_metadata => provides_metadata)
+
+      # convert provides from array to hash for quick lookup during iteration
+      dist_metadata_provides = Hash[dist_metadata["provides"].collect { |item| [item, ""] } ]
+#      logger.info("[[[ DEBUG ]]] in cpan::input(), have dist_metadata_provides: ", :dist_metadata_provides => dist_metadata_provides)
+#      logger.info("[[[ DEBUG ]]] in cpan::input(), have self.name: ", :self_name => self.name)
+#      logger.info("[[[ DEBUG ]]] in cpan::input(), have metadata['distribution']: ", :metadata_distribution => metadata["distribution"])
+
+      # call metacpan API to find all modules belonging to distribution
+      metacpan_search_url = "https://fastapi.metacpan.org/v1/module/_search"
+      metacpan_search_query = <<-EOL
+{
+    "query" : {
+        "constant_score" : {
+            "filter" : {
+                "exists" : { "field" : "module" }
+            }
+        }
+    },
+    "size": 5000,
+    "_source": [ "name", "module.name", "module.version" ],
+    "filter": {
+        "and": [
+            { "term": { "distribution": "#{metadata["distribution"]}" } },
+            { "term": { "maturity": "released" } },
+            { "term": { "status": "latest" } }
+        ]
+    }
+}
+EOL
+
+      begin
+        search_response = httppost(metacpan_search_url,metacpan_search_query)
+      rescue Net::HTTPServerException => e
+        logger.error("metacpan release query failed.", :error => e.message,
+                      :url => metacpan_search_url)
+         raise FPM::InvalidPackageConfiguration, "metacpan release query failed"
+      end
+
+      json_modules = search_response.body
+      json_modules_parsed = JSON.parse(json_modules)
+
+#      logger.info("[[[ DEBUG ]]] in cpan::input(), have json_modules: ", :json_modules => json_modules)
+#      logger.info("[[[ DEBUG ]]] in cpan::input(), have json_modules_parsed: ", :json_modules_parsed => json_modules_parsed)
+#      require 'pp'
+#      pp json_modules_parsed
+
+      # loop through all modules belonging to distribution, find those present in provides
+      json_modules_parsed['hits']['hits'].each do |m|
         # each .pm module file may contain multiple packages, iterate through each
-        unless provides_metadata["module"].nil?
-          provides_metadata["module"].each do |provides_metadata_module|
-            # only access the package with the correct name
-            if provides_metadata_module["name"] == m
+        m['_source']['module'].each do |package|
+          # only access the package with the correct name
+          if dist_metadata_provides.key?(package["name"])
+            # check is package has version or not
+            if ((package.key?("version")) && !(package["version"].nil?))
+              # use normal stringified "version" rather than "version_numified", which may contain invalid scientific notation or 0 instead of blank
+              dist_metadata_provides[package["name"]] = package["version"]
+            else
               # some packages have no version, but are still valid packages
-              if provides_metadata_module["version"].nil?
-                self.provides << cap_name(m)
-              else
-                # use normal stringified "version" rather than "version_numified", which may contain invalid scientific notation or 0 instead of blank
-                provides_metadata_module_version = provides_metadata_module["version"];
-                self.provides << cap_name(m) + " = #{provides_metadata_module_version}"
-              end  # if, provides has version
-              # only one package should have the correct name, break out of do loop when found
-              break
-            end  # if, module name matches
-          end  # do loop, packages in module
-        end  # unless, no packages in module
+              dist_metadata_provides[package["name"]] = "-1"
+            end  # if, provides has version
+            # DEV NOTE: each .pm module file may contain multiple packages which are provided, do NOT break after finding one
+#            break
+          end  # if, module name matches
+        end  # do loop, packages in module
+      end  # do loop, modules in dist
+
+      # actually create the provides, in the order given by the metacpan query
+      dist_metadata["provides"].each do |provide|
+        if (dist_metadata_provides[provide] == "")
+           raise FPM::InvalidPackageConfiguration, "metacpan module query did not contain version info for package " + provide
+        elsif (dist_metadata_provides[provide] == "-1")
+          self.provides << cap_name(provide)
+        else
+          self.provides << cap_name(provide) + " = " + dist_metadata_provides[provide]
+        end  # if, version was found
       end  # do loop, provides in dist
-    end  # unless, no provides in dist
+
+    end  # unless, dist has empty provides
 
     # author is not always set or it may be a string instead of an array
     self.vendor = case metadata["author"]
