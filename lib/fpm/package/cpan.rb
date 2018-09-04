@@ -90,6 +90,12 @@ class FPM::Package::CPAN < FPM::Package
     end
 
     self.version = metadata["version"]
+    # WBRASWELL 20180904 2018.247: strip leading 'v' from version strings for proper package dependency checking
+    if (self.version.kind_of?(String) and (self.version[0] == 'v'))
+      logger.warn("Package version '#{self.version}' includes 'v' prefix, removing")
+      self.version[0] = ''
+    end
+
     self.description = metadata["abstract"]
 
     self.license = case metadata["license"]
@@ -175,6 +181,11 @@ EOL
             if ((package.key?("version")) && !(package["version"].nil?))
               # use normal stringified "version" rather than "version_numified", which may contain invalid scientific notation or 0 instead of blank
               dist_metadata_provides[package["name"]] = package["version"]
+              # WBRASWELL 20180904 2018.247: strip leading 'v' from version strings for proper package dependency checking
+              if (dist_metadata_provides[package["name"]].kind_of?(String) and (dist_metadata_provides[package["name"]][0] == 'v'))
+                logger.warn("Package provides '#{package["name"]}' version '#{dist_metadata_provides[package["name"]]}' includes 'v' prefix, removing")
+                dist_metadata_provides[package["name"]][0] = ''
+              end  # if, version string starts with letter 'v'
             else
               # some packages have no version, but are still valid packages
               dist_metadata_provides[package["name"]] = "-1"
