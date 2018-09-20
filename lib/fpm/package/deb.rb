@@ -389,6 +389,8 @@ class FPM::Package::Deb < FPM::Package
 
   def output(output_path)
     self.provides = self.provides.collect { |p| fix_provides(p) }
+    validate_dependencies()
+    validate_provides()
     output_check(output_path)
     # Abort if the target path already exists.
 
@@ -613,7 +615,7 @@ class FPM::Package::Deb < FPM::Package
     self.provides = self.provides.collect do |provides|
       fix_provides(provides)
     end.flatten
-
+    
     if origin == FPM::Package::Deb
       changelog_path = staging_path("usr/share/doc/#{name}/changelog.Debian.gz")
       if File.exists?(changelog_path)
@@ -710,6 +712,21 @@ class FPM::Package::Deb < FPM::Package
     end
   end # def fix_dependency
 
+  def validate_dependencies()
+    self.dependencies.each do |dep|
+      if (dep =~ /^[A-Z]/ || dep =~ /^[a-z]/)
+        logger.debug("Fixing dependency '#{dep}'.")
+        fix_dependency(dep)
+      else
+        logger.warn("Dependency '#{dep}' is not a valid deb dependency " \
+              "name and will be removed.")
+        self.dependencies.delete(dep)
+      end
+    end.flatten
+    # Remove rpmlib dependencies leftover from the rpm.
+    self.dependencies.delete_if { |d| d.start_with?('rpmlib') }
+  end # def validate_dependencies
+
   def fix_provides(provides)
     name_re = /^[^ \(]+/
     name = provides[name_re]
@@ -724,8 +741,21 @@ class FPM::Package::Deb < FPM::Package
                    "debs don't like underscores")
       provides = provides.gsub("_", "-")
     end
+    
     return provides.rstrip
   end
+
+  def validate_provides()
+    self.provides.each do |provides|
+      if (!provides.include?("("))
+        fix_provides(provides)
+      else
+        logger.warn("Provides '#{provides}' is not a valid deb provides name " \
+                    "and will be removed.")
+        self.provides.delete(provides)
+      end
+    end.flatten
+  end # def validate_provides
 
   def control_path(path=nil)
     @control_path ||= build_path("control")
