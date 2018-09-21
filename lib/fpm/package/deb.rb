@@ -714,10 +714,7 @@ class FPM::Package::Deb < FPM::Package
 
   def validate_dependencies()
     self.dependencies.each do |dep|
-      if (dep =~ /^[A-Z]/ || dep =~ /^[a-z]/)
-        logger.debug("Fixing dependency '#{dep}'.")
-        fix_dependency(dep)
-      else
+      if (dep !~ /^[A-Z]/ && dep !~ /^[a-z]/)
         logger.warn("Dependency '#{dep}' is not a valid deb dependency " \
               "name and will be removed.")
         self.dependencies.delete(dep)
@@ -747,9 +744,7 @@ class FPM::Package::Deb < FPM::Package
 
   def validate_provides()
     self.provides.each do |provides|
-      if (!provides.include?("("))
-        fix_provides(provides)
-      else
+      if (provides.include?("("))
         logger.warn("Provides '#{provides}' is not a valid deb provides name " \
                     "and will be removed.")
         self.provides.delete(provides)
