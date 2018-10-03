@@ -111,8 +111,7 @@ class FPM::Package::Virtualenv < FPM::Package
     # Why is this hack here? It looks important, so I'll keep it in.
     safesystem(python_exe, pip_exe, "install", "-U", "-i",
                attributes[:virtualenv_pypi],
-               "pip", "distribute")
-    safesystem(python_exe, pip_exe, "uninstall", "-y", "distribute")
+               "pip")
 
     extra_index_url_args = []
     if attributes[:virtualenv_pypi_extra_index_urls]
