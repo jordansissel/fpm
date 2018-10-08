@@ -169,6 +169,8 @@ class FPM::Package::RPM < FPM::Package
      end
    end
 
+  option "--shebang", "SHEBANG", "Set the default interpreter instead of /bin/sh"
+
   private
 
   # Fix path name
@@ -186,6 +188,36 @@ class FPM::Package::RPM < FPM::Package
       '[' => '[\[]',
       ']' => '[\]]'
     })
+  end
+
+  # Fix the script so it uses the specified program
+  # Fixes (from RHEL/Fedora/Centos research):
+  # 1. RPM distros ship with /bin/sh -> bash - so bash should be
+  #    default shebang (unlike ubuntu, which has dash)
+  # 2. Some rpms (glibc) use <lua> as their prog, which means
+  #    /usr/bin/env lua
+  # 3. Some rpms use an interpreter but supply no script, but
+  #    do not expect to be run interactively. Adding </dev/null
+  #    prevents debian-based distros getting stuck
+  def fix_script(tags, tag, progtag)
+    if tags.key?(tag)
+      shebang = "#!/bin/bash"
+      if tags.key?(progtag)
+        if tags[progtag] =~ /<[^>]+>/
+          shebang = "#!/usr/bin/env %s" % (progtag.gsub(/[<>]/, ''))
+        else
+          shebang = "#!#{tags[progtag]}"
+        end
+      end
+      if shebang == "#!/bin/sh"
+        shebang = attributes[:rpm_shebang] || "#!/bin/bash"
+      end
+      return "#{shebang}\n#{tags[tag]}"
+    end
+    if tags.key?(progtag)
+        return "#{tags[progtag]} </dev/null"
+    end
+    return ""
   end
 
   def rpm_file_entry(file)
@@ -358,17 +390,13 @@ class FPM::Package::RPM < FPM::Package
     self.vendor = tags[:vendor]
     self.version = tags[:version]
 
-    self.scripts[:before_install] = tags[:prein]
-    self.scripts[:after_install] = tags[:postin]
-    self.scripts[:before_remove] = tags[:preun]
-    self.scripts[:after_remove] = tags[:postun]
-    self.scripts[:rpm_verifyscript] = tags[:verifyscript]
-    self.scripts[:rpm_posttrans] = tags[:posttrans]
-    self.scripts[:rpm_pretrans] = tags[:pretrans]
-    # TODO(sissel): prefix these scripts above with a shebang line if there isn't one?
-    # Also taking into account the value of tags[preinprog] etc, something like:
-    #    #!#{tags[:preinprog]}
-    #    #{tags[prein]}
+    self.scripts[:before_install] = fix_script(tags, :prein, :preinprog)
+    self.scripts[:after_install] = fix_script(tags, :postin, :postinprog)
+    self.scripts[:before_remove] = fix_script(tags, :preun, :preunprog)
+    self.scripts[:after_remove] = fix_script(tags, :postun, :postunprog)
+    self.scripts[:rpm_verifyscript] = fix_script(tags, :verifyscript, :verifyscriptprog)
+    self.scripts[:rpm_posttrans] = fix_script(tags, :posttrans, :posttransprog)
+    self.scripts[:rpm_pretrans] = fix_script(tags, :pretrans, :pretransprog)
 
     if !tags[:triggerindex].nil?
       val = tags[:triggerindex].zip(tags[:triggername],tags[:triggerflags],tags[:triggerversion]).group_by{ |x| x[0]}

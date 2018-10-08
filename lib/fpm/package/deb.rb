@@ -739,6 +739,11 @@ class FPM::Package::Deb < FPM::Package
       provides = provides.gsub("_", "-")
     end
     
+    if provides =~ /.*\([^0-9 ]/
+      logger.warn("Provides '#{provides}' contains non-numeric version specification, stripping")
+      provides = provides.gsub(/\([^0-9 ][^\)]*\)/, '')
+    end
+
     return provides.rstrip
   end
 
