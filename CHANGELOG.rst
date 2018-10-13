@@ -25,6 +25,7 @@ Release Notes and Change Log
 * rpm: fix shell function name `install` conflicting with `install` program. In
   postinst (after-install), the function is now called `_install` to avoid
   conflicting with `/usr/bin/install` (`#1434`_; Torsten Schmidt)
+* rpm: Allow binary "arch dependent" files in noarch rpms (Jordan Sissel)
 * - deb: --config-files ? (`#1440`_, `#1443`_; NoBodyCam)
 * FPM source repo now contains a Brewfile for use with Homebrew.
 * FPM source repo has a Dockerfile for invoking fpm with docker. (`#1484`_, ;Allan Lewis
