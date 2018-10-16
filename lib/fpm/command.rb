@@ -410,7 +410,12 @@ class FPM::Command < Clamp::Command
     set = proc do |object, attribute|
       # if the package's attribute is currently nil *or* the flag setting for this
       # attribute is non-default, use the value.
-      if object.send(attribute).nil? || send(attribute) != send("default_#{attribute}")
+
+      # Not all options have a default value, so we assume `nil` if there's no default. (#1543)
+      # In clamp >= 1.3.0, options without `:default => ..` will not have any # `default_xyz` 
+      # methods generated, so we need to check for the presence of this method first.
+      default = respond_to?("default_#{attribute}") ? send("default_#{attribute}") : nil
+      if object.send(attribute).nil? || send(attribute) != default
         logger.info("Setting from flags: #{attribute}=#{send(attribute)}")
         object.send("#{attribute}=", send(attribute))
       end
