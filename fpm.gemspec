@@ -57,6 +57,9 @@ Gem::Specification.new do |spec|
   # For sourcing from pleaserun
   spec.add_dependency("pleaserun", "~> 0.0.29") # license: Apache 2
 
+  # For sourcing from git repos
+  spec.add_dependency("git", ">= 1.3.0", "< 2.0") # license: MIT
+
   spec.add_dependency("stud")
 
   spec.add_development_dependency("rspec", "~> 3.0.0") # license: MIT (according to wikipedia)
