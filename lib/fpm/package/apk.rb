@@ -10,6 +10,9 @@ require 'digest/sha1'
 
 # Support for Alpine packages (.apk files)
 #
+# https://wiki.alpinelinux.org/wiki/Alpine_package_format
+# https://wiki.alpinelinux.org/wiki/Creating_an_Alpine_package
+#
 # This class supports both input and output of packages.
 class FPM::Package::APK < FPM::Package
 
