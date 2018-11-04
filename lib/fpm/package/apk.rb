@@ -11,7 +11,7 @@ require 'digest/sha1'
 # Support for Alpine packages (.apk files)
 #
 # This class supports both input and output of packages.
-class FPM::Package::APK< FPM::Package
+class FPM::Package::APK < FPM::Package
 
   TAR_CHUNK_SIZE = 512
   TAR_TYPEFLAG_OFFSET = 156
@@ -127,7 +127,7 @@ class FPM::Package::APK< FPM::Package
     pkginfo << "arch = #{architecture()}\n"
     pkginfo << "pkgdesc = #{description()}\n"
     pkginfo << "url = #{url()}\n"
-    pkginfo << "size = 102400\n" # totally magic, not sure what it's used for.
+    pkginfo << "size = #{installed_size()}\n"
 
     # write depends lines
     for dependency in dependencies()
@@ -135,6 +135,16 @@ class FPM::Package::APK< FPM::Package
     end
 
     File.write("#{base_path}/.PKGINFO", pkginfo)
+  end
+
+  def installed_size()
+    total = 0
+    Find.find(staging_path) do |path|
+      stat = File.lstat(path)
+      next if stat.directory?
+      total += stat.size
+    end
+    total
   end
 
   # Writes each control script from template into the build path,
