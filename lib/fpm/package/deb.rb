@@ -223,7 +223,7 @@ class FPM::Package::Deb < FPM::Package
       @architecture = "all"
     when "ppc64le"
       # Debian calls ppc64le "ppc64el"
-      @architecture "ppc64el"
+      @architecture = "ppc64el"
     end
     return @architecture
   end # def architecture
