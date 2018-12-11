@@ -155,6 +155,14 @@ class FPM::Package::RPM < FPM::Package
     File.expand_path(val) # Get the full path to the script
   end # --posttrans
 
+  rpm_ghost_files = []
+  option "--ghost-file", "FILE",
+    "Adds a ghost file directive under %files in the spec file." \
+    "Example: --rpm-ghost-file '/var/log/blather.log'" do |add_ghost_file|
+      rpm_ghost_files << add_ghost_file
+    next rpm_ghost_files
+  end
+
   ["before-install","after-install","before-uninstall","after-target-uninstall"].each do |trigger_type|
      rpm_trigger = []
      option "--trigger-#{trigger_type}", "'[OPT]PACKAGE: FILEPATH'", "Adds a rpm trigger script located in FILEPATH, " \
