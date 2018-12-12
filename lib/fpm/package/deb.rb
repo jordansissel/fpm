@@ -98,6 +98,10 @@ class FPM::Package::Deb < FPM::Package
     File.expand_path(file)
   end
 
+  option "--copyright", "FILEPATH", "Add FILEPATH as copyright" do |file|
+    File.expand_path(file)
+  end
+
   option "--recommends", "PACKAGE", "Add PACKAGE to Recommends" do |pkg|
     @recommends ||= []
     @recommends << pkg
@@ -462,6 +466,13 @@ class FPM::Package::Deb < FPM::Package
 
       # set the attribute with the systemd service name
       attributes[:deb_systemd] = name
+    end
+
+    if attributes[:deb_copyright]
+      dest_copyright = staging_path("usr/share/doc/#{name}/copyright")
+      mkdir_p(File.dirname(dest_copyright))
+      FileUtils.cp(attributes[:deb_copyright], dest_copyright)
+      File.chmod(0644, dest_copyright)
     end
 
     if script?(:before_upgrade) or script?(:after_upgrade) or attributes[:deb_systemd]
