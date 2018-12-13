@@ -44,7 +44,7 @@ And sometimes, there isn't a package available for the tool you need.
 And sometimes if you ask "How do I get python 3 on CentOS 5?" some unhelpful
 trolls will tell you to "Use another distro"
 
-Further, a job switches have me flipping between Ubuntu and CentOS. These use
+Further, job switches have me flipping between Ubuntu and CentOS. These use
 two totally different package systems with completely different packaging
 policies and support tools. Learning both was painful and confusing. I want to
 save myself (and you) that pain in the future.
