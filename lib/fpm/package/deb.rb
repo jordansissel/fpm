@@ -18,7 +18,6 @@ class FPM::Package::Deb < FPM::Package
     :after_install      => "postinst",
     :before_remove      => "prerm",
     :after_remove       => "postrm",
-    :after_purge        => "postrm",
   } unless defined?(SCRIPT_MAP)
 
   # The list of supported compression types. Default is gz (gzip)
@@ -469,23 +468,22 @@ class FPM::Package::Deb < FPM::Package
       attributes[:deb_systemd] << name
     end
 
-    if script?(:before_upgrade) or script?(:after_upgrade) or attributes[:deb_systemd].any?
-      puts "Adding action files"
-      if script?(:before_install) or script?(:before_upgrade)
-        scripts[:before_install] = template("deb/preinst_upgrade.sh.erb").result(binding)
-      end
-      if script?(:before_remove) or not attributes[:deb_systemd].empty?
-        scripts[:before_remove] = template("deb/prerm_upgrade.sh.erb").result(binding)
-      end
-      if script?(:after_install) or script?(:after_upgrade) or attributes[:deb_systemd].any?
-        scripts[:after_install] = template("deb/postinst_upgrade.sh.erb").result(binding)
-      end
-      if script?(:after_remove)
-        scripts[:after_remove] = template("deb/postrm_upgrade.sh.erb").result(binding)
-      end
-      if script?(:after_purge)
-        scripts[:after_purge] = template("deb/postrm_upgrade.sh.erb").result(binding)
-      end
+    if not attributes[:deb_after_purge].nil?
+      scripts[:after_purge] = File.read(attributes[:deb_after_purge])
+    end
+
+    puts "Adding action files"
+    if script?(:before_install) or script?(:before_upgrade)
+      scripts[:before_install] = template("deb/preinst_upgrade.sh.erb").result(binding)
+    end
+    if script?(:before_remove) or attributes[:deb_systemd].any?
+      scripts[:before_remove] = template("deb/prerm_upgrade.sh.erb").result(binding)
+    end
+    if script?(:after_install) or script?(:after_upgrade) or attributes[:deb_systemd].any?
+      scripts[:after_install] = template("deb/postinst_upgrade.sh.erb").result(binding)
+    end
+    if script?(:after_remove) or script?(:after_purge)
+      scripts[:after_remove] = template("deb/postrm_upgrade.sh.erb").result(binding)
     end
 
     # There are two changelogs that may appear:
