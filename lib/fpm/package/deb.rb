@@ -18,7 +18,6 @@ class FPM::Package::Deb < FPM::Package
     :after_install      => "postinst",
     :before_remove      => "prerm",
     :after_remove       => "postrm",
-    :after_purge        => "postrm",
   } unless defined?(SCRIPT_MAP)
 
   # The list of supported compression types. Default is gz (gzip)
@@ -464,6 +463,10 @@ class FPM::Package::Deb < FPM::Package
       attributes[:deb_systemd] = name
     end
 
+    if not attributes[:deb_after_purge].nil?
+      scripts[:after_purge] = File.read(attributes[:deb_after_purge])
+    end
+
     if script?(:before_upgrade) or script?(:after_upgrade) or attributes[:deb_systemd]
       puts "Adding action files"
       if script?(:before_install) or script?(:before_upgrade)
@@ -475,11 +478,8 @@ class FPM::Package::Deb < FPM::Package
       if script?(:after_install) or script?(:after_upgrade) or attributes[:deb_systemd]
         scripts[:after_install] = template("deb/postinst_upgrade.sh.erb").result(binding)
       end
-      if script?(:after_remove)
+      if script?(:after_remove) or script?(:after_purge)
         scripts[:after_remove] = template("deb/postrm_upgrade.sh.erb").result(binding)
-      end
-      if script?(:after_purge)
-        scripts[:after_purge] = template("deb/postrm_upgrade.sh.erb").result(binding)
       end
     end
 
