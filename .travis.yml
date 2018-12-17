@@ -28,7 +28,7 @@ addons:
     update: true
     brewfile: true
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then which virtualenv-tools || pip install --user virtualenv virtualenv-tools ; fi
+  - pip install --user virtualenv virtualenv-tools
   - virtualenv ${HOME}/.venv
 script: source ${HOME}/.venv/bin/activate && PATH=${PATH}:${HOME}/.local/bin bundle exec rspec
 addons:
