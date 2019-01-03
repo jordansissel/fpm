@@ -36,7 +36,7 @@ Installing FPM
 
 You can install fpm with the `gem` tool::
 
-    gem install --no-ri --no-rdoc fpm
+    gem install --no-document fpm
 
 .. note::
   `gem` is a command provided by a the Ruby packaging system called `rubygems`_. This allows you to install, and later upgrade, fpm.
@@ -45,7 +45,7 @@ You can install fpm with the `gem` tool::
 
 You should see output that looks like this::
 
-    % gem install --no-ri --no-rdoc fpm
+    % gem install --no-document fpm
     Fetching: cabin-0.9.0.gem (100%)
     Successfully installed cabin-0.9.0
     Fetching: backports-3.6.8.gem (100%)

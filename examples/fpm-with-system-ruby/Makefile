@@ -35,7 +35,7 @@ $(CHECKOUT_DIR):
 	cd $(CHECKOUT_DIR) && git fetch && git checkout $(TAG_SPEC)
 
 $(BUNDLE_BIN):
-	$(GEM_CMD) install bundler --install-dir=$(GEM_PATH) --no-ri --no-rdoc
+	$(GEM_CMD) install bundler --install-dir=$(GEM_PATH) --no-document
 
 $(FPM_BIN):
 	mkdir --parents $(BIN_DIR)

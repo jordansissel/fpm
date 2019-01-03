@@ -95,7 +95,7 @@ First we'll have to download the gem and its deps. The easiest way to do this
 is to stage the installation in a temporary directory, like this::
 
     % mkdir /tmp/gems
-    % gem install --no-ri --no-rdoc --install-dir /tmp/gems cucumber
+    % gem install --no-document --install-dir /tmp/gems cucumber
     <output trimmed>
 
     Successfully installed json-1.4.6
