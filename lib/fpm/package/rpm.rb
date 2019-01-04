@@ -464,9 +464,11 @@ class FPM::Package::RPM < FPM::Package
       self.directories = self.directories.map { |x| self.prefixed_path(x) }
       alldirs = []
       self.directories.each do |path|
-        Find.find(File.join(staging_path, path)) do |subpath|
-          if File.directory? subpath and !File.symlink? subpath
-            alldirs << subpath.gsub(/^#{staging_path}/, '')
+        ::Dir.glob(File.join(staging_path, path)) do |staging_dir|
+          Find.find(staging_dir) do |subpath|
+            if File.directory? subpath and !File.symlink? subpath
+              alldirs << subpath.gsub(/^#{staging_path}/, '')
+            end
           end
         end
       end
