@@ -18,6 +18,7 @@ rvm:
   - 2.4.0
   - 2.5.1
 cache: bundler
+env: PATH=/Users/travis/Library/Python/2.7/bin:${PATH}
 matrix:
   exclude:
     - os: osx
