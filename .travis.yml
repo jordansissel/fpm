@@ -23,15 +23,14 @@ matrix:
       rvm: 1.9.3
     - os: osx
       rvm: 2.0.0
-addons:
-  homebrew:
-    update: true
-    brewfile: true
 before_install:
   - pip install --user virtualenv virtualenv-tools
   - virtualenv ${HOME}/.venv
 script: source ${HOME}/.venv/bin/activate && PATH=${PATH}:${HOME}/.local/bin bundle exec rspec
 addons:
+  homebrew:
+    update: true
+    brewfile: true
   apt:
     packages:
       - bsdtar
