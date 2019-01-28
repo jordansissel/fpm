@@ -17,6 +17,7 @@ rvm:
   - 2.3.3
   - 2.4.0
   - 2.5.1
+cache: bundler
 matrix:
   exclude:
     - os: osx
