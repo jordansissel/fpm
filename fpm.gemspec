@@ -42,7 +42,9 @@ Gem::Specification.new do |spec|
   spec.add_dependency("clamp", "~> 1.0.0") # license: MIT
 
   # For starting external processes across various ruby interpreters
-  spec.add_dependency("childprocess") # license: ???
+  # Note: This is pinned because v1.0.0 fails to install for multiple users.
+  # Ref: https://github.com/jordansissel/fpm/issues/1592
+  spec.add_dependency("childprocess", "0.9.0") # license: ???
 
   # For calling functions in dynamic libraries
   spec.add_dependency("ffi") # license: GPL3/LGPL3
