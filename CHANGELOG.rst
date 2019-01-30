@@ -1,6 +1,12 @@
 Release Notes and Change Log
 ============================
 
+1.11.0 (January 30, 2019)
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* snap: Snap packages can now be created! (`#1490`_; kyrofa)
+* Fix an installation problem where a dependency (childprocess) fails to install correctly. (#1592; Jordan Sissel)
+
 1.10.2 (July 3, 2018)
 ^^^^^^^^^^^^^^^^^^^^^
 
