@@ -52,7 +52,7 @@ describe FPM::Package do
   end
 
   describe "#attributes" do
-    it_behaves_like :Default, description.gsub(/^#/, "").to_sym, {}
+    it_behaves_like :Default, description.gsub(/^#/, "").to_sym, { :workdir => ::Dir.tmpdir }
     it_behaves_like :Mutator, description.gsub(/^#/, "").to_sym
   end
 
