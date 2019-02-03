@@ -198,8 +198,13 @@ class FPM::Package::Gem < FPM::Package
 
     ::FileUtils.mkdir_p(installdir)
     # TODO(sissel): Allow setting gem tool path
-    args = [attributes[:gem_gem], "install", "--quiet", "--no-ri", "--no-rdoc",
-       "--no-user-install", "--install-dir", installdir]
+    args = [attributes[:gem_gem], "install", "--quiet", "--no-user-install", "--install-dir", installdir]
+    if ::Gem::VERSION =~ /^[012]\./ 
+      args += [ "--no-ri", "--no-rdoc" ]
+    else
+      # Rubygems 3.0.0 changed --no-ri to --no-document
+      args += [ "--no-document" ]
+    end
 
     if !attributes[:gem_embed_dependencies?]
       args += ["--ignore-dependencies"]
