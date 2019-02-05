@@ -27,6 +27,11 @@ On Fedora 23 or newer::
 
     dnf install ruby-devel gcc make rpm-build libffi-devel
 
+On Oracle Enterprise 7.x systems::
+
+    yum-config-manager --add-repo=https://yum.oracle.com/repo/OracleLinux/OL7/optional/developer/x86_64
+    yum install ruby-devel gcc make rpm-build rubygems
+
 On Debian-derived systems (Debian, Ubuntu, etc)::
 
     apt-get install ruby ruby-dev rubygems build-essential
