@@ -198,7 +198,7 @@ class FPM::Package::Gem < FPM::Package
 
     ::FileUtils.mkdir_p(installdir)
     # TODO(sissel): Allow setting gem tool path
-    args = [attributes[:gem_gem], "install", "--quiet", "--no-ri", "--no-rdoc",
+    args = [attributes[:gem_gem], "install", "--quiet", "--no-document",
        "--no-user-install", "--install-dir", installdir]
 
     if !attributes[:gem_embed_dependencies?]
