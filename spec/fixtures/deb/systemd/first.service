@@ -1,0 +1,11 @@
+[Unit]
+Description=Demo Service 1
+
+[Service]
+Type=oneshot
+ExecStart=true
+RemainAfterExit=true
+StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target

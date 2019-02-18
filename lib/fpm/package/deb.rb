@@ -470,7 +470,6 @@ class FPM::Package::Deb < FPM::Package
     end
 
     if script?(:before_upgrade) or script?(:after_upgrade) or attributes[:deb_systemd].any?
-      puts "Adding action files"
       if script?(:before_install) or script?(:before_upgrade)
         scripts[:before_install] = template("deb/preinst_upgrade.sh.erb").result(binding)
       end

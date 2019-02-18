@@ -440,4 +440,59 @@ describe FPM::Package::Deb do
       expect(FileUtils.compare_file(target, target + '.orig')).to be true
     end
   end # #reproducible
+
+  describe "systemd support" do
+
+    before do
+      subject.name = "name"
+      subject.version = "123"
+      subject.architecture = "all"
+      subject.iteration = "100"
+      subject.epoch = "5"
+
+      subject.attributes[:deb_systemd_list] = [
+        'spec/fixtures/deb/systemd/first.service',
+        'spec/fixtures/deb/systemd/second.service',
+      ]
+
+      subject.attributes[:deb_systemd_enable?] = true
+      subject.attributes[:deb_systemd_auto_start?] = true
+
+      subject.output(target)
+    end
+
+    after do
+      subject.cleanup
+    end
+
+    context "when the deb's control section is extracted" do
+      let(:control_dir) { Stud::Temporary.directory }
+      before do
+        system(ar_cmd[0] + " p '#{target}' control.tar.gz | tar -zx -C '#{control_dir}' -f -")
+        raise "couldn't extract test deb" unless $CHILD_STATUS.success?
+      end
+
+      it "should have the requested meta file in the control archive" do
+        File.open(File.join(control_dir, 'postinst')) do |f|
+          insist { f.read } == File.read('spec/fixtures/deb/systemd/postinst.example')
+        end
+      end
+
+      after do
+        FileUtils.rm_rf(control_dir)
+      end
+    end
+
+    # This section mainly just verifies that 'dpkg-deb' can parse the package.
+    context "when read with dpkg", :if => have_dpkg_deb do
+      let(:package_contents) { `dpkg-deb -c #{target}`.chomp }
+
+      it "should have services in the systemd directory" do
+        insist { package_contents }.include? "/lib/systemd/system/first.service"
+        insist { package_contents }.include? "/lib/systemd/system/second.service"
+      end
+    end
+
+  end # systemd support
+
 end # describe FPM::Package::Deb
