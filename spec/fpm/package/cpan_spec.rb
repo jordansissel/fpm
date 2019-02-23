@@ -8,7 +8,7 @@ if !have_cpanm
     .warn("Skipping CPAN#input tests because 'cpanm' isn't in your PATH")
 end
 
-is_travis = ENV["TRAVIS_JOB_NAME"] || ENV["TRAVIS_JOB_NAME"].empty?
+is_travis = ENV["TRAVIS_JOB_NAME"] && ENV["TRAVIS_JOB_NAME"].any?
 
 describe FPM::Package::CPAN, :if => have_cpanm do
   subject { FPM::Package::CPAN.new }
