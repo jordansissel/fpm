@@ -40,7 +40,7 @@ addons:
       - bsdtar
       - rpm
       - lintian
-      - python-setuptools
-      - python-pip
+      - python3-setuptools
+      - python3-pip
       - squashfs-tools
       - perl
