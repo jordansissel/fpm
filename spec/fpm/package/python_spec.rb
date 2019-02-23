@@ -12,7 +12,7 @@ if !python_usable?
     "'python' and/or 'easy_install' isn't in your PATH")
 end
 
-is_travis = ENV["TRAVIS_JOB_NAME"] || ENV["TRAVIS_JOB_NAME"].empty?
+is_travis = ENV["TRAVIS_JOB_NAME"] && ENV["TRAVIS_JOB_NAME"].any?
 
 # Determine default value of a given easy_install's option
 def easy_install_default(python_bin, option)
