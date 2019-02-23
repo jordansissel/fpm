@@ -153,9 +153,10 @@ module FPM::Util
     process.io.stdout = stdout_w
     process.io.stderr = stderr_w
 
-    if block_given? and opts[:stdin]
-      process.duplex = true
-    end
+    # Always use duplex mode because we will always
+    # want to either write to stdin (if block_given?)
+    # or we will want to close stdin to prevent subprocesses from blocking on it.
+    process.duplex = true
 
     process.start
 
@@ -170,10 +171,13 @@ module FPM::Util
 
       yield(*args3)
 
-      process.io.stdin.close        if opts[:stdin] and not process.io.stdin.closed?
+      process.io.stdin.close        if not process.io.stdin.closed?
       stdout_r.close                unless stdout_r.closed?
       stderr_r.close                unless stderr_r.closed?
     else
+      # If no block given (not interactive) we should close stdin.
+      process.io.stdin.close
+
       # Log both stdout and stderr as 'info' because nobody uses stderr for
       # actually reporting errors and as a result 'stderr' is a misnomer.
       logger.pipe(stdout_r => :info, stderr_r => :info)
