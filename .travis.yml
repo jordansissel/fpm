@@ -43,3 +43,4 @@ addons:
       - python-setuptools
       - python-pip
       - squashfs-tools
+      - perl
