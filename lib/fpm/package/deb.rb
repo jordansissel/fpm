@@ -577,19 +577,19 @@ class FPM::Package::Deb < FPM::Package
     case self.attributes[:deb_compression]
       when "gz", nil
         datatar = build_path("data.tar.gz")
-	controltar = build_path("control.tar.gz")
+        controltar = build_path("control.tar.gz")
         compression = "-z"
       when "bzip2"
         datatar = build_path("data.tar.bz2")
-	controltar = build_path("control.tar.bz2")
+        controltar = build_path("control.tar.bz2")
         compression = "-j"
       when "xz"
         datatar = build_path("data.tar.xz")
-	controltar = build_path("control.tar.xz")
+        controltar = build_path("control.tar.xz")
         compression = "-J"
       when "none"
         datatar = build_path("data.tar")
-	controltar = build_path("control.tar")
+        controltar = build_path("control.tar")
         compression = ""
       else
         raise FPM::InvalidPackageConfiguration,
