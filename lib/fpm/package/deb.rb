@@ -181,9 +181,9 @@ class FPM::Package::Deb < FPM::Package
     next File.expand_path(file)
   end
 
-  option "--systemd-enable", :flag , "Enable service on install or upgrade", :default => true
+  option "--systemd-enable", :flag , "Enable service on install or upgrade", :default => false
 
-  option "--systemd-auto-start", :flag , "Start service after install or upgrade", :default => true
+  option "--systemd-auto-start", :flag , "Start service after install or upgrade", :default => false
 
   option "--systemd-restart-after-upgrade", :flag , "Restart service after upgrade", :default => true
 
@@ -444,7 +444,7 @@ class FPM::Package::Deb < FPM::Package
       attributes[:deb_systemd] << name
     end
 
-    if script?(:before_upgrade) or script?(:after_upgrade) or not attributes[:deb_systemd].empty?
+    if script?(:before_upgrade) or script?(:after_upgrade) or attributes[:deb_systemd].any?
       puts "Adding action files"
       if script?(:before_install) or script?(:before_upgrade)
         scripts[:before_install] = template("deb/preinst_upgrade.sh.erb").result(binding)
@@ -452,7 +452,7 @@ class FPM::Package::Deb < FPM::Package
       if script?(:before_remove) or not attributes[:deb_systemd].empty?
         scripts[:before_remove] = template("deb/prerm_upgrade.sh.erb").result(binding)
       end
-      if script?(:after_install) or script?(:after_upgrade) or not attributes[:deb_systemd].empty?
+      if script?(:after_install) or script?(:after_upgrade) or attributes[:deb_systemd].any?
         scripts[:after_install] = template("deb/postinst_upgrade.sh.erb").result(binding)
       end
       if script?(:after_remove)

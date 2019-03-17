@@ -9,9 +9,9 @@ after_upgrade() {
 <% end -%>
 
 <%# if any systemd services specified, loop through and start them -%>
-<% unless attributes[:deb_systemd].empty? -%>
+<% if attributes[:deb_systemd].any? -%>
 systemctl --system daemon-reload >/dev/null || true
-sysctl=$(command -v deb-systemd-invoke || echo systemctl)
+debsystemctl=$(command -v deb-systemd-invoke || echo systemctl)
 <% attributes[:deb_systemd].each do |service| -%>
 if ! systemctl is-enabled <%= service %> >/dev/null 
 then
@@ -19,11 +19,11 @@ then
     systemctl enable <%= service %> >/dev/null || true
 <% end -%>
 <% if attributes[:deb_systemd_auto_start?]-%>
-    $sysctl start <%= service %> >/dev/null || true
+    $debsystemctl start <%= service %> >/dev/null || true
 <% end -%>
 <% if attributes[:deb_systemd_restart_after_upgrade?] -%>
 else
-    $sysctl restart <%= service %> >/dev/null || true
+    $debsystemctl restart <%= service %> >/dev/null || true
 <% end -%>
 fi
 <% end -%>
@@ -40,15 +40,15 @@ after_install() {
 <% end -%>
 
 <%# if any systemd services specified, loop through and start them -%>
-<% unless attributes[:deb_systemd].empty? -%>
+<% if attributes[:deb_systemd].any? -%>
 systemctl --system daemon-reload >/dev/null || true
-sysctl=$(command -v deb-systemd-invoke || echo systemctl)
+debsystemctl=$(command -v deb-systemd-invoke || echo systemctl)
 <% attributes[:deb_systemd].each do |service| -%>
 <% if attributes[:deb_systemd_enable?]-%>
 systemctl enable <%= service %> >/dev/null || true
 <% end -%>
 <% if attributes[:deb_systemd_auto_start?]-%>
-$sysctl start <%= service %> >/dev/null || true
+$debsystemctl start <%= service %> >/dev/null || true
 <% end -%>
 <% end -%>
 <% end -%>

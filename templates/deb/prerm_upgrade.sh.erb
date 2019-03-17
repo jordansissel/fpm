@@ -9,9 +9,10 @@ before_remove() {
 <% end -%>
 
 <%# Stop and remove any systemd services that were installed-%>
-<% unless attributes[:deb_systemd].empty? -%>
+<% if attributes[:deb_systemd].any? -%>
+debsystemctl=$(command -v deb-systemd-invoke || echo systemctl)
 <% attributes[:deb_systemd].each do |service| -%>
-systemctl stop <%= service %> >/dev/null || true
+$debsystemctl stop <%= service %> >/dev/null || true
 systemctl disable <%= service %> >/dev/null || true
 <% end -%>
 systemctl --system daemon-reload >/dev/null || true
