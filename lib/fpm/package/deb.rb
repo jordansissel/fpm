@@ -392,8 +392,6 @@ class FPM::Package::Deb < FPM::Package
 
   def output(output_path)
     self.provides = self.provides.collect { |p| fix_provides(p) }
-    validate_dependencies()
-    validate_provides()
     output_check(output_path)
     # Abort if the target path already exists.
 
@@ -619,6 +617,22 @@ class FPM::Package::Deb < FPM::Package
       fix_provides(provides)
     end.flatten
     
+    if origin == FPM::Package::RPM
+      # Remove filesystem paths listed as dependencies,
+      # as they cannot be accurately converted to package names.
+      self.dependencies.each do |dep|
+        pathRegex = /\A\/(?:[0-9a-zA-Z_-]+\/?)+/
+        if pathRegex.match(dep)
+          logger.warn("Dependency '#{dep}' is a filepath and cannot be converted to a " \
+                  "package name and will be removed.")
+          self.dependencies.delete(dep)
+        end
+      end
+
+      # Remove rpmlib dependencies leftover from the rpm.
+      self.dependencies.delete_if { |d| d.start_with?('rpmlib') }
+    end
+
     if origin == FPM::Package::Deb
       changelog_path = staging_path("usr/share/doc/#{name}/changelog.Debian.gz")
       if File.exists?(changelog_path)
@@ -715,18 +729,6 @@ class FPM::Package::Deb < FPM::Package
     end
   end # def fix_dependency
 
-  def validate_dependencies()
-    self.dependencies.each do |dep|
-      if (dep !~ /^[A-Z]/ && dep !~ /^[a-z]/)
-        logger.warn("Dependency '#{dep}' is not a valid deb dependency " \
-              "name and will be removed.")
-        self.dependencies.delete(dep)
-      end
-    end.flatten
-    # Remove rpmlib dependencies leftover from the rpm.
-    self.dependencies.delete_if { |d| d.start_with?('rpmlib') }
-  end # def validate_dependencies
-
   def fix_provides(provides)
     name_re = /^[^ \(]+/
     name = provides[name_re]
@@ -749,16 +751,6 @@ class FPM::Package::Deb < FPM::Package
 
     return provides.rstrip
   end
-
-  def validate_provides()
-    self.provides.each do |provides|
-      if (provides.include?("("))
-        logger.warn("Provides '#{provides}' is not a valid deb provides name " \
-                    "and will be removed.")
-        self.provides.delete(provides)
-      end
-    end.flatten
-  end # def validate_provides
 
   def control_path(path=nil)
     @control_path ||= build_path("control")
