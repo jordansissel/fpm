@@ -576,7 +576,7 @@ class FPM::Package::Deb < FPM::Package
       File.chmod(0644, dest_systemd)
     end
 
-    write_control_tarball
+    controltar = write_control_tarball
 
     # Tar up the staging_path into data.tar.{compression type}
     case self.attributes[:deb_compression]
@@ -610,7 +610,7 @@ class FPM::Package::Deb < FPM::Package
     # the 'debian-binary' file has to be first
     File.expand_path(output_path).tap do |output_path|
       ::Dir.chdir(build_path) do
-        safesystem(*ar_cmd, output_path, "debian-binary", "control.tar.gz", datatar)
+        safesystem(*ar_cmd, output_path, "debian-binary", controltar, datatar)
       end
     end
 
@@ -801,20 +801,19 @@ class FPM::Package::Deb < FPM::Package
           "Unknown compression type '#{self.attributes[:deb_compression]}'"
     end
 
-    # Make the control.tar.gz
-    build_path("control.tar.gz").tap do |controltar|
-      logger.info("Creating", :path => controltar, :from => control_path)
+    logger.info("Creating", :path => controltar, :from => control_path)
 
-      args = [ tar_cmd, "-C", control_path, compression, "-cf", controltar,
-        "--owner=0", "--group=0", "--numeric-owner", "." ]
-      if tar_cmd_supports_sort_names_and_set_mtime? and not attributes[:source_date_epoch].nil?
-        # Force deterministic file order and timestamp
-        args += ["--sort=name", ("--mtime=@%s" % attributes[:source_date_epoch])]
-        # gnu tar obeys GZIP environment variable with options for gzip; -n = forget original filename and date
-        args.unshift({"GZIP" => "-9n"})
-      end
-      safesystem(*args)
+    args = [ tar_cmd, "-C", control_path, compression, "-cf", controltar,
+      "--owner=0", "--group=0", "--numeric-owner", "." ]
+    if tar_cmd_supports_sort_names_and_set_mtime? and not attributes[:source_date_epoch].nil?
+      # Force deterministic file order and timestamp
+      args += ["--sort=name", ("--mtime=@%s" % attributes[:source_date_epoch])]
+      # gnu tar obeys GZIP environment variable with options for gzip; -n = forget original filename and date
+      args.unshift({"GZIP" => "-9n"})
     end
+    safesystem(*args)
+    
+    return controltar
 
     logger.debug("Removing no longer needed control dir", :path => control_path)
   ensure
