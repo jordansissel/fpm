@@ -24,3 +24,8 @@ From: alpine:3.7
         libc-dev \
         rpm
     gem install --no-ri --no-rdoc fpm
+
+%runscript
+
+    # echo "Arguments received: $*"
+    exec fpm "$@"
