@@ -5,6 +5,8 @@
 # Execute instructions:
 #
 #   singularity exec fpm.simg fpm --version
+# or
+#   fpm.simg --version
 #
 Bootstrap: docker
 From: alpine:3.7
