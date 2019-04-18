@@ -22,6 +22,9 @@ class FPM::Package::CPAN < FPM::Package
   option "--package-name-prefix", "NAME_PREFIX",
     "Name to prefix the package name with.", :default => "perl"
 
+  option "--deps-name-prefix", "DEPS_PREFIX",
+    "Name to prefix the package dependency names with.", :default => "perl"
+
   option "--test", :flag,
     "Run the tests before packaging?", :default => true
 
@@ -385,7 +388,8 @@ class FPM::Package::CPAN < FPM::Package
   end # def metadata
 
   def cap_name(name)
-    return "perl(" + name.gsub("-", "::") + ")"
+    deps_name_prefix = attributes[:cpan_deps_name_prefix]
+    return "#{deps_name_prefix}(" + name.gsub("-", "::") + ")"
   end # def cap_name
 
   def fix_name(name)

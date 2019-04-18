@@ -32,6 +32,7 @@ A full list of available options for CPAN are listed here::
     --cpan-mirror CPAN_MIRROR     (cpan only) The CPAN mirror to use instead of the default.
     --[no-]cpan-mirror-only       (cpan only) Only use the specified mirror for metadata. (default: false)
     --cpan-package-name-prefix NAME_PREFIX (cpan only) Name to prefix the package name with. (default: "perl")
+    --cpan-deps-name-prefix DEPS_PREFIX (cpan only) Name to prefix the package dependency names with. (default: "perl")
     --[no-]cpan-test              (cpan only) Run the tests before packaging? (default: true)
     --cpan-perl-lib-path PERL_LIB_PATH (cpan only) Path of target Perl Libraries
     --[no-]cpan-sandbox-non-core  (cpan only) Sandbox all non-core modules, even if they're already installed (default: true)
