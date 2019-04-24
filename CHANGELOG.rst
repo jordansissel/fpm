@@ -1,6 +1,12 @@
 Release Notes and Change Log
 ============================
 
+3.0.0 (April 24, 2019)
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Roivant fork begins here.
+* deb: fix version constraints when a gem uses just a major. (ex: `>=3`) (`#755`)
+
 1.11.0 (January 30, 2019)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -102,7 +108,7 @@ Yanked offline. I forgot some dependency changes. Hi.
 * FreeBSD: --architecture (-a) flag now sets FreeBSD package ABI (`#1196`_; Matt Sharpe)
 * perl/cpan: Fix bug and now local modules can be packaged (`#1202`_, `#1203`_; liger1978)
 * perl/cpan: Add support for `http_proxy` environment variable and improve how fpm queries CPAN for package information. (`#1206`_, `#1208`_; liger1978)
-* Fix crash for some users (`#1231`_, `#1148`_; Jose Diaz-Gonzalez) 
+* Fix crash for some users (`#1231`_, `#1148`_; Jose Diaz-Gonzalez)
 * Documentation now published on fpm.readthedocs.io. This is a work-in progress. Contributions welcome! <3 (`#1237`_, Jordan Sissel)
 * deb: Can now read bz2-compressed debian packages. (`#1213`_; shalq)
 * pleaserun: New flag --pleaserun-chdir for setting the working directory of a service. (`#1235`_; Claus F. Strasburger)
@@ -131,7 +137,7 @@ Yanked offline. I forgot some dependency changes. Hi.
 * deb: don't append `.conf` to an upstart file if the file name already ends in `.conf`. (`#1115`_, josegonzalez)
 * freebsd: fix bug where --package flag was ignored. (`#1093`_, Paweł Tomulik)
 * Improvements to the fpm rake tasks (`#1101`_, Evan Gilman)
-  
+
 1.5.0 (April 12, 2016)
 ^^^^^^^^^^^^^^^^^^^^^^
 * Arch package support is now available via -s pacman and -t pacman.  (`#916`_; wonderful community effort making this happen!)
@@ -173,7 +179,7 @@ Yanked offline. I forgot some dependency changes. Hi.
 * If PATH isn't set, and we need it, tell the user (`#886`_, Ranjib Dey)
 * cpan: --[no-]cpan-test now works correctly (`#853`_, Matt Schreiber)
 * deb-to-rpm: some improved support for config file knowledge passing from deb to rpm packages (Daniel Haskin)
-    
+
 1.3.3 (December 11, 2014)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 * The fpm project now uses Contributor Covenant. You can read more about this on the website: http://contributor-covenant.org/
@@ -188,7 +194,7 @@ Yanked offline. I forgot some dependency changes. Hi.
 ^^^^^^^^^^^^^^^^^^^^^^^^
 * deb: fix md5sums generation such that `dpkg -V` now works (`#799`_, Matteo Panella)
 * rpm: Use maximum compression when choosing xz (`#797`_, Ashish Kulkarni)
-  
+
 1.3.0 (October 25, 2014)
 ^^^^^^^^^^^^^^^^^^^^^^^^
 * Fixed a bunch of Ruby 1.8.7-related bugs. (Jordan Sissel)
@@ -308,7 +314,7 @@ Yanked offline. I forgot some dependency changes. Hi.
 0.4.39 (June 27, 2013)
 ^^^^^^^^^^^^^^^^^^^^^^
 * cpan: support more complex dependency specifications (reported by Mabi Knittel)
-  
+
 0.4.38 (June 24, 2013)
 ^^^^^^^^^^^^^^^^^^^^^^
 * cpan: fpm's cpan code now works under ruby 1.8.7
@@ -331,7 +337,7 @@ Yanked offline. I forgot some dependency changes. Hi.
 * cpan: --no-cpan-test now skips tests for build/configure dependencies
 * rpm: Add --rpm-defattrfile and --rpm-defattrdir flags (`#428`_, patch by phrawzty)
 
-0.4.35 -- was not announced 
+0.4.35 -- was not announced
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 0.4.34 (May 7, 2013)

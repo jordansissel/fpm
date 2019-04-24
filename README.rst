@@ -1,6 +1,16 @@
 fpm
 ===
 
+ROIVANT specific notes:
+-----------------------
+* Update the CHANGELOG.md with what changed in this version.
+* Update the version in `lib/fpm/version.rb`
+    * Make sure to follow semver rules.
+* `gem build fpm`
+* `gem push fpm-<version>.gem --host https://artifactory.vant.com/artifactory/api/gems/roivant-gems`
+
+===
+
 |Build| |Chat| |Gem|
 
 The goal of fpm is to make it easy and quick to build packages such as rpms,

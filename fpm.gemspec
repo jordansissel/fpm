@@ -20,6 +20,12 @@ Gem::Specification.new do |spec|
     "management without wasting pointless hours debugging bad rpm specs!"
   spec.license = "MIT-like"
 
+  if spec.respond_to?(:metadata)
+    spec.metadata['allowed_push_host'] = 'https://artifactory.vant.com/artifactory/api/gems/roivant-gems'
+  else
+    raise "RubyGems 2.0 or newer is required to protect against public gem pushes."
+  end
+
   spec.required_ruby_version = '>= 1.9.3'
 
   # For parsing JSON (required for some Python support, etc)

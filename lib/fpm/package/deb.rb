@@ -713,6 +713,7 @@ class FPM::Package::Deb < FPM::Package
     # Convert gem ~> X.Y.Z to '>= X.Y.Z' and << X.Y+1.0
     if dep =~ /\(~>/
       name, version = dep.gsub(/[()~>]/, "").split(/ +/)[0..1]
+      version = "#{version}.0" unless version.match(/\./)
       nextversion = version.split(".").collect { |v| v.to_i }
       l = nextversion.length
       nextversion[l-2] += 1

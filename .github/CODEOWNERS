@@ -1,0 +1,13 @@
+# Lines starting with '#' are comments.
+# Each line is a file pattern followed by one or more owners,
+# the last matching pattern has the most precendence.
+* @roivant/devops
+CODEOWNERS @roivant/devops
+/devops/ @roivant/devops
+/Berksfile* @roivant/devops
+/Gemfile* @roivant/devops
+/Jenkinsfile* @roivant/devops
+/Pipfile* @roivant/devops
+/Rakefile* @roivant/devops
+/repository_metadata.yaml @roivant/devops
+/Vagrantfile @roivant/devops
