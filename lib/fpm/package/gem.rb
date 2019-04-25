@@ -63,6 +63,9 @@ class FPM::Package::Gem < FPM::Package
     "rubygems.org, use this git branch.",
     :default => nil
 
+  option "--extensiondir", "EXTENSIONDIR",
+     "Where to put the native extension .so files", :default => "/usr/lib64/gems/ruby/"
+
   # Override parent method
   def staging_path(path=nil)
     @gem_staging_path ||= attributes[:gem_stagingdir] || Stud::Temporary.directory("package-#{type}-staging")
@@ -221,7 +224,7 @@ class FPM::Package::Gem < FPM::Package
     ::FileUtils.mkdir_p(installdir)
     # TODO(sissel): Allow setting gem tool path
     args = [attributes[:gem_gem], "install", "--quiet", "--no-user-install", "--install-dir", installdir]
-    if ::Gem::VERSION =~ /^[012]\./ 
+    if ::Gem::VERSION =~ /^[012]\./
       args += [ "--no-ri", "--no-rdoc" ]
     else
       # Rubygems 3.0.0 changed --no-ri to --no-document
@@ -295,8 +298,25 @@ class FPM::Package::Gem < FPM::Package
         File.unlink(path)
       end
     end
-
+    copy_extensions_to_lib("#{installdir}/extensions") if File.exist?("#{installdir}/extensions")
   end # def install_to_staging
+
+
+  # copies the .so files from the extension dir to the appropriate system lib path
+  def copy_extensions_to_lib(extension_path)
+    gem_name = "#{self.name.split("-")[1]}-#{self.version}"
+    extension_staging_root = "#{staging_path}/#{attributes[:gem_extensiondir]}#{gem_name}"
+    Find.find(extension_path) do | path |
+      if path.include?(gem_name)
+        file_part = path.split(gem_name, 2).last
+        if File.directory?(path)
+          FileUtils.mkdir_p("#{extension_staging_root}#{file_part}")
+        else
+          FileUtils.cp("#{path}", "#{extension_staging_root}#{file_part}")
+        end
+      end
+    end
+  end
 
   # Sanitize package name.
   # This prefixes the package name with 'rubygem' (but depends on the attribute

@@ -1,6 +1,11 @@
 Release Notes and Change Log
 ============================
 
+3.0.1 (April 25, 2019)
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* gem: copy built native extensions (.so files, etc) to `/usr/lib64/gems/ruby/`; configurable by `--extensiondir` (`DEVOPS-2088`)
+
 3.0.0 (April 24, 2019)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
