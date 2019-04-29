@@ -14,7 +14,7 @@ ENV COMMON_PKGS \
         ruby-etc \
         tar
 
-ENV BUILD_DEBS \
+ENV BUILD_DEPS \
         gcc \
         libc-dev \
         ruby-dev \
