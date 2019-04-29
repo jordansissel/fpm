@@ -3,13 +3,16 @@
 #
 # To run this Docker container interactively: docker run --rm -it fpm
 #
+
 FROM alpine:3.9
 
 ENV COMMON_PKGS \
-        ruby \
+        binutils \
+        git \
         libffi \
-        tar \
-        binutils
+        ruby \
+        ruby-etc \
+        tar
 
 ENV BUILD_DEBS \
         gcc \
@@ -18,15 +21,15 @@ ENV BUILD_DEBS \
         libffi-dev \
         make
 
+COPY . /workdir
+
 RUN set -xe \
  && apk add -q --clean-protected --no-cache --update --virtual .image-libs ${COMMON_PKGS} \
- && apk add -q --clean-protected --no-cache --update --virtual .build-deps ${BUILD_DEBS} \
- && update-ca-certificates \
+ && apk add -q --clean-protected --no-cache --update --virtual .build-deps ${BUILD_DEPS} \
+ && cd /workdir \
+ && gem build fpm.gemspec \
  && gem install --no-ri --no-rdoc fpm \
- && apk del .build-deps \
- && rm -Rf /usr/share/man \
- && rm -Rf /tmp/*         \
- && rm -Rf /var/cache/apk/*
+ && apk del .build-deps
 
 ENTRYPOINT [ "/usr/bin/fpm" ]
 
