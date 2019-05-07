@@ -16,6 +16,8 @@ rvm:
   - 2.2.5
   - 2.3.3
   - 2.4.0
+  - 2.5.1
+  - 2.6.0
 matrix:
   exclude:
     - os: osx
@@ -30,7 +32,9 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which easy_install || echo 'easy_install not found'; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which virtualenv || pip install --user virtualenv ; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then which virtualenv-tools || pip install --user virtualenv virtualenv-tools ; fi
-  - virtualenv ${HOME}/.venv
+  - |
+    export PATH="/Users/travis/Library/Python/2.7/bin:${PATH}"
+    virtualenv ${HOME}/.venv
 script: source ${HOME}/.venv/bin/activate && PATH=${PATH}:${HOME}/.local/bin bundle exec rspec
 addons:
   apt:
@@ -38,5 +42,7 @@ addons:
       - bsdtar
       - rpm
       - lintian
-      - python-setuptools
-      - python-pip
+      - python3-setuptools
+      - python3-pip
+      - squashfs-tools
+      - perl

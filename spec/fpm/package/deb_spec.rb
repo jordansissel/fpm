@@ -144,6 +144,7 @@ describe FPM::Package::Deb do
       original.provides << "Some-SILLY_name"
 
       original.conflicts = ["foo < 123"]
+      original.replaces  = ["package < 1.2.3"]
       original.attributes[:deb_breaks] = ["baz < 123"]
 
       original.attributes[:deb_build_depends_given?] = true
@@ -261,6 +262,11 @@ describe FPM::Package::Deb do
       it "should have the correct dependency list" do
         # 'something > 10' should convert to 'something (>> 10)', etc.
         insist { dpkg_field("Depends") } == "something (>> 10), hello (>= 20)"
+      end
+
+      it "should have the correct replaces list" do
+        # 'package < 1.2.3' should convert to 'package (<< 1.2.3)'
+        insist { dpkg_field("Replaces") } == "package (<< 1.2.3)"
       end
 
       it "should have the correct build dependency list" do

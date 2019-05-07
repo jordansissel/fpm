@@ -83,8 +83,8 @@ class FPM::Package::Dir < FPM::Package
     # can include license data from themselves (rpms, gems, etc),
     # but to make sure a simple dir -> rpm works without having
     # to specify a license.
-    self.license = "unknown"
-    self.vendor = [ENV["USER"], Socket.gethostname].join("@")
+    self.license ||= "unknown"
+    self.vendor ||= [ENV["USER"], Socket.gethostname].join("@")
   ensure
     # Clean up any logger context we added.
     logger.remove("method")
