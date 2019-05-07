@@ -275,16 +275,12 @@ class FPM::Package::Deb < FPM::Package
     compression = `#{ar_cmd[0]} t #{package}`.split("\n").grep(/control.tar/).first.split(".").last
     case compression
       when "gz"
-        controltar = "control.tar.gz"
         compression = "-z"
       when "bzip2","bz2"
-        controltar = "control.tar.bz2"
         compression = "-j"
       when "xz"
-        controltar = "control.tar.xz"
         compression = "-J"
       when 'tar'
-        controltar = "control.tar"
         compression = ""
       when nil
         raise FPM::InvalidPackageConfiguration, "Missing control.tar in deb source package #{package}"
@@ -585,15 +581,19 @@ class FPM::Package::Deb < FPM::Package
     case self.attributes[:deb_compression]
       when "gz", nil
         datatar = build_path("data.tar.gz")
+        controltar = "control.tar.gz"
         compression = "-z"
       when "bzip2"
         datatar = build_path("data.tar.bz2")
+        controltar = "control.tar.bz2"
         compression = "-j"
       when "xz"
         datatar = build_path("data.tar.xz")
+        controltar = "control.tar.xz"
         compression = "-J"
       when "none"
         datatar = build_path("data.tar")
+        controltar = "control.tar"
         compression = ""
       else
         raise FPM::InvalidPackageConfiguration,
@@ -613,7 +613,7 @@ class FPM::Package::Deb < FPM::Package
     # the 'debian-binary' file has to be first
     File.expand_path(output_path).tap do |output_path|
       ::Dir.chdir(build_path) do
-        safesystem(*ar_cmd, output_path, "debian-binary", "control.tar.gz", datatar)
+        safesystem(*ar_cmd, output_path, "debian-binary", controltar, datatar)
       end
     end
 
@@ -810,24 +810,24 @@ class FPM::Package::Deb < FPM::Package
     # Tar up the staging_path into control.tar.{compression type}
     case self.attributes[:deb_compression]
       when "gz", nil
-        controltar = build_path("control.tar.gz")
+        controltar = "control.tar.gz"
         compression = "-z"
       when "bzip2"
-        controltar = build_path("control.tar.bz2")
+        controltar = "control.tar.bz2"
         compression = "-j"
       when "xz"
-        controltar = build_path("control.tar.xz")
+        controltar = "control.tar.xz"
         compression = "-J"
       when "none"
-        controltar = build_path("control.tar")
+        controltar = "control.tar"
         compression = ""
       else
         raise FPM::InvalidPackageConfiguration,
           "Unknown compression type '#{self.attributes[:deb_compression]}'"
     end
 
-    # Make the control.tar.gz
-    build_path("control.tar.gz").tap do |controltar|
+    # Make the control tar
+    build_path(controltar).tap do |controltar|
       logger.info("Creating", :path => controltar, :from => control_path)
 
       args = [ tar_cmd, "-C", control_path, compression, "-cf", controltar,
