@@ -61,7 +61,7 @@ then
     # "abort-remove" happens when the pre-removal script failed.
     #   In that case, this script, which should be idemptoent, is run
     #   to ensure a clean roll-back of the removal.
-    after_install
+    after_install "${1}"
 elif [ "${1}" = "configure" -a -n "${2}" ]
 then
     upgradeFromVersion="${2}"

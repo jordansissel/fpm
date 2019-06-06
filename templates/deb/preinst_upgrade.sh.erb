@@ -21,7 +21,7 @@ before_install() {
 
 if [ "${1}" = "install" -a -z "${2}" ]
 then
-    before_install
+  before_install "${1}"
 elif [ "${1}" = "upgrade" -a -n "${2}" ]
 then
     upgradeFromVersion="${2}"

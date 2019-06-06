@@ -30,13 +30,13 @@ then
     # "abort-install" happens when the pre-installation script failed.
     #   In that case, this script, which should be idemptoent, is run
     #   to ensure a clean roll-back of the installation.
-    after_remove
+    after_remove "${1}"
 elif [ "${1}" = "purge" -a -z "${2}" ]
 then
     # like "on remove", but executes after dpkg deletes config files
     # 'apt-get purge' runs 'on remove' section, then this section.
     # There is no equivalent in RPM or ARCH.
-    after_purge
+    after_purge "${1}"
 elif [ "${1}" = "upgrade" ]
 then
     # This represents the case where the old package's postrm is called after
