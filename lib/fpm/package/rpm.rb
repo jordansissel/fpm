@@ -142,6 +142,10 @@ class FPM::Package::RPM < FPM::Package
            "names in rpm requires instead of the redhat style " \
            "rubygem(foo).", :default => false
 
+  option "--macro-expansion", :flag,
+           "install-time macro expansion in %pre %post %preun %postun scripts " \
+           "(see: https://rpm.org/user_doc/scriptlet_expansion.html)", :default => false
+
   option "--verifyscript", "FILE",
     "a script to be run on verification" do |val|
     File.expand_path(val) # Get the full path to the script
