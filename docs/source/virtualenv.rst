@@ -23,6 +23,10 @@ Build an rpm package for ansible::
   yum install virtualenv-ansible*.rpm
   which ansible # /usr/share/python/ansible/bin/ansible
 
+Build an rpm package for ansible without upgrading pip::
+
+  fpm -s virtualenv -t rpm --no-virtualenv-pip-upgrade ansible
+
 Create a debian package for your project's python dependencies under `/opt`::
 
   echo 'glade' >> requirements.txt
@@ -37,3 +41,4 @@ pypi repository, along with it's external dependencies::
   fpm -s virtualenv -t deb \
     --virtualenv-pypi-extra-url=https://office-pypi.lan/ \
     proprietary-magic=0.9
+
