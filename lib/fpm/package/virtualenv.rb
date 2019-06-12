@@ -46,6 +46,9 @@ class FPM::Package::Virtualenv < FPM::Package
     :multivalued => true, :attribute_name => :virtualenv_find_links_urls,
     :default => nil
 
+  option "--requirement", :flag, "Indicate the included file is a "\
+    "requirements file"
+
   private
 
   # Input a package.
@@ -56,7 +59,8 @@ class FPM::Package::Virtualenv < FPM::Package
     m = /^([^=]+)==([^=]+)$/.match(package)
     package_version = nil
 
-    is_requirements_file = (File.basename(package) == "requirements.txt")
+    is_requirements_file = (File.basename(package) == "requirements.txt" or self.attributes[:virtualenv_requirement?])
+    logger.debug("Detecting requirements file", :is_requirements_file => is_requirements_file)
 
     if is_requirements_file
       if !File.file?(package)
