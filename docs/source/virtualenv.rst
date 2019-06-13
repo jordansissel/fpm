@@ -23,6 +23,10 @@ Build an rpm package for ansible::
   yum install virtualenv-ansible*.rpm
   which ansible # /usr/share/python/ansible/bin/ansible
 
+Build an rpm package for ansible with custom python interpreter::
+
+  fpm -s virtualenv -t rpm --virtualenv-python /usr/local/bin/python3.6 ansible
+
 Create a debian package for your project's python dependencies under `/opt`::
 
   echo 'glade' >> requirements.txt
