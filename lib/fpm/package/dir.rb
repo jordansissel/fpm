@@ -4,6 +4,7 @@ require "backports"
 require "fileutils"
 require "find"
 require "socket"
+require "rbconfig"
 
 # A directory package.
 #
@@ -197,8 +198,15 @@ class FPM::Package::Dir < FPM::Package
     else
       # Otherwise try copying the file.
       begin
-        logger.debug("Linking", :source => source, :destination => destination)
-        File.link(source, destination)
+        if RbConfig::CONFIG['host_os'] =~ /mac os|darwin/
+          # OSX has a different way of handling hard links, thus File.link
+          # will cause problems and invalid links in case of the darwin file system.
+          logger.debug("Copying", :source => source, :destination => destination)
+          FileUtils.copy_entry(source, destination)
+        else
+          logger.debug("Linking", :source => source, :destination => destination)
+          File.link(source, destination)
+        end
       rescue Errno::ENOENT, Errno::EXDEV, Errno::EPERM
         # Hardlink attempt failed, copy it instead
         logger.debug("Copying", :source => source, :destination => destination)
