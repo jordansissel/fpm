@@ -524,7 +524,7 @@ class FPM::Command < Clamp::Command
   def run(run_args)
     logger.subscribe(STDOUT)
 
-    # Short circuit for a `fpm --version` or `fpm -v` short invocation that 
+    # Short circuit for a `fpm --version` or `fpm -v` short invocation that
     # is the user asking us for the version of fpm.
     if run_args == [ "-v" ] || run_args == [ "--version" ]
       puts FPM::VERSION
@@ -536,6 +536,7 @@ class FPM::Command < Clamp::Command
     # directory
     rc_files = [ ".fpm" ]
     rc_files << File.join(ENV["HOME"], ".fpm") if ENV["HOME"]
+    rc_files << File.join(ENV["FPMRC"], ".fpm") if ENV["FPMRC"]
 
     rc_args = []
 
