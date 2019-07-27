@@ -118,7 +118,7 @@ class FPM::Package::RPM < FPM::Package
     :multivalued => true, :attribute_name => :attrs
 
   option "--init", "FILEPATH", "Add FILEPATH as an init script",
-	:multivalued => true do |file|
+  :multivalued => true do |file|
     next File.expand_path(file)
   end
 
@@ -343,7 +343,7 @@ class FPM::Package::RPM < FPM::Package
       next if script_path.nil?
       if !File.exist?(script_path)
         logger.error("No such file (for #{scriptname.to_s}): #{script_path.inspect}")
-        script_errors	 << script_path
+        script_errors  << script_path
       end
       # Load the script into memory.
       scripts[scriptname] = File.read(script_path)
@@ -453,7 +453,7 @@ class FPM::Package::RPM < FPM::Package
   def output(output_path)
     output_check(output_path)
     %w(BUILD RPMS SRPMS SOURCES SPECS).each { |d| FileUtils.mkdir_p(build_path(d)) }
-    args = ["rpmbuild", "-bb"]
+    args = ["rpmbuild", "-ba"]
 
     if %x{uname -m}.chomp != self.architecture
       rpm_target = self.architecture
@@ -473,10 +473,7 @@ class FPM::Package::RPM < FPM::Package
     args += ["--define", "dist .#{attributes[:rpm_dist]}"] if attributes[:rpm_dist]
 
     args += [
-      "--define", "buildroot #{build_path}/BUILD",
       "--define", "_topdir #{build_path}",
-      "--define", "_sourcedir #{build_path}",
-      "--define", "_rpmdir #{build_path}/RPMS",
       "--define", "_tmppath #{attributes[:workdir]}"
     ]
 
@@ -557,6 +554,34 @@ class FPM::Package::RPM < FPM::Package
       copy_entry(path, dst, preserve=true)
     end
 
+    # Got to create a tarball to include in the SRPM
+    sources_tar = "#{name}-#{version}-#{iteration}.tgz"
+
+    ::Dir.chdir(build_path) do
+      ::Dir.chdir(build_sub_dir) do
+        to_tar = ::Dir['*']
+
+        unless to_tar.empty?
+          # If we have rpmbuild, we have tar, so just use it!
+          tar_cmd = [
+            'tar',
+            '-cz',
+            '-f',
+            File.join(build_path, sources_sub_dir, sources_tar),
+            to_tar
+          ].flatten
+
+          safesystem(*tar_cmd)
+        end
+      end
+    end
+
+    sources = []
+    ::Dir.chdir(File.join(build_path, sources_sub_dir)) do
+      sources = ::Dir['**/*']
+      sources.delete_if{|f| !File.file?(f)}
+    end
+
     rpmspec = template("rpm.erb").result(binding)
     specfile = File.join(build_path("SPECS"), "#{name}.spec")
     File.write(specfile, rpmspec)
@@ -569,8 +594,12 @@ class FPM::Package::RPM < FPM::Package
     safesystem(*args)
 
     ::Dir["#{build_path}/RPMS/**/*.rpm"].each do |rpmpath|
-      # This should only output one rpm, should we verify this?
       FileUtils.cp(rpmpath, output_path)
+    end
+
+    # Copy out the SRPM packages
+    ::Dir["#{build_path}/SRPMS/**/*.rpm"].each do |rpmpath|
+      FileUtils.cp(rpmpath, File.dirname(output_path))
     end
   end # def output
 
@@ -584,8 +613,11 @@ class FPM::Package::RPM < FPM::Package
 
   def build_sub_dir
     return "BUILD"
-    #return File.join("BUILD", prefix)
   end # def build_sub_dir
+
+  def sources_sub_dir
+    return "SOURCES"
+  end # def sources_sub_dir
 
   def summary
     if !attributes[:rpm_summary]
