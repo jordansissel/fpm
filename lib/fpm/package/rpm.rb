@@ -452,7 +452,7 @@ class FPM::Package::RPM < FPM::Package
 
   def output(output_path)
     output_check(output_path)
-    %w(BUILD RPMS SRPMS SOURCES SPECS).each { |d| FileUtils.mkdir_p(build_path(d)) }
+    %w(BUILD BUILDROOT RPMS SRPMS SOURCES SPECS).each { |d| FileUtils.mkdir_p(build_path(d)) }
     args = ["rpmbuild", "-ba"]
 
     if %x{uname -m}.chomp != self.architecture
