@@ -51,8 +51,10 @@ AutoReq: yes
 <% if attributes[:rpm_autoprov?] -%>
 AutoProv: yes
 <% end -%>
-<% if !prefix.nil? and !prefix.empty? -%>
+<% if !prefix.nil?  -%>
 Prefix: <%= prefix %>
+<% else -%>
+Prefix: /
 <% end -%>
 <% if defined?(sources) && !sources.nil? && !sources.empty? -%>
 <%   sources.each_with_index do |src, i| -%>
