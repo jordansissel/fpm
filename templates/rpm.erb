@@ -111,8 +111,8 @@ Obsoletes: <%= repl %>
 
 %install
 <% if defined?(sources) && !sources.nil? && !sources.empty? -%>
-mkdir -p %{buildroot}%{prefix}
-cp -r * %{buildroot}%{prefix}
+mkdir -p %{buildroot}
+cp -r * %{buildroot}
 <% end -%>
 
 %clean
