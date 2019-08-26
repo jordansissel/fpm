@@ -7,7 +7,7 @@ ROIVANT specific notes:
 * Update the version in `lib/fpm/version.rb`
     * Make sure to follow semver rules.
 * `gem build fpm`
-* `gem push fpm-<version>.gem --host https://artifactory.vant.com/artifactory/api/gems/roivant-gems`
+* `gem push fpm-<version>.gem --host https://$DEVOPS_ARTIFACTORY_ANON_USER:$DEVOPS_ARTIFACTORY_ANON_KEY@roivant.jfrog.io/roivant/api/gems/gems-local`
 
 ===
 
