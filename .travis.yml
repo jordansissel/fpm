@@ -1,15 +1,15 @@
 os:
-  - linux
   - osx
+  - linux
 language: ruby
 sudo: false
 rvm:
   # We use language features of Ruby that are not supported in Ruby 2.3.x or
   # older.
   # - 2.3.3
-  - 2.4.8
-  - 2.5.7
-  - 2.6.5
+  - 2.4
+  - 2.5
+  - 2.6
 matrix:
   # exclude:
   #  - os: osx
