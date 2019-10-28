@@ -7,9 +7,9 @@ rvm:
   # We use language features of Ruby that are not supported in Ruby 2.3.x or
   # older.
   # - 2.3.3
-  - 2.4.9
-  - 2.5.1
-  - 2.6.0
+  - 2.4.8
+  - 2.5.7
+  - 2.6.5
 matrix:
   # exclude:
   #  - os: osx
@@ -17,8 +17,6 @@ matrix:
   #  - os: osx
   #    rvm: 2.0.0
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update && brew bundle; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which dpkg-deb || 'dpkg-deb not found'; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which lintian || echo 'lintian not found'; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which python || brew install python; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which easy_install || echo 'easy_install not found'; fi
@@ -27,8 +25,14 @@ before_install:
   - |
     export PATH="/Users/travis/Library/Python/2.7/bin:${PATH}"
     virtualenv ${HOME}/.venv
-script: source ${HOME}/.venv/bin/activate && PATH=${PATH}:${HOME}/.local/bin bundle exec rspec
+script: >
+  if [[ "$TRAVIS_OS_NAME" == "osx" ]];then
+     export PATH="/usr/local/opt/binutils/bin:$PATH"
+  fi
+  source ${HOME}/.venv/bin/activate && PATH=${PATH}:${HOME}/.local/bin bundle exec rspec
 addons:
+  homebrew:
+    brewfile: true
   apt:
     packages:
       - bsdtar
