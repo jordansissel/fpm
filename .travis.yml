@@ -33,6 +33,7 @@ script: >
 addons:
   homebrew:
     brewfile: true
+    update: true
   apt:
     packages:
       - bsdtar
