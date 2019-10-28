@@ -6,16 +6,8 @@ sudo: false
 rvm:
   # We use language features of Ruby that are not supported in Ruby 2.3.x or
   # older.
-  #- 1.8.7
-  #- 1.9.2
-  # - 1.9.3
-  # - 2.0.0
-  # - 2.1.1
-  # - 2.2.1
-  # - 2.3.1
-  # - 2.2.5
   # - 2.3.3
-  - 2.4.0
+  - 2.4.9
   - 2.5.1
   - 2.6.0
 matrix:
