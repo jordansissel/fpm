@@ -28,7 +28,7 @@ before_install:
 script: >
   if [[ "$TRAVIS_OS_NAME" == "osx" ]];then
      export PATH="/usr/local/opt/binutils/bin:$PATH"
-  fi
+  fi &&
   source ${HOME}/.venv/bin/activate && PATH=${PATH}:${HOME}/.local/bin bundle exec rspec
 addons:
   homebrew:
