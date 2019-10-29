@@ -18,7 +18,8 @@ install_files() {
     cd "${source}/${platform}/${version}/files/" || exit 1
 
     # Write a cleanup script
-    find . -print0 | xargs -r0 -n1 "$source/generate-cleanup.sh" > "$cleanup_script"
+    init_command $platform stop > "$cleanup_script"
+    find . -print0 | xargs -r0 -n1 "$source/generate-cleanup.sh" >> "$cleanup_script"
 
     # Actually do the installation
     find . -print0 | xargs -r0 -n1 "$source/install-path.sh"
@@ -90,11 +91,18 @@ has_launchd() {
 }
 
 install_help() {
+  platform="$1"
+  echo "To start this service, use: $(init_command $platform start)"
+}
+
+init_command() {
+  platform="$1"
+  action="$2"
   case $platform in
-    systemd) echo "To start this service, use: systemctl start <%= attributes[:pleaserun_name] %>" ;;
-    upstart) echo "To start this service, use: initctl start <%= attributes[:pleaserun_name] %>" ;;
-    launchd) echo "To start this service, use: launchctl start <%= attributes[:pleaserun_name] %>" ;;
-    sysv) echo "To start this service, use: /etc/init.d/<%= attributes[:pleaserun_name] %> start" ;;
+    systemd) echo "systemctl ${action} <%= attributes[:pleaserun_name] %>"  ;;
+    upstart) echo "initctl ${action} <%= attributes[:pleaserun_name] %>" ;;
+    launchd) echo "launchctl ${action} <%= attributes[:pleaserun_name] %>" ;;
+    sysv) echo "/etc/init.d/<%= attributes[:pleaserun_name] %> ${action}" ;;
   esac
 }
 
