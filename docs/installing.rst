@@ -41,7 +41,7 @@ Installing FPM
 
 You can install fpm with the `gem` tool::
 
-    gem install --no-ri --no-rdoc fpm
+    gem install --no-document fpm
 
 .. note::
   `gem` is a command provided by a the Ruby packaging system called `rubygems`_. This allows you to install, and later upgrade, fpm.
