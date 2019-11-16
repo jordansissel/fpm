@@ -802,7 +802,7 @@ class FPM::Package::Deb < FPM::Package
     end
 
     # Make the control.tar.gz
-    build_path("control.tar.gz").tap do |controltar|
+    build_path(controltar).tap do |controltar|
       logger.info("Creating", :path => controltar, :from => control_path)
 
       args = [ tar_cmd, "-C", control_path, compression, "-cf", controltar,
