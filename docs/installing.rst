@@ -27,9 +27,9 @@ On Fedora 23 or newer::
 
     dnf install ruby-devel gcc make rpm-build libffi-devel
 
-On Oracle Enterprise 7.x systems::
+On Oracle Linux 7.x systems::
 
-    yum-config-manager --add-repo=https://yum.oracle.com/repo/OracleLinux/OL7/optional/developer/x86_64
+    yum-config-manager --enable ol7_optional_latest
     yum install ruby-devel gcc make rpm-build rubygems
 
 On Debian-derived systems (Debian, Ubuntu, etc)::
@@ -41,7 +41,7 @@ Installing FPM
 
 You can install fpm with the `gem` tool::
 
-    gem install --no-ri --no-rdoc fpm
+    gem install --no-document fpm
 
 .. note::
   `gem` is a command provided by a the Ruby packaging system called `rubygems`_. This allows you to install, and later upgrade, fpm.
