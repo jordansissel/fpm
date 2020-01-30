@@ -1,23 +1,49 @@
-FROM ubuntu:18.04 as fpm
+FROM ubuntu:18.04 as base
 
-# Documented dependencies
-RUN apt-get update && apt-get -y dist-upgrade
-RUN apt-get install -y ruby ruby-dev rubygems build-essential
+# Runtime deps. Build deps go in the build or test containers
+RUN apt-get update \
+	&& apt-get -y dist-upgrade \
+	&& apt-get install --no-install-recommends -y \
+	ruby rubygems rubygems-integration \
+	bsdtar \
+	cpio \
+	debsigs \
+	pacman \
+	perl \
+	python3-pip \
+	python3-setuptools \
+	rpm  \
+	squashfs-tools \
+	xz-utils \
+	zip \
+	&& rm -rf /var/lib/apt/lists/* \
+	&& apt-get clean
 
-# Discovered dependancies
-RUN apt-get install -y \
-	bsdtar rpm lintian python3-setuptools python3-pip \
-	squashfs-tools perl cpio
 
+# Run tests. This is a bit broken now.
+# See https://github.com/jordansissel/fpm/issues/1682
+# FROM base AS fpm-test
+# WORKDIR /src
+# RUN apt-get install --no-install-recommends -y gcc make ruby-dev libc-dev lintian git
+# RUN git clone https://github.com/jordansissel/fpm /src
+# RUN gem install --no-ri --no-rdoc bundler
+# RUN cd /src && bundle install
+# RUN cd /src && rspec
+# ENTRYPOINT rspec
 
-# New second stage container to run tests in
-FROM fpm AS fpm-test
-WORKDIR /fpm
+# build container, install build deps here, so we can omit them from
+# our release package
+FROM base AS build
+RUN apt-get update
+RUN apt-get install --no-install-recommends -y \
+	gcc make ruby-dev libc-dev
+ENV GEM_PATH /fpm
+ENV PATH "/fpm/bin:${PATH}"
+RUN gem install --no-ri --no-rdoc --install-dir=/fpm fpm
+RUN gem clean
 
-RUN apt-get install -y git && \
-	git clone https://github.com/jordansissel/fpm /fpm
-
-
-RUN gem install --no-ri --no-rdoc bundler
-RUN cd /fpm && bundle install
-ENTRYPOINT rspec
+FROM base as release
+COPY --from=build /fpm /fpm
+ENV GEM_PATH /fpm
+ENV PATH "/fpm/bin:${PATH}"
+ENTRYPOINT /fpm/bin/fpm
