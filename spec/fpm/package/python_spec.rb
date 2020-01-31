@@ -3,8 +3,6 @@ require "fpm" # local
 require "fpm/package/python" # local
 require "find" # stdlib
 
-is_travis = ENV["TRAVIS_OS_NAME"] && !ENV["TRAVIS_OS_NAME"].empty?
-
 # Determine default value of a given easy_install's option
 def easy_install_default(python_bin, option)
   result = nil
@@ -175,7 +173,7 @@ describe FPM::Package::Python, if: HAVE_USABLE_PYTHON do
 
   context "python_scripts_executable is set" do
     it "should have scripts with a custom hashbang line" do
-      pending("Disabled on travis-ci because it always fails, and there is no way to debug it?") if is_travis
+      pending("Disabled on travis-ci because it always fails, and there is no way to debug it?") if IS_TRAVIS_CI
 
       subject.attributes[:python_scripts_executable] = "fancypants"
       # Newer versions of Django require Python 3.

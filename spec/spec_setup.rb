@@ -113,3 +113,8 @@ if !HAVE_USABLE_VENV
   Cabin::Channel.get("rspec").warn("Skipping python virtualenv tests because " \
                                    "no virtualenv/tools bin on your path")
 end
+
+IS_TRAVIS_CI = ENV["TRAVIS_OS_NAME"] && !ENV["TRAVIS_OS_NAME"].empty?
+if IS_TRAVIS_CI
+    Cabin::Channel.get("rspec").warn("On travis-ci, some tests will be skipped")
+end
