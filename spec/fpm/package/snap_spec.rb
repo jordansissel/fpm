@@ -2,7 +2,13 @@ require "spec_setup"
 require "fpm" # local
 require "English" # for $CHILD_STATUS
 
-describe FPM::Package::Snap do
+describe FPM::Package::Snap, if: IS_OLD_RUBY do
+  it 'dependencies' do
+    skip("Ruby 1.x and 2.0.x are unsupported for Snap because it lacks Psych::safe_load")
+  end
+end
+
+describe FPM::Package::Snap, if !IS_OLD_RUBY do
   let(:target) { Stud::Temporary.pathname + ".snap" }
   after do
     subject.cleanup
@@ -19,7 +25,6 @@ describe FPM::Package::Snap do
     end
 
     it "should have a default output usable as a filename" do
-      pending("Ruby 1.x and 2.0.x are unsupported for Snap because it lacks Psych::safe_load") if IS_OLD_RUBY
       # This is the default filename commonly produced by snapcraft
       insist { subject.to_s } == "name_123-100_all.snap"
     end
@@ -30,8 +35,7 @@ describe FPM::Package::Snap do
       end
 
       it "should not include iteration if it is nil" do
-        pending("Ruby 1.x and 2.0.x are unsupported for Snap because it lacks Psych::safe_load") if IS_OLD_RUBY
-      # This is the default filename commonly produced by snapcraft
+        # This is the default filename commonly produced by snapcraft
         expect(subject.to_s).to(be == "name_123_all.snap")
       end
     end
@@ -87,32 +91,26 @@ describe FPM::Package::Snap do
       end
 
       it "should have the correct name" do
-        pending("Ruby 1.x and 2.0.x are unsupported for Snap because it lacks Psych::safe_load") if IS_OLD_RUBY
         insist { input.name } == original.name
       end
 
       it "should have the correct version" do
-        pending("Ruby 1.x and 2.0.x are unsupported for Snap because it lacks Psych::safe_load") if IS_OLD_RUBY
         insist { input.version } == original.version
       end
 
       it "should have the correct description" do
-        pending("Ruby 1.x and 2.0.x are unsupported for Snap because it lacks Psych::safe_load") if IS_OLD_RUBY
         insist { input.description } == original.description
       end
 
       it "should have the correct architecture" do
-        pending("Ruby 1.x and 2.0.x are unsupported for Snap because it lacks Psych::safe_load") if IS_OLD_RUBY
         insist { input.architecture } == original.architecture
       end
 
       it "should have the correct apps" do
-        pending("Ruby 1.x and 2.0.x are unsupported for Snap because it lacks Psych::safe_load") if IS_OLD_RUBY
         insist { input.attributes[:snap_apps] } == original.attributes[:snap_apps]
       end
 
       it "should have the correct hooks" do
-        pending("Ruby 1.x and 2.0.x are unsupported for Snap because it lacks Psych::safe_load") if IS_OLD_RUBY
         insist { input.attributes[:snap_hooks] } == original.attributes[:snap_hooks]
       end
     end
@@ -141,38 +139,31 @@ describe FPM::Package::Snap do
       end
 
       it "should have the custom name" do
-        pending("Ruby 1.x and 2.0.x are unsupported for Snap because it lacks Psych::safe_load") if IS_OLD_RUBY
         insist { input.name } == "custom-name"
       end
 
       it "should have the custom version" do
-        pending("Ruby 1.x and 2.0.x are unsupported for Snap because it lacks Psych::safe_load") if IS_OLD_RUBY
         insist { input.version } == "custom-version"
       end
 
       it "should have the custom description" do
-        pending("Ruby 1.x and 2.0.x are unsupported for Snap because it lacks Psych::safe_load") if IS_OLD_RUBY
         insist { input.description } == "custom-summary\ncustom-description"
       end
 
       it "should have the custom architecture" do
-        pending("Ruby 1.x and 2.0.x are unsupported for Snap because it lacks Psych::safe_load") if IS_OLD_RUBY
         insist { input.architecture } == "custom-architecture"
       end
 
       it "should have the custom apps" do
-        pending("Ruby 1.x and 2.0.x are unsupported for Snap because it lacks Psych::safe_load") if IS_OLD_RUBY
         insist { input.attributes[:snap_apps] } == []
       end
 
       it "should have the custom hooks" do
-        pending("Ruby 1.x and 2.0.x are unsupported for Snap because it lacks Psych::safe_load") if IS_OLD_RUBY
         insist { input.attributes[:snap_hooks] } == []
       end
     end
 
     it "should support specifying confinement" do
-      pending("Ruby 1.x and 2.0.x are unsupported for Snap because it lacks Psych::safe_load") if IS_OLD_RUBY
       original.attributes[:snap_confinement] = "test-confinement"
 
       original.output(target)
@@ -182,7 +173,6 @@ describe FPM::Package::Snap do
     end
 
     it "should support specifying grade" do
-      pending("Ruby 1.x and 2.0.x are unsupported for Snap because it lacks Psych::safe_load") if IS_OLD_RUBY
       original.attributes[:snap_grade] = "test-grade"
 
       original.output(target)

@@ -50,9 +50,8 @@ module Kernel
   end
 end
 
-##
-## Check existence of various binaries
-##
+# Check various system dependancies.
+# TODO: Move this into util somewhere, and conditionalize the fpm functions as well.
 
 HAVE_DPKG_DEB = program_exists?("dpkg-deb")
 if !HAVE_DPKG_DEB
