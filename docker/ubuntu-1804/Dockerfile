@@ -7,6 +7,11 @@ ARG BASE_ENV=minimal
 # CWD, where release will use the downloaded gem.
 ARG TARGET=test
 
+# Container to throw an error if called with a bare `docker build .`
+FROM ubuntu:18.04 as error
+RUN echo "\n\n\nHey! Use buildkit. See the Makefile or docs\n\n\n"
+RUN false
+
 # Base container is used for various release and test things
 FROM ubuntu:18.04 as minimal-base
 
@@ -38,7 +43,8 @@ RUN apt-get update \
 	python3-pip \
 	&& pip3 --no-cache-dir install setuptools \
 	&& pip3 --no-cache-dir install wheel \
-	&& pip3 --no-cache-dir install virtualenv virtualenv-tools \
+	&& pip3 --no-cache-dir install virtualenv virtualenv-tools3 \
+	&& update-alternatives --install /usr/bin/python python /usr/bin/python3 10 \
 	&& rm -rf /var/lib/apt/lists/*
 
 
@@ -68,7 +74,6 @@ RUN apt-get install --no-install-recommends -y \
 ENV GEM_PATH /fpm
 ENV PATH "/fpm/bin:${PATH}"
 RUN gem install --no-ri --no-rdoc --install-dir=/fpm fpm
-RUN gem clean
 
 FROM build as release
 COPY --from=build /fpm /fpm
