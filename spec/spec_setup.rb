@@ -53,6 +53,12 @@ end
 # Check various system dependancies.
 # TODO: Move this into util somewhere, and conditionalize the fpm functions as well.
 
+HAVE_MKSQUASHFS = program_exists?("mksquashfs")
+if !HAVE_MKSQUASHFS
+  Cabin::Channel.get("rspec") \
+    .warn("Skipping some tests because 'mksquashfs' isn't in your PATH")
+end
+
 HAVE_DPKG_DEB = program_exists?("dpkg-deb")
 if !HAVE_DPKG_DEB
   Cabin::Channel.get("rspec") \

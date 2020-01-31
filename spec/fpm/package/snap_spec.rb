@@ -2,13 +2,17 @@ require "spec_setup"
 require "fpm" # local
 require "English" # for $CHILD_STATUS
 
-describe FPM::Package::Snap, if: IS_OLD_RUBY do
+describe FPM::Package::Snap, if: IS_OLD_RUBY || !HAVE_MKSQUASHFS  do
   it 'dependencies' do
-    skip("Ruby 1.x and 2.0.x are unsupported for Snap because it lacks Psych::safe_load")
+    skip("Ruby 1.x and 2.0.x are unsupported for Snap because it lacks Psych::safe_load") if IS_OLD_RUBY
+  end
+
+  it 'dependencies' do
+    skip("missing mksquashfs") if !HAVE_MKSQUASHFS
   end
 end
 
-describe FPM::Package::Snap, if: !IS_OLD_RUBY do
+describe FPM::Package::Snap, if: !IS_OLD_RUBY && HAVE_MKSQUASHFS do
   let(:target) { Stud::Temporary.pathname + ".snap" }
   after do
     subject.cleanup
