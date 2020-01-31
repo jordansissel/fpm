@@ -6,20 +6,13 @@ require "fpm/package/dir" # local
 require "stud/temporary"
 require "English" # for $CHILD_STATUS
 
-describe FPM::Package::Deb do
-  # dpkg-deb lets us query deb package files.
-  # Comes with debian and ubuntu systems.
-  have_dpkg_deb = program_exists?("dpkg-deb")
-  if !have_dpkg_deb
-    Cabin::Channel.get("rspec") \
-      .warn("Skipping some deb tests because 'dpkg-deb' isn't in your PATH")
+describe FPM::Package::Deb, if: !HAVE_DPKG_DEB do
+  it 'dependencies' do
+    skip('missing dpkg-deb')
   end
+end
 
-  have_lintian = program_exists?("lintian")
-  if !have_lintian
-    Cabin::Channel.get("rspec") \
-      .warn("Skipping some deb tests because 'lintian' isn't in your PATH")
-  end
+describe FPM::Package::Deb, if: HAVE_DPKG_DEB do
 
   let(:target) { Stud::Temporary.pathname + ".deb" }
   after do
@@ -242,7 +235,9 @@ describe FPM::Package::Deb do
     end # package attributes
 
     # This section mainly just verifies that 'dpkg-deb' can parse the package.
-    context "when read with dpkg", :if => have_dpkg_deb do
+    context "when read with dpkg" do
+      skip("Missing dpkg-deb") unless HAVE_DPKG_DEB
+
       def dpkg_field(field)
         return `dpkg-deb -f #{target} #{field}`.chomp
       end # def dpkg_field
@@ -352,6 +347,8 @@ describe FPM::Package::Deb do
   describe "#output with lintian" do
     let(:staging_path) { Stud::Temporary.directory }
     before do
+      skip("missing lintian") unless HAVE_LINTIAN
+
       # TODO(sissel): Refactor this to use factory pattern instead of fixture?
       FileUtils.cp_r(Dir['spec/fixtures/deb/staging/*'], staging_path)
       ['/etc', '/etc/init.d', '/etc/init.d/test'].each do |f|
@@ -376,7 +373,7 @@ describe FPM::Package::Deb do
       FileUtils.rm_r staging_path if File.exist? staging_path
     end # after
 
-    context "when run against lintian", :if => have_lintian do
+    context "when run against lintian" do
       lintian_errors_to_ignore = [
         "no-copyright-file",
         "script-in-etc-init.d-not-registered-via-update-rc.d"
@@ -413,7 +410,7 @@ describe FPM::Package::Deb do
       lamecmds << "ar" if not ar_cmd_deterministic?
       lamecmds << "tar" if not tar_cmd_supports_sort_names_and_set_mtime?
       if not lamecmds.empty?
-        skip("fpm searched for variants of #{lamecmds.join(", ")} that support(s) deterministic archives, but found none, so can't test reproducibility.")
+        skip("fpm searched for variants of [#{lamecmds.join(", ")}] that support(s) deterministic archives, but found none, so can't test reproducibility.")
         return
       end
 

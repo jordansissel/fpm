@@ -3,16 +3,13 @@ require "fpm" # local
 require "fpm/package/virtualenv" # local
 require "find" # stdlib
 
-def virtualenv_usable?
-  return program_exists?("virtualenv") && program_exists?("virtualenv-tools")
+describe FPM::Package::Virtualenv, if: !HAVE_USABLE_VENV do
+  it 'dependencies' do
+    skip("Missing virtualenv and virtualenv-tools")
+  end
 end
 
-if !virtualenv_usable?
-  Cabin::Channel.get("rspec").warn("Skipping python virtualenv tests because " \
-    "no virtualenv/tools bin on your path")
-end
-
-describe FPM::Package::Virtualenv, :if => virtualenv_usable? do
+describe FPM::Package::Virtualenv, if: HAVE_USABLE_VENV do
 
   after :each do
     subject.cleanup

@@ -2,15 +2,15 @@ require "spec_setup"
 require "fpm" # local
 require "fpm/package/cpan" # local
 
-have_cpanm = program_exists?("cpanm")
-if !have_cpanm
-  Cabin::Channel.get("rspec") \
-    .warn("Skipping CPAN#input tests because 'cpanm' isn't in your PATH")
-end
-
 is_travis = ENV["TRAVIS_OS_NAME"] && !ENV["TRAVIS_OS_NAME"].empty?
 
-describe FPM::Package::CPAN, :if => have_cpanm do
+describe FPM::Package::CPAN, if: !HAVE_CPANM do
+  it 'dependencies' do
+    skip("Missing cpanm")
+  end
+end
+
+describe FPM::Package::CPAN, if: HAVE_CPANM  do
   subject { FPM::Package::CPAN.new }
 
   after :each do

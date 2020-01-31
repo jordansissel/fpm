@@ -3,15 +3,6 @@ require "fpm" # local
 require "fpm/package/python" # local
 require "find" # stdlib
 
-def python_usable?
-  return program_exists?("python") && program_exists?("easy_install")
-end
-
-if !python_usable?
-  Cabin::Channel.get("rspec").warn("Skipping Python#input tests because " \
-    "'python' and/or 'easy_install' isn't in your PATH")
-end
-
 is_travis = ENV["TRAVIS_OS_NAME"] && !ENV["TRAVIS_OS_NAME"].empty?
 
 # Determine default value of a given easy_install's option
@@ -26,7 +17,13 @@ def easy_install_default(python_bin, option)
   return result
 end
 
-describe FPM::Package::Python, :if => python_usable? do
+describe FPM::Package::Python, if: !HAVE_USABLE_PYTHON do
+  it 'dependencies' do
+    skip("Missing python and easy_install")
+  end
+end
+
+describe FPM::Package::Python, if: HAVE_USABLE_PYTHON do
   let (:example_dir) do
     File.expand_path("../../fixtures/python/", File.dirname(__FILE__))
   end

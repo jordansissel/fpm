@@ -5,6 +5,10 @@ require "fpm/package/pacman" # local
 require "stud/temporary"
 
 describe FPM::Package::Pacman do
+  before do
+    skip("Missing tar and xz") unless HAVE_BSDTAR && HAVE_XZ
+  end
+
   let(:target) { Stud::Temporary.pathname + ".pkg.tar.xz" }
   after do
     subject.cleanup
