@@ -8,7 +8,7 @@ describe FPM::Package::Snap, if: IS_OLD_RUBY do
   end
 end
 
-describe FPM::Package::Snap, if !IS_OLD_RUBY do
+describe FPM::Package::Snap, if: !IS_OLD_RUBY do
   let(:target) { Stud::Temporary.pathname + ".snap" }
   after do
     subject.cleanup
