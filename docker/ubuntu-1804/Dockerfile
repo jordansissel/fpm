@@ -25,8 +25,7 @@ RUN apt-get update \
 FROM base AS fpm-test
 WORKDIR /src
 RUN apt-get update && apt-get install --no-install-recommends -y gcc make ruby-dev libc-dev lintian git
-RUN git clone https://github.com/jordansissel/fpm /src
-#COPY . /src
+COPY . /src
 RUN gem install --no-ri --no-rdoc bundler
 RUN cd /src && bundle install
 RUN cd /src && rspec
