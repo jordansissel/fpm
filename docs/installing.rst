@@ -19,7 +19,7 @@ you might need to run the following commands:
 
 On OSX/macOS::
 
-    brew install gnu-tar squashfs
+    brew install gnu-tar squashfs dpkg
 
 On Red Hat systems (Fedora 22 or older, CentOS, etc)::
 
