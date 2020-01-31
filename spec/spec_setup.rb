@@ -118,3 +118,8 @@ IS_TRAVIS_CI = ENV["TRAVIS_OS_NAME"] && !ENV["TRAVIS_OS_NAME"].empty?
 if IS_TRAVIS_CI
     Cabin::Channel.get("rspec").warn("On travis-ci, some tests will be skipped")
 end
+
+IS_OLD_RUBY = (RUBY_VERSION =~ /^((1\.)|(2\.0))/)
+if IS_OLD_RUBY
+  Cabin::Channel.get("rspec").warn("Old ruby, not all tests are supported")
+end
