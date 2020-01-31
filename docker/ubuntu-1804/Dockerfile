@@ -22,14 +22,15 @@ RUN apt-get update \
 
 # Run tests. This is a bit broken now.
 # See https://github.com/jordansissel/fpm/issues/1682
-# FROM base AS fpm-test
-# WORKDIR /src
-# RUN apt-get install --no-install-recommends -y gcc make ruby-dev libc-dev lintian git
-# RUN git clone https://github.com/jordansissel/fpm /src
-# RUN gem install --no-ri --no-rdoc bundler
-# RUN cd /src && bundle install
-# RUN cd /src && rspec
-# ENTRYPOINT rspec
+FROM base AS fpm-test
+WORKDIR /src
+RUN apt-get update && apt-get install --no-install-recommends -y gcc make ruby-dev libc-dev lintian git
+RUN git clone https://github.com/jordansissel/fpm /src
+#COPY . /src
+RUN gem install --no-ri --no-rdoc bundler
+RUN cd /src && bundle install
+RUN cd /src && rspec
+ENTRYPOINT rspec
 
 # build container, install build deps here, so we can omit them from
 # our release package
