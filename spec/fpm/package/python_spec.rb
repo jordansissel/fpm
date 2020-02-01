@@ -173,8 +173,8 @@ describe FPM::Package::Python, if: HAVE_USABLE_PYTHON do
 
   context "python_scripts_executable is set" do
     it "should have scripts with a custom hashbang line" do
-      pending("Disabled on travis-ci because it always fails, and there is no way to debug it?") if IS_TRAVIS_CI
-      pending("Requires python3") unless program_exists?("python3")
+      skip("Disabled on travis-ci because it always fails, and there is no way to debug it?") if IS_TRAVIS_CI
+      skip("Requires python3") unless program_exists?("python3")
 
       subject.attributes[:python_scripts_executable] = "fancypants"
       # Newer versions of Django require Python 3.
