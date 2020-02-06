@@ -1,7 +1,7 @@
 # Are we running against the minimal container, or the everything
-# container? Minimal is mostlty the compiled package tools. Everything
+# container? Minimal is mostly the compiled package tools. Everything
 # pulls in scripting langauges.
-ARG BASE_ENV=minimal
+ARG BASE_ENV=everything
 
 # Are we running tests, or a release? Tests build and run against the
 # CWD, where release will use the downloaded gem.
@@ -50,8 +50,9 @@ RUN apt-get update \
 
 # Run tests against the current working directory. This is a bit
 # orthogonal to the container release process, but it has a lot of
-# same dependancies, so we reuse it. This uses COPY to prep the gem
-# files, but expects you to volume mount into /src
+# same dependancies, so we reuse it. This uses COPY to allow rspect to
+# initall the gems, but runtime usage expects you to mount a volume
+# into /src
 FROM ${BASE_ENV}-base AS test
 WORKDIR /src
 RUN apt-get update \
@@ -66,7 +67,6 @@ ENTRYPOINT ["rspec"]
 
 # build a container from a released gem. install build deps here, so
 # we can omit them from the final release package
-#ARG BASE=everything
 FROM ${BASE_ENV}-base AS build
 RUN apt-get update
 RUN apt-get install --no-install-recommends -y \
@@ -79,6 +79,7 @@ FROM build as release
 COPY --from=build /fpm /fpm
 ENV GEM_PATH /fpm
 ENV PATH "/fpm/bin:${PATH}"
+WORKDIR /src
 ENTRYPOINT ["/fpm/bin/fpm"]
 
 # This target is to help docker buildkit in resolving things.
