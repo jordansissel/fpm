@@ -58,4 +58,4 @@ Below is a 10-minute video demonstrating fpm's simplicity of use:
     <iframe width="560" height="315" src="https://www.youtube.com/embed/Jf89-2gWwiI" frameborder="0" allowfullscreen></iframe>
 
 
-Now that you've seen a bit of what fpm can do, it's time to :doc:`install fpm <installing>`.
+Now that you've seen a bit of what fpm can do, it's time to :doc:`install fpm <installing>` or use :doc:`FPM and Docker<docker>`

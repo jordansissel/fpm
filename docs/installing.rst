@@ -4,13 +4,16 @@ Installation
 FPM requires a few things before you can use it. This document will show you
 how to install all the necessary things :)
 
-Depending on what you want to do with FPM, you might need some extra things installed (like tooling to build rpms, or solaris packages, or something else), but for now, let's just get ruby so we can start using fpm!
+Depending on what you want to do with FPM, you might need some extra
+things installed (like tooling to build rpms, or solaris packages, or
+something else), but for now, let's just get ruby so we can start
+using fpm!
 
 Installing things FPM needs
 --------------
 
 .. warning::
-  This section may be imperfect due to the inconsistencies across OS vendors
+  This section may be imperfect due to the inconsistencies across OS vendors.
 
 fpm is written in Ruby, you'll need to provide Ruby. Some operating
 systems, like OSX, come with Ruby already, but some do not. Depending
@@ -19,7 +22,7 @@ you might need to run the following commands:
 
 On OSX/macOS::
 
-    brew install gnu-tar squashfs dpkg
+    brew install gnu-tar
 
 On Red Hat systems (Fedora 22 or older, CentOS, etc)::
 
@@ -96,3 +99,28 @@ You should get some output like this, although the exact output will depend on w
 
     % fpm --version
     1.6.3
+
+Additional Tools FPM will use
+-----------------
+
+FPM uses various system tools to make packages. This list is something
+of a moving target, but can be seen in the test suite and in the
+Dockerfile.
+
+For example, you may need any of:
+
+ * ``bsdtar``
+ * ``cpanm``
+ * ``dpkg-deb``
+ * ``dpkg``
+ * ``easy_install``
+ * ``gem``
+ * ``lintian``
+ * ``mksquashfs``
+ * ``npm``
+ * ``python3``
+ * ``python``
+ * ``rpmbuild``
+ * ``virtualenv-tools``
+ * ``virtualenv``
+ * ``xz``
