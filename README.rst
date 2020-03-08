@@ -95,6 +95,20 @@ Targets:
 * Mac OS X `.pkg` files (`osxpkg`)
 * pacman (ArchLinux) packages
 
+Running Tests
+-------------
+
+FPM uses ``rspec`` to run tests. You can run ``rspec`` locally or through docker.
+
+To run locally::
+
+  bundle install
+  bundle exec rspec
+
+To run via docker::
+
+  make docker-test-everything
+
 .. include: docs/contributing
 
 .. |Build| image:: https://img.shields.io/travis/jordansissel/fpm.svg

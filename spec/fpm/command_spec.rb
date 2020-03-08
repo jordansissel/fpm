@@ -67,7 +67,8 @@ describe FPM::Command do
 
   describe "-p | --package" do
     context "when given a directory" do
-      it "should write the package to the given directory." do
+      it "should write the package to the given directory."  do
+        skip("Missing dpkg-deb") unless HAVE_DPKG_DEB
         Stud::Temporary.directory do |path|
           cmd = FPM::Command.new("fpm")
           cmd.run(["-s", "empty", "-t", "deb", "-n", "example", "-p", path])
@@ -81,6 +82,7 @@ describe FPM::Command do
 
     context "when not set" do
       it "should write the package to the current directory." do
+        skip("Missing dpkg-deb") unless HAVE_DPKG_DEB
         Stud::Temporary.directory do |path|
           Dir.chdir(path) do
             cmd = FPM::Command.new("fpm")

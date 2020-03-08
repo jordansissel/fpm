@@ -2,13 +2,8 @@ require "spec_setup"
 require "fpm" # local
 require "fpm/package/gem" # local
 
-have_gem = program_exists?("gem")
-if !have_gem
-  Cabin::Channel.get("rspec") \
-    .warn("Skipping Gem#input tests because 'gem' isn't in your PATH")
-end
 
-describe FPM::Package::Gem, :if => have_gem do
+describe FPM::Package::Gem, :if => HAVE_GEM do
   let (:example_gem) do
     File.expand_path("../../fixtures/gem/example/example-1.0.gem", File.dirname(__FILE__))
   end

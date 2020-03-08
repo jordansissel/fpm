@@ -18,6 +18,7 @@ Table of Contents
 
    intro
    installing
+   docker
    use-cases
    packages
    contributing

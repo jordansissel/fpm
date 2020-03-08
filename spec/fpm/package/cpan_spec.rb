@@ -2,15 +2,13 @@ require "spec_setup"
 require "fpm" # local
 require "fpm/package/cpan" # local
 
-have_cpanm = program_exists?("cpanm")
-if !have_cpanm
-  Cabin::Channel.get("rspec") \
-    .warn("Skipping CPAN#input tests because 'cpanm' isn't in your PATH")
+describe FPM::Package::CPAN, if: !HAVE_CPANM do
+  it 'dependencies' do
+    skip("Missing cpanm")
+  end
 end
 
-is_travis = ENV["TRAVIS_OS_NAME"] && !ENV["TRAVIS_OS_NAME"].empty?
-
-describe FPM::Package::CPAN, :if => have_cpanm do
+describe FPM::Package::CPAN, if: HAVE_CPANM  do
   subject { FPM::Package::CPAN.new }
 
   after :each do
@@ -18,7 +16,7 @@ describe FPM::Package::CPAN, :if => have_cpanm do
   end
 
   it "should package Digest::MD5" do
-    pending("Disabled on travis-ci because it always fails, and there is no way to debug it?") if is_travis
+    pending("Disabled on travis-ci because it always fails, and there is no way to debug it?") if IS_TRAVIS_CI
 
     # Disable testing because we don't really need to run the cpan tests. The
     # goal is to see the parsed result (name, module description, etc)
@@ -34,7 +32,7 @@ describe FPM::Package::CPAN, :if => have_cpanm do
   end
 
   it "should package File::Spec" do
-    pending("Disabled on travis-ci because it always fails, and there is no way to debug it?") if is_travis
+    pending("Disabled on travis-ci because it always fails, and there is no way to debug it?") if IS_TRAVIS_CI
     subject.input("File::Spec")
 
     # the File::Spec module comes from the PathTools CPAN distribution
@@ -43,7 +41,7 @@ describe FPM::Package::CPAN, :if => have_cpanm do
 
   context "given a distribution without a META.* file" do
     it "should package IPC::Session" do
-      pending("Disabled on travis-ci because it always fails, and there is no way to debug it?") if is_travis
+      pending("Disabled on travis-ci because it always fails, and there is no way to debug it?") if IS_TRAVIS_CI
 
       # IPC::Session fails 'make test'
       subject.attributes[:cpan_test?] = false
