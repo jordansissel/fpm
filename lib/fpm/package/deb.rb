@@ -469,7 +469,8 @@ class FPM::Package::Deb < FPM::Package
       attributes[:deb_systemd] << name
     end
 
-    if script?(:before_upgrade) or script?(:after_upgrade) or attributes[:deb_systemd].any?
+    if script?(:before_upgrade) or script?(:after_upgrade) or attributes[:deb_systemd].any? \
+		    or script?(:triggered)
       puts "Adding action files"
       if script?(:before_install) or script?(:before_upgrade)
         scripts[:before_install] = template("deb/preinst_upgrade.sh.erb").result(binding)
@@ -477,7 +478,8 @@ class FPM::Package::Deb < FPM::Package
       if script?(:before_remove) or not attributes[:deb_systemd].empty?
         scripts[:before_remove] = template("deb/prerm_upgrade.sh.erb").result(binding)
       end
-      if script?(:after_install) or script?(:after_upgrade) or attributes[:deb_systemd].any?
+      if script?(:after_install) or script?(:after_upgrade) or attributes[:deb_systemd].any? \
+		      or script?(:triggered)
         scripts[:after_install] = template("deb/postinst_upgrade.sh.erb").result(binding)
       end
       if script?(:after_remove)
