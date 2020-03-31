@@ -1,4 +1,5 @@
 #!/bin/sh
+
 after_upgrade() {
 <%# Making sure that at least one command is in the function -%>
 <%# avoids a lot of potential errors, including the case that -%>
@@ -15,6 +16,7 @@ debsystemctl=$(command -v deb-systemd-invoke || echo systemctl)
 <% attributes[:deb_systemd].each do |service| -%>
 if ! systemctl is-enabled <%= service %> >/dev/null 
 then
+    :
 <% if attributes[:deb_systemd_enable?]-%>
     systemctl enable <%= service %> >/dev/null || true
 <% end -%>
@@ -54,6 +56,16 @@ $debsystemctl start <%= service %> >/dev/null || true
 <% end -%>
 }
 
+triggered() {
+<%# Making sure that at least one command is in the function -%>
+<%# avoids a lot of potential errors, including the case that -%>
+<%# the script is non-empty, but just whitespace and/or comments -%>
+    :
+<% if script?(:triggered) -%>
+<%=  script(:triggered) %>
+<% end -%>
+}
+
 if [ "${1}" = "configure" -a -z "${2}" ] || \
    [ "${1}" = "abort-remove" ]
 then
@@ -71,6 +83,13 @@ then
     # package is installed later, called "Config-Files" state.
     # basically, that still looks a _lot_ like an upgrade to me.
     after_upgrade "${2}"
+elif [ "${1}" = "triggered" ]
+then
+    # "triggered" here
+    # NOTE: This slot allows implementing package triggers according to
+    # https://wiki.debian.org/DpkgTriggers
+    shift
+    triggered "${@}"
 elif echo "${1}" | grep -E -q "(abort|fail)"
 then
     echo "Failed to install before the post-installation script was run." >&2
