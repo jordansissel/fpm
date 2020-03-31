@@ -535,7 +535,9 @@ class FPM::Package::Deb < FPM::Package
 
     if File.exists?(dest_changelog) and not File.exists?(dest_upstream_changelog)
       # see https://www.debian.org/doc/debian-policy/ch-docs.html#s-changelogs
-      File.rename(dest_changelog, dest_upstream_changelog)
+      # to solve Lintian rule debian-changelog-file-missing-or-wrong-name the file
+      # is copied and not renamed
+      FileUtils.cp(dest_changelog, dest_upstream_changelog)
     end
 
     attributes.fetch(:deb_init_list, []).each do |init|
