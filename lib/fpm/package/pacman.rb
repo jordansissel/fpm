@@ -245,7 +245,7 @@ class FPM::Package::Pacman < FPM::Package
     Find.find(staging_path) do |path|
       src = path.gsub(/^#{staging_path}/, '')
       dst = build_path(src)
-      copy_entry(path, dst, preserve=true, remove_destination=true)
+      copy_entry(path, dst, remove_destination=true)
       copy_metadata(path, dst)
     end
 
