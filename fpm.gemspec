@@ -47,7 +47,9 @@ Gem::Specification.new do |spec|
   spec.add_dependency("childprocess", "< 1.0.0") # license: ???
 
   # For calling functions in dynamic libraries
-  spec.add_dependency("ffi") # license: GPL3/LGPL3
+  # Note: This is pinned because 1.11.0 drops 1.9 ruby support
+  # Ref: https://github.com/ffi/ffi/issues/700
+  spec.add_dependency("ffi", "<= 1.10.0") # license: GPL3/LGPL3
 
   spec.add_development_dependency("rake", "~> 10") # license: MIT
 
