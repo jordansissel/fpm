@@ -715,8 +715,13 @@ class FPM::Package::Deb < FPM::Package
       name, version = dep.gsub(/[()~>]/, "").split(/ +/)[0..1]
       nextversion = version.split(".").collect { |v| v.to_i }
       l = nextversion.length
-      nextversion[l-2] += 1
-      nextversion[l-1] = 0
+      if l > 1
+        nextversion[l-2] += 1
+        nextversion[l-1] = 0
+      else
+        # Single component versions ~> 1
+        nextversion[l-1] += 1
+      end
       nextversion = nextversion.join(".")
       return ["#{name} (>= #{version})", "#{name} (<< #{nextversion})"]
     elsif (m = dep.match(/(\S+)\s+\(!= (.+)\)/))
