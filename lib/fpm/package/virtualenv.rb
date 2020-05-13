@@ -46,6 +46,8 @@ class FPM::Package::Virtualenv < FPM::Package
     :multivalued => true, :attribute_name => :virtualenv_find_links_urls,
     :default => nil
 
+  option "--binary-removal", :flag, "Prune virtualenv of pyc/pyo", :default => true
+
   private
 
   # Input a package.
@@ -170,7 +172,9 @@ class FPM::Package::Virtualenv < FPM::Package
       end
     end
 
-    remove_python_compiled_files virtualenv_build_folder
+    if attributes[:virtualenv_binary_removal?]
+        remove_python_compiled_files virtualenv_build_folder
+    end
 
     # use dir to set stuff up properly, mainly so I don't have to reimplement
     # the chdir/prefix stuff special for tar.
