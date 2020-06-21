@@ -27,7 +27,7 @@ possible) the actions of that script simply in a tarball.
 
 ## Python
 
-http://www.debian.org/doc/packaging-manuals/python-policy/ap-packaging_tools.html
+https://www.debian.org/doc/packaging-manuals/python-policy/ap-packaging_tools.html
 
 Debian python packages all rely on some form of python-central or
 python-support (different tools that do similar/same things? I don't know)

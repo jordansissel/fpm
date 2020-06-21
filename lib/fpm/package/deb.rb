@@ -22,7 +22,7 @@ class FPM::Package::Deb < FPM::Package
   } unless defined?(SCRIPT_MAP)
 
   # The list of supported compression types. Default is gz (gzip)
-  COMPRESSION_TYPES = [ "gz", "bzip2", "xz" ]
+  COMPRESSION_TYPES = [ "gz", "bzip2", "xz", "none" ]
 
   option "--ignore-iteration-in-dependencies", :flag,
             "For '=' (equal) dependencies, allow iterations on the specified " \
@@ -181,6 +181,10 @@ class FPM::Package::Deb < FPM::Package
     next File.expand_path(file)
   end
 
+  option "--systemd-enable", :flag , "Enable service on install or upgrade", :default => false
+
+  option "--systemd-auto-start", :flag , "Start service after install or upgrade", :default => false
+
   option "--systemd-restart-after-upgrade", :flag , "Restart service after upgrade", :default => true
 
   option "--after-purge", "FILE",
@@ -265,10 +269,32 @@ class FPM::Package::Deb < FPM::Package
   end # def input
 
   def extract_info(package)
+    compression = `#{ar_cmd[0]} t #{package}`.split("\n").grep(/control.tar/).first.split(".").last
+    case compression
+      when "gz"
+        controltar = "control.tar.gz"
+        compression = "-z"
+      when "bzip2","bz2"
+        controltar = "control.tar.bz2"
+        compression = "-j"
+      when "xz"
+        controltar = "control.tar.xz"
+        compression = "-J"
+      when 'tar'
+        controltar = "control.tar"
+        compression = ""
+      when nil
+        raise FPM::InvalidPackageConfiguration, "Missing control.tar in deb source package #{package}"
+      else
+        raise FPM::InvalidPackageConfiguration,
+          "Unknown compression type '#{compression}' for control.tar in deb source package #{package}"
+    end
+
     build_path("control").tap do |path|
       FileUtils.mkdir(path) if !File.directory?(path)
+      # unpack the control.tar.{,gz,bz2,xz} from the deb package into staging_path
       # Unpack the control tarball
-      safesystem(ar_cmd[0] + " p #{package} control.tar.gz | tar -zxf - -C #{path}")
+      safesystem(ar_cmd[0] + " p #{package} #{controltar} | tar #{compression} -xf - -C #{path}")
 
       control = File.read(File.join(path, "control"))
 
@@ -376,15 +402,18 @@ class FPM::Package::Deb < FPM::Package
       when "xz"
         datatar = "data.tar.xz"
         compression = "-J"
+      when 'tar'
+        datatar = "data.tar"
+        compression = ""
+      when nil
+        raise FPM::InvalidPackageConfiguration, "Missing data.tar in deb source package #{package}"
       else
         raise FPM::InvalidPackageConfiguration,
-          "Unknown compression type '#{self.attributes[:deb_compression]}' "
-          "in deb source package #{package}"
+          "Unknown compression type '#{compression}' for data.tar in deb source package #{package}"
     end
 
     # unpack the data.tar.{gz,bz2,xz} from the deb package into staging_path
-    safesystem(ar_cmd[0] + " p #{package} #{datatar} " \
-               "| tar #{compression} -xf - -C #{staging_path}")
+    safesystem(ar_cmd[0] + " p #{package} #{datatar} | tar #{compression} -xf - -C #{staging_path}")
   end # def extract_files
 
   def output(output_path)
@@ -428,6 +457,7 @@ class FPM::Package::Deb < FPM::Package
       raise "#{name}: tar is insufficient to support source_date_epoch."
     end
 
+    attributes[:deb_systemd] = []
     attributes.fetch(:deb_systemd_list, []).each do |systemd|
       name = File.basename(systemd, ".service")
       dest_systemd = staging_path("lib/systemd/system/#{name}.service")
@@ -435,19 +465,19 @@ class FPM::Package::Deb < FPM::Package
       FileUtils.cp(systemd, dest_systemd)
       File.chmod(0644, dest_systemd)
 
-      # set the attribute with the systemd service name
-      attributes[:deb_systemd] = name
+      # add systemd service name to attribute
+      attributes[:deb_systemd] << name
     end
 
-    if script?(:before_upgrade) or script?(:after_upgrade) or attributes[:deb_systemd]
+    if script?(:before_upgrade) or script?(:after_upgrade) or attributes[:deb_systemd].any?
       puts "Adding action files"
       if script?(:before_install) or script?(:before_upgrade)
         scripts[:before_install] = template("deb/preinst_upgrade.sh.erb").result(binding)
       end
-      if script?(:before_remove) or attributes[:deb_systemd]
+      if script?(:before_remove) or not attributes[:deb_systemd].empty?
         scripts[:before_remove] = template("deb/prerm_upgrade.sh.erb").result(binding)
       end
-      if script?(:after_install) or script?(:after_upgrade) or attributes[:deb_systemd]
+      if script?(:after_install) or script?(:after_upgrade) or attributes[:deb_systemd].any?
         scripts[:after_install] = template("deb/postinst_upgrade.sh.erb").result(binding)
       end
       if script?(:after_remove)
@@ -559,6 +589,9 @@ class FPM::Package::Deb < FPM::Package
       when "xz"
         datatar = build_path("data.tar.xz")
         compression = "-J"
+      when "none"
+        datatar = build_path("data.tar")
+        compression = ""
       else
         raise FPM::InvalidPackageConfiguration,
           "Unknown compression type '#{self.attributes[:deb_compression]}'"
@@ -749,11 +782,30 @@ class FPM::Package::Deb < FPM::Package
     write_triggers # write trigger config to 'triggers' file
     write_md5sums # write the md5sums file
 
+    # Tar up the staging_path into control.tar.{compression type}
+    case self.attributes[:deb_compression]
+      when "gz", nil
+        controltar = "control.tar.gz"
+        compression = "-z"
+      when "bzip2"
+        controltar = "control.tar.bz2"
+        compression = "-j"
+      when "xz"
+        controltar = "control.tar.xz"
+        compression = "-J"
+      when "none"
+        controltar = "control.tar"
+        compression = ""
+      else
+        raise FPM::InvalidPackageConfiguration,
+          "Unknown compression type '#{self.attributes[:deb_compression]}'"
+    end
+
     # Make the control.tar.gz
-    build_path("control.tar.gz").tap do |controltar|
+    build_path(controltar).tap do |controltar|
       logger.info("Creating", :path => controltar, :from => control_path)
 
-      args = [ tar_cmd, "-C", control_path, "-zcf", controltar,
+      args = [ tar_cmd, "-C", control_path, compression, "-cf", controltar,
         "--owner=0", "--group=0", "--numeric-owner", "." ]
       if tar_cmd_supports_sort_names_and_set_mtime? and not attributes[:source_date_epoch].nil?
         # Force deterministic file order and timestamp
@@ -931,7 +983,7 @@ class FPM::Package::Deb < FPM::Package
 
     if attributes[:deb_templates]
       FileUtils.cp(attributes[:deb_templates], control_path("templates"))
-      File.chmod(0755, control_path("templates"))
+      File.chmod(0644, control_path("templates"))
     end
   end # def write_debconf
 

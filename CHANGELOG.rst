@@ -1,6 +1,23 @@
 Release Notes and Change Log
 ============================
 
+1.11.0 (January 30, 2019)
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* snap: Snap packages can now be created! (`#1490`_; kyrofa)
+* Fix an installation problem where a dependency (childprocess) fails to install correctly. (#1592; Jordan Sissel)
+
+1.10.2 (July 3, 2018)
+^^^^^^^^^^^^^^^^^^^^^
+
+* cpan: Fix a crash where fpm would crash trying to parse a perl version string (`#1515`_, `#1514`; Jordan Sissel, William N. Braswell, Jr)
+
+1.10.1 (July 3, 2018)
+^^^^^^^^^^^^^^^^^^^^^
+
+* cpan: Fixes some package building by setting PERL5LIB correctly (`#1509`_, `#1511`_; William N. Braswell, Jr)
+* cpan: Adds `--[no-]cpan-verbose` flag which, when set, runs `cpanm` with the `--verbose` flag (`#1511`_; William N. Braswell, Jr)
+
 1.10.0 (May 21, 2018)
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -14,6 +31,7 @@ Release Notes and Change Log
 * rpm: fix shell function name `install` conflicting with `install` program. In
   postinst (after-install), the function is now called `_install` to avoid
   conflicting with `/usr/bin/install` (`#1434`_; Torsten Schmidt)
+* rpm: Allow binary "arch dependent" files in noarch rpms (Jordan Sissel)
 * - deb: --config-files ? (`#1440`_, `#1443`_; NoBodyCam)
 * FPM source repo now contains a Brewfile for use with Homebrew.
 * FPM source repo has a Dockerfile for invoking fpm with docker. (`#1484`_, ;Allan Lewis
@@ -36,7 +54,7 @@ Release Notes and Change Log
 * Fix bug so fpm can now copy symlinks correctly (`#1348`_; ServiusHack)
 * apk: Improve performance (`#1358`_; Jan Delgado)
 * cpan: Fix crash when CPAN query returns a version value that was a number and fpm was expecting a string. (`#1344`_, `#1343`_; liger1978)
-* cpan: Fix MetaCPAN searches to use v1 of MetaCPAN's API. The v0 API is no longer provided by MetaCPAN. (`#1341`_, `#1339`; Bob Bell)
+* cpan: Fix MetaCPAN searches to use v1 of MetaCPAN's API. The v0 API is no longer provided by MetaCPAN. (`#1341`_, `#1339`_; Bob Bell)
 * cpan: Have perl modules implicitly "provide" (`--provides`) capabilities. (`#1340`_; Bob Bell. `#1345`_; liger1978)
 * cpan: Now transforms perl version values like "5.008001" to "5.8.1" (`#1342`_; Bob Bell)
 * cpan: Use `>=` ("this version or newer") for package dependencies instead of `=` ("exactly this version"). (`#1338`_; Bob Bell)

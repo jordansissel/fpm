@@ -1,0 +1,26 @@
+# Build command:
+#
+#   singularity build fpm.simg singularity.def
+#
+# Execute instructions:
+#
+#   singularity exec fpm.simg fpm --version
+#
+Bootstrap: docker
+From: alpine:3.7
+
+%help
+
+    Singularity container with Effing Package Management - FPM
+
+%post
+
+    apk add --no-cache \
+        ruby \
+        ruby-dev \
+        gcc \
+        libffi-dev \
+        make \
+        libc-dev \
+        rpm
+    gem install --no-ri --no-rdoc fpm

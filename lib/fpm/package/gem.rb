@@ -4,6 +4,7 @@ require "rubygems"
 require "fileutils"
 require "fpm/util"
 require "yaml"
+require "git"
 
 # A rubygems package.
 #
@@ -53,6 +54,15 @@ class FPM::Package::Gem < FPM::Package
     "The directory where fpm installs the gem temporarily before conversion. " \
     "Normally a random subdirectory of workdir."
 
+  option "--git-repo", "GIT_REPO",
+    "Use this git repo address as the source of the gem instead of " \
+    "rubygems.org.", :default => nil
+
+  option "--git-branch", "GIT_BRANCH",
+    "When using a git repo as the source of the gem instead of " \
+    "rubygems.org, use this git branch.",
+    :default => nil
+
   # Override parent method
   def staging_path(path=nil)
     @gem_staging_path ||= attributes[:gem_stagingdir] || Stud::Temporary.directory("package-#{type}-staging")
@@ -91,20 +101,32 @@ class FPM::Package::Gem < FPM::Package
 
     logger.info("Trying to download", :gem => gem_name, :version => gem_version)
 
-    gem_fetch = [ "#{attributes[:gem_gem]}", "fetch", gem_name]
-
-    gem_fetch += ["--prerelease"] if attributes[:gem_prerelease?]
-    gem_fetch += ["--version", gem_version] if gem_version
-
     download_dir = build_path(gem_name)
     FileUtils.mkdir(download_dir) unless File.directory?(download_dir)
 
-    ::Dir.chdir(download_dir) do |dir|
-      logger.debug("Downloading in directory #{dir}")
-      safesystem(*gem_fetch)
+    if attributes[:gem_git_repo]
+      logger.debug("Git cloning in directory #{download_dir}")
+      g = Git.clone(attributes[:gem_git_repo],gem_name,:path => download_dir)
+      if attributes[:gem_git_branch]
+        g.branch(attributes[:gem_git_branch]).checkout
+        g.pull('origin',attributes[:gem_git_branch])
+      end
+      gem_build = [ "#{attributes[:gem_gem]}", "build", "#{g.dir.to_s}/#{gem_name}.gemspec"]
+      ::Dir.chdir(g.dir.to_s) do |dir|
+        logger.debug("Building in directory #{dir}")
+        safesystem(*gem_build)
+      end
+      gem_files = ::Dir.glob(File.join(g.dir.to_s, "*.gem"))
+    else
+      gem_fetch = [ "#{attributes[:gem_gem]}", "fetch", gem_name]
+      gem_fetch += ["--prerelease"] if attributes[:gem_prerelease?]
+      gem_fetch += ["--version", gem_version] if gem_version
+      ::Dir.chdir(download_dir) do |dir|
+        logger.debug("Downloading in directory #{dir}")
+        safesystem(*gem_fetch)
+      end
+      gem_files = ::Dir.glob(File.join(download_dir, "*.gem"))
     end
-
-    gem_files = ::Dir.glob(File.join(download_dir, "*.gem"))
 
     if gem_files.length != 1
       raise "Unexpected number of gem files in #{download_dir},  #{gem_files.length} should be 1"
@@ -198,8 +220,13 @@ class FPM::Package::Gem < FPM::Package
 
     ::FileUtils.mkdir_p(installdir)
     # TODO(sissel): Allow setting gem tool path
-    args = [attributes[:gem_gem], "install", "--quiet", "--no-ri", "--no-rdoc",
-       "--no-user-install", "--install-dir", installdir]
+    args = [attributes[:gem_gem], "install", "--quiet", "--no-user-install", "--install-dir", installdir]
+    if ::Gem::VERSION =~ /^[012]\./ 
+      args += [ "--no-ri", "--no-rdoc" ]
+    else
+      # Rubygems 3.0.0 changed --no-ri to --no-document
+      args += [ "--no-document" ]
+    end
 
     if !attributes[:gem_embed_dependencies?]
       args += ["--ignore-dependencies"]

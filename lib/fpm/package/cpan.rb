@@ -25,6 +25,9 @@ class FPM::Package::CPAN < FPM::Package
   option "--test", :flag,
     "Run the tests before packaging?", :default => true
 
+  option "--verbose", :flag,
+    "Produce verbose output from cpanm?", :default => false
+
   option "--perl-lib-path", "PERL_LIB_PATH",
     "Path of target Perl Libraries"
 
@@ -137,6 +140,7 @@ class FPM::Package::CPAN < FPM::Package
     cpanm_flags += ["--mirror", "#{attributes[:cpan_mirror]}"] if !attributes[:cpan_mirror].nil?
     cpanm_flags += ["--mirror-only"] if attributes[:cpan_mirror_only?] && !attributes[:cpan_mirror].nil?
     cpanm_flags += ["--force"] if attributes[:cpan_cpanm_force?]
+    cpanm_flags += ["--verbose"] if attributes[:cpan_verbose?]
 
     safesystem(attributes[:cpan_cpanm_bin], *cpanm_flags)
 
@@ -156,7 +160,7 @@ class FPM::Package::CPAN < FPM::Package
        found_dependencies.each do |dep_name, version|
           # Special case for representing perl core as a version.
           if dep_name == "perl"
-            m = version.match(/^(\d)\.(\d{3})(\d{3})$/)
+            m = version.to_s.match(/^(\d)\.(\d{3})(\d{3})$/)
             if m
                version = m[1] + '.' + m[2].sub(/^0*/, '') + '.' + m[3].sub(/^0*/, '')
             end
@@ -241,11 +245,7 @@ class FPM::Package::CPAN < FPM::Package
                      # Empty install_base to avoid local::lib being used.
                      "INSTALL_BASE=")
         end
-        if attributes[:cpan_test?]
-          make = [ "env", "PERL5LIB=#{build_path("cpan/lib/perl5")}", "make" ]
-        else
-          make = [ "make" ]
-        end
+        make = [ "env", "PERL5LIB=#{build_path("cpan/lib/perl5")}", "make" ]
         safesystem(*make)
         safesystem(*(make + ["test"])) if attributes[:cpan_test?]
         safesystem(*(make + ["DESTDIR=#{staging_path}", "install"]))
