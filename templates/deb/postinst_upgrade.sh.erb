@@ -22,7 +22,6 @@ then
     $debsystemctl start <%= service %> >/dev/null || true
 <% end -%>
 <% if attributes[:deb_systemd_restart_after_upgrade?] -%>
-else
     $debsystemctl restart <%= service %> >/dev/null || true
 <% end -%>
 fi
