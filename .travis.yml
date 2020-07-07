@@ -6,12 +6,13 @@ sudo: false
 rvm:
   # We use language features of Ruby that are not supported in Ruby 1.9.x or
   # older.
+  # FMS: ffi requires 2.3
   #- 1.8.7
   #- 1.9.2
-  - 1.9.3
-  - 2.0.0
-  - 2.1.1
-  - 2.2.1
+  #- 1.9.3
+  #- 2.0.0
+  #- 2.1.1
+  #- 2.2.1
   - 2.3.1
   - 2.2.5
   - 2.3.3
