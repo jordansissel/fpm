@@ -1,6 +1,10 @@
-os:
-  - linux
-  - osx
+jobs:
+  include:
+    - os: linux
+      dist: xenial
+    - os: linux
+      dist: focal
+    - os: osx
 language: ruby
 sudo: false
 rvm:
