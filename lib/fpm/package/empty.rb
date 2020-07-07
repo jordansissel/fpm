@@ -1,5 +1,5 @@
 require "fpm/package"
-require "backports"
+require "backports/latest"
 
 # Empty Package type. For strict/meta/virtual package creation
 

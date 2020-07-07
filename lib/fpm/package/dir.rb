@@ -1,6 +1,6 @@
 require "fpm/package"
 require "fpm/util"
-require "backports"
+require "backports/latest"
 require "fileutils"
 require "find"
 require "socket"

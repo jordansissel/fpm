@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 require "fpm/package"
 require "fpm/util"
-require "backports"
+require "backports/latest"
 require "fileutils"
 require "find"
 
