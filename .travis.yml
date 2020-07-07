@@ -10,12 +10,9 @@ rvm:
 
 os:
   - linux
+  - dist: xenial
+  - dist: focal
   - osx
-
-matrix:
-  include:
-    - dist: xenial
-    - dist: focal
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update && brew bundle; fi
