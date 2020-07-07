@@ -1,12 +1,5 @@
-jobs:
-  include:
-    - os: linux
-      dist: xenial
-    - os: linux
-      dist: focal
-    - os: osx
+
 language: ruby
-sudo: false
 rvm:
   # We use language features of Ruby that are not supported in Ruby 1.9.x or
   # older.
@@ -24,7 +17,13 @@ rvm:
   - 2.5.1
   - 2.6.0
   - 2.7.1
-matrix:
+jobs:
+  include:
+    - os: linux
+      dist: xenial
+    - os: linux
+      dist: focal
+    - os: osx
   exclude:
     - os: osx
       rvm: 1.9.3
