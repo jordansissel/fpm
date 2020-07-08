@@ -11,21 +11,21 @@ rvm:
 os:
   - linux
   - dist: xenial
-  - dist: focal
+  - dist: bionic
   - osx
 
-before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update && brew bundle; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which dpkg-deb || 'dpkg-deb not found'; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which lintian || echo 'lintian not found'; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which python || brew install python; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which easy_install || echo 'easy_install not found'; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which virtualenv || pip install --user virtualenv ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then which virtualenv-tools || pip install --user virtualenv virtualenv-tools ; fi
-  - |
-    export PATH="/Users/travis/Library/Python/2.7/bin:${PATH}"
-    virtualenv ${HOME}/.venv
-script: source ${HOME}/.venv/bin/activate && PATH=${PATH}:${HOME}/.local/bin bundle exec rspec
+#before_install:
+#  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update && brew bundle; fi
+#  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which dpkg-deb || 'dpkg-deb not found'; fi
+#  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which lintian || echo 'lintian not found'; fi
+#  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which python || brew install python; fi
+#  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which easy_install || echo 'easy_install not found'; fi
+#  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which virtualenv || pip install --user virtualenv ; fi
+#  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then which virtualenv-tools || pip install --user virtualenv virtualenv-tools ; fi
+#  - |
+#    export PATH="/Users/travis/Library/Python/2.7/bin:${PATH}"
+#    virtualenv ${HOME}/.venv
+#script: source ${HOME}/.venv/bin/activate && PATH=${PATH}:${HOME}/.local/bin bundle exec rspec
 addons:
   apt:
     packages:
