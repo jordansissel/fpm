@@ -24,6 +24,11 @@ then
 <% if attributes[:deb_systemd_restart_after_upgrade?] -%>
     $debsystemctl restart <%= service %> >/dev/null || true
 <% end -%>
+else
+<%# if any systemd services specified and is-enabled, loop through and restart them -%>
+<% if attributes[:deb_systemd_restart_after_upgrade?] -%>
+    $debsystemctl restart <%= service %> >/dev/null || true
+<% end -%>
 fi
 <% end -%>
 <% end -%>
