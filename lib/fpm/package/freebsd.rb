@@ -1,4 +1,4 @@
-require "backports" # gem backports
+require "backports/latest" # gem backports/latest
 require "fpm/package"
 require "fpm/util"
 require "digest"
