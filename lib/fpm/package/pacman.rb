@@ -257,6 +257,7 @@ class FPM::Package::Pacman < FPM::Package
         copy_entry(path, dst, preserve=true, remove_destination=true)
       rescue
         copy_entry(path, dst, preserve=false, remove_destination=true)
+      end
       copy_metadata(path, dst)
     end
 
