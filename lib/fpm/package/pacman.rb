@@ -209,31 +209,35 @@ class FPM::Package::Pacman < FPM::Package
 
   def compression_option
     case self.attributes[:pacman_compression]
-      when nil, "xz"
-        return "--xz"
+      when nil, "zstd"
+        return "--zstd"
       when "none"
         return ""
       when "gz"
         return "-z"
       when "bzip2"
         return "-j"
+      when "zstd"
+        return "--zstd"
       else
-        return "--xz"
+        return "--zstd"
       end
   end
 
   def compression_ending
     case self.attributes[:pacman_compression]
-      when nil, "xz"
-        return ".xz"
+      when nil, "zstd"
+        return ".zst"
       when "none"
         return ""
       when "gz"
         return ".gz"
       when "bzip2"
         return ".bz2"
+      when "zstd"
+        return ".zst"
       else
-        return ".xz"
+        return ".zst"
       end
   end
 
