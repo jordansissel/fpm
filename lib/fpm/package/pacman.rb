@@ -18,10 +18,10 @@ class FPM::Package::Pacman < FPM::Package
   option "--group", "GROUP", "The group owner of files in this package", :default => 'root'
 
   # The list of supported compression types. Default is xz (LZMA2)
-  COMPRESSION_TYPES = [ "gz", "bzip2", "xz", "none" ]
+  COMPRESSION_TYPES = [ "gz", "bzip2", "xz", "zstd", "none" ]
 
   option "--compression", "COMPRESSION", "The compression type to use, must " \
-    "be one of #{COMPRESSION_TYPES.join(", ")}.", :default => "xz" do |value|
+    "be one of #{COMPRESSION_TYPES.join(", ")}.", :default => "zstd" do |value|
     if !COMPRESSION_TYPES.include?(value)
       raise ArgumentError, "Pacman compression value of '#{value}' is invalid. " \
         "Must be one of #{COMPRESSION_TYPES.join(", ")}"
@@ -215,6 +215,8 @@ class FPM::Package::Pacman < FPM::Package
         return ""
       when "gz"
         return "-z"
+      when "xz"
+        return "--xz"
       when "bzip2"
         return "-j"
       when "zstd"
@@ -232,6 +234,8 @@ class FPM::Package::Pacman < FPM::Package
         return ""
       when "gz"
         return ".gz"
+      when "zx"
+        return ".xz"
       when "bzip2"
         return ".bz2"
       when "zstd"
