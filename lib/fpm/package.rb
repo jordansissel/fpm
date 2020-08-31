@@ -4,7 +4,7 @@ require "pathname" # stdlib
 require "find"
 require "tmpdir" # stdlib
 require "ostruct"
-require "backports/2.0.0/stdlib/ostruct"
+require "backports/latest"
 require "socket" # stdlib, for Socket.gethostname
 require "shellwords" # stdlib, for Shellwords.escape
 require "erb" # stdlib, for template processing
@@ -316,7 +316,7 @@ class FPM::Package
     # the path before returning.
     #
     # Wrapping Find.find in an Enumerator is required for sane operation in ruby 1.8.7,
-    # but requires the 'backports' gem (which is used in other places in fpm)
+    # but requires the 'backports/latest' gem (which is used in other places in fpm)
     return Enumerator.new { |y| Find.find(staging_path) { |path| y << path } } \
       .select { |path| path != staging_path } \
       .select { |path| is_leaf.call(path) } \

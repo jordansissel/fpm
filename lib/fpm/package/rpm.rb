@@ -1,5 +1,5 @@
 require "fpm/package"
-require "backports"
+require "backports/latest"
 require "fileutils"
 require "find"
 require "arr-pm/file" # gem 'arr-pm'
