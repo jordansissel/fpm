@@ -69,8 +69,6 @@ class FPM::Package::Pacman < FPM::Package
                   :removed_dependencies => bogus_dependencies,
                   :fixed_dependencies => @dependencies)
     end
-    print @dependencies
-    print "\n"
     return @dependencies
   end
 
