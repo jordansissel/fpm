@@ -5,7 +5,7 @@ require "fpm/package/pacman" # local
 require "stud/temporary"
 
 describe FPM::Package::Pacman do
-  let(:target) { Stud::Temporary.pathname + ".pkg.tar.xz" }
+  let(:target) { Stud::Temporary.pathname + ".pkg.tar.zst" }
   after do
     subject.cleanup
     File.unlink(target) if File.exist?(target)
@@ -59,7 +59,7 @@ describe FPM::Package::Pacman do
 
     it "should have a default output usable as a filename" do
       # This is the default filename I see commonly produced by debuild
-      insist { subject.to_s } == "name-123-100-any.pkg.tar.xz"
+      insist { subject.to_s } == "name-123-100-any.pkg.tar.zst"
     end
 
     context "when iteration is nil" do
@@ -69,7 +69,7 @@ describe FPM::Package::Pacman do
 
       it "should have an iteration of `1`" do
         # This is the default filename I see commonly produced by debuild
-        expect(subject.to_s).to(be == "name-123-1-any.pkg.tar.xz")
+        expect(subject.to_s).to(be == "name-123-1-any.pkg.tar.zst")
       end
     end
   end
