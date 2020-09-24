@@ -3,7 +3,7 @@
 #
 # To run this Docker container interactively: docker run -it fpm
 #
-FROM alpine:3.7
+FROM alpine:3.12
 
 RUN apk add --no-cache \
         ruby \
