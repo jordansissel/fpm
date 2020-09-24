@@ -13,4 +13,4 @@ RUN apk add --no-cache \
         make \
         libc-dev \
         rpm \
-    && gem install --no-ri --no-rdoc fpm
+    && gem install --no-document fpm
