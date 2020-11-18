@@ -29,6 +29,9 @@ class FPM::Package::Python < FPM::Package
   option "--pypi", "PYPI_URL",
     "PyPi Server uri for retrieving packages.",
     :default => "https://pypi.python.org/simple"
+  option "--trusted-host", "PYPI_TRUSTED",
+    "Mark this host or host:port pair as trusted for pip",
+    :default => nil
   option "--package-prefix", "NAMEPREFIX",
     "(DEPRECATED, use --package-name-prefix) Name to prefix the package " \
     "name with." do |value|
@@ -136,7 +139,31 @@ class FPM::Package::Python < FPM::Package
     else
       logger.debug("using pip", :pip => attributes[:python_pip])
       # TODO: Support older versions of pip
-      safesystem(attributes[:python_pip], "download", "--no-clean", "--no-deps", "--no-binary", ":all:", "-i", attributes[:python_pypi], "--build", target,  want_pkg)
+
+      setup_cmd = [
+        attributes[:python_pip],
+        "download",
+        "--no-clean",
+        "--no-deps",
+        "--no-binary",
+        ":all:",
+        "-i", attributes[:python_pypi],
+      ]
+
+      if attributes[:python_trusted_host]
+        setup_cmd += [
+          "--trusted-host",
+          attributes[:python_trusted_host],
+        ]
+      end
+
+      setup_cmd += [
+        "--build",
+        target,
+        want_pkg,
+      ]
+      
+      safesystem(setup_cmd*" ")
     end
 
     # easy_install will put stuff in @tmpdir/packagename/, so find that:
