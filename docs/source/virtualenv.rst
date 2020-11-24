@@ -15,7 +15,7 @@ python dependencies separate from system python that you can then distribute.
    `pip install virtualenv virtualenv-tools`.
 
 Example uses:
-=============
+-------------
 
 Build an rpm package for ansible::
 
