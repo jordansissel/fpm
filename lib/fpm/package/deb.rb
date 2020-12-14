@@ -6,6 +6,7 @@ require "fpm/util"
 require "backports"
 require "fileutils"
 require "digest"
+require "zlib"
 
 # Support for debian packages (.deb files)
 #
