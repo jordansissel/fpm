@@ -193,6 +193,11 @@ class FPM::Package::Deb < FPM::Package
     File.expand_path(val) # Get the full path to the script
   end # --after-purge
 
+  option "--maintainerscripts-force-errorchecks", :flag ,
+    "Activate errexit shell option according to lintian. " \
+    "https://lintian.debian.org/tags/maintainer-script-ignores-errors.html",
+    :default => false
+
   def initialize(*args)
     super(*args)
     attributes[:deb_priority] = "extra"

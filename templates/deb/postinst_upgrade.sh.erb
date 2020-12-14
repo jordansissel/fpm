@@ -1,6 +1,8 @@
 #!/bin/sh
 
+<% if attributes[:deb_maintainerscripts_force_errorchecks?] -%>
 set -e
+<% end -%>
 
 after_upgrade() {
 <%# Making sure that at least one command is in the function -%>
