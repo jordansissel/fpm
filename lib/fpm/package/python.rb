@@ -163,7 +163,7 @@ class FPM::Package::Python < FPM::Package
         want_pkg,
       ]
       
-      safesystem(setup_cmd*" ")
+      safesystem(*setup_cmd)
     end
 
     # easy_install will put stuff in @tmpdir/packagename/, so find that:
