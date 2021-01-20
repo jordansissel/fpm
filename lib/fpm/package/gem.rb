@@ -4,7 +4,6 @@ require "rubygems"
 require "fileutils"
 require "fpm/util"
 require "yaml"
-require "git"
 
 # A rubygems package.
 #
@@ -105,6 +104,7 @@ class FPM::Package::Gem < FPM::Package
     FileUtils.mkdir(download_dir) unless File.directory?(download_dir)
 
     if attributes[:gem_git_repo]
+      require "git"
       logger.debug("Git cloning in directory #{download_dir}")
       g = Git.clone(attributes[:gem_git_repo],gem_name,:path => download_dir)
       if attributes[:gem_git_branch]
