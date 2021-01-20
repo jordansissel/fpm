@@ -20,6 +20,7 @@ debsystemctl=$(command -v deb-systemd-invoke || echo systemctl)
 <% attributes[:deb_systemd].each do |service| -%>
 if ! systemctl is-enabled <%= service %> >/dev/null 
 then
+  : # Ensure this if-clause is not empty. If it were empty, and we had an 'else', then it is an error in shell syntax
 <% if attributes[:deb_systemd_enable?]-%>
     systemctl enable <%= service %> >/dev/null || true
 <% end -%>
