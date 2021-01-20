@@ -1,6 +1,11 @@
 Release Notes and Change Log
 ============================
 
+1.12.1 (???)
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* gem: Fix error "git: not found (Git::GitExecuteError)". Now loads `git` library only when using git features.
+
 1.12.0 (January 19, 2021)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -17,6 +22,7 @@ Release Notes and Change Log
 * rpm: Add support for `xzmt` compression (multithreaded xz compressor) to help when creating very large packages (several gigabytes). (`#1447`_, `#1419`_; amnobc)
 * rpm: Add `--rpm-macro-expansion` flag to enable macro expansion in scripts during rpmbuild. See https://rpm.org/user_doc/scriptlet_expansion.html for more details. (`#1642`_; juliantrzeciak)
 * deb: use correct control.tar filename (`#1668`_; Mike Perham)
+* gem: Add flag --gem-git-repo to allow a gem source to be a git repository url. (`#1558`_; liger1978)
 
 1.11.0 (January 30, 2019)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
