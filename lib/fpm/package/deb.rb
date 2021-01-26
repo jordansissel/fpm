@@ -178,7 +178,7 @@ class FPM::Package::Deb < FPM::Package
   end
 
   option "--systemd", "FILEPATH", "Add FILEPATH as a systemd script",
-	:multivalued => true do |file|
+    :multivalued => true do |file|
     next File.expand_path(file)
   end
 
@@ -591,15 +591,19 @@ class FPM::Package::Deb < FPM::Package
     case self.attributes[:deb_compression]
       when "gz", nil
         datatar = build_path("data.tar.gz")
+        controltar = build_path("control.tar.gz")
         compression = "-z"
       when "bzip2"
         datatar = build_path("data.tar.bz2")
+        controltar = build_path("control.tar.bz2")
         compression = "-j"
       when "xz"
         datatar = build_path("data.tar.xz")
+        controltar = build_path("control.tar.xz")
         compression = "-J"
       when "none"
         datatar = build_path("data.tar")
+        controltar = build_path("control.tar")
         compression = ""
       else
         raise FPM::InvalidPackageConfiguration,
@@ -619,7 +623,7 @@ class FPM::Package::Deb < FPM::Package
     # the 'debian-binary' file has to be first
     File.expand_path(output_path).tap do |output_path|
       ::Dir.chdir(build_path) do
-        safesystem(*ar_cmd, output_path, "debian-binary", "control.tar.gz", datatar)
+        safesystem(*ar_cmd, output_path, "debian-binary", controltar, datatar)
       end
     end
 
