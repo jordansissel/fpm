@@ -126,7 +126,7 @@ Obsoletes: <%= repl %>
 -%>
 <% if script?(:before_upgrade) or script?(:after_upgrade) -%>
 <%   if script?(:before_upgrade) or script?(:before_install) -%>
-%pre <% if attributes[:rpm_macro_expansion?] -%><%= " -e " %> <% end -%>
+%pre <% if attributes[:rpm_macro_expansion?] -%><%= " -e " %> <% end %>
 upgrade() {
 <%# Making sure that at least one command is in the function -%>
 <%# avoids a lot of potential errors, including the case that -%>
@@ -156,7 +156,7 @@ then
 fi
 <%   end -%>
 <%   if script?(:after_upgrade) or script?(:after_install) -%>
-%post <% if attributes[:rpm_macro_expansion?] -%><%= " -e " %>  <% end -%>
+%post <% if attributes[:rpm_macro_expansion?] -%><%= " -e " %>  <% end %>
 upgrade() {
 <%# Making sure that at least one command is in the function -%>
 <%# avoids a lot of potential errors, including the case that -%>
@@ -186,7 +186,7 @@ then
 fi
 <%   end -%>
 <%   if script?(:before_remove) -%>
-%preun <% if attributes[:rpm_macro_expansion?] -%><%= " -e " %>  <% end -%>
+%preun <% if attributes[:rpm_macro_expansion?] -%><%= " -e " %>  <% end %>
 if [ "${1}" -eq 0 ]
 then
 <%# Making sure that at least one command is in the function -%>
@@ -197,7 +197,7 @@ then
 fi
 <%   end -%>
 <%   if script?(:after_remove) -%>
-%postun <% if attributes[:rpm_macro_expansion?] -%><%= " -e " %>  <% end -%>
+%postun <% if attributes[:rpm_macro_expansion?] -%><%= " -e " %>  <% end %>
 if [ "${1}" -eq 0 ]
 then
 <%# Making sure that at least one command is in the function -%>
