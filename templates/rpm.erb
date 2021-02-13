@@ -258,6 +258,9 @@ fi
 <%   next if directories.include?(path)-%>
 <%= rpm_file_entry(path) %>
 <% end -%>
+<% (attributes[:rpm_ghost_file] or []).each do |ghost| -%>
+<%= "%ghost #{ghost}" %>
+<% end -%>
 
 %changelog
 <%= attributes[:rpm_changelog] %>
