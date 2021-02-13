@@ -16,6 +16,11 @@ else:
     def u(s):
         if isinstance(u, unicode):
             return u
+
+        # TODO: update to return more than the single author
+        if isinstance(s, list):
+            s = s.pop()
+
         return s.decode('utf-8')
 
 
