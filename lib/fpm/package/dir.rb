@@ -69,6 +69,7 @@ class FPM::Package::Dir < FPM::Package
       ::Dir.chdir(chdir) do
         begin
           clone(source, destination)
+          FileUtils.chmod(0755, destination)
         rescue Errno::ENOENT => e
           raise FPM::InvalidPackageConfiguration,
             "Cannot package the path '#{File.join(chdir, source)}', does it exist?"
