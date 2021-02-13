@@ -5,6 +5,8 @@
 # Execute instructions:
 #
 #   singularity exec fpm.simg fpm --version
+# or
+#   fpm.simg --version
 #
 Bootstrap: docker
 From: alpine:3.7
@@ -24,3 +26,8 @@ From: alpine:3.7
         libc-dev \
         rpm
     gem install --no-ri --no-rdoc fpm
+
+%runscript
+
+    # echo "Arguments received: $*"
+    exec fpm "$@"
