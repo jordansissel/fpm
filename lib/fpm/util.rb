@@ -322,7 +322,9 @@ module FPM::Util
     case %x{uname -s}.chomp
     when 'Linux'
       # bits/stat.h #define _MKNOD_VER_LINUX  0
-      rc = xmknod(0, path, mode, FFI::MemoryPointer.new(dev))
+      dev_p = FFI::MemoryPointer.new :ulong
+      dev_p.write_ulong dev
+      rc = xmknod(0, path, mode, dev_p)
     else
       rc = mknod(path, mode, dev)
     end
@@ -356,7 +358,7 @@ module FPM::Util
     case File.ftype(src)
     when 'fifo', 'characterSpecial', 'blockSpecial', 'socket'
       st = File.stat(src)
-      rc = mknod_w(dst, st.mode, st.dev)
+      rc = mknod_w(dst, st.mode, st.rdev)
       raise SystemCallError.new("mknod error", FFI.errno) if rc == -1
     when 'directory'
       FileUtils.mkdir(dst) unless File.exists? dst
