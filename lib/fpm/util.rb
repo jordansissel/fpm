@@ -142,7 +142,7 @@ module FPM::Util
       raise ExecutableNotFound.new(program)
     end
 
-    logger.debug("Running command", :args => args2)
+    logger.debug("Running command: " + args2.join(" "))
 
     stdout_r, stdout_w = IO.pipe
     stderr_r, stderr_w = IO.pipe
@@ -161,18 +161,23 @@ module FPM::Util
 
     stdout_w.close; stderr_w.close
     logger.debug("Process is running", :pid => process.pid)
+# DEV NOTE: disabliing this entire conditional code block allows output & cures the gcc/as freeze/hang, but re-introduces the Perl CPAN Inline::CPP interactive build hang;
+# the only solution discovered so far is a "hybrid" approach whereby we allow the conditional to execute, but we disable STDOUT & STDERR,
+# as seen with the 5 commented-out lines below and the 1 logger.pipe() line below which was copied directly from the else code block,
+# as well as the 2 commented-out lines stdout.read & stderr.read in safesystemin()
     if block_given?
       args3 = []
       args3.push(process)           if opts[:process]
       args3.push(process.io.stdin)  if opts[:stdin]
-      args3.push(stdout_r)          if opts[:stdout]
-      args3.push(stderr_r)          if opts[:stderr]
+#      args3.push(stdout_r)          if opts[:stdout]
+#      args3.push(stderr_r)          if opts[:stderr]
 
       yield(*args3)
 
-      process.io.stdin.close        if opts[:stdin] and not process.io.stdin.closed?
-      stdout_r.close                unless stdout_r.closed?
-      stderr_r.close                unless stderr_r.closed?
+#      process.io.stdin.close        if opts[:stdin] and not process.io.stdin.closed?
+#      stdout_r.close                unless stdout_r.closed?
+#      stderr_r.close                unless stderr_r.closed?
+      logger.pipe(stdout_r => :info, stderr_r => :info)
     else
       # Log both stdout and stderr as 'info' because nobody uses stderr for
       # actually reporting errors and as a result 'stderr' is a misnomer.
@@ -186,6 +191,7 @@ module FPM::Util
 
   # Run a command safely in a way that gets reports useful errors.
   def safesystem(*args)
+    logger.debug("[[[ DEBUG, FULL COMMAND ]]]  in safesystem(), received args =\n" + args.join(" "))
     # ChildProcess isn't smart enough to run a $SHELL if there's
     # spaces in the first arg and there's only 1 arg.
     if args.size == 1
@@ -203,13 +209,50 @@ module FPM::Util
 
     if !success
       raise ProcessFailed.new("#{program} failed (exit code #{exit_code})" \
-                              ". Full command was:#{args.inspect}")
+                              ". Full command was:\n" + args.join(" "))
     end
     return success
   end # def safesystem
 
+  # Run a command safely in a way that pushes stdin to command
+  def safesystemin(*args)
+    logger.debug("[[[ DEBUG, FULL COMMAND ]]]  in safesystemin(), received args =\n" + args.join(" "))
+    # Our first argument is our stdin
+    safe_stdin = args.shift()
+
+    if args.size == 1
+      args = [ default_shell, "-c", args[0] ]
+    end
+
+    if args[0].kind_of?(Hash)
+      env = args.shift()
+      exit_code = execmd(env, args) do |stdin,stdout,stderr|
+        stdin.write(safe_stdin)
+        stdin.close
+        stdout_r_str = stdout.read
+        stderr_r_str = stderr.read  
+      end
+    else
+      exit_code = execmd(args) do |stdin,stdout,stderr|
+        stdin.write(safe_stdin)
+        stdin.close
+#        stdout_r_str = stdout.read
+#        stderr_r_str = stderr.read
+      end
+    end
+    program = args[0]
+    success = (exit_code == 0)
+
+    if !success
+      raise ProcessFailed.new("#{program} failed (exit code #{exit_code})" \
+                              ". Full command was:\n" + args.join(" "))
+    end
+    return success
+  end # def safesystemin
+
   # Run a command safely in a way that captures output and status.
   def safesystemout(*args)
+    logger.debug("[[[ DEBUG, FULL COMMAND ]]]  in safesystemout(), received args =\n" + args.join(" "))
     if args.size == 1
       args = [ ENV["SHELL"], "-c", args[0] ]
     end
@@ -227,7 +270,7 @@ module FPM::Util
 
     if !success
       raise ProcessFailed.new("#{program} failed (exit code #{exit_code})" \
-                              ". Full command was:#{args.inspect}")
+                              ". Full command was:\n" + args.join(" "))
     end
     return stdout_r_str
   end # def safesystemout
