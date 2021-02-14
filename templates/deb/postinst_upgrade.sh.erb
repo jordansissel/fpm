@@ -20,6 +20,7 @@ debsystemctl=$(command -v deb-systemd-invoke || echo systemctl)
 <% attributes[:deb_systemd].each do |service| -%>
 if ! systemctl is-enabled <%= service %> >/dev/null 
 then
+    :
 <% if attributes[:deb_systemd_enable?]-%>
     systemctl enable <%= service %> >/dev/null || true
 <% end -%>
