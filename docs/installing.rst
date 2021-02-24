@@ -21,20 +21,20 @@ On OSX/macOS::
 
 On Red Hat systems (Fedora 22 or older, CentOS, etc)::
 
-    yum install ruby-devel gcc make rpm-build rubygems
+    yum install gcc git make rpm-build ruby-devel rubygems
 
 On Fedora 23 or newer::
 
-    dnf install ruby-devel gcc make rpm-build libffi-devel
+    dnf install libffi-devel gcc git make rpm-build ruby-devel
 
 On Oracle Linux 7.x systems::
 
     yum-config-manager --enable ol7_optional_latest
-    yum install ruby-devel gcc make rpm-build rubygems
+    yum install gcc git make rpm-build ruby-devel rubygems
 
 On Debian-derived systems (Debian, Ubuntu, etc)::
 
-    apt-get install ruby ruby-dev rubygems build-essential
+    apt-get install build-essential git ruby ruby-dev rubygems
 
 Installing FPM
 --------------
