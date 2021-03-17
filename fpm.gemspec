@@ -47,9 +47,15 @@ Gem::Specification.new do |spec|
   spec.add_dependency("childprocess", "< 1.0.0") # license: ???
 
   # For calling functions in dynamic libraries
-  # This is pinned because 1.13.0 requires Ruby 2.3 or later
-  # Ref: https://github.com/jordansissel/fpm/issues/1708
-  spec.add_dependency("ffi", "~> 1.12.0") # license: GPL3/LGPL3
+  if (Gem::Platform.local.os == "darwin" &&
+      Gem::Platform.local.cpu == "arm64")
+    # Apple Silicon Macs need ffi 1.14 at least (I tested 1.15)
+    spec.add_dependency("ffi", "~> 1.15")
+  else
+    # This is pinned because 1.13.0 requires Ruby 2.3 or later
+    # Ref: https://github.com/jordansissel/fpm/issues/1708
+    spec.add_dependency("ffi", "~> 1.12.0") # license: GPL3/LGPL3
+  end
 
   spec.add_development_dependency("rake", "~> 10") # license: MIT
 
