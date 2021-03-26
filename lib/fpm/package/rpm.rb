@@ -239,6 +239,8 @@ class FPM::Package::RPM < FPM::Package
         return %x{uname -m}.chomp   # default to current arch
       when "amd64" # debian and redhat disagree on architecture names
         return "x86_64"
+      when "arm64" # debian and redhat disagree on architecture names
+        return "aarch64"
       when "native"
         return %x{uname -m}.chomp   # 'native' is current arch
       when "all"

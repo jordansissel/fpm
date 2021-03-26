@@ -33,6 +33,11 @@ describe FPM::Package::Deb do
       expect(subject.architecture).to(be == "amd64")
     end
 
+    it "should convert aarch64 to arm64" do
+      subject.architecture = "aarch64"
+      expect(subject.architecture).to(be == "arm64")
+    end
+
     it "should convert noarch to all" do
       subject.architecture = "noarch"
       expect(subject.architecture).to(be == "all")
