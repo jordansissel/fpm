@@ -110,6 +110,8 @@ class FPM::Package::FreeBSD < FPM::Package
     wordsize = case @architecture
     when nil, 'native'
       %x{getconf LONG_BIT}.chomp # 'native' is current arch
+    when 'arm64'
+      '64'
     when 'amd64'
       '64'
     when 'i386'

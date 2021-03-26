@@ -21,6 +21,11 @@ describe FPM::Package::RPM do
       insist { subject.architecture } == "x86_64"
     end
 
+    it "should convert arm64 to aarch64" do
+      subject.architecture = "arm64"
+      expect(subject.architecture).to(be == "aarch64")
+    end
+
     it "should convert 'all' to 'noarch'" do
       subject.architecture = "all"
       insist { subject.architecture } == "noarch"
@@ -596,14 +601,14 @@ describe FPM::Package::RPM do
     it "should not cause errors when reading basic rpm in input (#802)" do
       # Write the rpm out
       @generator.output(@target)
-      
+
       # Load generated rpm
       subject.input(@target)
-      
+
       # Value sanity check
       insist { subject.name } == "name"
       insist { subject.version } == "1.23"
-    end 
+    end
 
     it "should not cause errors when reading more complete rpm in input (#802)" do
       @generator.architecture = "all"
@@ -632,7 +637,7 @@ describe FPM::Package::RPM do
       insist { subject.conflicts[0] } == "bad < 2"
       insist { subject.license } == @generator.license.split("\n").join(" ") # See issue #252
       insist { subject.provides[0] } == "bacon = 1.0"
-      
+
     end
     it "should not cause errors when reading rpm with script in input (#802)" do
       @generator.scripts[:before_install] = "example before_install"
