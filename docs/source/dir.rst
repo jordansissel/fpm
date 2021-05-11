@@ -15,7 +15,7 @@ Path mapping
 
 Some times you want to take a path and copy it into a package but under a different location.  fpm can use the `=` directive to mark that::
 
-  fpm [...] -s dir ./example/foo=/usr/bin 
+  fpm [...] -s dir ./example/foo=/usr/bin/ 
 
 This will put the file `foo` in the /usr/bin directory inside the package.
 
