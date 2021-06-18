@@ -146,31 +146,22 @@ module FPM::Util
 
     stdout_r, stdout_w = IO.pipe
     stderr_r, stderr_w = IO.pipe
+    stdin_r, stdin_w = IO.pipe
 
-    process = ChildProcess.build(*args2)
-    process.environment.merge!(env)
-
-    process.io.stdout = stdout_w
-    process.io.stderr = stderr_w
-
-    if block_given? and opts[:stdin]
-      process.duplex = true
-    end
-
-    process.start
+    pid = Process.spawn(env, *args2, :out => stdout_w, :err => stderr_w, :in => stdin_r)
 
     stdout_w.close; stderr_w.close
-    logger.debug("Process is running", :pid => process.pid)
+    logger.debug("Process is running", :pid => pid)
     if block_given?
       args3 = []
       args3.push(process)           if opts[:process]
-      args3.push(process.io.stdin)  if opts[:stdin]
+      args3.push(stdin_w)           if opts[:stdin]
       args3.push(stdout_r)          if opts[:stdout]
       args3.push(stderr_r)          if opts[:stderr]
 
       yield(*args3)
 
-      process.io.stdin.close        if opts[:stdin] and not process.io.stdin.closed?
+      stdin_w_close                 if opts[:stdin] and not stdin_w.closed?
       stdout_r.close                unless stdout_r.closed?
       stderr_r.close                unless stderr_r.closed?
     else
@@ -179,9 +170,10 @@ module FPM::Util
       logger.pipe(stdout_r => :info, stderr_r => :info)
     end
 
-    process.wait if process.alive?
+    Process.waitpid(pid)
+    status = $?
 
-    return process.exit_code
+    return status.exitstatus
   end # def execmd
 
   # Run a command safely in a way that gets reports useful errors.
