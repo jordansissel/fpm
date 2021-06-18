@@ -46,11 +46,6 @@ Gem::Specification.new do |spec|
   # Ref: https://github.com/jordansissel/fpm/issues/1592
   spec.add_dependency("childprocess", "< 1.0.0") # license: ???
 
-  # For calling functions in dynamic libraries
-  # This is pinned because 1.13.0 requires Ruby 2.3 or later
-  # Ref: https://github.com/jordansissel/fpm/issues/1708
-  spec.add_dependency("ffi", "~> 1.12.0") # license: GPL3/LGPL3
-
   spec.add_development_dependency("rake", "~> 10") # license: MIT
 
   # For creating FreeBSD package archives (xz-compressed tars)
