@@ -4,6 +4,25 @@ require "fpm" # local
 require "fpm/package/pacman" # local
 require "stud/temporary"
 
+
+if !program_exists?("bsdtar")
+  Cabin::Channel.get("rspec") \
+    .warn("Skipping Pacman tests because 'bsdtar' isn't in your PATH")
+end
+
+if !program_exists?("zstd")
+  Cabin::Channel.get("rspec") \
+    .warn("Skipping Pacman tests because 'zstd' isn't in your PATH")
+end
+
+def skip?
+  missing = []
+  missing << "bsdtar" unless program_exists?("bsdtar")
+  missing << "zstd" unless program_exists?("zstd")
+  return nil if missing.empty?
+  return "Missing programs: #{missing.join(", ")}"
+end
+
 describe FPM::Package::Pacman do
   let(:target) { Stud::Temporary.pathname + ".pkg.tar.zst" }
   after do
@@ -80,6 +99,7 @@ describe FPM::Package::Pacman do
 
     context "Test that empty epoch is tested properly" do
       before do
+        skip(skip?) if skip?
 
         original.name = "foo"
         original.version = "123"
@@ -90,18 +110,26 @@ describe FPM::Package::Pacman do
         input.input(target)
       end
       it "should have the correct name" do
+        skip("Missing bsdtar") unless program_exists?("bsdtar")
+        skip("Missing zstd") unless program_exists?("zstd")
         insist { input.name } == original.name
       end
 
       it "should have the correct version" do
+        skip("Missing bsdtar") unless program_exists?("bsdtar")
+        skip("Missing zstd") unless program_exists?("zstd")
         insist { input.version } == original.version
       end
 
       it "should have the correct iteration" do
+        skip("Missing bsdtar") unless program_exists?("bsdtar")
+        skip("Missing zstd") unless program_exists?("zstd")
         insist { input.iteration } == original.iteration
       end
 
       it "should have the correct epoch" do
+        skip("Missing bsdtar") unless program_exists?("bsdtar")
+        skip("Missing zstd") unless program_exists?("zstd")
         insist { input.epoch } == original.epoch
       end
     end
@@ -109,6 +137,8 @@ describe FPM::Package::Pacman do
 
     context "normal tests" do
       before do
+        skip(skip?) if skip?
+        
         # output a package, use it as the input, set the subject to that input
         # package. This helps ensure that we can write and read packages
         # properly.
@@ -184,6 +214,8 @@ describe FPM::Package::Pacman do
         [:before_install, :after_install, :before_remove, :after_remove,
          :before_upgrade, :after_upgrade].each do |script|
           it "should be the same both with input as with original for #{script.to_s}" do
+            skip("Missing bsdtar") unless program_exists?("bsdtar")
+            skip("Missing zstd") unless program_exists?("zstd")
             expect( \
                    (input.scripts[script] =~ \
                     /[\n :]+#{Regexp.quote(original.scripts[script])}/m \
@@ -208,6 +240,8 @@ describe FPM::Package::Pacman do
          "/var/lib" => 0755,
          "/var/lib/foo" => 0755}.each do |dir, perm|
            it "should preserve file permissions for #{dir}" do
+             skip("Missing bsdtar") unless program_exists?("bsdtar")
+             skip("Missing zstd") unless program_exists?("zstd")
              insist { File.stat(File.join(input.staging_path,
                                           dir)).mode & 07777 } == perm
            end
@@ -216,18 +250,26 @@ describe FPM::Package::Pacman do
 
       context "package attributes" do
         it "should have the correct name" do
+          skip("Missing bsdtar") unless program_exists?("bsdtar")
+          skip("Missing zstd") unless program_exists?("zstd")
           insist { input.name } == original.name
         end
 
         it "should have the correct version" do
+          skip("Missing bsdtar") unless program_exists?("bsdtar")
+          skip("Missing zstd") unless program_exists?("zstd")
           insist { input.version } == original.version
         end
 
         it "should have the correct iteration" do
+          skip("Missing bsdtar") unless program_exists?("bsdtar")
+          skip("Missing zstd") unless program_exists?("zstd")
           insist { input.iteration } == original.iteration
         end
 
         it "should have the correct epoch" do
+          skip("Missing bsdtar") unless program_exists?("bsdtar")
+          skip("Missing zstd") unless program_exists?("zstd")
           insist { input.epoch } == original.epoch
         end
 

@@ -26,7 +26,11 @@ def easy_install_default(python_bin, option)
   return result
 end
 
-describe FPM::Package::Python, :if => python_usable? do
+describe FPM::Package::Python do
+  before do
+    skip("Python and/or easy_install not found") unless python_usable?
+  end
+
   let (:example_dir) do
     File.expand_path("../../fixtures/python/", File.dirname(__FILE__))
   end

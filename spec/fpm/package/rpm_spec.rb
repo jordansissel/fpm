@@ -140,7 +140,11 @@ describe FPM::Package::RPM do
     end # context
   end
 
-  describe "#output", :if => program_exists?("rpmbuild") do
+  describe "#output" do
+    before do
+      skip("Missing rpmbuild program") unless program_exists?("rpmbuild")
+    end
+
     context "architecture" do
       it "can be basically anything" do
         subject.name = "example"
@@ -484,7 +488,11 @@ describe FPM::Package::RPM do
     end
   end
 
-  describe "regressions should not occur", :if => program_exists?("rpmbuild") do
+  describe "regressions should not occur" do
+    before do
+      skip("Missing rpmbuild program") unless program_exists?("rpmbuild")
+    end
+
     before :each do
       @tempfile_handle =
       @target = Stud::Temporary.pathname
@@ -582,7 +590,11 @@ describe FPM::Package::RPM do
     end
   end # regression stuff
 
-  describe "input validation stuff", :if => program_exists?("rpmbuild") do
+  describe "input validation stuff" do
+    before do
+      skip("Missing rpmbuild program") unless program_exists?("rpmbuild")
+    end
+
     before :each do
       @tempfile_handle =
       @target = Stud::Temporary.pathname
@@ -705,14 +717,16 @@ describe FPM::Package::RPM do
       File.delete(target) rescue nil
     end
 
-    it "should respect file user and group ownership", :if => program_exists?("rpmbuild") do
+    it "should respect file user and group ownership" do
+      skip("Missing rpmbuild program") unless program_exists?("rpmbuild")
       subject.attributes[:rpm_use_file_permissions?] = true
       subject.output(target)
       insist { rpm.tags[:fileusername].first } == Etc.getpwuid(path_stat.uid).name
       insist { rpm.tags[:filegroupname].first } == Etc.getgrgid(path_stat.gid).name
     end
 
-    it "rpm_group should override rpm_use_file_permissions-derived owner", :if => program_exists?("rpmbuild") do
+    it "rpm_group should override rpm_use_file_permissions-derived owner" do
+      skip("Missing rpmbuild program") unless program_exists?("rpmbuild")
       subject.attributes[:rpm_use_file_permissions?] = true
       subject.attributes[:rpm_user] = "hello"
       subject.attributes[:rpm_group] = "world"
@@ -722,7 +736,11 @@ describe FPM::Package::RPM do
     end
   end
 
-  describe "#output with digest and compression settings", :if => program_exists?("rpmbuild") do
+  describe "#output with digest and compression settings" do
+    before do
+      skip("Missing rpmbuild program") unless program_exists?("rpmbuild")
+    end
+
     context "bzip2/sha1" do
       before :each do
         @target = Stud::Temporary.pathname
