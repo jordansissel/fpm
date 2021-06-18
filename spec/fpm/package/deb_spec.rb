@@ -247,7 +247,11 @@ describe FPM::Package::Deb do
     end # package attributes
 
     # This section mainly just verifies that 'dpkg-deb' can parse the package.
-    context "when read with dpkg", :if => have_dpkg_deb do
+    context "when read with dpkg" do
+      before do
+        skip("Missing dpkg-deb program") unless have_dpkg_deb
+      end
+
       def dpkg_field(field)
         return `dpkg-deb -f #{target} #{field}`.chomp
       end # def dpkg_field
@@ -380,7 +384,11 @@ describe FPM::Package::Deb do
       FileUtils.rm_r staging_path if File.exist? staging_path
     end # after
 
-    context "when run against lintian", :if => have_lintian do
+    context "when run against lintian" do
+      before do
+        skip("Missing lintian program") unless have_lintian 
+      end
+
       lintian_errors_to_ignore = [
         "no-copyright-file",
         "script-in-etc-init.d-not-registered-via-update-rc.d"

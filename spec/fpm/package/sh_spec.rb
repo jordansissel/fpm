@@ -9,7 +9,11 @@ if !shell_is_bash
 end
 
 describe FPM::Package::Sh do
-  describe "#output", :if => shell_is_bash do
+  describe "#output" do
+    before do
+      skip("Shell (SHELL env) is not bash") unless shell_is_bash
+    end
+
     def make_sh_package
       # output a package, use it as the input, set the subject to that input
       # package. This helps ensure that we can write and read packages

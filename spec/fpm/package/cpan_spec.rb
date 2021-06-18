@@ -10,7 +10,11 @@ end
 
 is_travis = ENV["TRAVIS_OS_NAME"] && !ENV["TRAVIS_OS_NAME"].empty?
 
-describe FPM::Package::CPAN, :if => have_cpanm do
+describe FPM::Package::CPAN do
+  before do
+    skip("Missing cpanm program") unless have_cpanm
+  end
+
   subject { FPM::Package::CPAN.new }
 
   after :each do
