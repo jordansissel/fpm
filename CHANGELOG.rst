@@ -1,7 +1,7 @@
 Release Notes and Change Log
 ============================
 
-1.13.0 (????)
+1.13.0 (June 19, 2021)
 ^^^^^^^^^^^^^^^^^^^^^^
 * Apple M1 users should now work (`#1772`_, `#1785`_, `#1786`_; Jordan Sissel)
 * Removed `ffi` ruby library as a dependency. This should make it easier to support a wider range of Ruby versions (Ruby 2.2, 3.0, etc) and platforms (like arm64, Apple M1, etc) in the future. (`#1785`_, `#1786`_; Jordan Sissel)
