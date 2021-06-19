@@ -453,4 +453,33 @@ describe FPM::Package::Deb do
       expect(FileUtils.compare_file(target, target + '.orig')).to be true
     end
   end # #reproducible
+
+  describe "compression" do
+    {
+      "bzip2" => "bz2",
+      "xz" => "xz",
+      "gz" => "gz"
+    }.each do |flag,suffix|
+      context "when --deb-compression is #{flag}" do
+        let(:target) { Stud::Temporary.pathname + ".deb" }
+        after do
+          subject.cleanup
+          File.unlink(target) if File.exist?(target)
+        end
+
+        before do
+          deb = FPM::Package::Deb.new
+          deb.name = "name"
+          deb.attributes[:deb_compression] = flag
+          deb.output(target)
+        end
+
+        it "should use #{suffix} for data and control files" do
+          list = `ar t #{target}`.split("\n")
+          insist { list }.include?("control.tar.#{suffix}")
+          insist { list }.include?("data.tar.#{suffix}")
+        end
+      end
+    end
+  end
 end # describe FPM::Package::Deb
