@@ -41,11 +41,6 @@ Gem::Specification.new do |spec|
   # https://github.com/mdub/clamp/blob/master/README.markdown
   spec.add_dependency("clamp", "~> 1.0.0") # license: MIT
 
-  # For starting external processes across various ruby interpreters
-  # Note: This is pinned because v1.0.0 fails to install for multiple users.
-  # Ref: https://github.com/jordansissel/fpm/issues/1592
-  spec.add_dependency("childprocess", "< 1.0.0") # license: ???
-
   spec.add_development_dependency("rake", "~> 10") # license: MIT
 
   # For creating FreeBSD package archives (xz-compressed tars)
