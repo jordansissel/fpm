@@ -17,10 +17,6 @@ class FPM::Package::FreeBSD < FPM::Package
          :default => "fpm/<name>"
 
   def output(output_path)
-    # See https://github.com/jordansissel/fpm/issues/1090
-    # require xz later, because this triggers a load of liblzma.so.5 that is
-    # unavailable on older CentOS/RH distros.
-    require "xz"
     output_check(output_path)
 
     # Build the packaging metadata files.
@@ -80,22 +76,19 @@ class FPM::Package::FreeBSD < FPM::Package
       file.write(pkgdata.to_json + "\n")
     end
 
-    # Create the .txz package archive from the files in staging_path.
-    File.open(output_path, "wb") do |file|
-      XZ::StreamWriter.new(file) do |xz|
-        FPM::Util::TarWriter.new(xz) do |tar|
-          # The manifests must come first for pkg.
-          add_path(tar, "+COMPACT_MANIFEST",
-                   File.join(staging_path, "+COMPACT_MANIFEST"))
-          add_path(tar, "+MANIFEST",
-                   File.join(staging_path, "+MANIFEST"))
-
-          checksums.keys.each do |path|
-            add_path(tar, "/" + path, File.join(staging_path, path))
-          end
-        end
-      end
+    file_list = File.new(build_path("file_list"), "w")
+    files.each do |i|
+      file_list.puts(i)
     end
+    file_list.close
+
+    # Create the .txz package archive from the files in staging_path.
+    # We use --files-from here to keep the tar entries from having `./` as the prefix.
+    # This is done as a best effor to mimic what FreeBSD packages do, having everything at the top-level as
+    # file names, like "+MANIFEST" instead of "./+MANIFEST"
+    # Note: This will include top-level files like "/usr/bin/foo" listed in the tar as "usr/bin/fo" without
+    # a leading slash. I don't know if this has any negative impact on freebsd packages.
+    safesystem("tar", "-Jcf", output_path, "-C", staging_path, "--files-from", build_path("file_list"))
   end # def output
 
   # Handle architecture naming conversion:
