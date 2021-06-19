@@ -12,6 +12,8 @@ Release Notes and Change Log
 * Ruby 3.0 support: Added `rexml` as a runtime dependency. In Ruby 2.0, `rexml` came by default, but in Ruby 3.0, `rexml` is now a bundled gem and some distributiosn do not include it by default. (`#1794`_; Jordan Sissel)
 * Fix error "git: not found (Git::GitExecuteError)". Now loads `git` library only when using git features. (`#1753`_, `#1748`_, `#1751`_, `#1766`_; Jordan Sissel, Cameron Nemo, Jason Rogers, Luke Short)
 * deb: Fix syntax error in `postinst` (`--after-install`) script. (`#1752`_, `#1749`_, `#1764`_; rmanus, Adam Mohammed, Elliot Murphy, kimw, Jordan Sissel)
+* deb: --deb-compression now uses the same compression and file suffix on the control.tar file (`#1760`_; Philippe Poilbarbe
+)
 
 
 1.12.0 (January 19, 2021)
