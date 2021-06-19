@@ -1,5 +1,4 @@
 require "fpm/namespace"
-require "childprocess"
 require "fileutils"
 
 # Some utility functions
