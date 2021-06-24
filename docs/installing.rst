@@ -18,6 +18,8 @@ like OSX, come with Ruby already, but some do not. Depending on your operating s
 On OSX/macOS::
 
     brew install gnu-tar
+    
+    brew install rpm
 
 On Red Hat systems (Fedora 22 or older, CentOS, etc)::
 
