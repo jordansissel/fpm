@@ -1,8 +1,6 @@
 fpm
 ===
 
-|Build| |Chat| |Gem|
-
 The goal of fpm is to make it easy and quick to build packages such as rpms,
 debs, OSX packages, etc.
 
@@ -96,10 +94,3 @@ Targets:
 * pacman (ArchLinux) packages
 
 .. include: docs/contributing
-
-.. |Build| image:: https://img.shields.io/travis/jordansissel/fpm.svg
-   :target: https://travis-ci.org/jordansissel/fpm
-.. |Chat| image:: https://img.shields.io/badge/irc-%23fpm%20on%20freenode-brightgreen.svg
-   :target: https://webchat.freenode.net/?channels=fpm
-.. |Gem| image:: https://img.shields.io/gem/v/fpm.svg
-   :target: https://rubygems.org/gems/fpm
