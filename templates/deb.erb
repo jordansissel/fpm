@@ -25,7 +25,7 @@ Build-Depends: <%= attributes[:deb_build_depends].collect { |d| fix_dependency(d
 <% if !provides.empty? -%>
 <%# Turn each provides from 'foo = 123' to simply 'foo' because Debian :\ -%>
 <%#  http://www.debian.org/doc/debian-policy/ch-relationships.html -%>
-Provides: <%= provides.map {|p| p.split(" ").first}.join ", " %>
+Provides: <%= provides.join ", " %>
 <% end -%>
 <% if !replaces.empty? -%>
 Replaces: <%= replaces.collect { |d| fix_dependency(d) }.flatten.join(", ") %>
