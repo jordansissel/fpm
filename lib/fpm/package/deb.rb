@@ -687,6 +687,19 @@ class FPM::Package::Deb < FPM::Package
         File.unlink(changelog_path)
       end
     end
+
+    if origin == FPM::Package::Gem
+      # fpm's gem input will have provides as "rubygem-name = version"
+      # and we need to convert this to Debian-style "rubygem-name (= version)"
+      self.provides = self.provides.collect do |provides|
+        m = /^(#{attributes[:gem_package_name_prefix]})-([^\s]+)\s*=\s*(.*)$/.match(provides)
+        if m
+          "#{m[1]}-#{m[2]} (= #{m[3]})"
+        else
+          provides
+        end
+      end
+    end
   end # def converted_from
 
   def debianize_op(op)
@@ -774,6 +787,11 @@ class FPM::Package::Deb < FPM::Package
       logger.warn("Replacing 'provides' underscores with dashes in '#{provides}' because " \
                    "debs don't like underscores")
       provides = provides.gsub("_", "-")
+    end
+
+    if m = provides.match(/^([A-Za-z0-9_-]+)\s*=\s*(\d+.*$)/)
+      logger.warn("Replacing 'provides' entry #{provides} with syntax 'name (= version)'")
+      provides = "#{m[1]} (= #{m[2]})"
     end
     return provides.rstrip
   end

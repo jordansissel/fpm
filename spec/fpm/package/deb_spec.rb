@@ -143,7 +143,7 @@ describe FPM::Package::Deb do
       original.architecture = "all"
       original.dependencies << "something > 10"
       original.dependencies << "hello >= 20"
-      original.provides << "#{original.name} = #{original.version}"
+      original.provides << "#{original.name} (= #{original.version})"
 
       # Test to cover PR#591 (fix provides names)
       original.provides << "Some-SILLY_name"
@@ -234,11 +234,6 @@ describe FPM::Package::Deb do
         original.dependencies.each do |dep|
           insist { input.dependencies }.include?(dep)
         end
-      end
-
-      it "should ignore versions and conditions in 'provides' (#280)" do
-        # Provides is an array because rpm supports multiple 'provides'
-        insist { input.provides }.include?(original.name)
       end
 
       it "should fix capitalization and underscores-to-dashes (#591)" do
