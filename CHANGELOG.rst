@@ -5,7 +5,7 @@ Release Notes and Change Log
 ^^^^^^^^^^^^^^^^^^^^^
 * deb: The `--provides` flag now allows for versions. Previously, fpm would
   remove the version part of a provides field when generating deb packages.
-  (`#1788`_, `#1803`_; Jordan Sissel, Phil Schwarz, tympanix)
+  (`#1788`_, `#1803`_; Jordan Sissel, Phil Schwartz, tympanix)
 * osxpkg: Update documentation to include installing `rpm` tools on OSX
   (`#1797`_; allen joslin)
 
