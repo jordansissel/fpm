@@ -60,8 +60,8 @@ describe FPM::Package::OSXpkg do
     end
 
     after :all do
-      @original.cleanup
-      @input.cleanup
+      @original.cleanup if @original
+      @input.cleanup if @input
     end # after
 
     context "package attributes" do
