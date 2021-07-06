@@ -120,7 +120,10 @@
 .. _#1775: https://github.com/jordansissel/fpm/issues/1775
 .. _#1785: https://github.com/jordansissel/fpm/issues/1785
 .. _#1786: https://github.com/jordansissel/fpm/issues/1786
+.. _#1788: https://github.com/jordansissel/fpm/issues/1788
 .. _#1794: https://github.com/jordansissel/fpm/issues/1794
+.. _#1797: https://github.com/jordansissel/fpm/issues/1797
+.. _#1803: https://github.com/jordansissel/fpm/issues/1803
 .. _#185: https://github.com/jordansissel/fpm/issues/185
 .. _#186: https://github.com/jordansissel/fpm/issues/186
 .. _#187: https://github.com/jordansissel/fpm/issues/187

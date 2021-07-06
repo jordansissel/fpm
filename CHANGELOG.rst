@@ -1,6 +1,14 @@
 Release Notes and Change Log
 ============================
 
+1.13.1 (July 6, 2021)
+^^^^^^^^^^^^^^^^^^^^^
+* deb: The `--provides` flag now allows for versions. Previously, fpm would
+  remove the version part of a provides field when generating deb packages.
+  (`#1788`_, `#1803`_; Jordan Sissel, Phil Schwarz, tympanix)
+* osxpkg: Update documentation to include installing `rpm` tools on OSX
+  (`#1797`_; allen joslin)
+
 1.13.0 (June 19, 2021)
 ^^^^^^^^^^^^^^^^^^^^^^
 * Apple M1 users should now work (`#1772`_, `#1785`_, `#1786`_; Jordan Sissel)
