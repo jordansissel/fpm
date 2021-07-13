@@ -26,6 +26,9 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which python || brew install python; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which easy_install || echo 'easy_install not found'; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which virtualenv || pip install --user virtualenv ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which mksquashfs || brew install squashfs; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which rpm || brew install rpm; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then which rpmbuild || brew install rpmbuild; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then which virtualenv-tools || pip install --user virtualenv virtualenv-tools ; fi
   - |
     export PATH="/Users/travis/Library/Python/2.7/bin:${PATH}"
