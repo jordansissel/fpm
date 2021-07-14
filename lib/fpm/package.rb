@@ -390,6 +390,14 @@ class FPM::Package
       installdir = staging_path
     end
 
+    exclude_from(installdir)
+  end # def exclude
+
+  # Removes excluded files from the given installdir, Subclasses can use this
+  # during input to make use of base exclusion logic
+  def exclude_from(installdir)
+    return if attributes[:excludes].nil?
+
     Find.find(installdir) do |path|
       match_path = path.sub("#{installdir.chomp('/')}/", '')
 
@@ -404,7 +412,7 @@ class FPM::Package
         end
       end
     end
-  end # def exclude
+  end # def exclude_from
 
 
   class << self
