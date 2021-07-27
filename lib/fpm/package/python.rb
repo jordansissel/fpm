@@ -158,17 +158,19 @@ class FPM::Package::Python < FPM::Package
       end
 
       setup_cmd += [
-        "--build",
-        target,
         want_pkg,
       ]
+
+      # Use TMPDIR environment variable due to pip>20.3 removing the --build argument.
+      env = Hash["TMPDIR" => target]
+      setup_cmd.unshift(env)
       
       safesystem(*setup_cmd)
     end
 
-    # easy_install will put stuff in @tmpdir/packagename/, so find that:
-    #  @tmpdir/somepackage/setup.py
-    dirs = ::Dir.glob(File.join(target, "*"))
+    # pip will download stuff to @tmpdir/pip-download-*/, so find that:
+    #  @tmpdir/pip-download-*/somepackage-*/setup.py
+    dirs = ::Dir.glob(File.join(target, "pip-download-*/*"))
     if dirs.length != 1
       raise "Unexpected directory layout after easy_install. Maybe file a bug? The directory is #{build_path}"
     end
