@@ -1,4 +1,3 @@
-from distutils.core import Command
 import os
 import sys
 import pkg_resources
@@ -6,6 +5,12 @@ try:
     import json
 except ImportError:
     import simplejson as json
+
+# distutils.core is to be deprecated in python 3.10 (PEP 632)
+try:
+    from setuptools import Command
+except ImportError:
+    from distutils.core import Command
 
 PY3 = sys.version_info[0] == 3
 
