@@ -1,4 +1,27 @@
+import pkg_resources
+import re
+import sys
 from setuptools.dist import Distribution
+
+
+def gen_safe_name(allow_underscores):
+    if allow_underscores:
+        regex = '[^A-Za-z0-9_.]+'
+    else:
+        # This matches the original verion in pkg_resources.
+        regex = '[^A-Za-z0-9.]+'
+
+    def safe_name(name):
+        return re.sub(regex, '-', name)
+
+    return safe_name
+
+
+# Use simple argument parsing--older python lacks argparse and optparse has no
+# good way to ignore unrecognized options (which need to be passed through).
+pkg_resources.safe_name = gen_safe_name('--allow-underscores' in sys.argv)
+
+
 try:
     # Many older modules include a setup.py that uses distutils.core, which
     # does not support the install_requires attribute. Monkey-patch

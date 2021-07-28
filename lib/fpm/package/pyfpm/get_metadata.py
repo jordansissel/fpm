@@ -32,13 +32,16 @@ else:
 class get_metadata(Command):
     description = "get package metadata"
     user_options = [
+        ('allow-underscores', 'a', 'allow underscores in package names/deps'),
         ('load-requirements-txt', 'l',
          "load dependencies from requirements.txt"),
         ("output=", "o", "output destination for metadata json")
     ]
-    boolean_options = ['load-requirements-txt']
+    boolean_options = ['allow-underscores', 'load-requirements-txt']
 
     def initialize_options(self):
+        # allow-underscores is handled in python_patch.py; this is ignored here
+        self.allow_underscores = False
         self.load_requirements_txt = False
         self.cwd = None
         self.output = None
@@ -68,7 +71,7 @@ class get_metadata(Command):
 
     def run(self):
         data = {
-            "name": self.distribution.get_name(),
+            "name": pkg_resources.safe_name(self.distribution.get_name()),
             "version": self.distribution.get_version(),
             "author": u("%s <%s>") % (
                 u(self.distribution.get_author()),
