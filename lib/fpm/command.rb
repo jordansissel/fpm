@@ -5,6 +5,7 @@ require "fpm/util"
 require "clamp"
 require "ostruct"
 require "fpm"
+require "json"
 require "tmpdir" # for Dir.tmpdir
 
 if $DEBUG
@@ -95,6 +96,14 @@ class FPM::Command < Clamp::Command
     "A dependency. This flag can be specified multiple times. Value is " \
     "usually in the form of: -d 'name' or -d 'name > version'",
     :multivalued => true, :attribute_name => :dependencies
+
+  option "--name-map", "JSON-STRING",
+    "Key-value map of package or dependency names to convert, encoded as " \
+    "a JSON string. For each source name specified as a key, matching " \
+    "package names and dependencies will be converted to the corresponding" \
+    "value. This happens after any automatic determination of such names," \
+    "but before any manual specification set via --depends.",
+    :default => '{}'
 
   option "--no-depends", :flag, "Do not list any dependencies in this package",
     :default => false
@@ -385,6 +394,27 @@ class FPM::Command < Clamp::Command
       end
     end
 
+    name_hash = JSON.parse(name_map)
+
+    # Remap dependency names according to user-supplied values.
+    input.dependencies.map! do |dep|
+      # Dependency strings consist of a name, optionally followed by a space
+      # and some other trailing info. Save the trailing info for later.
+      dep_name, dep_post = dep.split(/ /, 2)
+      if not dep_post.nil?
+        # put the space back
+        dep_post = " #{dep_post}"
+      end
+      # Find remapped value or fall back to original.
+      name_hash.fetch(dep_name, dep_name) + dep_post
+    end
+
+    # Remap package name as well.
+    if not input.name.nil?
+      input.name = name_hash.fetch(input.name, input.name)
+    end
+
+
     # Override package settings if they are not the default flag values
     # the below proc essentially does:
     #
@@ -644,7 +674,17 @@ class FPM::Command < Clamp::Command
                 " or more gems to package from. As a full example, this " \
                 "will make an rpm of the 'json' rubygem: " \
                 "`fpm -s gem -t rpm json`")
+
+      check_json('--name-map', @command.name_map)
     end # def validate
+
+    def check_json(option, string)
+      begin
+        JSON.parse(string)
+      rescue JSON::JSONError => e
+        mandatory(false, "JSON error parsing #{option}: #{e}")
+      end
+    end
 
     def mandatory(value, message)
       if value.nil? or !value
