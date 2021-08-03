@@ -231,6 +231,9 @@ If you are using FPM in to build packages for multiple targets and keep repeatin
 
 	hello-world=/usr/bin/hello-world hello-world.1=/usr/share/man/man1/hello-world.1
 
+.. note::
+	CLI flags will override those in the ``.fpm`` file.
+
 Meanwhile, we could run the following commands in terminal to build the .deb and .rpm::
 
 	fpm -s dir -t deb -p hello-world-0.1.0-1-any.deb
