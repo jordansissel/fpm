@@ -1,24 +1,33 @@
-fpm - packaging made simple
-===========================
+FPM
+===
 
 .. note::
-  The documentation here is a work-in-progress. If you want to contribute new
-  docs or report problems, I invite you to do so on `the project issue tracker`_.
+  The documentation here is a work-in-progress; it is by no means extensive. If you want to contribute new docs or report problems, you are invited to do so on `the project issue tracker`_.
 
-.. _the project issue tracker: https://github.com/jordansissel/fpm/issues
+Welcome to the FPM documentation!
 
-.. include:: ../README.rst
+1. `Installation`_
+2. `Getting started`_
+3. `CLI reference`_
+4. `Contributing`_
+
+You can view the changelog `here`_.
 
 Table of Contents
 -----------------
 
 .. toctree::
-   :maxdepth: 2
-   :includehidden:
+	:includehidden:
 
-   intro
-   installing
-   use-cases
-   packages
-   contributing
-   changelog
+	installation
+	getting-started
+	cli-reference
+	contributing
+
+.. _Installation: /installation
+.. _Getting started: /getting-started
+.. _CLI reference: /cli-reference
+.. _Contributing: /contributing
+.. _here: /changelog
+
+.. _the project issue tracker: https://github.com/jordansissel/fpm/issues
