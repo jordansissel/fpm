@@ -141,7 +141,7 @@ Let's break the command down, option by option:
 
 * ``hello-world=/usr/bin/hello-world hello-world.1=/usr/share/man/man1/hello-world.1`` [required]
 	- This is the most important part. It tells FPM which file (relative paths from the current directory) should be installed to which path in the machine.
-	- In this case, we want the user to be able to execute the command ``hello-world`` from terminal; so we put the hello-world script in the user``s PATH, that is, in /usr/bin/. We also want the user to access the manual page using ``man hello-world``, so we put the manpage (hello-world.1) in the /usr/share/man/man1/ directory.
+	- In this case, we want the user to be able to execute the command ``hello-world`` from terminal; so we put the hello-world script in the user's PATH, that is, in /usr/bin/. We also want the user to access the manual page using ``man hello-world``, so we put the manpage (hello-world.1) in the /usr/share/man/man1/ directory.
 
 For more detailed documentation about each and every flag (there are some package-type-specific flags that exist as well), run ``fpm --help``.
 
@@ -203,7 +203,7 @@ By default, FPM believes the following to be true:
 * That you want the package name to be prefixed with the word perl
 * That the dependencies from CPAN are valid and that the naming scheme for those dependencies are prefixed with perl
 
-If you wish to avoid any of those issues you can try::
+If you wish to change any of the above, use the following::
 
 	fpm -t deb -s cpan -–cpan-perl-lib-path /usr/share/perl5 Fennec
 
