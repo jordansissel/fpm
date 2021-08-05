@@ -220,6 +220,7 @@ If you are using FPM in to build packages for multiple targets and keep repeatin
 
 	--- File: .fpm
 
+	-s dir
 	--name hello-world
 	--license agpl3
 	--version 0.1.0
@@ -236,9 +237,9 @@ If you are using FPM in to build packages for multiple targets and keep repeatin
 
 Meanwhile, we could run the following commands in terminal to build the .deb and .rpm::
 
-	fpm -s dir -t deb -p hello-world-0.1.0-1-any.deb
+	fpm -t deb -p hello-world-0.1.0-1-any.deb
 
-	fpm -s dir -t rpm -p hello-world-0.1.0-1-any.rpm
+	fpm -t rpm -p hello-world-0.1.0-1-any.rpm
 
 Tada! You will have a .deb (for Debian) and .rpm (for RedHat), with no unnecessary duplication of metadata. You can put any other valid CLI options in the ``.fpm`` file too.
 
