@@ -46,26 +46,25 @@ Here are instructions to install these dependencies on your machine:
 
 On OSX/macOS::
 
-    brew install gnu-tar
     brew install rpm squashfs
 
 On Arch Linux and Arch-based systems (Manjaro, EndeavourOS, etc)::
 
-		pacman -S base-devel ruby rpm-tools squashfs-tools
+    pacman -S rpm-tools squashfs-tools
 
 On Debian and Debian-based systems (Ubuntu, Linux Mint, Pop!_OS, etc)::
 
-    apt-get install ruby ruby-dev rubygems build-essential squashfs-tools
+    apt-get install squashfs-tools
 
 On Red Hat systems (Fedora 22 or older, CentOS, Rocky Linux, etc)::
 
-    yum install ruby-devel gcc make rpm-build rubygems squashfs-tools
+    yum install rpm-build squashfs-tools
 
 On Fedora 23 or newer::
 
-    dnf install ruby-devel gcc make rpm-build libffi-devel squashfs-tools
+    dnf install rpm-build squashfs-tools
 
 On Oracle Linux 7.x systems::
 
     yum-config-manager --enable ol7_optional_latest
-    yum install ruby-devel gcc make rpm-build rubygems squashfs-tools
+    yum install rpm-build squashfs-tools
