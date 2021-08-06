@@ -1,7 +1,7 @@
 Installation
 ============
 
-FPM is written in ruby and can be installed using `gem`. For some package formats (like snap), you will need certain packages installed to build them.
+FPM is written in ruby and can be installed using `gem`. For some package formats (like rpm and snap), you will need certain packages installed to build them.
 
 Installing FPM
 --------------
@@ -34,8 +34,10 @@ Installing optional dependencies
 
 Some package formats require other tools to be installed on your machine to be built; especially if you are building a package for another operating system/distribution.
 
-* RPM: rpm/rpm-tools/rpm-build
+* RPM: rpm/rpm-tools/rpm-build [This dependency might be removed in the future, see `issue #54`_ on github]
 * Snap: squashfs/squashfs-tools
+
+.. _issue #54: https://github.com/jordansissel/fpm/issues/54
 
 .. note::
 	You will not be able to build an osxpkg package (.pkg) for MacOS unless you are running MacOS.
