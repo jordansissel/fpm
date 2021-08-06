@@ -23,7 +23,7 @@ That said, some points to get started:
 Contributing changes by forking from GitHub
 -------------------------------------------
 
-First, create a GitHub account if you do not already have one.  Log in to
+First, create a GitHub account if you do not already have one. Log in to
 GitHub and go to [the main FPM GitHub page](https://github.com/jordansissel/fpm).
 
 At the top right, click on the button labeled "Fork".  This will put a forked
@@ -49,7 +49,7 @@ when it lists the FPM gem:
 
     ...
     Using json (1.8.1)
-    Using FPM (0.4.42) from source at .
+    Using fpm (0.4.42) from source at .
     Using hitimes (1.2.1)
     ...
 
