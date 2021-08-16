@@ -5,6 +5,8 @@ WORKDIR=./.work
 GITROOT=$(shell git rev-parse --show-toplevel)
 GITREMOTE=$(shell git remote -v | awk '/(push)/ {print $$2}')
 
+GENERATED_FILES=cli-reference.rst changelog_links.rst
+
 $(WORKDIR):
 	mkdir $(WORKDIR)
 
@@ -15,11 +17,16 @@ changelog_links.rst: ../CHANGELOG.rst Makefile
 		| awk '{printf ".. _#%s: https://github.com/jordansissel/fpm/issues/%s\n", $$1, $$1 }' \
 		| sort -u > $@
 
+# CLI reference is generated based on the the command line flags
+cli-reference.rst: generate-cli-reference.rb Makefile
+cli-reference.rst: ../lib/fpm/package/*.rb ../lib/fpm/package.rb
+	ruby generate-cli-reference.rb > $@
+
 .PHONY: docker-prep
 docker-prep: Dockerfile
 	@docker images fpm-sphinx | grep -q '^fpm-sphinx ' \
 	|| docker build -t $(IMAGE) .
 
 .PHONY: build
-build: changelog_links.rst | docker-prep
+build: $(GENERATED_FILES) | docker-prep
 	docker run -it -v $$PWD/../:/project:z $(IMAGE) sh -xc 'make -C /project/docs html && chown -R 1000:1000 /project/docs'
