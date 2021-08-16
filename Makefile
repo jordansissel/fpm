@@ -52,3 +52,18 @@ clean:
 
 publish-docs:
 	$(MAKE) -C docs publish
+
+# Testing in docker.
+# The dot file is a sentinal file that will built a docker image, and tag it.
+# The normal make target runs said image, mounting CWD against it.
+SECONDARY: .docker-test-minimal .docker-test-everything
+.docker-test-%: Gemfile.lock fpm.gemspec Dockerfile
+	DOCKER_BUILDKIT=1 docker build -t fpm-test-$*  --build-arg BASE_ENV=$* --build-arg TARGET=test .
+	touch "$@"
+
+docker-test-%: .docker-test-%
+	docker run -v `pwd`:/src fpm-test-$*
+
+docker-release-%:
+	DOCKER_BUILDKIT=1 docker build -t fpm  --build-arg BASE_ENV=$* --build-arg TARGET=release --squash .
+

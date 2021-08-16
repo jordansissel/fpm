@@ -42,3 +42,6 @@ Gemfile.lock
 
 docs/_build
 docs/.work
+
+.docker-test-everything
+.docker-test-minimal
