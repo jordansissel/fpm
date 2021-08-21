@@ -79,7 +79,11 @@ class FPM::Package::Python < FPM::Package
   option "--setup-py-arguments", "setup_py_argument",
     "Arbitrary argument(s) to be passed to setup.py",
     :multivalued => true, :attribute_name => :python_setup_py_arguments,
-    :default => []
+    :default => [] 
+  option "--internal-pip", :flag,
+    "Use the pip module within python to install modules",
+    :attribute_name => :python_internal_pip,
+    :default => true
 
   private
 
@@ -130,18 +134,19 @@ class FPM::Package::Python < FPM::Package
     target = build_path(package)
     FileUtils.mkdir(target) unless File.directory?(target)
 
-    if attributes[:python_pip].nil?
-      # no pip, use easy_install
-      logger.debug("no pip, defaulting to easy_install", :easy_install => attributes[:python_easyinstall])
-      safesystem(attributes[:python_easyinstall], "-i",
-                 attributes[:python_pypi], "--editable", "-U",
-                 "--build-directory", target, want_pkg)
-    else
+    if attributes[:python_internal_pip?]
+      # XXX: Should we detect if internal pip is available?
+      attributes[:python_pip] = [ attributes[:python_bin], "-m", "pip"]
+    end
+
+    # attributes[:python_pip] -- expected to be a path
+    if attributes[:python_pip]
       logger.debug("using pip", :pip => attributes[:python_pip])
       # TODO: Support older versions of pip
 
+      pip = [attributes[:python_pip]] if pip.is_a?(String)
       setup_cmd = [
-        attributes[:python_pip],
+        *attributes[:python_pip],
         "download",
         "--no-clean",
         "--no-deps",
@@ -164,6 +169,12 @@ class FPM::Package::Python < FPM::Package
       ]
       
       safesystem(*setup_cmd)
+    else
+      # no pip, use easy_install
+      logger.debug("no pip, defaulting to easy_install", :easy_install => attributes[:python_easyinstall])
+      safesystem(attributes[:python_easyinstall], "-i",
+                 attributes[:python_pypi], "--editable", "-U",
+                 "--build-directory", target, want_pkg)
     end
 
     # easy_install will put stuff in @tmpdir/packagename/, so find that:
