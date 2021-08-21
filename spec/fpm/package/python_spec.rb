@@ -4,7 +4,7 @@ require "fpm/package/python" # local
 require "find" # stdlib
 
 def python_usable?
-  return program_exists?("python") && program_exists?("easy_install")
+  return program_exists?("python")
 end
 
 if !python_usable?
@@ -124,7 +124,8 @@ describe FPM::Package::Python do
 
     it "it should include the dependencies from setup.py" do
       subject.input(example_dir)
-      insist { subject.dependencies.sort } == ["python-dependency1  ","python-dependency2  "]
+      # XXX: Why is there extra whitespace in these strings?
+      insist { subject.dependencies.sort } == ["python-dependency1  ","python-dependency2  ", "python-rtxt-dep4  "]
     end
 
     context "and :python_disable_dependency is set" do
@@ -134,7 +135,7 @@ describe FPM::Package::Python do
 
       it "it should exclude the dependency" do
         subject.input(example_dir)
-        insist { subject.dependencies.sort } == ["python-dependency2  "]
+        insist { subject.dependencies.sort } == ["python-dependency2  ", "python-rtxt-dep4  "]
       end
     end
   end
