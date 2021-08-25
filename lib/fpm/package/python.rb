@@ -266,6 +266,14 @@ class FPM::Package::Python < FPM::Package
 
         next if attributes[:python_disable_dependency].include?(name)
 
+        # dependency name prefixing is optional, if enabled, a name 'foo' will
+        # become 'python-foo' (depending on what the python_package_name_prefix
+        # is)
+        name = fix_name(name) if attributes[:python_fix_dependencies?]
+
+        # convert dependencies from python-Foo to python-foo
+        name = name.downcase if attributes[:python_downcase_dependencies?]
+
         # convert == to =
         if cmp == "=="
           logger.info("Converting == dependency requirement to =", :dependency => dep )
@@ -303,14 +311,6 @@ class FPM::Package::Python < FPM::Package
           nextversion = version_arr.join(".")
           self.dependencies << "#{name} < #{nextversion}"
         end
-
-        # dependency name prefixing is optional, if enabled, a name 'foo' will
-        # become 'python-foo' (depending on what the python_package_name_prefix
-        # is)
-        name = fix_name(name) if attributes[:python_fix_dependencies?]
-
-        # convert dependencies from python-Foo to python-foo
-        name = name.downcase if attributes[:python_downcase_dependencies?]
 
         self.dependencies << "#{name} #{cmp} #{version}"
       end
