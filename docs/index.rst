@@ -6,12 +6,6 @@ FPM
 
 Welcome to the FPM documentation!
 
-1. `Installation`_
-2. `Getting started`_
-3. `CLI reference`_
-4. `Contributing`_
-
-You can view the changelog `here`_.
 
 Table of Contents
 -----------------
@@ -31,3 +25,5 @@ Table of Contents
 .. _here: /changelog
 
 .. _the project issue tracker: https://github.com/jordansissel/fpm/issues
+
+You can view the changelog `here`_.
