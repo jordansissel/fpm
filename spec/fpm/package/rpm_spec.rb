@@ -162,6 +162,22 @@ describe FPM::Package::RPM do
         File.unlink(target)
       end
     end
+
+    context "with slight corrections" do
+      context "on the version attribute" do
+        it "should replace dash(-) with underscore(_)" do
+          subject.version = "123-456"
+          insist { subject.version } == "123_456"
+        end
+      end
+      context "on the iteration attribute" do
+        # Found in https://github.com/electron-userland/electron-builder/issues/5976
+        it "should replace dash(-) with underscore(_)" do
+          subject.iteration = "123-456"
+          insist { subject.iteration } == "123_456"
+        end
+      end
+    end
     context "package attributes" do
       before :each do
         @target = Stud::Temporary.pathname

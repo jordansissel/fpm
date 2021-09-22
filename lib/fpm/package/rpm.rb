@@ -254,6 +254,12 @@ class FPM::Package::RPM < FPM::Package
 
   # This method ensures a default value for iteration if none is provided.
   def iteration
+    if @iteration.kind_of?(String) and @iteration.include?("-")
+      logger.warn("Package iteration '#{@iteration}' includes dashes, converting" \
+                   " to underscores. rpmbuild does not allow the dashes in the package iteration (called 'Release' in rpm)")
+      @iteration = @iteration.gsub(/-/, "_")
+    end
+
     return @iteration ? @iteration : 1
   end # def iteration
 
