@@ -78,4 +78,4 @@ And maybe the architecture is wrong. fpm defaulted to x86_64 (what fpm calls
 RPM-specific command line flags
 -------------------------------
 
-TBD:
+.. include:: rpm-cli.rst
