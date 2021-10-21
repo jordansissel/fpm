@@ -22,6 +22,13 @@ cli-reference.rst: generate-cli-reference.rb Makefile
 cli-reference.rst: ../lib/fpm/package/*.rb ../lib/fpm/package.rb
 	ruby generate-cli-reference.rb > $@
 
+package-type-cli: 
+	$(MAKE) $(addprefix packages/,$(addsuffix -cli.rst,$(notdir $(basename $(wildcard ../lib/fpm/package/*.rb)))))
+
+packages/%-cli.rst: ../lib/fpm/package/%.rb
+	ruby generate-cli-reference.rb $* > $@
+
+
 .PHONY: docker-prep
 docker-prep: Dockerfile
 	@docker images fpm-sphinx | grep -q '^fpm-sphinx ' \

@@ -1,4 +1,4 @@
-FPM Command-line Reference
+Command-line Reference
 ==========================
 
 This page documents the command-line flags available in FPM. You can also see this content in your terminal by running ``fpm --help``
@@ -588,27 +588,6 @@ General Options
 * ``--snap-grade GRADE``
     - (snap only) Grade of this snap.
 
-* ``--pleaserun-name SERVICE_NAME``
-    - (pleaserun only) The name of the service you are creating
-
-* ``--pleaserun-chdir CHDIR``
-    - (pleaserun only) The working directory used by the service
-
-* ``--pacman-optional-depends PACKAGE``
-    - (pacman only) Add an optional dependency to the pacman package.
-
-* ``--[no-]pacman-use-file-permissions``
-    - (pacman only) Use existing file permissions when defining ownership and modes
-
-* ``--pacman-user USER``
-    - (pacman only) The owner of files in this package
-
-* ``--pacman-group GROUP``
-    - (pacman only) The group owner of files in this package
-
-* ``--pacman-compression COMPRESSION``
-    - (pacman only) The compression type to use, must be one of gz, bzip2, xz, zstd, none.
-
 * ``--virtualenv-pypi PYPI_URL``
     - (virtualenv only) PyPi Server uri for retrieving packages.
 
@@ -635,6 +614,27 @@ General Options
 
 * ``--virtualenv-find-links PIP_FIND_LINKS``
     - (virtualenv only) If a url or path to an html file, then parse for links to archives. If a local path or file:// url that's a directory, then look for archives in the directory listing.
+
+* ``--pacman-optional-depends PACKAGE``
+    - (pacman only) Add an optional dependency to the pacman package.
+
+* ``--[no-]pacman-use-file-permissions``
+    - (pacman only) Use existing file permissions when defining ownership and modes
+
+* ``--pacman-user USER``
+    - (pacman only) The owner of files in this package
+
+* ``--pacman-group GROUP``
+    - (pacman only) The group owner of files in this package
+
+* ``--pacman-compression COMPRESSION``
+    - (pacman only) The compression type to use, must be one of gz, bzip2, xz, zstd, none.
+
+* ``--pleaserun-name SERVICE_NAME``
+    - (pleaserun only) The name of the service you are creating
+
+* ``--pleaserun-chdir CHDIR``
+    - (pleaserun only) The working directory used by the service
 
 apk
 ---
