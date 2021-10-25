@@ -612,7 +612,7 @@ class FPM::Package::Deb < FPM::Package
         compression = "-z"
       when "bzip2"
         datatar = build_path("data.tar.bz2")
-        controltar = build_path("control.tar.bz2")
+        controltar = build_path("control.tar.gz")
         compression = "-j"
       when "xz"
         datatar = build_path("data.tar.xz")
@@ -863,12 +863,9 @@ class FPM::Package::Deb < FPM::Package
 
     # Tar up the staging_path into control.tar.{compression type}
     case self.attributes[:deb_compression]
-      when "gz", nil
+      when "gz", "bzip2", nil
         controltar = "control.tar.gz"
         compression = "-z"
-      when "bzip2"
-        controltar = "control.tar.bz2"
-        compression = "-j"
       when "xz"
         controltar = "control.tar.xz"
         compression = "-J"
