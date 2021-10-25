@@ -520,9 +520,16 @@ describe FPM::Package::Deb do
           deb.output(target)
         end
 
-        it "should use #{suffix} for data and control files" do
+        control_suffix = case flag
+          when 'bzip2'
+            'gz'
+          else
+            suffix
+        end
+
+        it "should use #{suffix} for data file and #{control_suffix} for control file" do
           list = `ar t #{target}`.split("\n")
-          insist { list }.include?("control.tar.#{suffix}")
+          insist { list }.include?("control.tar.#{control_suffix}")
           insist { list }.include?("data.tar.#{suffix}")
         end
       end
