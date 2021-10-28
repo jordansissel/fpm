@@ -23,7 +23,7 @@ You can find out how to use fpm in the `documentation`_.
 
 You can learn how to install fpm on your platform in the `installation guide`_.
 
-.. _installation guide: http://fpm.readthedocs.io/en/latest/installing.html
+.. _installation guide: https://fpm.readthedocs.io/en/latest/installation.html
 
 Project Principles
 ------------------
