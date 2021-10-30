@@ -14,6 +14,7 @@ describe FPM::Package::FreeBSD do
       Dir.mkdir(subject.staging_path("/usr"))
       Dir.mkdir(subject.staging_path("/usr/bin"))
       File.write(subject.staging_path("/usr/bin/example"), "testing")
+      File.write(subject.staging_path("/usr/bin/hello"), "world")
       subject.output(package)
     end
 
@@ -36,6 +37,11 @@ describe FPM::Package::FreeBSD do
         files.each do |path|
           insist { path }.start_with?("/")
         end
+      end
+
+      it "should contain expected files" do
+        insist { files }.include?("/usr/bin/example")
+        insist { files }.include?("/usr/bin/hello")
       end
     end
 
