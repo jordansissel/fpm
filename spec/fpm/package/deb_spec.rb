@@ -532,6 +532,19 @@ describe FPM::Package::Deb do
           insist { list }.include?("control.tar.#{control_suffix}")
           insist { list }.include?("data.tar.#{suffix}")
         end
+
+        # For issue #1840, PR #1841
+        # fpm should generate deb packages that do not cause lintian to crash
+        it "should not cause lintian to crash" do
+          skip("Missing lintian program") unless have_lintian
+
+          # Have lintian run with only one check. The goal here is to check if
+          # lintian crashes or not. This 'symlinks' check would normaly check
+          # for broken symlinks. Since this package has no files, this check
+          # should always succeed. It would fail if fpm generated any invalid
+          # packages, such as ones with a bzip2-compressed control.tar file (#1840)
+          insist { system("lintian", "-C", "symlinks", target) } == true
+        end
       end
     end
   end
