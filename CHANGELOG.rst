@@ -20,8 +20,7 @@ Release Notes and Change Log
 * Ruby 3.0 support: Added `rexml` as a runtime dependency. In Ruby 2.0, `rexml` came by default, but in Ruby 3.0, `rexml` is now a bundled gem and some distributiosn do not include it by default. (`#1794`_; Jordan Sissel)
 * Fix error "git: not found (Git::GitExecuteError)". Now loads `git` library only when using git features. (`#1753`_, `#1748`_, `#1751`_, `#1766`_; Jordan Sissel, Cameron Nemo, Jason Rogers, Luke Short)
 * deb: Fix syntax error in `postinst` (`--after-install`) script. (`#1752`_, `#1749`_, `#1764`_; rmanus, Adam Mohammed, Elliot Murphy, kimw, Jordan Sissel)
-* deb: --deb-compression now uses the same compression and file suffix on the control.tar file (`#1760`_; Philippe Poilbarbe
-)
+* deb: --deb-compression now uses the same compression and file suffix on the control.tar file (`#1760`_; Philippe Poilbarbe)
 
 
 1.12.0 (January 19, 2021)
@@ -59,7 +58,7 @@ Release Notes and Change Log
 * cpan: Adds `--[no-]cpan-verbose` flag which, when set, runs `cpanm` with the `--verbose` flag (`#1511`_; William N. Braswell, Jr)
 
 1.10.0 (May 21, 2018)
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
 
 * Pin `ruby-xz` dependency to one which allows Ruby versions older than 2.3.0 (`#1494`_; Marat Sharafutdinov)
 * Documentation improvements: `#1488`_; Arthur Burkart. `#1384`_; Justin Kolberg. `#1452`_; Anatoli Babenia.
@@ -87,7 +86,7 @@ Release Notes and Change Log
 * rpm: Fix `--config-files` handling (`#1390`_, `#1391`_; Jordan Sissel)
 
 1.9.1 (July 28, 2017) happy sysadmin day!
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Documentation improvements: `#1291`_; Pablo Castellano. `#1321`_; ge-fa. `#1309`_; jesusbagpuss. `#1349`_; Perry Stole. `#1352`_, Jordan Sissel. `#1384`_; Justin Kolberg.
 * Testing improvements: `#1320`_; Rob Young. `#1266`_; Ryan Parman. `#1374`_; Thiago Figueiró.
@@ -116,9 +115,9 @@ Release Notes and Change Log
 * Other: Remove unused archive-tar-minitar as a dependency of fpm (`#1355`_; Diego Martins)
 * Other: Add stud as a runtime dependency (`#1354`_; Elan Ruusamäe)
 
-.. _reproducible_builds:: https://reproducible-builds.org/
-.. _path mapping:: http://fpm.readthedocs.io/en/latest/source/dir.html#path-mapping
-.. _Deterministic output:: http://fpm.readthedocs.io/en/latest/source/gem.html
+.. _reproducible_builds: https://reproducible-builds.org/
+.. _path mapping: source/dir.html#path-mapping
+.. _Deterministic output: source/gem.html
 
 1.9.0 (July 28, 2017)
 ^^^^^^^^^^^^^^^^^^^^^
