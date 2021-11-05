@@ -23,12 +23,12 @@ cli-reference.rst: ../lib/fpm/package/*.rb ../lib/fpm/package.rb
 	ruby generate-cli-reference.rb > $@
 
 package-type-cli: 
-	$(MAKE) $(addprefix packages/,$(addsuffix -cli.rst,$(notdir $(basename $(wildcard ../lib/fpm/package/*.rb)))))
+	$(MAKE) $(addprefix packages/cli/,$(addsuffix .rst,$(notdir $(basename $(wildcard ../lib/fpm/package/*.rb)))))
 
 packages/cli:
 	mkdir $@
 
-packages/cli/%-cli.rst: ../lib/fpm/package/%.rb packages/cli
+packages/cli/%.rst: ../lib/fpm/package/%.rb packages/cli
 	ruby generate-cli-reference.rb $* > $@
 
 

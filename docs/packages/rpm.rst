@@ -3,7 +3,7 @@ rpm - RedHat Package Manager
 
 rpm is the package format used on RedHat Enterprise (RHEL), Fedora, CentOS, and
 a number of other Linux distributions.
-
+ 
 You may be familiar with tools such as `dnf` and `yum` for installing packages from repositories. The package files that these tools install are rpms.
 
 Supported Uses in FPM
@@ -78,4 +78,4 @@ And maybe the architecture is wrong. fpm defaulted to x86_64 (what fpm calls
 RPM-specific command line flags
 -------------------------------
 
-.. include:: rpm-cli.rst
+.. include:: cli/rpm.rst

@@ -114,4 +114,4 @@ And maybe the architecture is wrong. fpm defaulted to amd64 (what fpm calls
 Deb-specific command line flags
 -------------------------------
 
-.. include:: deb-cli.rst
+.. include:: cli/deb.rst
