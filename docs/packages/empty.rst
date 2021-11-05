@@ -29,18 +29,20 @@ Here's the fpm command to do this::
   % fpm -s empty -t rpm -n devtools -a all -d git -d curl -d nodejs
   Created package {:path=>"devtools-1.0-1.noarch.rpm"}
 
-We can check the dependencies on this package and also see that there are no files::
+We can check the dependencies on this package::
 
-  % dpkg --field devtools_1.0_all.deb Depends
-  git, curl, nodejs
+  % rpm -qp devtools-1.0-1.noarch.rpm --requires
+  curl
+  git
+  nodejs
+  rpmlib(CompressedFileNames) <= 3.0.4-1
+  rpmlib(PayloadFilesHavePrefix) <= 4.0-1
 
-  % dpkg --contents devtools_1.0_all.deb 
-  drwxrwxr-x 0/0               0 2021-11-04 22:38 ./
-  drwxr-xr-x 0/0               0 2021-11-04 22:38 ./usr/
-  drwxr-xr-x 0/0               0 2021-11-04 22:38 ./usr/share/
-  drwxr-xr-x 0/0               0 2021-11-04 22:38 ./usr/share/doc/
-  drwxr-xr-x 0/0               0 2021-11-04 22:38 ./usr/share/doc/devtools/
-  -rw-r--r-- 0/0             135 2021-11-04 22:38 ./usr/share/doc/devtools/changelog.gz
+And see that there are no files::
+
+  % rpm -ql devtools-1.0-1.noarch.rpm
+  (contains no files)
+
 
 Fun Examples
 ------------
