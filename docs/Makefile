@@ -25,7 +25,10 @@ cli-reference.rst: ../lib/fpm/package/*.rb ../lib/fpm/package.rb
 package-type-cli: 
 	$(MAKE) $(addprefix packages/,$(addsuffix -cli.rst,$(notdir $(basename $(wildcard ../lib/fpm/package/*.rb)))))
 
-packages/%-cli.rst: ../lib/fpm/package/%.rb
+packages/cli:
+	mkdir $@
+
+packages/cli/%-cli.rst: ../lib/fpm/package/%.rb packages/cli
 	ruby generate-cli-reference.rb $* > $@
 
 
@@ -37,3 +40,8 @@ docker-prep: Dockerfile
 .PHONY: build
 build: $(GENERATED_FILES) | docker-prep
 	docker run -it -v $$PWD/../:/project:z $(IMAGE) sh -xc 'make -C /project/docs html && chown -R 1000:1000 /project/docs'
+
+
+.PHONY: build
+view: $(GENERATED_FILES) | docker-prep
+	docker run -p 127.0.0.1:8000:8000 -it -v $$PWD/../:/project:z $(IMAGE) sh -xc 'make -C /project/docs livehtml'
