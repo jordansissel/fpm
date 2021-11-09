@@ -81,7 +81,7 @@ class FPM::Package::Python < FPM::Package
     :multivalued => true, :attribute_name => :python_setup_py_arguments,
     :default => [] 
   option "--internal-pip", :flag,
-    "Use the pip module within python to install modules",
+    "Use the pip module within python to install modules - aka 'python -m pip'. This is the recommended usage since Python 3.4 (2014) instead of invoking the 'pip' script",
     :attribute_name => :python_internal_pip,
     :default => true
 
