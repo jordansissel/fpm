@@ -3,13 +3,19 @@ require "fpm" # local
 require "fpm/package/python" # local
 require "find" # stdlib
 
+def find_python
+  [ "python", "python3", "python2" ].each do |i|
+    return i if program_exists?(i)
+  end
+  return nil
+end
+
 def python_usable?
-  return program_exists?("python")
+  return find_python
 end
 
 if !python_usable?
-  Cabin::Channel.get("rspec").warn("Skipping Python#input tests because " \
-    "'python' and/or 'easy_install' isn't in your PATH")
+  Cabin::Channel.get("rspec").warn("Skipping Python#input tests because 'python' wasn't found in $PATH")
 end
 
 is_travis = ENV["TRAVIS_OS_NAME"] && !ENV["TRAVIS_OS_NAME"].empty?
@@ -28,7 +34,8 @@ end
 
 describe FPM::Package::Python do
   before do
-    skip("Python and/or easy_install not found") unless python_usable?
+    skip("Python program not found") unless python_usable?
+    subject.attributes[:python_bin] = find_python
   end
 
   let (:example_dir) do
