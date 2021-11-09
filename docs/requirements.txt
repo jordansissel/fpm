@@ -1,0 +1,2 @@
+# https://blog.readthedocs.com/build-errors-docutils-0-18/
+docutils<0.18
