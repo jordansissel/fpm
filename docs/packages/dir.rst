@@ -32,7 +32,7 @@ First, we download the ``kubectl`` binary, according to the kubernetes documenta
   # Make it executable
   % chmod 755 kubectl
 
-The above shell will find the latest version of ``kubectl`` and download it. We'll use the file and the version number next to make our package:
+The above shell will find the latest version of ``kubectl`` and download it. We'll use the file and the version number next to make our package::
 
   # Create the package that installs kubectl as /usr/bin/kubectl
   % fpm -s dir -t deb -n kubectl -a amd64 -v ${version#v*} kubectl=/usr/bin/kubectl
