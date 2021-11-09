@@ -677,6 +677,43 @@ class FPM::Package::Deb < FPM::Package
       fix_provides(provides)
     end.flatten
 
+    if origin == FPM::Package::CPAN
+      # The fpm cpan code presents dependencies and provides fields as perl(ModuleName)
+      # so we'll need to convert them to something debian supports.
+
+      # Replace perl(ModuleName) > 1.0 with Debian-style perl-ModuleName (> 1.0)
+      perldepfix = lambda do |dep|
+        m = dep.match(/perl\((?<name>[A-Za-z0-9_:]+)\)\s*(?<op>.*$)/)
+        if m.nil?
+          # 'dep' syntax didn't look like 'perl(Name) > 1.0'
+          dep
+        else
+          # Also replace '::' in the perl module name with '-'
+          modulename = m["name"].gsub("::", "-")
+         
+          # Fix any upper-casing or other naming concerns Debian has about packages
+          name = "#{attributes[:cpan_package_name_prefix]}-#{modulename}"
+
+          if m["op"].empty?
+            name
+          else
+            # 'dep' syntax was like this (version constraint): perl(Module) > 1.0
+            "#{name} (#{m["op"]})"
+          end
+        end
+      end
+
+      rejects = [ "perl(vars)", "perl(warnings)", "perl(strict)", "perl(Config)" ]
+      self.dependencies = self.dependencies.reject do |dep|
+        # Reject non-module Perl dependencies like 'vars' and 'warnings'
+        rejects.include?(dep)
+      end.collect(&perldepfix).collect(&method(:fix_dependency))
+
+      # Also fix the Provides field 'perl(ModuleName) = version' to be 'perl-modulename (= version)'
+      self.provides = self.provides.collect(&perldepfix).collect(&method(:fix_provides))
+
+    end # if origin == FPM::Packagin::CPAN
+
     if origin == FPM::Package::Deb
       changelog_path = staging_path("usr/share/doc/#{name}/changelog.Debian.gz")
       if File.exists?(changelog_path)
