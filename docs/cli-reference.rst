@@ -537,6 +537,9 @@ General Options
 * ``--python-setup-py-arguments setup_py_argument``
     - (python only) Arbitrary argument(s) to be passed to setup.py
 
+* ``--[no-]python-internal-pip``
+    - (python only) Use the pip module within python to install modules - aka 'python -m pip'. This is the recommended usage since Python 3.4 (2014) instead of invoking the 'pip' script
+
 * ``--osxpkg-identifier-prefix IDENTIFIER_PREFIX``
     - (osxpkg only) Reverse domain prefix prepended to package identifier, ie. 'org.great.my'. If this is omitted, the identifer will be the package name.
 
@@ -894,6 +897,8 @@ python
     - Should the package dependencies be prefixed?
 * ``--[no-]python-fix-name``
     - Should the target package name be prefixed?
+* ``--[no-]python-internal-pip``
+    - Use the pip module within python to install modules - aka 'python -m pip'. This is the recommended usage since Python 3.4 (2014) instead of invoking the 'pip' script
 * ``--[no-]python-obey-requirements-txt``
     - Use a requirements.txt file in the top-level directory of the python package for dependency detection.
 * ``--python-bin PYTHON_EXECUTABLE``

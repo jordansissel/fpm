@@ -1,6 +1,10 @@
 Release Notes and Change Log
 ============================
 
+1.14.1 (November 10, 2021)
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+* Fix a bug that impacted fpm api usage (from other ruby programs) that caused an error "NameError: uninitialized constant FPM::Package::CPAN" when trying to output a Deb package. (`#1854`_, `#1856`_; Karol Bucek, Jordan Sissel)
+
 1.14.0 (November 9, 2021)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 * python: Use pip by default for fetching Python packages. This matches the Python 3 "installation" docs which recommend calling pip as ``python -m pip`` where ``python`` depends on ``--python-bin`` (default "python"). Previous default was to use `easy_install` which is no longer available on many newer systems. To use easy_install, you can set ``--no-python-internal-pip`` to revert this pip default. Further, you can specify your own pip path instead of using ``python -m pip`` with the ``--python-pip /path/to/pip`` flag. (`#1820`_, `#1821`_; Jordan Sissel)
