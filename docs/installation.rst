@@ -22,9 +22,9 @@ To make sure fpm is installed correctly, try running the following command::
 You should get some output like this, although the exact output will depend on which version of FPM you have installed.::
 
     % fpm --version
-    1.13.1
+    1.14.0
 
-Now you can go on to :doc:`using FPM! <getting-started>`
+Now you can go on to `using FPM! <getting-started.html>`_
 
 Installing optional dependencies
 --------------------------------
