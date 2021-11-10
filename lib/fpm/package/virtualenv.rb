@@ -2,6 +2,8 @@ require "fpm/namespace"
 require "fpm/package"
 require "fpm/util"
 
+require "fpm/package/dir"
+
 # Support for python virtualenv packages.
 #
 # This supports input, but not output.
