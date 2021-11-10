@@ -1,6 +1,20 @@
 Release Notes and Change Log
 ============================
 
+1.14.0 (??????)
+^^^^^^^^^^^^^^^
+* python: Use pip by default for fetching Python packages. This matches the Python 3 "installation" docs which recommend calling pip as ``python -m pip`` where ``python`` depends on ``--python-bin`` (default "python"). Previous default was to use `easy_install` which is no longer available on many newer systems. To use easy_install, you can set ``--no-python-internal-pip`` to revert this pip default. Further, you can specify your own pip path instead of using ``python -m pip`` with the ``--python-pip /path/to/pip`` flag. (`#1820`_, `#1821`_; Jordan Sissel)
+* python: Support extras_require build markers in python packages (`#1307`_, `#1816`_; Joris Vandermeersch)
+* freebsd: Fix bug which caused fpm to generate incorrect FreeBSD packages "missing leading `/`" (`#1811`_, `#1812`_, `#1844`_, `#1832`_, `#1845`_; Vlastimil Holer, Clayton Wong, Markus Ueberall, Jordan Sissel)
+* deb: In order to only allow fpm to create valid packages, fpm now rejects packages with invalid "provides" (``--provides``) values. (`#1829`_, `#1825`_; Jordan Sissel, Peter Teichman)
+* deb: Only show a warning about /etc and config files if there are files in /etc (`#1852`_, `#1851`_; Jordan Sissel)
+
+* rpm: replace dash with underscore in rpm's "Release" field aka what fpm calls ``--iteration``. (`#1834`_, `#1833`_; Jordan Sissel)
+* empty: `fpm -s empty ...` now defaults to "all" architecture instead of "native". (`#1850`_, `#1846`_; Jordan Sissel)
+* Significant documentation improvements rewriting most of the documentation. New overview pages, full CLI flag listing, and new sections dedicated package types (rpm, cpan, deb, etc). (`#1815`_, `#1817`_, `#1838`_; Vedant K, Jordan Sissel)
+* Typo fixes in documentation are always appreciated! (`#1842`_; Clayton Wong)
+* fpm can now (we hope!) now be tested more easily from docker (`#1818`_, `#1682`_, `#1453`_; @directionless, Jordan Sissel, Douglas Muth)
+
 1.13.1 (July 6, 2021)
 ^^^^^^^^^^^^^^^^^^^^^
 * deb: The `--provides` flag now allows for versions. Previously, fpm would
