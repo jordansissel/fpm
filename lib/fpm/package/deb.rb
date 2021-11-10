@@ -8,6 +8,10 @@ require "fileutils"
 require "digest"
 require "zlib"
 
+# For handling conversion
+require "fpm/package/cpan"
+require "fpm/package/gem"
+
 # Support for debian packages (.deb files)
 #
 # This class supports both input and output of packages.
