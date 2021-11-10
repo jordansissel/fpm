@@ -1,8 +1,8 @@
 Release Notes and Change Log
 ============================
 
-1.14.0 (??????)
-^^^^^^^^^^^^^^^
+1.14.0 (November 9, 2021)
+^^^^^^^^^^^^^^^^^^^^^^^^^
 * python: Use pip by default for fetching Python packages. This matches the Python 3 "installation" docs which recommend calling pip as ``python -m pip`` where ``python`` depends on ``--python-bin`` (default "python"). Previous default was to use `easy_install` which is no longer available on many newer systems. To use easy_install, you can set ``--no-python-internal-pip`` to revert this pip default. Further, you can specify your own pip path instead of using ``python -m pip`` with the ``--python-pip /path/to/pip`` flag. (`#1820`_, `#1821`_; Jordan Sissel)
 * python: Support extras_require build markers in python packages (`#1307`_, `#1816`_; Joris Vandermeersch)
 * freebsd: Fix bug which caused fpm to generate incorrect FreeBSD packages "missing leading `/`" (`#1811`_, `#1812`_, `#1844`_, `#1832`_, `#1845`_; Vlastimil Holer, Clayton Wong, Markus Ueberall, Jordan Sissel)
