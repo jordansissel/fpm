@@ -55,7 +55,7 @@ publish-docs:
 
 release-prep:
 	rm -f docs/changelog_links.rst docs/cli-reference.rst
-	make -C docs changelog_links.rst cli-reference.rst
+	make -C docs changelog_links.rst cli-reference.rst package-type-cli
 
 # Testing in docker.
 # The dot file is a sentinal file that will built a docker image, and tag it.
