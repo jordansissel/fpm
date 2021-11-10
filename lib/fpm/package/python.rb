@@ -150,8 +150,8 @@ class FPM::Package::Python < FPM::Package
         "download",
         "--no-clean",
         "--no-deps",
-        "--no-binary",
-        ":all:",
+        "--no-binary", ":all:",
+        "-d", build_path,
         "-i", attributes[:python_pypi],
       ]
 
