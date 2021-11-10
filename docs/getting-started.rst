@@ -189,9 +189,7 @@ Packaging a CPAN module
 .. note::
 	This assumes you have perl already installed on your machine.
 
-Run the following command::
-
-E.g.: To package Fennec for Debian::
+Run the following command package the perl Fennec module for Debian::
 
 	fpm -s cpan -t deb Fennec
 
