@@ -53,6 +53,10 @@ clean:
 publish-docs:
 	$(MAKE) -C docs publish
 
+release-prep:
+	rm -f docs/changelog_links.rst docs/cli-reference.rst
+	make -C docs changelog_links.rst cli-reference.rst
+
 # Testing in docker.
 # The dot file is a sentinal file that will built a docker image, and tag it.
 # The normal make target runs said image, mounting CWD against it.
