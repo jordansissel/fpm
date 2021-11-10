@@ -4,6 +4,9 @@ require "fileutils"
 require "find"
 require "arr-pm/file" # gem 'arr-pm'
 
+# For conversion handling
+require "fpm/package/gem"
+
 # RPM Package type.
 #
 # Build RPMs without having to waste hours reading Maximum-RPM.
