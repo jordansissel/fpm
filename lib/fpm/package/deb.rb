@@ -1007,7 +1007,7 @@ class FPM::Package::Deb < FPM::Package
     etcfiles = []
     # Add everything in /etc
     begin
-      if !attributes[:deb_no_default_config_files?]
+      if !attributes[:deb_no_default_config_files?] && File.exists?(staging_path("/etc"))
         logger.warn("Debian packaging tools generally labels all files in /etc as config files, " \
                     "as mandated by policy, so fpm defaults to this behavior for deb packages. " \
                     "You can disable this default behavior with --deb-no-default-config-files flag")
