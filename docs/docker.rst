@@ -18,7 +18,7 @@ First, build a container will all the dependencies::
 Now, run it as you would the fpm command. Note that you will have to
 mount your source directly into the docker volume::
 
-   docker run -v $(pwd):/src fpm --help
+   docker run -v "$(pwd):/src" fpm --help
 
 As a full example::
 
