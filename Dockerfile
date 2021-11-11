@@ -66,9 +66,8 @@ RUN install -d -o fpm /origsrc
 COPY --chown=fpm . /origsrc
 ENV HOME=/origsrc
 ENV BUNDLE_PATH=/origsrc/.bundle
-# Install a specific version of bundler
 WORKDIR /origsrc
-RUN gem install -v "$(grep -A1 '^BUNDLED WITH' Gemfile.lock | tail -1)" bundler
+RUN gem install bundler
 USER fpm
 RUN bundle install
 CMD bundle exec rspec
