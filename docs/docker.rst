@@ -34,6 +34,14 @@ As a full example::
 Depending on your needs, you will have to adjust the volume mounts and
 relative paths to fit your particular situation.
 
+Developing using docker
+-----------------------
+The docker image can be useful for doing ad-hoc testing of changes made to the
+FPM source. To do this, build an image as described above, then run the `fpm`
+script from within the source directory. For example::
+
+    docker run -v "$(pwd):/src" --entrypoint /src/bin/fpm fpm --help
+
 Running rpsec inside docker
 ---------------------------
 
