@@ -69,5 +69,5 @@ docker-test-%: .docker-test-%
 	docker run -v `pwd`:/src fpm-test-$*
 
 docker-release-%:
-	DOCKER_BUILDKIT=1 docker build -t fpm  --build-arg BASE_ENV=$* --build-arg TARGET=release --squash .
+	DOCKER_BUILDKIT=1 docker build -t fpm  --build-arg BASE_ENV=$* --build-arg TARGET=release .
 
