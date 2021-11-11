@@ -15,6 +15,9 @@ RUN false
 # Base container is used for various release and test things
 FROM ubuntu:18.04 as minimal-base
 
+# This avoids 'pip' having decoding errors for UTF-8 paths.
+ENV LC_ALL=C.UTF-8
+
 # Runtime deps. Build deps go in the build or test containers
 RUN apt-get update \
 	&& apt-get -y dist-upgrade \
