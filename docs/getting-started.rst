@@ -20,7 +20,7 @@ The source could be a:
 * python (using easy_install or a local setup.py) package - ``python``
 * python virtualenv - ``virtualenv``
 * pear package - ``pear``
-* pearl (cpan) module - ``cpan``
+* perl (cpan) module - ``cpan``
 * .deb package - ``deb``
 * .rpm package - ``rpm``
 * pacman (.pkg.tar.zst) package - ``pacman``
