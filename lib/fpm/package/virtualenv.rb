@@ -27,7 +27,7 @@ class FPM::Package::Virtualenv < FPM::Package
   "The path to the virtualenv executable you wish to run.", :default => "virtualenv"
   
   option "--python", "VIRTUALENV_PYTHON",
-  "The version of python to create the virtualenv with", :default => "python"
+  "The path to the python binary to use with virtualenv", :default => "python"
 
   option "--fix-name", :flag, "Should the target package name be prefixed?",
   :default => true
