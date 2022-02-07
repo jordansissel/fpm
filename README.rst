@@ -41,7 +41,7 @@ situations), but small tweaks can fix it.
 
 And sometimes, there isn't a package available for the tool you need.
 
-And sometimes if you ask "How do I get python 3 on CentOS 5?" some unhelpful
+And sometimes if you ask "How do I get python 3.9 on RHEL 8?" some unhelpful
 trolls will tell you to "Use another distro"
 
 Further, job switches have me flipping between Ubuntu and CentOS. These use
