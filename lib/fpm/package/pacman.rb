@@ -234,7 +234,7 @@ class FPM::Package::Pacman < FPM::Package
         return ""
       when "gz"
         return ".gz"
-      when "zx"
+      when "xz"
         return ".xz"
       when "bzip2"
         return ".bz2"
