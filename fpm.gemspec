@@ -57,6 +57,8 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency("insist", "~> 1.0.0") # license: Apache 2
   spec.add_development_dependency("pry")
 
+  spec.add_development_dependency("rake") # For FPM::RakeTask, #1877, #756
+
   spec.files = files
   spec.require_paths << "lib"
   spec.bindir = "bin"
