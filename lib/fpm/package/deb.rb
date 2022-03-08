@@ -613,25 +613,24 @@ class FPM::Package::Deb < FPM::Package
       when "gz", nil
         datatar = build_path("data.tar.gz")
         controltar = build_path("control.tar.gz")
-        compression = "-z"
+        compression_flags = ["-z"]
       when "bzip2"
         datatar = build_path("data.tar.bz2")
         controltar = build_path("control.tar.gz")
-        compression = "-j"
+        compression_flags = ["-j"]
       when "xz"
         datatar = build_path("data.tar.xz")
         controltar = build_path("control.tar.xz")
-        compression = "-J"
+        compression_flags = ["-J"]
       when "none"
         datatar = build_path("data.tar")
         controltar = build_path("control.tar")
-        compression = ""
+        compression_flags = []
       else
         raise FPM::InvalidPackageConfiguration,
           "Unknown compression type '#{self.attributes[:deb_compression]}'"
     end
-
-    args = [ tar_cmd, "-C", staging_path, compression ] + data_tar_flags + [ "-cf", datatar, "." ]
+    args = [ tar_cmd, "-C", staging_path ] + compression_flags + data_tar_flags + [ "-cf", datatar, "." ]
     if tar_cmd_supports_sort_names_and_set_mtime? and not attributes[:source_date_epoch].nil?
       # Use gnu tar options to force deterministic file order and timestamp
       args += ["--sort=name", ("--mtime=@%s" % attributes[:source_date_epoch])]
@@ -906,13 +905,13 @@ class FPM::Package::Deb < FPM::Package
     case self.attributes[:deb_compression]
       when "gz", "bzip2", nil
         controltar = "control.tar.gz"
-        compression = "-z"
+        compression_flags = ["-z"]
       when "xz"
         controltar = "control.tar.xz"
-        compression = "-J"
+        compression_flags = ["-J"]
       when "none"
         controltar = "control.tar"
-        compression = ""
+        compression_flags = []
       else
         raise FPM::InvalidPackageConfiguration,
           "Unknown compression type '#{self.attributes[:deb_compression]}'"
@@ -922,7 +921,7 @@ class FPM::Package::Deb < FPM::Package
     build_path(controltar).tap do |controltar|
       logger.info("Creating", :path => controltar, :from => control_path)
 
-      args = [ tar_cmd, "-C", control_path, compression, "-cf", controltar,
+      args = [ tar_cmd, "-C", control_path ] + compression_flags + [ "-cf", controltar,
         "--owner=0", "--group=0", "--numeric-owner", "." ]
       if tar_cmd_supports_sort_names_and_set_mtime? and not attributes[:source_date_epoch].nil?
         # Force deterministic file order and timestamp
