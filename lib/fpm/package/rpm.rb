@@ -192,17 +192,26 @@ class FPM::Package::RPM < FPM::Package
   # Replace * with [*] to make rpm not use globs
   # Replace ? with [?] to make rpm not use globs
   # Replace % with [%] to make rpm not expand macros
+  # Replace whitespace with ? to make rpm not split the filename
+  # If and only if any of the above are done, then also replace ' with \', " with \", and \ with \\\\
+  #   to accommodate escape and quote processing that rpm will perform in that case (but not otherwise)
   def rpm_fix_name(name)
-    name = name.gsub(/(\ |\[|\]|\*|\?|\%|\$|')/, {
-      ' ' => '?',
-      '%' => '[%]',
-      '$' => '[$]',
-      '?' => '[?]',
-      '*' => '[*]',
-      '[' => '[\[]',
-      ']' => '[\]]',
-      "'" => "\\'",
-    })
+    if name.match?(/[ \t*?%$\[\]]/)
+      name = name.gsub(/(\ |\t|\[|\]|\*|\?|\%|\$|'|"|\\)/, {
+        ' '  => '?',
+        "\t" => '?',
+        '%'  => '[%]',
+        '$'  => '[$]',
+        '?'  => '[?]',
+        '*'  => '[*]',
+        '['  => '[\[]',
+        ']'  => '[\]]',
+        '"'  => '\\"',
+        "'"  => "\\'",
+        '\\' => '\\\\\\\\',
+      })
+    end
+    name
   end
 
   def rpm_file_entry(file)
