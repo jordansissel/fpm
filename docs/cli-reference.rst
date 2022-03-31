@@ -210,6 +210,36 @@ General Options
 * ``--gem-git-branch GIT_BRANCH``
     - (gem only) When using a git repo as the source of the gem instead of rubygems.org, use this git branch.
 
+* ``--cpan-perl-bin PERL_EXECUTABLE``
+    - (cpan only) The path to the perl executable you wish to run.
+
+* ``--cpan-cpanm-bin CPANM_EXECUTABLE``
+    - (cpan only) The path to the cpanm executable you wish to run.
+
+* ``--cpan-mirror CPAN_MIRROR``
+    - (cpan only) The CPAN mirror to use instead of the default.
+
+* ``--[no-]cpan-mirror-only``
+    - (cpan only) Only use the specified mirror for metadata.
+
+* ``--cpan-package-name-prefix NAME_PREFIX``
+    - (cpan only) Name to prefix the package name with.
+
+* ``--[no-]cpan-test``
+    - (cpan only) Run the tests before packaging?
+
+* ``--[no-]cpan-verbose``
+    - (cpan only) Produce verbose output from cpanm?
+
+* ``--cpan-perl-lib-path PERL_LIB_PATH``
+    - (cpan only) Path of target Perl Libraries
+
+* ``--[no-]cpan-sandbox-non-core``
+    - (cpan only) Sandbox all non-core modules, even if they're already installed
+
+* ``--[no-]cpan-cpanm-force``
+    - (cpan only) Pass the --force parameter to cpanm
+
 * ``--[no-]deb-ignore-iteration-in-dependencies``
     - (deb only) For '=' (equal) dependencies, allow iterations on the specified version. Default is to be specific. This option allows the same version of a package but any iteration is permitted
 
@@ -428,36 +458,6 @@ General Options
 
 * ``--rpm-trigger-after-target-uninstall '[OPT]PACKAGE: FILEPATH'``
     - (rpm only) Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
-
-* ``--cpan-perl-bin PERL_EXECUTABLE``
-    - (cpan only) The path to the perl executable you wish to run.
-
-* ``--cpan-cpanm-bin CPANM_EXECUTABLE``
-    - (cpan only) The path to the cpanm executable you wish to run.
-
-* ``--cpan-mirror CPAN_MIRROR``
-    - (cpan only) The CPAN mirror to use instead of the default.
-
-* ``--[no-]cpan-mirror-only``
-    - (cpan only) Only use the specified mirror for metadata.
-
-* ``--cpan-package-name-prefix NAME_PREFIX``
-    - (cpan only) Name to prefix the package name with.
-
-* ``--[no-]cpan-test``
-    - (cpan only) Run the tests before packaging?
-
-* ``--[no-]cpan-verbose``
-    - (cpan only) Produce verbose output from cpanm?
-
-* ``--cpan-perl-lib-path PERL_LIB_PATH``
-    - (cpan only) Path of target Perl Libraries
-
-* ``--[no-]cpan-sandbox-non-core``
-    - (cpan only) Sandbox all non-core modules, even if they're already installed
-
-* ``--[no-]cpan-cpanm-force``
-    - (cpan only) Pass the --force parameter to cpanm
 
 * ``--pear-package-name-prefix PREFIX``
     - (pear only) Name prefix for pear package
