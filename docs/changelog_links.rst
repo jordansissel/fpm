@@ -68,6 +68,7 @@
 .. _#1376: https://github.com/jordansissel/fpm/issues/1376
 .. _#1379: https://github.com/jordansissel/fpm/issues/1379
 .. _#1384: https://github.com/jordansissel/fpm/issues/1384
+.. _#1385: https://github.com/jordansissel/fpm/issues/1385
 .. _#1390: https://github.com/jordansissel/fpm/issues/1390
 .. _#1391: https://github.com/jordansissel/fpm/issues/1391
 .. _#1395: https://github.com/jordansissel/fpm/issues/1395
@@ -154,9 +155,13 @@
 .. _#1864: https://github.com/jordansissel/fpm/issues/1864
 .. _#186: https://github.com/jordansissel/fpm/issues/186
 .. _#1875: https://github.com/jordansissel/fpm/issues/1875
+.. _#1876: https://github.com/jordansissel/fpm/issues/1876
 .. _#1877: https://github.com/jordansissel/fpm/issues/1877
 .. _#1879: https://github.com/jordansissel/fpm/issues/1879
 .. _#187: https://github.com/jordansissel/fpm/issues/187
+.. _#1882: https://github.com/jordansissel/fpm/issues/1882
+.. _#1884: https://github.com/jordansissel/fpm/issues/1884
+.. _#1886: https://github.com/jordansissel/fpm/issues/1886
 .. _#190: https://github.com/jordansissel/fpm/issues/190
 .. _#191: https://github.com/jordansissel/fpm/issues/191
 .. _#193: https://github.com/jordansissel/fpm/issues/193
