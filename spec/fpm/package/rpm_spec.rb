@@ -530,6 +530,21 @@ describe FPM::Package::RPM do
       insist { rpm.files } == [ "/example/%name%" ]
     end
 
+    it "should correctly include files with spaces and quotation marks" do
+      names = [
+        "/It's time to go.txt",
+        "/It's \"time\" to go.txt"
+      ]
+
+      names.each do |n|
+        File.write(subject.staging_path("#{n}"), "Hello")
+      end
+      subject.output(@target)
+
+      rpm = ::RPM::File.new(@target)
+      insist { rpm.files.sort } == names.sort
+    end
+
     it "should escape '%' characters in filenames while preserving permissions" do
       Dir.mkdir(subject.staging_path("/example"))
       File.write(subject.staging_path("/example/%name%"), "Hello")
