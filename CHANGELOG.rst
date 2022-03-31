@@ -1,6 +1,12 @@
 Release Notes and Change Log
 ============================
 
+1.14.2 (March 30, 2022)
+^^^^^^^^^^^^^^^^^^^^^^^
+* deb: fix bug causing ``--deb-compression none`` to invoke ``tar`` incorrectly (`#1879`_; John Howard)
+* Fixed mistake causing the test suite to fail when ``rake`` wasn't available. (`#1877`_; Jordan Sissel)
+* docs: Small but lovely documentation fixes (`#1875`_ by Corey Quinn, `#1864`_ by Geoff Beier)
+
 1.14.1 (November 10, 2021)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 * Fix a bug that impacted fpm api usage (from other ruby programs) that caused an error "NameError: uninitialized constant FPM::Package::CPAN" when trying to output a Deb package. (`#1854`_, `#1856`_; Karol Bucek, Jordan Sissel)
