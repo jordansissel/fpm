@@ -4,9 +4,11 @@ Release Notes and Change Log
 1.14.2 (March 30, 2022)
 ^^^^^^^^^^^^^^^^^^^^^^^
 * deb: fix bug causing ``--deb-compression none`` to invoke ``tar`` incorrectly (`#1879`_; John Howard)
-* Fixed mistake causing the test suite to fail when ``rake`` wasn't available. (`#1877`_; Jordan Sissel)
+* rpm: Better support for paths that have spaces and mixed quotation marks in them. (`#1882`_, `#1886`_, `#1385`_; John Bollinger and Jordan Sissel)
+* pacman: Fix typo preventing the use of ``--pacman-compression xz`` (`#1876`_; mszprejda)
 * docs: All supported package types now have dedicated documentation pages. Some pages are small stubs and would benefit from future improvement. (`#1884`_; mcandre, Jordan Sissel)
 * docs: Small but lovely documentation fixes (`#1875`_ by Corey Quinn, `#1864`_ by Geoff Beier)
+* Fixed mistake causing the test suite to fail when ``rake`` wasn't available. (`#1877`_; Jordan Sissel)
 
 1.14.1 (November 10, 2021)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
