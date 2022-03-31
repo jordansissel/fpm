@@ -5,6 +5,7 @@ Release Notes and Change Log
 ^^^^^^^^^^^^^^^^^^^^^^^
 * deb: fix bug causing ``--deb-compression none`` to invoke ``tar`` incorrectly (`#1879`_; John Howard)
 * Fixed mistake causing the test suite to fail when ``rake`` wasn't available. (`#1877`_; Jordan Sissel)
+* docs: All supported package types now have dedicated documentation pages. Some pages are small stubs and would benefit from future improvement. (`#1884`_; mcandre, Jordan Sissel)
 * docs: Small but lovely documentation fixes (`#1875`_ by Corey Quinn, `#1864`_ by Geoff Beier)
 
 1.14.1 (November 10, 2021)
