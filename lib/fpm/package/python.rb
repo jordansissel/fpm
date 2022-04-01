@@ -167,7 +167,7 @@ class FPM::Package::Python < FPM::Package
         target,
         want_pkg,
       ]
-      
+
       safesystem(*setup_cmd)
     else
       # no pip, use easy_install
@@ -277,12 +277,6 @@ class FPM::Package::Python < FPM::Package
 
         next if attributes[:python_disable_dependency].include?(name)
 
-        # convert == to =
-        if cmp == "==" or cmp == "~="
-          logger.info("Converting == dependency requirement to =", :dependency => dep )
-          cmp = "="
-        end
-
         # dependency name prefixing is optional, if enabled, a name 'foo' will
         # become 'python-foo' (depending on what the python_package_name_prefix
         # is)
@@ -290,6 +284,44 @@ class FPM::Package::Python < FPM::Package
 
         # convert dependencies from python-Foo to python-foo
         name = name.downcase if attributes[:python_downcase_dependencies?]
+
+        # convert == to =
+        if cmp == "=="
+          logger.info("Converting == dependency requirement to =", :dependency => dep )
+          cmp = "="
+        elsif cmp == "~="
+          logger.info("Converting ~= dependency requirement to <,>=", :dependency => dep )
+          cmp = ">="
+
+          # PEP 440 - https://www.python.org/dev/peps/pep-0440/#compatible-release
+          # Note: rpm and deb packages do not allow wildcard dependency versions like 2.*
+          # Therefore we use >= 2.2, < 3.0 as the closest correct interpretation of the proposed >= 2.2, == 2.*
+          # Other examples:
+          # ~= 2.2
+          # >= 2.2, < 3.0
+          #
+          # ~= 1.4.5
+          # >= 1.4.5, < 1.5.0
+          #
+          # ~= 2.2.post3
+          # >= 2.2.post3, < 3.0
+          #
+          # ~= 1.4.5a4
+          # >= 1.4.5a4, < 1.5.0
+          #
+          # ~= 2.2.0
+          # >= 2.2.0, < 2.3.0
+          version_arr = version.split(".")
+          version_last = version_arr.pop  # drop last number (make it 0)
+          while /[a-z]/.match(version_last)  # drop post, pre, and dev release numbers
+            version_last = version_arr.pop
+          end
+          version_last = version_arr.pop  # get successor of next-to-last number
+          version_arr << (version_last.to_i + 1).to_s
+          version_arr << "0"
+          nextversion = version_arr.join(".")
+          self.dependencies << "#{name} < #{nextversion}"
+        end
 
         self.dependencies << "#{name} #{cmp} #{version}"
       end
