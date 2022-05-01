@@ -162,13 +162,22 @@ class FPM::Package::Python < FPM::Package
         ]
       end
 
-      setup_cmd += [
-        "--build",
-        target,
-        want_pkg,
-      ]
-      
+      setup_cmd << want_pkg
+
       safesystem(*setup_cmd)
+
+      # Pip removed the --build flag sometime in 2021, it seems: https://github.com/pypa/pip/issues/8333
+      # A workaround for pip removing the `--build` flag. Previously, `pip download --build ...` would leave
+      # behind a directory with the Python package extracted and ready to be used.
+      # For example, `pip download ... Django` puts `Django-4.0.4.tar.tz` into the build_path directory.
+      # If we expect `pip` to leave an unknown-named file in the `build_path` directory, let's check for
+      # a single file and unpack it.  I don't know if it will /always/ be a .tar.gz though.
+      files = ::Dir.glob(File.join(build_path, "*.tar.gz"))
+      if files.length != 1
+        raise "Unexpected directory layout after `pip download ...`. This might be an fpm bug? The directory is #{build_path}"
+      end
+
+      safesystem("tar", "-zxf", files[0], "-C", target)
     else
       # no pip, use easy_install
       logger.debug("no pip, defaulting to easy_install", :easy_install => attributes[:python_easyinstall])
