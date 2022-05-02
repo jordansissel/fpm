@@ -204,7 +204,7 @@ describe FPM::Package::Python do
 
       # Hardcode /usr/local/bin here. On newer Python 3's I cannot figure out how to 
       # determine the script_dir at installation time. easy_install's method is gone.
-      path = subject.staging_path("/usr/local/bin/django-admin.py")
+      path = subject.staging_path("/usr/local/bin/django-admin")
 
       # Read the first line (the hashbang line) of the django-admin.py script
       fd = File.new(path, "r")
