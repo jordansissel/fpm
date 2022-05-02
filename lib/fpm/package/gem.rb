@@ -135,9 +135,19 @@ class FPM::Package::Gem < FPM::Package
     return gem_files.first
   end # def download
 
+  GEMSPEC_YAML_CLASSES = [ ::Gem::Specification, ::Gem::Version, Time, ::Gem::Dependency, ::Gem::Requirement, Symbol ]
   def load_package_info(gem_path)
-
-    spec = YAML.load(%x{#{attributes[:gem_gem]} specification #{gem_path} --yaml})
+    # TODO(sissel): Maybe we should check if `safe_load` method exists instead of this version check?
+    if ::Gem::Version.new(RUBY_VERSION) >= ::Gem::Version.new("3.1.0")
+      # Ruby 3.1.0 switched to a Psych/YAML version that defaults to "safe" loading
+      # and unfortunately `gem specification --yaml` emits YAML that requires
+      # class loaders to process correctly
+      spec = YAML.load(%x{#{attributes[:gem_gem]} specification #{gem_path} --yaml},
+                      :permitted_classes => GEMSPEC_YAML_CLASSES)
+    else
+      # Older versions of ruby call this method YAML.safe_load
+      spec = YAML.safe_load(%x{#{attributes[:gem_gem]} specification #{gem_path} --yaml}, GEMSPEC_YAML_CLASSES)
+    end
 
     if !attributes[:gem_package_prefix].nil?
       attributes[:gem_package_name_prefix] = attributes[:gem_package_prefix]
