@@ -331,10 +331,11 @@ class FPM::Package
     template_path = File.join(template_dir, path)
     template_code = File.read(template_path)
     logger.info("Reading template", :path => template_path)
-    erb = ERB.new(template_code, nil, "-")
+    erb = erbnew(template_code)
     erb.filename = template_path
     return erb
   end # def template
+
 
   #######################################
   # The following methods are provided to
@@ -518,7 +519,7 @@ class FPM::Package
   # flag), then apply it as an ERB template.
   def script(script_name)
     if attributes[:template_scripts?]
-      erb = ERB.new(scripts[script_name], nil, "-")
+      erb = erbnew(scripts[script_name])
       # TODO(sissel): find the original file name for the file.
       erb.filename = "script(#{script_name})"
       return erb.result(binding)

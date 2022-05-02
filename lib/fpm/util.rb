@@ -406,6 +406,29 @@ module FPM::Util
   def logger
     @logger ||= Cabin::Channel.get
   end # def logger
+
+  def erbnew(template_code)
+    # In Ruby 2.6(?), Ruby changed how ERB::new is invoked.
+    # First, it added keyword args like `ERB.new(..., trim_mode: "-")`
+    # Later, it deprecated then removed the safe_level feature.
+    # As of Ruby 3.1, warnings are printed at runtime when ERB.new is called with the old syntax.
+    # Ruby 2.5 and older does not support the ERB.new keyword args.
+    #
+    # My tests showed:
+    # * Ruby 2.3.0 through 3.0 work correctly with the old syntax.
+    # * Ruby 3.1.0 and newer (at time of writing, Ruby 3.2) require the new syntax
+    # Therefore, in order to support the most versions of ruby, we need to do a version check
+    # to invoke ERB.new correctly and without printed warnings.
+    # References: https://github.com/jordansissel/fpm/issues/1894
+    # Honestly, I'm not sure if Gem::Version is correct to use in this situation, but it works.
+    if Gem::Version.new(RUBY_VERSION) < Gem::Version.new("3.1.0")
+      # Ruby 3.0.x and older
+      return ERB.new(template_code, nil, "-")
+    else
+      # Ruby 3.1.0 and newer
+      return ERB.new(template_code, trim_mode: "-")
+    end
+  end
 end # module FPM::Util
 
 require 'fpm/util/tar_writer'
