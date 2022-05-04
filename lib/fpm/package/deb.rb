@@ -33,12 +33,17 @@ class FPM::Package::Deb < FPM::Package
   # Example value with version relationship: libc6 (>= 2.2.1)
   # Example value: libc6
 
+  # Package name docs here: https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-source
+  # Package names (both source and binary, see Package) must consist only of lower case letters (a-z),
+  # digits (0-9), plus (+) and minus (-) signs, and periods (.).
+  # They must be at least two characters long and must start with an alphanumeric character.
+
   # Version string docs here: https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-version
   # The format is: [epoch:]upstream_version[-debian_revision].
   # epoch - This is a single (generally small) unsigned integer
   # upstream_version - must contain only alphanumerics 6 and the characters . + - ~
   # debian_revision - only alphanumerics and the characters + . ~
-  RELATIONSHIP_FIELD_PATTERN = /^(?<name>[A-z0-9_-]+)(?: *\((?<relation>[<>=]+) *(?<version>(?:[0-9]+:)?[0-9A-Za-z+~.-]+(?:-[0-9A-Za-z+~.]+)?)\))?$/
+  RELATIONSHIP_FIELD_PATTERN = /^(?<name>[A-z0-9][A-z0-9_.-]+)(?: *\((?<relation>[<>=]+) *(?<version>(?:[0-9]+:)?[0-9A-Za-z+~.-]+(?:-[0-9A-Za-z+~.]+)?)\))?$/
 
   option "--ignore-iteration-in-dependencies", :flag,
             "For '=' (equal) dependencies, allow iterations on the specified " \
