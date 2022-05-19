@@ -618,8 +618,32 @@ class FPM::Command < Clamp::Command
       while args.any?
         arg = args.shift
 
-        # Lookup the Clamp flag by its --flag-name
-        option = self.class.find_option(arg)
+        # Lookup the Clamp option by its --flag-name or short  name like -f
+        if arg =~ /^-/
+          # Single-letter options like -a or -z
+          if single_letter = arg.match(/^(-[A-Za-z0-9])(.*)$/)
+            puts "Found single letter entry #{single_letter.match(1)} from arg #{arg}"
+            option = self.class.find_option(single_letter.match(1))
+            arg, remainder = single_letter.match(1), single_letter.match(2)
+            if option.flag?
+              # Flags aka switches take no arguments, so we push the rest of the 'arg' entry back onto the args list
+
+              # For combined letter flags, like `-abc`, we want to consume the
+              # `-a` and then push `-bc` back to be processed.
+              # Only do this if there's more flags, like, not for `-a` but yes for `-abc`
+              args.unshift("-" + remainder) unless remainder.empty?
+            else
+              # Single letter options that take arguments, like `-ohello` same as `-o hello`
+
+              # For single letter flags with values, like `-ofilename` aka `-o filename`, push the remainder ("filename")
+              # back onto the args list so that it is consumed when we extract the flag value.
+              args.unshift(remainder) unless remainder.empty?
+            end
+          elsif arg.match(/^--/)
+            # Lookup the flag by its long --flag-name
+            option = self.class.find_option(arg)
+          end
+        end
 
         # Extract the flag value, if any, from the remaining args list.
         value = option.extract_value(arg, args)

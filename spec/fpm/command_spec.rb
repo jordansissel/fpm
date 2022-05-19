@@ -168,14 +168,28 @@ describe FPM::Command do
     context "with multiple single-letter flags on a single line" do
       subject { FPM::Command.new("fpm") }
 
-      before do
-        File.write(path, [
-          "-ffff"
-        ].join($/))
+      context "separately" do
+        before do
+          File.write(path, [
+            "-f -f -f -f"
+          ].join($/))
+        end
+
+        it "should work" do
+          subject.parse(["--fpm-options-file", path])
+        end
       end
 
-      it "should work" do
-        subject.parse(["--fpm-options-file", path])
+      context "together" do
+        before do
+          File.write(path, [
+            "-ffff"
+          ].join($/))
+        end
+
+        it "should work" do
+          subject.parse(["--fpm-options-file", path])
+        end
       end
     end
 
