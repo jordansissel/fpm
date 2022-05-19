@@ -3,6 +3,7 @@ require "stud/temporary"
 require "fpm" # local
 require "fpm/command" # local
 require "fixtures/mockpackage"
+require "shellwords"
 
 describe FPM::Command do
   describe "--prefix"
@@ -117,6 +118,82 @@ describe FPM::Command do
         insist { subject.parse(args + ["--log", "whatever"]) }.raises FPM::Package::InvalidArgument
         insist { subject.parse(args + ["--log", "fatal"]) }.raises FPM::Package::InvalidArgument
       end
+    end
+  end
+
+  describe "--fpm-options-file" do
+    let(:path) { Stud::Temporary.pathname }
+
+    after do
+      File.unlink(path)
+    end
+
+    context "when considering option order" do
+      before do
+        File.write(path, [
+          "--name file-value",
+        ].join($/))
+      end
+
+      it "should process options file content in-place" do
+        cli = [ "--name", "cli-value" ]
+        fileopt = [ "--fpm-options-file", path ]
+
+        subject = FPM::Command.new("fpm")
+        subject.parse(cli + fileopt)
+        insist { subject.name } == "file-value"
+
+        subject = FPM::Command.new("fpm")
+        subject.parse(fileopt + cli)
+        insist { subject.name } == "cli-value"
+      end
+    end
+
+    context "with multiple flags on a single line" do
+      subject { FPM::Command.new("fpm") }
+
+      before do
+        File.write(path, [
+          "--version 123 --name fancy",
+        ].join($/))
+      end
+
+      it "should work" do
+        subject.parse(["--fpm-options-file", path])
+        insist { subject.name } == "fancy"
+        insist { subject.version } == "123"
+      end
+    end
+
+    context "with multiple single-letter flags on a single line" do
+      subject { FPM::Command.new("fpm") }
+
+      before do
+        File.write(path, [
+          "-ffff"
+        ].join($/))
+      end
+
+      it "should work" do
+        subject.parse(["--fpm-options-file", path])
+      end
+    end
+
+    context "when a file refers to itself" do
+      subject { FPM::Command.new("fpm") }
+
+      before do
+        File.write(path, [
+          "--version 1.0",
+          "--fpm-options-file #{Shellwords.shellescape(path)}",
+          "--iteration 1",
+        ].join($/))
+      end
+
+      it "should raise an exception" do
+        insist { subject.parse([ "--fpm-options-file", Shellwords.shellescape(path) ]) }.raises FPM::Package::InvalidArgument
+      end
+
     end
   end
 end
