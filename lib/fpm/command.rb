@@ -622,7 +622,6 @@ class FPM::Command < Clamp::Command
         if arg =~ /^-/
           # Single-letter options like -a or -z
           if single_letter = arg.match(/^(-[A-Za-z0-9])(.*)$/)
-            puts "Found single letter entry #{single_letter.match(1)} from arg #{arg}"
             option = self.class.find_option(single_letter.match(1))
             arg, remainder = single_letter.match(1), single_letter.match(2)
             if option.flag?
