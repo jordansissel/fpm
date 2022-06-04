@@ -148,6 +148,11 @@ class FPM::Package::OSXpkg < FPM::Package
       write_scripts
       args += ["--scripts", scripts_path]
     end
+
+    if attributes[:prefix]
+      args += ["--install-location", attributes[:prefix]]
+    end
+
     args << output_path
 
     safesystem("pkgbuild", *args)
