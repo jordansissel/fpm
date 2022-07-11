@@ -15,6 +15,9 @@ RUN false
 # Base container is used for various release and test things
 FROM ubuntu:18.04 as minimal-base
 
+# This avoids 'pip' having decoding errors for UTF-8 paths.
+ENV LC_ALL=C.UTF-8
+
 # Runtime deps. Build deps go in the build or test containers
 RUN apt-get update \
 	&& apt-get -y dist-upgrade \
@@ -66,9 +69,8 @@ RUN install -d -o fpm /origsrc
 COPY --chown=fpm . /origsrc
 ENV HOME=/origsrc
 ENV BUNDLE_PATH=/origsrc/.bundle
-# Install a specific version of bundler
 WORKDIR /origsrc
-RUN gem install -v "$(grep -A1 '^BUNDLED WITH' Gemfile.lock | tail -1)" bundler
+RUN gem install bundler
 USER fpm
 RUN bundle install
 CMD bundle exec rspec

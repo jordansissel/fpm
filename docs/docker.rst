@@ -11,14 +11,14 @@ locally. And a developer can use docker to run the test suite.
 Running FPM inside docker
 -------------------------
 
-First, build a container will all the dependencies::
+First, build an image will all the dependencies::
 
    make docker-release-everything
 
 Now, run it as you would the fpm command. Note that you will have to
 mount your source directly into the docker volume::
 
-   docker run -v $(pwd):/src fpm --help
+   docker run -v "$(pwd):/src" fpm --help
 
 As a full example::
 
@@ -34,11 +34,19 @@ As a full example::
 Depending on your needs, you will have to adjust the volume mounts and
 relative paths to fit your particular situation.
 
+Developing using docker
+-----------------------
+The docker image can be useful for doing ad-hoc testing of changes made to the
+FPM source. To do this, build an image as described above, then run the `fpm`
+script from within the source directory. For example::
+
+    docker run -v "$(pwd):/src" --entrypoint /src/bin/fpm fpm --help
+
 Running rpsec inside docker
 ---------------------------
 
 The Makefile provides some targets for testing. They will build a
-docker container with the dependencies, and then invoked `rspec`
+docker image with the dependencies, and then invoke `rspec`
 inside it. The makefile uses a sentinel file to indicate that the
 docker image has been build, and can be reused.
 
@@ -50,7 +58,7 @@ How does this work
 ------------------
 
 The Dockerfile makes heavy use of multistage
-builds. This allows the various output containers to build on the same
+builds. This allows the various output images to build on the same
 earlier stages.
 
 There are two ``base`` images. A ``minimal`` image, which contains
@@ -65,6 +73,6 @@ unspecified, it defaults to ``everything``
 
 We want to use the same set of base images for both the ``rspec``
 testing, as well as the run time containerization. We do this by using
-the ``TARGET`` argument to select which container to build.
+the ``TARGET`` argument to select which image to build.
 
 The makefile encodes this logic with two pattern rules.
