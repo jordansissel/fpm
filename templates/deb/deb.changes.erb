@@ -14,7 +14,7 @@ Description: <%= firstline %>
 <%= remainder.collect { |l| l =~ /^ *$/ ? " ." : " #{l}" }.join("\n") %>
 <% end -%>
 Changes:
-<%= name %> (<%= "#{epoch}:" if epoch %><%= version %><%= "-" + iteration.to_s if iteration %>) <%= distribution %>; urgency=medium
+ <%= name %> (<%= "#{epoch}:" if epoch %><%= version %><%= "-" + iteration.to_s if iteration %>) <%= distribution %>; urgency=medium
   * Package created with FPM.
 Checksums-Sha1:
 <% changes_files.each do |file| -%>
