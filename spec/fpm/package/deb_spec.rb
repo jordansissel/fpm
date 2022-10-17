@@ -543,7 +543,13 @@ describe FPM::Package::Deb do
           # for broken symlinks. Since this package has no files, this check
           # should always succeed. It would fail if fpm generated any invalid
           # packages, such as ones with a bzip2-compressed control.tar file (#1840)
-          insist { system("lintian", "-C", "symlinks", target) } == true
+          #
+          # Note: At some point, Debian renamed the "symlinks" check to "files/symbolic-links/broken"
+          # In order to support both newer and older Debian derivatives, the test suite will try both checks,
+          # and if both fail, we should know something is wrong with the package.
+          insist {
+            system("lintian", "-C", "symlinks", target) || system("lintian", "-C", "files/symbolic-links/broken", target)
+          } == true
         end
       end
     end
