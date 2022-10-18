@@ -45,6 +45,16 @@ describe FPM::Package::CPAN do
     insist { subject.name } == "perl-PathTools"
   end
 
+  it "should package Class::Data::Inheritable" do
+    pending("Disabled on travis-ci because it always fails, and there is no way to debug it?") if is_travis
+
+    # Class::Data::Inheritable version 0.08 has a blank author field in its
+    # META.yml file.
+    subject.instance_variable_set(:@version, "0.08");
+    subject.input("Class::Data::Inheritable")
+    insist { subject.vendor } == "No Vendor Or Author Provided"
+  end
+
   context "given a distribution without a META.* file" do
     it "should package IPC::Session" do
       pending("Disabled on travis-ci because it always fails, and there is no way to debug it?") if is_travis
