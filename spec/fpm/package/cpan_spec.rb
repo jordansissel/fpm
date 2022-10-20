@@ -37,6 +37,14 @@ describe FPM::Package::CPAN do
     # TODO(sissel): Check dependencies
   end
 
+  it "should package Alien::astyle" do
+    pending("Disabled on travis-ci because it always fails, and there is no way to debug it?") if is_travis
+
+    subject.instance_variable_set(:@version, "0.010000");
+    subject.input("Alien::astyle")
+    insist { subject.name } == "perl-Alien-astyle"
+  end
+
   it "should package File::Spec" do
     pending("Disabled on travis-ci because it always fails, and there is no way to debug it?") if is_travis
     subject.input("File::Spec")
