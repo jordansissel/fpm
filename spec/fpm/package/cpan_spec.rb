@@ -45,6 +45,16 @@ describe FPM::Package::CPAN do
     insist { subject.name } == "perl-PathTools"
   end
 
+  it "should package Inline::CPP" do
+    # Inline::CPP v0.80 has an interactive Makefile.PL which expects input from
+    # STDIN.
+    pending("Disabled on travis-ci because it always fails, and there is no way to debug it?") if is_travis
+    subject.instance_variable_set(:@version, "0.80");
+    subject.input("Inline::CPP")
+
+    insist { subject.name } == "perl-Inline-CPP"
+  end
+
   it "should package Class::Data::Inheritable" do
     pending("Disabled on travis-ci because it always fails, and there is no way to debug it?") if is_travis
 
