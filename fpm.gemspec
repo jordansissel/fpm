@@ -44,9 +44,6 @@ Gem::Specification.new do |spec|
   # For sourcing from pleaserun
   spec.add_dependency("pleaserun", "~> 0.0.29") # license: Apache 2
 
-  # For sourcing from git repos
-  spec.add_dependency("git", ">= 1.3.0", "< 2.0") # license: MIT
-
   spec.add_dependency("stud")
 
   # In Ruby 3.0, rexml was moved to a bundled gem instead of a default one,
