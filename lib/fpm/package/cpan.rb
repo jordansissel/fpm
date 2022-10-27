@@ -20,7 +20,10 @@ class FPM::Package::CPAN < FPM::Package
     "Only use the specified mirror for metadata.", :default => false
 
   option "--package-name-prefix", "NAME_PREFIX",
-    "Name to prefix the package name with.", :default => "perl"
+    "Name to prefix the package name with.", :default => "perl-"
+
+  option "--package-name-postfix", "NAME_POSTFIX",
+    "Name to prefix the package name with.", :default => ""
 
   option "--test", :flag,
     "Run the tests before packaging?", :default => true
@@ -392,7 +395,7 @@ class FPM::Package::CPAN < FPM::Package
   def fix_name(name)
     case name
       when "perl"; return "perl"
-      else; return [attributes[:cpan_package_name_prefix], name].join("-").gsub("::", "-")
+      else; return "#{attributes[:cpan_package_name_prefix]}#{name.downcase}#{attributes[:cpan_package_name_postfix]}".gsub("::", "-")
     end
   end # def fix_name
 

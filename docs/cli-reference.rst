@@ -225,6 +225,9 @@ General Options
 * ``--cpan-package-name-prefix NAME_PREFIX``
     - (cpan only) Name to prefix the package name with.
 
+* ``--cpan-package-name-postfix NAME_POSTFIX``
+    - (cpan only) Name to prefix the package name with.
+
 * ``--[no-]cpan-test``
     - (cpan only) Run the tests before packaging?
 
@@ -662,6 +665,8 @@ cpan
 * ``--cpan-mirror CPAN_MIRROR``
     - The CPAN mirror to use instead of the default.
 * ``--cpan-package-name-prefix NAME_PREFIX``
+    - Name to prefix the package name with.
+* ``--cpan-package-name-postfix NAME_POSTFIX``
     - Name to prefix the package name with.
 * ``--cpan-perl-bin PERL_EXECUTABLE``
     - The path to the perl executable you wish to run.
