@@ -431,4 +431,4 @@ class FPM::Package::CPAN < FPM::Package
   end
 
   public(:input)
-end # class FPM::Package::NPM
+end # class FPM::Package::CPAN
