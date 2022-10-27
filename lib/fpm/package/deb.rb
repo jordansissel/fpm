@@ -684,7 +684,8 @@ class FPM::Package::Deb < FPM::Package
       # The fpm cpan code presents dependencies and provides fields as perl(ModuleName)
       # so we'll need to convert them to something debian supports.
 
-      # Replace perl(ModuleName) > 1.0 with Debian-style perl-ModuleName (> 1.0)
+      # Replace perl(Module::Name) > 1.0 with Debian-style libmodule-name-perl (> 1.0)
+      # per: https://www.debian.org/doc/packaging-manuals/perl-policy/ch-module_packages.html
       perldepfix = lambda do |dep|
         m = dep.match(/perl\((?<name>[A-Za-z0-9_:]+)\)\s*(?<op>.*$)/)
         if m.nil?
@@ -695,7 +696,7 @@ class FPM::Package::Deb < FPM::Package
           modulename = m["name"].gsub("::", "-")
          
           # Fix any upper-casing or other naming concerns Debian has about packages
-          name = "#{attributes[:cpan_package_name_prefix]}-#{modulename}"
+          name = "lib#{modulename}-perl"
 
           if m["op"].empty?
             name
