@@ -228,6 +228,9 @@ General Options
 * ``--cpan-package-name-postfix NAME_POSTFIX``
     - (cpan only) Name to prefix the package name with.
 
+* ``--cpan-package-reject-from-depends MODULE``
+    - (cpan only) Filter modules from the generated depends.
+
 * ``--[no-]cpan-test``
     - (cpan only) Run the tests before packaging?
 
@@ -668,6 +671,8 @@ cpan
     - Name to prefix the package name with.
 * ``--cpan-package-name-postfix NAME_POSTFIX``
     - Name to prefix the package name with.
+* ``--cpan-package-reject-from-depends MODULE``
+    - (cpan only) Filter modules from the generated depends.
 * ``--cpan-perl-bin PERL_EXECUTABLE``
     - The path to the perl executable you wish to run.
 * ``--cpan-perl-lib-path PERL_LIB_PATH``
