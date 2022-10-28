@@ -1,4 +1,5 @@
 require "spec_setup"
+require "tmpdir" # for Dir.mktmpdir
 require "fpm" # local
 require "fpm/package/cpan" # local
 
@@ -37,12 +38,20 @@ describe FPM::Package::CPAN do
     # TODO(sissel): Check dependencies
   end
 
-  it "should package Alien::astyle" do
+  it "should unpack tarball containing ./ leading paths" do
     pending("Disabled on travis-ci because it always fails, and there is no way to debug it?") if is_travis
 
-    subject.instance_variable_set(:@version, "0.010000");
-    subject.input("Alien::astyle")
-    insist { subject.name } == "perl-Alien-astyle"
+    Dir.mktmpdir do |tmpdir|
+      # Create tarball containing a file './foo/bar.txt'
+      system("mkdir -p #{tmpdir}/z/foo")
+      system("touch #{tmpdir}/z/foo/bar.txt")
+      system("tar -C #{tmpdir} -cvzf #{tmpdir}/z.tar.gz .")
+
+      # Invoke the unpack method
+      directory = subject.instance_eval { unpack("#{tmpdir}/z.tar.gz") }
+
+      insist { File.file?("#{directory}/foo/bar.txt") } == true
+    end
   end
 
   it "should package File::Spec" do
