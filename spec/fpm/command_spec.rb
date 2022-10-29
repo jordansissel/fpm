@@ -123,9 +123,10 @@ describe FPM::Command do
 
   describe "--fpm-options-file" do
     let(:path) { Stud::Temporary.pathname }
+    subject = FPM::Command.new("fpm")
 
     after do
-      File.unlink(path)
+      File.unlink(path) if File.exist?(path)
     end
 
     context "when considering option order" do
@@ -139,7 +140,6 @@ describe FPM::Command do
         cli = [ "--name", "cli-value" ]
         fileopt = [ "--fpm-options-file", path ]
 
-        subject = FPM::Command.new("fpm")
         subject.parse(cli + fileopt)
         insist { subject.name } == "file-value"
 
@@ -150,8 +150,6 @@ describe FPM::Command do
     end
 
     context "with multiple flags on a single line" do
-      subject { FPM::Command.new("fpm") }
-
       before do
         File.write(path, [
           "--version 123 --name fancy",
@@ -208,6 +206,46 @@ describe FPM::Command do
         insist { subject.parse([ "--fpm-options-file", Shellwords.shellescape(path) ]) }.raises FPM::Package::InvalidArgument
       end
 
+    end
+
+    context "when using an nonexistent file" do
+      it "should raise an exception" do
+        # At this point, 'path' file hasn't been created, so we should be safe to assume it doesn't exist.
+        insist { subject.parse([ "--fpm-options-file", path ]) }.raises Errno::ENOENT
+      end
+
+    end
+
+    context "when using an unreadable file (no permission to read)" do
+      it "should raise an exception" do
+        File.write(path, "")
+        File.chmod(000, path)
+        # At this point, 'path' file hasn't been created, so we should be safe to assume it doesn't exist.
+        insist { subject.parse([ "--fpm-options-file", path ]) }.raises Errno::EACCES
+      end
+    end
+
+    context "when reading a large file" do
+      let(:fd) { File.new(path, "w") }
+
+      before do
+        # Write more than 100kb
+        max = 105 * 1024
+        data = "\n" * 4096
+
+        bytes = 0
+        bytes += fd.syswrite(data) while bytes < max
+
+        fd.flush
+      end
+
+      after do
+        fd.close
+      end
+
+      it "should raise an exception" do
+        insist { subject.parse([ "--fpm-options-file", path ]) }.raises FPM::Package::InvalidArgument
+      end
     end
   end
 end

@@ -590,10 +590,6 @@ class FPM::Command < Clamp::Command
       raise FPM::Package::InvalidArgument, "Options file already loaded once. Refusing to load a second time. Maybe a file tries to load itself? Path: #{path}"
     end
 
-    @loaded_files << path
-
-    logger.info("Loading flags from file", :path => path)
-    
     if !File.exist?(path)
       logger.fatal("Cannot load options from file because the file doesn't exist.", :path => path)
     end
@@ -602,10 +598,16 @@ class FPM::Command < Clamp::Command
       logger.fatal("Cannot load options from file because the file isn't readable.", :path => path)
     end
 
+    @loaded_files << path
+
+    logger.info("Loading flags from file", :path => path)
+
     # Safety check, abort if the file is huge. Arbitrarily chosen limit is 100kb
     stat = File.stat(path)
-    if stat.size > (100 * 1024)
+    max = 100 * 1024
+    if stat.size > max
       logger.fatal("Refusing to load options from file because the file seems pretty large.", :path => path, :size => stat.size)
+      raise FPM::Package::InvalidArgument, "Options file given to --fpm-options-file is seems too large. For safety, fpm is refusing to load this. Path: #{path} - Size: #{stat.size}, maximum allowed size #{max}."
     end
 
     File.read(path).split($/).each do |line|
