@@ -248,7 +248,9 @@ class FPM::Command < Clamp::Command
     :environment_variable => "SOURCE_DATE_EPOCH"
 
   option "--fpm-options-file", "FPM_OPTIONS_FILE",
-    "A file that contains fpm options. This can be useful on build servers where you want to use a common configuration or inject other parameters from a file instead of from a command-line flag. Any fpm flag format is valid in this file." do |path|
+    "A file that contains additional fpm options. Any fpm flag format is valid in this file. " \
+    "This can be useful on build servers where you want to use a common configuration or " \
+    "inject other parameters from a file instead of from a command-line flag.." do |path|
     load_options(path)
   end
 
