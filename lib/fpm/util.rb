@@ -154,7 +154,7 @@ module FPM::Util
 
       yield(*args3)
 
-      stdin_w_close                 if opts[:stdin] and not stdin_w.closed?
+      stdin_w.close                 if opts[:stdin] and not stdin_w.closed?
       stdout_r.close                unless stdout_r.closed?
       stderr_r.close                unless stderr_r.closed?
     else
