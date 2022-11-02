@@ -4,7 +4,6 @@ require "fileutils"
 require "fpm/package/dir"
 require 'tempfile'  # stdlib
 require 'pathname'  # stdlib
-require 'rexml/document'  # stdlib
 
 # Use an OS X pkg built with pkgbuild.
 #
@@ -103,6 +102,7 @@ class FPM::Package::OSXpkg < FPM::Package
 
   # Extract name and version from PackageInfo XML
   def extract_info(package)
+    require 'rexml/document'
     build_path("expand").tap do |path|
       doc = REXML::Document.new File.open(File.join(path, "PackageInfo"))
       pkginfo_elem = doc.elements["pkg-info"]
