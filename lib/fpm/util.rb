@@ -421,7 +421,11 @@ module FPM::Util
     # to invoke ERB.new correctly and without printed warnings.
     # References: https://github.com/jordansissel/fpm/issues/1894
     # Honestly, I'm not sure if Gem::Version is correct to use in this situation, but it works.
-    if Gem::Version.new(RUBY_VERSION) < Gem::Version.new("3.1.0")
+    
+    # on older versions of Ruby, RUBY_VERSION is a frozen string, and
+    # Gem::Version.new calls String#strip! which throws an exception.
+    # so we have to call String#dup to get an unfrozen copy.
+    if Gem::Version.new(RUBY_VERSION.dup) < Gem::Version.new("3.1.0")
       # Ruby 3.0.x and older
       return ERB.new(template_code, nil, "-")
     else
