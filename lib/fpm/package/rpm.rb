@@ -548,32 +548,16 @@ class FPM::Package::RPM < FPM::Package
 
     args += ["--define", "_builddir #{staging_path}"]
 
-    # Got to create a tarball to include in the SRPM
-    sources_tar = "#{name}-#{version}-#{iteration}.tgz"
-
-    ::Dir.chdir(build_path) do
-      ::Dir.chdir(build_sub_dir) do
-        to_tar = ::Dir['*']
-
-        unless to_tar.empty?
-          # If we have rpmbuild, we have tar, so just use it!
-          tar_cmd = [
-            'tar',
-            '-cz',
-            '-f',
-            File.join(build_path, sources_sub_dir, sources_tar),
-            to_tar
-          ].flatten
-
-          safesystem(*tar_cmd)
-        end
-      end
-    end
-
+    # If there are files in the staging path, put them in a tarball so we can
+    # produce an srpm.
     sources = []
-    ::Dir.chdir(File.join(build_path, sources_sub_dir)) do
-      sources = ::Dir['**/*']
-      sources.delete_if{|f| !File.file?(f)}
+    if !::Dir.empty?(staging_path)
+      # Got to create a tarball to include in the SRPM
+      sources_tar = "#{name}-#{version}-#{iteration}.tgz"
+      tarpath = File.join(build_path, sources_sub_dir, sources_tar)
+      safesystem("tar", "-zcf", tarpath, "-C", staging_path, ".")
+
+      sources << tarpath
     end
 
     rpmspec = template("rpm.erb").result(binding)
