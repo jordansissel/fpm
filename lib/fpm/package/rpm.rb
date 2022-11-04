@@ -546,13 +546,7 @@ class FPM::Package::RPM < FPM::Package
       args += ["--define", define]
     end
 
-    # copy all files from staging to BUILD dir
-    # [#1538] Be sure to preserve the original timestamps.
-    Find.find(staging_path) do |path|
-      src = path.gsub(/^#{staging_path}/, '')
-      dst = File.join(build_path, build_sub_dir, src)
-      copy_entry(path, dst, preserve=true)
-    end
+    args += ["--define", "_builddir #{staging_path}"]
 
     # Got to create a tarball to include in the SRPM
     sources_tar = "#{name}-#{version}-#{iteration}.tgz"
