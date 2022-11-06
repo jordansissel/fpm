@@ -158,6 +158,9 @@ module FPM::Util
       stdout_r.close                unless stdout_r.closed?
       stderr_r.close                unless stderr_r.closed?
     else
+      # If no block given (not interactive) we should close stdin_w because we
+      # won't be able to give input which may cause a hang.
+      stdin_w.close
       # Log both stdout and stderr as 'info' because nobody uses stderr for
       # actually reporting errors and as a result 'stderr' is a misnomer.
       logger.pipe(stdout_r => :info, stderr_r => :info)
@@ -421,7 +424,7 @@ module FPM::Util
     # to invoke ERB.new correctly and without printed warnings.
     # References: https://github.com/jordansissel/fpm/issues/1894
     # Honestly, I'm not sure if Gem::Version is correct to use in this situation, but it works.
-    
+
     # on older versions of Ruby, RUBY_VERSION is a frozen string, and
     # Gem::Version.new calls String#strip! which throws an exception.
     # so we have to call String#dup to get an unfrozen copy.
