@@ -2,6 +2,7 @@ require "spec_setup"
 require "fpm" # local
 require "fpm/util" # local
 require "stud/temporary"
+require "timeout"
 
 
 describe FPM::Util do
@@ -105,6 +106,12 @@ describe FPM::Util do
           subject.safesystem("sh", "-c", "read foo || true")
         end
       }.not_to raise_error
+    end
+
+    it "should pipe command output to logger" do
+      logger = Cabin::Channel.get
+      expect(logger).to receive(:pipe)
+      subject.safesystem("true")
     end
   end
 
