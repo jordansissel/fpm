@@ -98,6 +98,14 @@ describe FPM::Util do
         subject.safesystem("true")
       end
     end
+
+    it "should not prompt for input" do
+      expect {
+        Timeout::timeout(3) do
+          subject.safesystem("sh", "-c", "read foo || true")
+        end
+      }.not_to raise_error
+    end
   end
 
   describe "#expand_pessimistic_constraints" do
