@@ -122,6 +122,8 @@ class FPM::Package::RPM < FPM::Package
     next File.expand_path(file)
   end
 
+  option "--with-source", :flag, "Also output an SRPM.", :default => false
+
   rpmbuild_filter_from_provides = []
   option "--filter-from-provides", "REGEX",
     "Set %filter_from_provides to the supplied REGEX." do |filter_from_provides|
@@ -578,29 +580,35 @@ class FPM::Package::RPM < FPM::Package
       FileUtils.cp(rpmpath, output_path)
     end
 
-    # Copy out the SRPM packages
-    ::Dir["#{build_path}/SRPMS/**/*.rpm"].each do |rpmpath|
-      # Try to use the same naming scheme if we are specifying a custom output path?
-      # Replace the .ARCH.EXTENSION with .src.EXTENSION ?
-      #
-      # For example, if the output wanted "foo.noarch.rpm"
-      # then the srpm should be named "foo.src.rpm"
-      #
-      # But for the cases where someone asked for a file with just ".rpm" at the end,
-      # we can also write the srpm as ".src.rpm"
-      extension_checks = [
-        # Try .<arch>.rpm ending
-        Regexp.compile(to_s(".ARCH.EXTENSION$")),
-        # Try just .rpm ending
-        Regexp.compile(to_s(".EXTENSION$"))
-      ]
+    if attributes[:rpm_with_source?]
+      # Copy out the SRPM packages
+      ::Dir["#{build_path}/SRPMS/**/*.rpm"].each do |rpmpath|
+        # Try to use the same naming scheme if we are specifying a custom output path?
+        # Replace the .ARCH.EXTENSION with .src.EXTENSION ?
+        #
+        # For example, if the output wanted "foo.noarch.rpm"
+        # then the srpm should be named "foo.src.rpm"
+        #
+        # But for the cases where someone asked for a file with just ".rpm" at the end,
+        # we can also write the srpm as ".src.rpm"
+        extension_checks = [
+          # Try .<arch>.rpm ending
+          Regexp.compile(to_s(".ARCH.EXTENSION$")),
+          # Try just .rpm ending
+          Regexp.compile(to_s(".EXTENSION$")),
 
-      extension_checks.each do |re|
-        if output_path =~ re
-          filename = File.basename(output_path).gsub(re, to_s(".src.EXTENSION"))
-          p [ "Copying", rpmpath => filename ]
-          FileUtils.cp(rpmpath, File.join(File.dirname(output_path), filename))
-          break
+          # Last effort to just append `.src.rpm` to the end of the filename
+          /$/
+        ]
+
+        extension_checks.each do |re|
+          if output_path =~ re
+            filename = File.basename(output_path).gsub(re, to_s(".src.EXTENSION"))
+            outpath = File.join(File.dirname(output_path), filename)
+            logger.log("Created SRPM", :path => outpath)
+            FileUtils.cp(rpmpath, outpath)
+            break
+          end
         end
       end
     end
