@@ -455,7 +455,7 @@ class FPM::Package::RPM < FPM::Package
   def output(output_path)
     output_check(output_path)
     %w(BUILD BUILDROOT RPMS SRPMS SOURCES SPECS).each { |d| FileUtils.mkdir_p(build_path(d)) }
-    args = ["rpmbuild", "-ba"]
+    args = ["rpmbuild", attributes[:rpm_with_source?] ? "-ba" : "-bb"]
 
     # Workaround rpm#2265 in case we've specified an unexpected architecture name
     args += [ "--define", "_smp_build_ncpus 1" ]
