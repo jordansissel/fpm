@@ -580,7 +580,29 @@ class FPM::Package::RPM < FPM::Package
 
     # Copy out the SRPM packages
     ::Dir["#{build_path}/SRPMS/**/*.rpm"].each do |rpmpath|
-      FileUtils.cp(rpmpath, File.dirname(output_path))
+      # Try to use the same naming scheme if we are specifying a custom output path?
+      # Replace the .ARCH.EXTENSION with .src.EXTENSION ?
+      #
+      # For example, if the output wanted "foo.noarch.rpm"
+      # then the srpm should be named "foo.src.rpm"
+      #
+      # But for the cases where someone asked for a file with just ".rpm" at the end,
+      # we can also write the srpm as ".src.rpm"
+      extension_checks = [
+        # Try .<arch>.rpm ending
+        Regexp.compile(to_s(".ARCH.EXTENSION$")),
+        # Try just .rpm ending
+        Regexp.compile(to_s(".EXTENSION$"))
+      ]
+
+      extension_checks.each do |re|
+        if output_path =~ re
+          filename = File.basename(output_path).gsub(re, to_s(".src.EXTENSION"))
+          p [ "Copying", rpmpath => filename ]
+          FileUtils.cp(rpmpath, File.join(File.dirname(output_path), filename))
+          break
+        end
+      end
     end
   end # def output
 
