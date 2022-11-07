@@ -29,6 +29,14 @@ class FPM::Package::CurlBash < FPM::Package
     safesystem("podman", "save", "--format", "docker-dir", "--output", layerdir, name)
 
     # Extract the last layer to the staging_path for packaging.
-    safesystem("tar", "-C", staging_path, "-xf", build_path(File.join("layers", last_layer.gsub(/^sha256:/, ""))))
+    safesystem("tar", "-C", staging_path, "-x", 
+               "-f", build_path(File.join("layers", last_layer.gsub(/^sha256:/, ""))))
+
+    (attributes[:excludes] ||= []).append(
+      "tmp",
+      "run",
+      "root/.bashrc",
+      "root/.profile"
+    )
   end
 end
