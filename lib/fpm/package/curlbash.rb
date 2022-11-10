@@ -35,6 +35,7 @@ class FPM::Package::CurlBash < FPM::Package
     (attributes[:excludes] ||= []).append(
       "tmp",
       "run",
+      "var/tmp",
       "root/.bashrc",
       "root/.profile"
     )
