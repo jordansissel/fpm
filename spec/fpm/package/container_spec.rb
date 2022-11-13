@@ -1,10 +1,10 @@
 require "spec_setup"
-require "fpm/package/curlbash"
+require "fpm/package/container"
 require "stud/temporary"
 
 require "fpm/package/dir"
 
-describe FPM::Package::CurlBash do
+describe FPM::Package::Container do
   context "with commands" do
     after { subject.cleanup }
 
@@ -18,7 +18,7 @@ describe FPM::Package::CurlBash do
 
     context "with setup steps" do
       before do
-        subject.attributes[:curlbash_setup_list] = [
+        subject.attributes[:container_setup_list] = [
           "touch /usr/bin/example",
           "mkdir -p /hello/world",
         ]
@@ -54,7 +54,7 @@ describe FPM::Package::CurlBash do
     end
 
     context "and specifying the file directly" do
-      let(:dockerfile) { File.expand_path("../../fixtures/curlbash/Dockerfile", File.dirname(__FILE__)) }
+      let(:dockerfile) { File.expand_path("../../fixtures/container/Dockerfile", File.dirname(__FILE__)) }
 
       before do
         subject.input(dockerfile)
@@ -66,10 +66,9 @@ describe FPM::Package::CurlBash do
     end
 
     context "and giving a directory containing a Dockerfile or Containerfile" do
-      let(:path) { File.expand_path("../../fixtures/curlbash", File.dirname(__FILE__)) }
+      let(:path) { File.expand_path("../../fixtures/container", File.dirname(__FILE__)) }
 
       before do
-        p path
         subject.input(path)
       end
 

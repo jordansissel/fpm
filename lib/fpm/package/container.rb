@@ -1,9 +1,9 @@
 require "fpm/package"
 require "json"
 
-class FPM::Package::CurlBash < FPM::Package
+class FPM::Package::Container < FPM::Package
 
-  option "--container-image", "IMAGE", "The container image to use when running the command", :default => "ubuntu:latest"
+  option "--image", "IMAGE", "The container image to use when running the command", :default => "ubuntu:latest"
 
   option "--setup", "SHELL COMMANDS", "Commands to run but not to include in the resulting package. For example, 'apt-get update' or other setup.", :multivalued => true
 
@@ -27,8 +27,8 @@ class FPM::Package::CurlBash < FPM::Package
     name = "whatever-#{$$}"
 
     if File.exists?(entry)
-      if attributes[:curlbash_setup_list]
-        logger.warn("When the argument given is a file or directory, the --curlbash-setup flags are ignored. This is because fpm assumes any setup you want to do is done inside of your Dockerfile or Containerfile, and also because fpm does not know how to edit a Dockerfile to append these setup steps.")
+      if attributes[:container_setup_list]
+        logger.warn("When the argument given is a file or directory, the --container-setup flags are ignored. This is because fpm assumes any setup you want to do is done inside of your Dockerfile or Containerfile, and also because fpm does not know how to edit a Dockerfile to append these setup steps.")
       end
 
       entryinfo = File.stat(entry)
@@ -44,7 +44,7 @@ class FPM::Package::CurlBash < FPM::Package
       # The given argument is not a path, so let's assume it's a shell command to run.
       # We'll need to generate a 
 
-      content = template("curlbash.erb").result(binding)
+      content = template("container.erb").result(binding)
       containerfile = build_path("Containerfile")
       File.write(containerfile, content)
 
