@@ -1,6 +1,6 @@
 FROM <%= attributes[:curlbash_container_image] %>
 
-<% attributes[:curlbash_setup_list].each do |step| %>
+<% attributes.fetch(:curlbash_setup_list, []).each do |step| %>
 RUN <%= step %>
 <% end %>
 

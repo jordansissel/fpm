@@ -1,3 +1,6 @@
+require "fpm/package"
+require "json"
+
 class FPM::Package::CurlBash < FPM::Package
 
   option "--container-image", "IMAGE", "The container image to use when running the command", :default => "ubuntu:latest"
@@ -10,7 +13,7 @@ class FPM::Package::CurlBash < FPM::Package
     build_flags = []
 
     if File.exists?(entry)
-      if attributes[:curlbash_setup_list].any?
+      if attributes[:curlbash_setup_list]
         logger.warn("When the argument given is a file or directory, the --curlbash-setup flags are ignored. This is because fpm assumes any setup you want to do is done inside of your Dockerfile or Containerfile, and also because fpm does not know how to edit a Dockerfile to append these setup steps.")
       end
 
@@ -18,7 +21,7 @@ class FPM::Package::CurlBash < FPM::Package
       if entryinfo.file?
         build_flags += ["-f", entry, build_path]
       elsif entryinfo.directory?
-        build_flags += [entryinfo]
+        build_flags += [entry]
       else
         logger.fatal("The path must be a file or a directory. It is not.", :path => entry)
         raise FPM::InvalidPackageConfiguration, "The path must be a file or directory, but it is neither. Path: #{entry.inspect}"
@@ -68,10 +71,14 @@ class FPM::Package::CurlBash < FPM::Package
 
     (attributes[:excludes] ||= []).append(
       "tmp",
-      "run",
       "var/tmp",
       "root/.bashrc",
-      "root/.profile"
+      "root/.profile",
+
+      # Ignore podman's secrets files
+      "run/secret/**",
+      "run/secret",
+      "run",
     )
   end
 end
