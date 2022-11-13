@@ -36,7 +36,6 @@ class FPM::Package::CurlBash < FPM::Package
     end
 
     name = "whatever-#{$$}"
-    p ["podman", "image", "build", "-t", name, *build_flags]
     safesystem("podman", "image", "build", "-t", name, *build_flags)
 
     # Convert the container to a image layer tarball.
