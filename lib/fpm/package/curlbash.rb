@@ -1,4 +1,3 @@
-
 class FPM::Package::CurlBash < FPM::Package
 
   option "--container-image", "IMAGE", "The container image to use when running the command", :default => "ubuntu:latest"
@@ -36,21 +35,32 @@ class FPM::Package::CurlBash < FPM::Package
     end
 
     name = "whatever-#{$$}"
-    safesystem("podman", "image", "build", "-t", name, *build_flags)
+    if program_exists?("podman")
+      runtime = "podman"
+    elsif program_exists?("docker")
+      # Docker support isn't implemented yet. I don't expect it to be difficult, but
+      # we need to check if the build, inspect, and save commands use the same syntax
+      # At minimu, docker doesn't support the same flags as `podman image save`
+      #runtime = "docker"
+      logger.error("Docker executable found, but fpm doesn't support this yet. If you want this, file an issue? https://github.com/jordansissel/fpm/issues/new")
+      raise FPM::Package::InvalidPackageConfiguration, "Missing 'podman' executable."
+    else
+      raise FPM::Package::InvalidPackageConfiguration, "Missing 'podman' executable."
+    end
 
-    # Convert the container to a image layer tarball.
-    changes_tar = build_path("changes.tar")
-    safesystem("podman", "save", name, "-o", changes_tar)
+    safesystem(runtime, "image", "build", "-t", name, *build_flags)
 
+    # Find out the identifier for the most latest image layer
     last_layer = nil
-    execmd(["podman", "inspect", name], :stdin => false, :stdout =>true) do |stdout|
+    execmd([runtime, "inspect", name], :stdin => false, :stdout =>true) do |stdout|
       inspection = JSON.parse(stdout.read)
       stdout.close
       last_layer = inspection[0]["RootFS"]["Layers"][-1]
     end
 
+    # Convert the container to a image layer tarball.
     layerdir = build_path("layers")
-    safesystem("podman", "save", "--format", "docker-dir", "--output", layerdir, name)
+    safesystem(runtime, "save", "--format", "docker-dir", "--output", layerdir, name)
 
     # Extract the last layer to the staging_path for packaging.
     safesystem("tar", "-C", staging_path, "-x", 
