@@ -282,9 +282,9 @@ class FPM::Package
     if File.directory?(staging_path)
       logger.debug("Cleaning up staging path", :path => staging_path)
 
-      # Recursively check directories to make sure 'write' permission is set.
-      # This works around an issue where 'rm_r' fails because a
-      # a directory may have no write permission.
+      # Recursively check directories to make sure 'write' and 'execute'
+      # permission is set. This works around an issue where 'rm_r' fails
+      # because a a directory may have no write permission.
       #
       # You might wonder if `rm_rf` is an option for this because "force"
       # sounds like an option that would effectively ignore permissions.
