@@ -303,8 +303,6 @@ class FPM::Package
       # tested for this code, here, under Ruby 2.7.6.
       FileUtils::Entry_.new(staging_path).preorder_traverse do |entry|
         if entry.directory?
-          mode = entry.lstat.mode
-
           # Directory must be writable in order to remove files.
           # Directories need to be executable if we're going to remove files in the directory.
           if !entry.lstat.writable? || !entry.lstat.executable?
