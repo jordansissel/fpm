@@ -10,7 +10,21 @@ class FPM::Package::CurlBash < FPM::Package
   #option "--volume", "VOLUME" , "Same syntax as `podman run --volume`. Mount a local directory into the container. Useful for `make install` types of projects that were built outside of fpm."
 
   def input(entry)
+    if program_exists?("podman")
+      runtime = "podman"
+    elsif program_exists?("docker")
+      # Docker support isn't implemented yet. I don't expect it to be difficult, but
+      # we need to check if the build, inspect, and save commands use the same syntax
+      # At minimu, docker doesn't support the same flags as `podman image save`
+      #runtime = "docker"
+      logger.error("Docker executable found, but fpm doesn't support this yet. If you want this, file an issue? https://github.com/jordansissel/fpm/issues/new")
+      raise FPM::Package::InvalidPackageConfiguration, "Missing 'podman' executable."
+    else
+      raise FPM::Package::InvalidPackageConfiguration, "Missing 'podman' executable."
+    end
+
     build_flags = []
+    name = "whatever-#{$$}"
 
     if File.exists?(entry)
       if attributes[:curlbash_setup_list]
@@ -35,20 +49,6 @@ class FPM::Package::CurlBash < FPM::Package
       File.write(containerfile, content)
 
       build_flags += ["-f", build_path("Containerfile"), build_path]
-    end
-
-    name = "whatever-#{$$}"
-    if program_exists?("podman")
-      runtime = "podman"
-    elsif program_exists?("docker")
-      # Docker support isn't implemented yet. I don't expect it to be difficult, but
-      # we need to check if the build, inspect, and save commands use the same syntax
-      # At minimu, docker doesn't support the same flags as `podman image save`
-      #runtime = "docker"
-      logger.error("Docker executable found, but fpm doesn't support this yet. If you want this, file an issue? https://github.com/jordansissel/fpm/issues/new")
-      raise FPM::Package::InvalidPackageConfiguration, "Missing 'podman' executable."
-    else
-      raise FPM::Package::InvalidPackageConfiguration, "Missing 'podman' executable."
     end
 
     safesystem(runtime, "image", "build", "-t", name, *build_flags)
@@ -80,5 +80,10 @@ class FPM::Package::CurlBash < FPM::Package
       "run/secret",
       "run",
     )
+  ensure
+    if !name.nil? && !runtime.nil?
+      logger.info("Removing #{runtime} image", :name => name)
+      safesystem(runtime, "image", "rm", name)
+    end
   end
 end
