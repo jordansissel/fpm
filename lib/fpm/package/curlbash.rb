@@ -5,14 +5,39 @@ class FPM::Package::CurlBash < FPM::Package
 
   option "--setup", "SHELL COMMANDS", "Commands to run but not to include in the resulting package. For example, 'apt-get update' or other setup.", :multivalued => true
 
-  def input(command)
+  #option "--volume", "VOLUME" , "Same syntax as `podman run --volume`. Mount a local directory into the container. Useful for `make install` types of projects that were built outside of fpm."
+
+  def input(entry)
+    build_flags = []
+
+    if File.exists?(entry)
+      if attributes[:curlbash_setup_list].any?
+        logger.warn("When the argument given is a file or directory, the --curlbash-setup flags are ignored. This is because fpm assumes any setup you want to do is done inside of your Dockerfile or Containerfile, and also because fpm does not know how to edit a Dockerfile to append these setup steps.")
+      end
+
+      entryinfo = File.stat(entry)
+      if entryinfo.file?
+        build_flags += ["-f", entry, build_path]
+      elsif entryinfo.directory?
+        build_flags += [entryinfo]
+      else
+        logger.fatal("The path must be a file or a directory. It is not.", :path => entry)
+        raise FPM::InvalidPackageConfiguration, "The path must be a file or directory, but it is neither. Path: #{entry.inspect}"
+      end
+    else
+      # The given argument is not a path, so let's assume it's a shell command to run.
+      # We'll need to generate a 
+
+      content = template("curlbash.erb").result(binding)
+      containerfile = build_path("Containerfile")
+      File.write(containerfile, content)
+
+      build_flags += ["-f", build_path("Containerfile"), build_path]
+    end
+
     name = "whatever-#{$$}"
-
-    content = template("curlbash.erb").result(binding)
-    containerfile = build_path("Containerfile")
-    File.write(containerfile, content)
-
-    safesystem("podman", "image", "build", "-t", name, build_path)
+    p ["podman", "image", "build", "-t", name, *build_flags]
+    safesystem("podman", "image", "build", "-t", name, *build_flags)
 
     # Convert the container to a image layer tarball.
     changes_tar = build_path("changes.tar")
