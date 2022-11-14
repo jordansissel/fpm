@@ -14,7 +14,6 @@ Release Notes and Change Log
 * python: Fix errors in how fpm invoked ``pip``. Previously, fpm would use pip's ``--build`` flag, but this was removed a while ago, and fpm is now aware! (`#1896`_, `#1831`_, `#1893`_, `#1916`_; Jordan Sissel, Svyatogor Chuykov)
 * pleaserun: Add ``--pleaserun-user`` flag. (`#1912`_; Evgeny Stambulchik)
 * deb: The default ``--deb-priority`` is now "optional" instead of "extra" (`#1913`_; Chris Novakovic)
-* https://github.com/jordansissel/fpm/pull/1897 (`#1897`_; Jordan Sissel)
 * Enable installation of fpm on older versions of ruby. This change removed ``git`` rubygem dependency. (`#1946`_, `#1923`_; Jordan Sissel, Andreas Wirooks, Ruslan Kuprieiev, jamshid, Lorenzo Castellino, Sam Hughes)
 * Enable operation of fpm on very old versions of ruby (as old as Ruby 1.9.3). This changed removed ``json`` rubygem dependency. (`#1950`_, `#1949`_, `#1741`_, `#1264`_, `#1798`_, `#1800`_, `#1784`_; Jordan Sissel and many others)
 * Fix bug where subprocesses could hang waiting for input (`#1955`_, `#1519`_, `#1522`_; Nicholas Hubbard, William N. Braswell, Jr.)
@@ -22,7 +21,7 @@ Release Notes and Change Log
 * internal: Fix a code typo (`#1948`_; Nicholas Hubbard)
 * internal tests: Support newer versions of lintian (`#1939`_, `#1907`_; Jordan Sissel)
 * Improve support for Ruby 3.1.0 and newer that would previously crash with an error mentioning Psych::DisallowedClass (`#1898`_, `#1895`_; Jordan Sissel, Alexandre ZANNI)
-* Improve support for Ruby 3.1.0 and newer that changed the API for ERB
+* Improve support for Ruby 3.1.0 and newer that changed the API for ERB (`#1897`_; Jordan Sissel)
 
 1.14.2 (March 30, 2022)
 ^^^^^^^^^^^^^^^^^^^^^^^
