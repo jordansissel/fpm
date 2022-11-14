@@ -1,8 +1,8 @@
 Release Notes and Change Log
 ============================
 
-1.15.0 (unreleased)
-^^^^^^^^^^^^^^^^^^^
+1.15.0 (November 13, 2022)
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 * New flag ``--fpm-options-file path/to/file`` which allows you to specify additional fpm flags in an external file of your choosing. (`#1905`_, `#1902`_, `#1827`_; Jordan Sissel, Will Furnell, hjpotter92)
 * deb: Periods are now accepted in package names (`#1899`_; C. Cooke)
 * Fix bug where fpm would crash if ``--workdir`` pointed at a path that didn't
