@@ -20,7 +20,7 @@ changelog_links.rst: ../CHANGELOG.rst Makefile
 # CLI reference is generated based on the the command line flags
 cli-reference.rst: generate-cli-reference.rb Makefile
 cli-reference.rst: ../lib/fpm/package/*.rb ../lib/fpm/package.rb
-	ruby generate-cli-reference.rb > $@
+	ruby -I ../lib generate-cli-reference.rb > $@
 
 package-type-cli: 
 	$(MAKE) $(addprefix packages/cli/,$(addsuffix .rst,$(notdir $(basename $(wildcard ../lib/fpm/package/*.rb)))))
@@ -28,8 +28,8 @@ package-type-cli:
 packages/cli:
 	mkdir $@
 
-packages/cli/%.rst: ../lib/fpm/package/%.rb packages/cli
-	ruby generate-cli-reference.rb $* > $@
+packages/cli/%.rst: ../lib/fpm/package/%.rb packages/cli generate-cli-reference.rb Makefile
+	ruby -I ../lib generate-cli-reference.rb $* > $@
 
 
 .PHONY: docker-prep
