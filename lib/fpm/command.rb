@@ -298,6 +298,15 @@ class FPM::Command < Clamp::Command
       args << "."
     end
 
+    if !File.exists?(workdir)
+      logger.fatal("Given --workdir=#{workdir} is not a path that exists.")
+      raise FPM::Package::InvalidArgument, "The given workdir '#{workdir}' does not exist."
+    end
+    if !File.directory?(workdir)
+      logger.fatal("Given --workdir=#{workdir} must be a directory")
+      raise FPM::Package::InvalidArgument, "The given workdir '#{workdir}' must be a directory."
+    end
+
     logger.info("Setting workdir", :workdir => workdir)
     ENV["TMP"] = workdir
 
@@ -578,6 +587,7 @@ class FPM::Command < Clamp::Command
 
     ARGV.unshift(*flags)
     ARGV.push(*args)
+
     super(run_args)
   rescue FPM::Package::InvalidArgument => e
     logger.error("Invalid package argument: #{e}")

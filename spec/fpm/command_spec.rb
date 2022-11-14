@@ -26,6 +26,27 @@ describe FPM::Command do
   describe "--directories"
   describe "-a | --architecture"
 
+  describe "--workdir" do
+    subject { FPM::Command.new("fpm") }
+
+    context "with an nonexistent path" do
+      it "should fail aka return nonzero exit" do
+        args = ["--workdir", "/this/path/should/not/exist", "-s", "rpm", "-t", "empty", "-n", "example"]
+        insist { subject.run(args) } != 0
+      end
+    end
+
+    context "with a path that is not a directory" do
+      it "should fail aka return nonzero exit" do
+        Stud::Temporary.file do |file|
+          args = ["--workdir", file.path, "-s", "rpm", "-t", "empty", "-n", "example"]
+          insist { subject.run(args) } != 0
+        end
+      end
+    end
+
+  end
+
   describe "-v | --version" do
     subject { FPM::Command.new("fpm") }
 
