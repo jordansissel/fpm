@@ -2,6 +2,8 @@
 
 require_relative "../lib/fpm/command"
 
+flagsort = lambda { |x| x.sub(/^--(?:\[no-\])?/, "") }
+
 if ARGV.length == 0
   puts "Command-line Reference"
   puts "=========================="
@@ -13,7 +15,7 @@ if ARGV.length == 0
   puts "General Options"
   puts "---------------"
 
-  FPM::Command.instance_variable_get(:@declared_options).each do |option|
+  FPM::Command.instance_variable_get(:@declared_options).sort_by { |o| flagsort.call(o.switches.first) }.each do |option|
       text = option.description.gsub("\n", " ")
 
       if option.type == :flag
@@ -49,7 +51,7 @@ FPM::Package.types.sort_by { |k,v| k }.each do |name, type|
         puts "This package type has no additional options"
     end
 
-    options.sort_by { |flag, _| flag }.each do |flag, param, help, options, block|
+    options.sort_by { |flag, _| flagsort.call(flag.first) }.each do |flag, param, help, options, block|
         if param == :flag 
             puts "* ``#{flag.first}``"
         else
