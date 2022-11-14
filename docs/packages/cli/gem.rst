@@ -1,3 +1,7 @@
+* ``--gem-bin-path DIRECTORY``
+    - The directory to install gem executables
+* ``--gem-disable-dependency gem_name``
+    - The gem name to remove from dependency list
 * ``--[no-]gem-embed-dependencies``
     - Should the gem dependencies be installed?
 * ``--[no-]gem-env-shebang``
@@ -6,14 +10,6 @@
     - Should the package dependencies be prefixed?
 * ``--[no-]gem-fix-name``
     - Should the target package name be prefixed?
-* ``--[no-]gem-prerelease``
-    - Allow prerelease versions of a gem
-* ``--[no-]gem-version-bins``
-    - Append the version to the bins
-* ``--gem-bin-path DIRECTORY``
-    - The directory to install gem executables
-* ``--gem-disable-dependency gem_name``
-    - The gem name to remove from dependency list
 * ``--gem-gem PATH_TO_GEM``
     - The path to the 'gem' tool (defaults to 'gem' and searches your $PATH)
 * ``--gem-git-branch GIT_BRANCH``
@@ -24,8 +20,12 @@
     - Name to prefix the package name with.
 * ``--gem-package-prefix NAMEPREFIX``
     - (DEPRECATED, use --package-name-prefix) Name to prefix the package name with.
+* ``--[no-]gem-prerelease``
+    - Allow prerelease versions of a gem
 * ``--gem-shebang SHEBANG``
     - Replace the shebang in the executables in the bin path with a custom string
 * ``--gem-stagingdir STAGINGDIR``
     - The directory where fpm installs the gem temporarily before conversion. Normally a random subdirectory of workdir.
+* ``--[no-]gem-version-bins``
+    - Append the version to the bins
 
