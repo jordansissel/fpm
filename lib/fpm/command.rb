@@ -51,6 +51,9 @@ class FPM::Command < Clamp::Command
   option ["-s", "--input-type"], "INPUT_TYPE",
     "the package type to use as input (gem, rpm, python, etc)",
     :attribute_name => :input_type
+  option ["-r", "--recipe"], "RECIPE_FILE",
+    "path to recipe file used for building a source based package",
+    :attribute_name => :recipe_file
   option ["-C", "--chdir"], "CHDIR",
     "Change directory to here before searching for files",
     :attribute_name => :chdir
@@ -311,7 +314,7 @@ class FPM::Command < Clamp::Command
       return 1
     end
     input_class = FPM::Package.types[input_type]
-    output_class = FPM::Package.types[output_type]
+    output_class = FPM::Package.types[output_type] || FPM::SourcePackage.types[output_type]
 
     input = input_class.new
 
@@ -470,7 +473,7 @@ class FPM::Command < Clamp::Command
     end
 
     # Convert to the output type
-    output = input.convert(output_class)
+    output = input.convert(output_class, recipe_file)
 
     # Provide any template values as methods on the package.
     if template_scripts?
@@ -685,21 +688,29 @@ class FPM::Command < Clamp::Command
                 "Missing required -t flag. What package output did you want?")
 
       # Verify the types requested are valid
-      types = FPM::Package.types.keys.sort
+      types = FPM::Package.types.keys.concat(FPM::SourcePackage.types.keys).sort
       @command.input_type.tap do |val|
         next if val.nil?
-        mandatory(FPM::Package.types.include?(val),
+        mandatory(types.include?(val),
                   "Invalid input package -s flag) type #{val.inspect}. " \
                   "Expected one of: #{types.join(", ")}")
       end
 
       @command.output_type.tap do |val|
         next if val.nil?
-        mandatory(FPM::Package.types.include?(val),
+        mandatory(types.include?(val),
                   "Invalid output package (-t flag) type #{val.inspect}. " \
                   "Expected one of: #{types.join(", ")}")
       end
 
+      # we cannot output a source based package without a recipe
+      @command.recipe_file.tap do |val| 
+        is_source_package = FPM::SourcePackage.types.keys.include?(@command.output_type)
+        mandatory(is_source_package ? val : true,
+                 "source based package output type #{@command.output_type} " \
+                 "requires a recipe file (via -r flag).")
+      end
+      
       @command.dependencies.tap do |dependencies|
         # Verify dependencies don't include commas (#257)
         dependencies.each do |dep|

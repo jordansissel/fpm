@@ -191,12 +191,12 @@ class FPM::Package
   end # def type
 
   # Convert this package to a new package type
-  def convert(klass)
+  def convert(klass, recipe_file)
     logger.info("Converting #{self.type} to #{klass.type}")
 
     exclude
 
-    pkg = klass.new
+    pkg = recipe_file ? klass.new(recipe_file) : klass.new
     pkg.cleanup_staging # purge any directories that may have been created by klass.new
 
     # copy other bits
@@ -414,7 +414,9 @@ class FPM::Package
     # Lets us track all known FPM::Package subclasses
     def inherited(klass)
       @subclasses ||= {}
-      @subclasses[klass.name.gsub(/.*:/, "").downcase] = klass
+      unless klass.name == 'FPM::SourcePackage'
+        @subclasses[klass.name.gsub(/.*:/, "").downcase] = klass
+      end
     end # def self.inherited
 
     # Get a list of all known package subclasses
