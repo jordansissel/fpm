@@ -22,7 +22,7 @@ class FPM::Recipe
     cur_section = nil
     cur_val = nil
     File.foreach(recipe_file) do |line|
-      line.chomp!.gsub!(/ *#.*| +$/, '')
+      line.gsub!(/ *#.*| +$/, '')
       next if line =~ /^$/
       if section_name = section_tag?(line)
         if !cur_section # this is the first section tag we have seen.
