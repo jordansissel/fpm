@@ -259,7 +259,9 @@ class FPM::Package::Python < FPM::Package
     self.description = metadata["description"]
     # Sometimes the license field is multiple lines; do best-effort and just
     # use the first line.
-    self.license = metadata["license"].split(/[\r\n]+/).first
+    if metadata["license"]
+      self.license = metadata["license"].split(/[\r\n]+/).first
+    end
     self.version = metadata["version"]
     self.url = metadata["url"]
 
