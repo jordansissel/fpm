@@ -292,6 +292,15 @@ class FPM::Package::Deb < FPM::Package
     return (attributes[:prefix] or "/")
   end # def prefix
 
+  def version
+    if @version.kind_of?(String) and @version.start_with?("v")
+      logger.warn("Drop leading v from package version '#{@version}'")
+      @version = @version.gsub(/^v/, "")
+    end
+
+    return @version
+  end
+
   def input(input_path)
     extract_info(input_path)
     extract_files(input_path)
@@ -1189,5 +1198,5 @@ class FPM::Package::Deb < FPM::Package
     return data_tar_flags
   end # def data_tar_flags
 
-  public(:input, :output, :architecture, :name, :prefix, :converted_from, :to_s, :data_tar_flags)
+  public(:input, :output, :architecture, :name, :prefix, :version, :converted_from, :to_s, :data_tar_flags)
 end # class FPM::Target::Deb
