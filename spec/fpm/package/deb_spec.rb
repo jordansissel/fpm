@@ -126,6 +126,12 @@ describe FPM::Package::Deb do
     end
   end
 
+  context "when validating the version field" do
+    pending "it should reject invalid versions"
+    pending "it should convert v-prefixed-but-otherwise-valid versions"
+    pending "it should accept valid versions"
+  end
+
   describe "#output" do
     let(:original) { FPM::Package::Deb.new }
     let(:input) { FPM::Package::Deb.new }
