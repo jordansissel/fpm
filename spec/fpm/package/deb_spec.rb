@@ -127,9 +127,28 @@ describe FPM::Package::Deb do
   end
 
   context "when validating the version field" do
-    pending "it should reject invalid versions"
-    pending "it should convert v-prefixed-but-otherwise-valid versions"
-    pending "it should accept valid versions"
+    [ "_", "1_2", "abc def", "%", "1^a"].each do |v|
+      it "should reject as invalid, '#{v}'" do
+        subject.version = v
+        insist { subject.version }.raises FPM::InvalidPackageConfiguration
+      end
+    end
+
+    [ "1", "1.2", "1.2.3", "20200101", "1~beta", "1whatever"].each do |v|
+      it "should accept '#{v}'" do
+        subject.version = v
+
+        # should not raise exception
+        insist { subject.version } == v
+      end
+
+      it "should remove a leading 'v' from v#{v} and still accept it" do
+        subject.version = "v#{v}"
+
+        # should not raise exception
+        insist { subject.version } == v
+      end
+    end
   end
 
   describe "#output" do
