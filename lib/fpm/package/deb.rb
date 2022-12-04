@@ -43,7 +43,15 @@ class FPM::Package::Deb < FPM::Package
   # epoch - This is a single (generally small) unsigned integer
   # upstream_version - must contain only alphanumerics 6 and the characters . + - ~
   # debian_revision - only alphanumerics and the characters + . ~
-  RELATIONSHIP_FIELD_PATTERN = /^(?<name>[A-z0-9][A-z0-9_.-]+)(?: *\((?<relation>[<>=]+) *(?<version>(?:[0-9]+:)?[0-9A-Za-z+~.-]+(?:-[0-9A-Za-z+~.]+)?)\))?$/
+  VERSION_FIELD_PATTERN = /
+    (?:(?:[0-9]+):)?        # The epoch, an unsigned int
+    (?:[A-Za-z0-9+~.-]+)     # upstream version, probably should not contain dashes?
+    (?:-[A-Za-z0-9+~.]+)?  # debian_revision
+  /x # Version field pattern
+  RELATIONSHIP_FIELD_PATTERN = /^
+    (?<name>[A-z0-9][A-z0-9_.-]+)
+    (?:\s*\((?<relation>[<>=]+)\s(?<version>#{VERSION_FIELD_PATTERN})\))?
+  $/x # Relationship field pattern
 
   option "--ignore-iteration-in-dependencies", :flag,
             "For '=' (equal) dependencies, allow iterations on the specified " \
@@ -293,9 +301,15 @@ class FPM::Package::Deb < FPM::Package
   end # def prefix
 
   def version
-    if @version.kind_of?(String) and @version.start_with?("v")
-      logger.warn("Drop leading v from package version '#{@version}'")
-      @version = @version.gsub(/^v/, "")
+    if @version.kind_of?(String)
+      if @version.start_with?("v") && @version.gsub(/^v/, "") =~ /^#{VERSION_FIELD_PATTERN}$/
+        logger.warn("Debian 'Version' field needs to start with a digit. I was provided '#{@version}' which seems like it just has a 'v' prefix to an otherwise-valid Debian version, I'll remove the 'v' for you.")
+        @version = @version.gsub(/^v/, "")
+      end
+
+      if @version !~ /^#{VERSION_FIELD_PATTERN}$/
+        raise FPM::InvalidPackageConfiguration, "The version looks invalid for Debian packages. Debian version field must contain only alphanumerics and . (period), + (plus), - (hyphen) or ~ (tilde). I have '#{@version}' which which isn't valid."
+      end
     end
 
     return @version
