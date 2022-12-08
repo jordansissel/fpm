@@ -131,6 +131,8 @@ class FPM::Package::Gem < FPM::Package
       raise "Unexpected number of gem files in #{download_dir},  #{gem_files.length} should be 1"
     end
 
+    self.source_archive = gem_files.first
+
     return gem_files.first
   end # def download
 
@@ -217,6 +219,10 @@ class FPM::Package::Gem < FPM::Package
         end
       end # runtime_dependencies
     end #no_auto_depends
+
+    # in case we are building a source-based package
+    self.build_procedure = ""
+    self.install_procedure = "gem install #{File.basename(gem_path)}"
   end # def load_package_info
 
   def install_to_staging(gem_path)

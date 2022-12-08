@@ -84,14 +84,10 @@ Obsoletes: <%= repl %>
 %autosetup -n <%= source_archive_dirname %>
 
 %build
-mkdir -p ./cpan
-cpanm -L ./cpan . --installdeps
-
-perl Makefile.PL
-make
+<%= build_procedure %>
 
 %install
-%make_install
+<%= install_procedure %>
 
 <%# This next section puts any %pre, %post, %preun, %postun, %verifyscript, %pretrans or %posttrans scripts %>
 <%

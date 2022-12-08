@@ -8,9 +8,9 @@ require "fpm/package/cpan"
 
 class FPM::Package::SRPM < FPM::Package
   def output(output_path)
-    source_archive = ::Dir.glob(build_path("*")).select(&File.method(:file?)).first
-    source_archive_dirname = `tar -ztf #{Shellwords.escape(source_archive)}` \
-      .split("\n").map { |path| path.split("/").first }.uniq.first
+    ensure_source_package_capable()
+
+    source_archive_dirname = source_archive_dirname(source_archive)
 
     # Generate an rpm spec with Source0: <source_archive>
     rpmspec = template("srpm.erb").result(binding)
@@ -138,21 +138,7 @@ class FPM::Package::SRPM < FPM::Package
   end
 
   def converted_from(origin)
-    if origin ==  FPM::Package::CPAN
-        # Fun hack to find the instance of the origin class
-        # So we can find the build_path
-        input = nil
-        ObjectSpace.each_object { |x| input = x if x.is_a?(origin) }
-        if input.nil?
-            raise "Something bad happened. Couldn't find origin package in memory? This is a bug."
-        end
-
-        # Pick the first file found, should be a tarball.
-        source_archive = ::Dir.glob(File.join(input.build_path, "*")).select(&File.method(:file?)).first
-        #FileUtils.copy_entry(source_archive, build_path)
-        File.link(source_archive, build_path(File.basename(source_archive)))
-        #FileUtils.copy_entry(source_archive, build_path)
-    end
+    File.link(self.source_archive, build_path(File.basename(self.source_archive)))
   end
 
   def summary
@@ -170,6 +156,19 @@ class FPM::Package::SRPM < FPM::Package
       return "/"
     end
   end # def prefix
+
+  def source_archive_dirname(source_archive)
+    basename = File.basename(source_archive)
+
+    case basename
+    when /\.tar\.gz$/
+      return basename.sub(/\.tar\.gz$/, '')
+    when /\.gem$/
+      return basename.sub(/\.gem$/, '')
+    else
+      raise "Unrecognized file extension in '#{basename}'. This is probably a bug."
+    end
+  end # def source_archive_dirname
 
   def to_s(format=nil)
     if format.nil?

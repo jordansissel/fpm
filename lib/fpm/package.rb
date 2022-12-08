@@ -98,6 +98,17 @@ class FPM::Package
   # a summary or description of the package
   attr_accessor :description
 
+  # the source code archive
+  attr_accessor :source_archive
+
+  # Shell code for building this package from source. (inserted into a
+  # source-package's spec file).
+  attr_accessor :build_procedure
+
+  # Shell code for installing this package to host OS (inserted into a
+  # source-package's spec file).
+  attr_accessor :install_procedure
+
   # hash of scripts for maintainer/package scripts (postinstall, etc)
   #
   # The keys are :before_install, etc
@@ -201,10 +212,11 @@ class FPM::Package
 
     # copy other bits
     ivars = [
-      :@architecture, :@category, :@config_files, :@conflicts,
-      :@dependencies, :@description, :@epoch, :@iteration, :@license, :@maintainer,
-      :@name, :@provides, :@replaces, :@scripts, :@url, :@vendor, :@version,
-      :@directories, :@staging_path, :@attrs
+      :@architecture, :@build_procedure, :@category, :@config_files, :@conflicts,
+      :@dependencies, :@description, :@epoch, :@install_procedure, :@iteration,
+      :@license, :@maintainer, :@name, :@provides, :@replaces, :@scripts, :@url,
+      :@vendor, :@version, :@directories, :@source_archive, :@staging_path,
+      :@attrs
     ]
     ivars.each do |ivar|
       #logger.debug("Copying ivar", :ivar => ivar, :value => instance_variable_get(ivar),
@@ -549,6 +561,19 @@ class FPM::Package
       @provides = value
     end
   end
+
+  def ensure_source_package_capable
+    required = [:@source_archive, :@build_procedure, :@install_procedure]
+
+    required.each do |req|
+      unless instance_variable_get(req)
+        raise "#{self.class.name} does not yet support creating #{self.type} " \
+              "source-based packages. Missing required instance variable #{req}."
+      end
+    end
+
+    return true
+  end # def ensure_source_package_capable
 
   # General public API
   public(:type, :initialize, :convert, :input, :output, :to_s, :cleanup, :files,
