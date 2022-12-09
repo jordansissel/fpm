@@ -247,6 +247,13 @@ class FPM::Command < Clamp::Command
     "See https://reproducible-builds.org/specs/source-date-epoch ",
     :environment_variable => "SOURCE_DATE_EPOCH"
 
+  option "--fpm-options-file", "FPM_OPTIONS_FILE",
+    "A file that contains additional fpm options. Any fpm flag format is valid in this file. " \
+    "This can be useful on build servers where you want to use a common configuration or " \
+    "inject other parameters from a file instead of from a command-line flag.." do |path|
+    load_options(path)
+  end
+
   parameter "[ARGS] ...",
     "Inputs to the source package type. For the 'dir' type, this is the files" \
     " and directories you want to include in the package. For others, like " \
@@ -289,6 +296,15 @@ class FPM::Command < Clamp::Command
     if input_type == "dir" and args.empty? and !chdir.nil?
       logger.info("No args, but -s dir and -C are given, assuming '.' as input")
       args << "."
+    end
+
+    if !File.exists?(workdir)
+      logger.fatal("Given --workdir=#{workdir} is not a path that exists.")
+      raise FPM::Package::InvalidArgument, "The given workdir '#{workdir}' does not exist."
+    end
+    if !File.directory?(workdir)
+      logger.fatal("Given --workdir=#{workdir} must be a directory")
+      raise FPM::Package::InvalidArgument, "The given workdir '#{workdir}' must be a directory."
     end
 
     logger.info("Setting workdir", :workdir => workdir)
@@ -571,11 +587,85 @@ class FPM::Command < Clamp::Command
 
     ARGV.unshift(*flags)
     ARGV.push(*args)
+
     super(run_args)
   rescue FPM::Package::InvalidArgument => e
     logger.error("Invalid package argument: #{e}")
     return 1
   end # def run
+
+  def load_options(path)
+    @loaded_files ||= []
+
+    if @loaded_files.include?(path)
+      #logger.error("Options file was already loaded once. Refusing to load a second time.", :path => path)
+      raise FPM::Package::InvalidArgument, "Options file already loaded once. Refusing to load a second time. Maybe a file tries to load itself? Path: #{path}"
+    end
+
+    if !File.exist?(path)
+      logger.fatal("Cannot load options from file because the file doesn't exist.", :path => path)
+    end
+
+    if !File.readable?(path)
+      logger.fatal("Cannot load options from file because the file isn't readable.", :path => path)
+    end
+
+    @loaded_files << path
+
+    logger.info("Loading flags from file", :path => path)
+
+    # Safety check, abort if the file is huge. Arbitrarily chosen limit is 100kb
+    stat = File.stat(path)
+    max = 100 * 1024
+    if stat.size > max
+      logger.fatal("Refusing to load options from file because the file seems pretty large.", :path => path, :size => stat.size)
+      raise FPM::Package::InvalidArgument, "Options file given to --fpm-options-file is seems too large. For safety, fpm is refusing to load this. Path: #{path} - Size: #{stat.size}, maximum allowed size #{max}."
+    end
+
+    File.read(path).split($/).each do |line|
+      logger.info("Processing flags from file", :path => path, :line => line)
+      # With apologies for this hack to mdub (Mike Williams, author of Clamp)...
+      # The following code will read a file and parse the file
+      # as flags as if they were in same argument position as the given --fpm-options-file option.
+
+      args = Shellwords.split(line)
+      while args.any?
+        arg = args.shift
+
+        # Lookup the Clamp option by its --flag-name or short  name like -f
+        if arg =~ /^-/
+          # Single-letter options like -a or -z
+          if single_letter = arg.match(/^(-[A-Za-z0-9])(.*)$/)
+            option = self.class.find_option(single_letter.match(1))
+            arg, remainder = single_letter.match(1), single_letter.match(2)
+            if option.flag?
+              # Flags aka switches take no arguments, so we push the rest of the 'arg' entry back onto the args list
+
+              # For combined letter flags, like `-abc`, we want to consume the
+              # `-a` and then push `-bc` back to be processed.
+              # Only do this if there's more flags, like, not for `-a` but yes for `-abc`
+              args.unshift("-" + remainder) unless remainder.empty?
+            else
+              # Single letter options that take arguments, like `-ohello` same as `-o hello`
+
+              # For single letter flags with values, like `-ofilename` aka `-o filename`, push the remainder ("filename")
+              # back onto the args list so that it is consumed when we extract the flag value.
+              args.unshift(remainder) unless remainder.empty?
+            end
+          elsif arg.match(/^--/)
+            # Lookup the flag by its long --flag-name
+            option = self.class.find_option(arg)
+          end
+        end
+
+        # Extract the flag value, if any, from the remaining args list.
+        value = option.extract_value(arg, args)
+
+        # Process the flag into `self`
+        option.of(self).take(value)
+      end
+    end
+  end
 
   # A simple flag validator
   #

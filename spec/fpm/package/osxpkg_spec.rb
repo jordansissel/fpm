@@ -8,7 +8,7 @@ if !platform_is_darwin
       "which requires a Darwin platform.")
 end
 
-describe FPM::Package::OSXpkg do
+describe FPM::Package::OSXpkg, :if => platform_is_darwin do
   describe "#identifier" do
     it "should be of the form reverse.domain.pkgname" do
       subject.name = "name"

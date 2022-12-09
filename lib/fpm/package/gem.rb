@@ -104,19 +104,18 @@ class FPM::Package::Gem < FPM::Package
     FileUtils.mkdir(download_dir) unless File.directory?(download_dir)
 
     if attributes[:gem_git_repo]
-      require "git"
       logger.debug("Git cloning in directory #{download_dir}")
-      g = Git.clone(attributes[:gem_git_repo],gem_name,:path => download_dir)
+      safesystem("git", "-C", download_dir, "clone", attributes[:gem_git_repo], ".")
       if attributes[:gem_git_branch]
-        g.branch(attributes[:gem_git_branch]).checkout
-        g.pull('origin',attributes[:gem_git_branch])
+        safesystem("git", "-C", download_dir, "checkout", attributes[:gem_git_branch])
       end
-      gem_build = [ "#{attributes[:gem_gem]}", "build", "#{g.dir.to_s}/#{gem_name}.gemspec"]
-      ::Dir.chdir(g.dir.to_s) do |dir|
+
+      gem_build = [ "#{attributes[:gem_gem]}", "build", "#{download_dir}/#{gem_name}.gemspec"]
+      ::Dir.chdir(download_dir) do |dir|
         logger.debug("Building in directory #{dir}")
         safesystem(*gem_build)
       end
-      gem_files = ::Dir.glob(File.join(g.dir.to_s, "*.gem"))
+      gem_files = ::Dir.glob(File.join(download_dir, "*.gem"))
     else
       gem_fetch = [ "#{attributes[:gem_gem]}", "fetch", gem_name]
       gem_fetch += ["--prerelease"] if attributes[:gem_prerelease?]

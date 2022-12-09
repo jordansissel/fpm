@@ -12,7 +12,7 @@ if !virtualenv_usable?
     "no virtualenv/tools bin on your path")
 end
 
-describe FPM::Package::Virtualenv do
+describe FPM::Package::Virtualenv, :if => virtualenv_usable? do
   before do
     skip("virtualenv and/or virtualenv-tools programs not found") unless virtualenv_usable?
   end

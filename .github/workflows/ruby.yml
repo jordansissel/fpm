@@ -1,0 +1,25 @@
+name: Ruby
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        ruby-version: ['2.7', '3.0', '3.1']
+    steps:
+    - run: |
+        sudo apt install -y libarchive-tools lintian cpanminus
+    - uses: actions/checkout@v3
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ matrix.ruby-version }}
+        bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+    - run: |
+        bundle exec rspec
+      env:
+        SHELL: /usr/bin/bash

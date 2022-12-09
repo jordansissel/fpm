@@ -33,12 +33,25 @@ class FPM::Package::Deb < FPM::Package
   # Example value with version relationship: libc6 (>= 2.2.1)
   # Example value: libc6
 
+  # Package name docs here: https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-source
+  # Package names (both source and binary, see Package) must consist only of lower case letters (a-z),
+  # digits (0-9), plus (+) and minus (-) signs, and periods (.).
+  # They must be at least two characters long and must start with an alphanumeric character.
+
   # Version string docs here: https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-version
   # The format is: [epoch:]upstream_version[-debian_revision].
   # epoch - This is a single (generally small) unsigned integer
   # upstream_version - must contain only alphanumerics 6 and the characters . + - ~
   # debian_revision - only alphanumerics and the characters + . ~
-  RELATIONSHIP_FIELD_PATTERN = /^(?<name>[A-z0-9_-]+)(?: *\((?<relation>[<>=]+) *(?<version>(?:[0-9]+:)?[0-9A-Za-z+~.-]+(?:-[0-9A-Za-z+~.]+)?)\))?$/
+  VERSION_FIELD_PATTERN = /
+    (?:(?:[0-9]+):)?        # The epoch, an unsigned int
+    (?:[A-Za-z0-9+~.-]+)     # upstream version, probably should not contain dashes?
+    (?:-[A-Za-z0-9+~.]+)?  # debian_revision
+  /x # Version field pattern
+  RELATIONSHIP_FIELD_PATTERN = /^
+    (?<name>[A-z0-9][A-z0-9_.-]+)
+    (?:\s*\((?<relation>[<>=]+)\s(?<version>#{VERSION_FIELD_PATTERN})\))?
+  $/x # Relationship field pattern
 
   option "--ignore-iteration-in-dependencies", :flag,
             "For '=' (equal) dependencies, allow iterations on the specified " \
@@ -286,6 +299,21 @@ class FPM::Package::Deb < FPM::Package
   def prefix
     return (attributes[:prefix] or "/")
   end # def prefix
+
+  def version
+    if @version.kind_of?(String)
+      if @version.start_with?("v") && @version.gsub(/^v/, "") =~ /^#{VERSION_FIELD_PATTERN}$/
+        logger.warn("Debian 'Version' field needs to start with a digit. I was provided '#{@version}' which seems like it just has a 'v' prefix to an otherwise-valid Debian version, I'll remove the 'v' for you.")
+        @version = @version.gsub(/^v/, "")
+      end
+
+      if @version !~ /^#{VERSION_FIELD_PATTERN}$/
+        raise FPM::InvalidPackageConfiguration, "The version looks invalid for Debian packages. Debian version field must contain only alphanumerics and . (period), + (plus), - (hyphen) or ~ (tilde). I have '#{@version}' which which isn't valid."
+      end
+    end
+
+    return @version
+  end
 
   def input(input_path)
     extract_info(input_path)
@@ -1187,5 +1215,5 @@ class FPM::Package::Deb < FPM::Package
     return data_tar_flags
   end # def data_tar_flags
 
-  public(:input, :output, :architecture, :name, :prefix, :converted_from, :to_s, :data_tar_flags)
+  public(:input, :output, :architecture, :name, :prefix, :version, :converted_from, :to_s, :data_tar_flags)
 end # class FPM::Target::Deb

@@ -22,10 +22,6 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = '>= 1.9.3'
 
-  # For parsing JSON (required for some Python support, etc)
-  # http://flori.github.com/json/doc/index.html
-  spec.add_dependency("json", ">= 1.7.7", "< 3.0") # license: Ruby License
-
   # For logging
   # https://github.com/jordansissel/ruby-cabin
   spec.add_dependency("cabin", ">= 0.6.0") # license: Apache 2
@@ -43,9 +39,6 @@ Gem::Specification.new do |spec|
 
   # For sourcing from pleaserun
   spec.add_dependency("pleaserun", "~> 0.0.29") # license: Apache 2
-
-  # For sourcing from git repos
-  spec.add_dependency("git", ">= 1.3.0", "< 2.0") # license: MIT
 
   spec.add_dependency("stud")
 

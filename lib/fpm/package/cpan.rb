@@ -315,7 +315,7 @@ class FPM::Package::CPAN < FPM::Package
     directory = build_path("module")
     ::Dir.mkdir(directory)
     args = [ "-C", directory, "-zxf", tarball,
-      "--strip-components", "1" ]
+             %q{--transform=s,[./]*[^/]*/,,} ]
     safesystem("tar", *args)
     return directory
   end

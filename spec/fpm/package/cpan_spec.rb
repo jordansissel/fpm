@@ -1,4 +1,5 @@
 require "spec_setup"
+require "tmpdir" # for Dir.mktmpdir
 require "fpm" # local
 require "fpm/package/cpan" # local
 
@@ -35,6 +36,22 @@ describe FPM::Package::CPAN do
     insist { subject.description } == "Perl interface to the MD-5 algorithm"
     insist { subject.vendor } == "Gisle Aas <gisle@activestate.com>"
     # TODO(sissel): Check dependencies
+  end
+
+  it "should unpack tarball containing ./ leading paths" do
+    pending("Disabled on travis-ci because it always fails, and there is no way to debug it?") if is_travis
+
+    Dir.mktmpdir do |tmpdir|
+      # Create tarball containing a file './foo/bar.txt'
+      system("mkdir -p #{tmpdir}/z/foo")
+      system("touch #{tmpdir}/z/foo/bar.txt")
+      system("tar -C #{tmpdir} -cvzf #{tmpdir}/z.tar.gz .")
+
+      # Invoke the unpack method
+      directory = subject.instance_eval { unpack("#{tmpdir}/z.tar.gz") }
+
+      insist { File.file?("#{directory}/foo/bar.txt") } == true
+    end
   end
 
   it "should package File::Spec" do

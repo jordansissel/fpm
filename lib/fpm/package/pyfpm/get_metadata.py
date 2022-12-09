@@ -112,3 +112,4 @@ class get_metadata(Command):
         else:
             # For Python 2.5 and Debian's python-json
             output.write(json.write(data))
+        output.close()

@@ -1,6 +1,28 @@
 Release Notes and Change Log
 ============================
 
+1.15.0 (November 13, 2022)
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+* New flag ``--fpm-options-file path/to/file`` which allows you to specify additional fpm flags in an external file of your choosing. (`#1905`_, `#1902`_, `#1827`_; Jordan Sissel, Will Furnell, hjpotter92)
+* deb: Periods are now accepted in package names (`#1899`_; C. Cooke)
+* Fix bug where fpm would crash if ``--workdir`` pointed at a path that didn't
+  exist. (`#1959`_; Jordan Sissel)
+* osxpkg: this package format now supports the fpm ``--prefix`` flag(`#1909`_, `#1908`_; Jordan Sissel, mcataga)
+* cpan: Fix bug where fpm would fail on certain Perl modules due to their source tarball structure (`#1940`_; Nicholas Hubbard, William N. Braswell, Jr.)
+* cpan: Fix crash on certain CPAN modules where the author field was blank (`#1942`_, `#1937`_, `#1523`_, `#1528`_; Nicholas Hubbard, William N. Braswell, Jr.)
+* deb: The distribution field of the debian changelog and changes files will now use the value set by ``--deb-dist`` (default is "unstable") (`#1934`_; Chabert Loïc)
+* python: Fix errors in how fpm invoked ``pip``. Previously, fpm would use pip's ``--build`` flag, but this was removed a while ago, and fpm is now aware! (`#1896`_, `#1831`_, `#1893`_, `#1916`_; Jordan Sissel, Svyatogor Chuykov)
+* pleaserun: Add ``--pleaserun-user`` flag. (`#1912`_; Evgeny Stambulchik)
+* deb: The default ``--deb-priority`` is now "optional" instead of "extra" (`#1913`_; Chris Novakovic)
+* Enable installation of fpm on older versions of ruby. This change removed ``git`` rubygem dependency. (`#1946`_, `#1923`_; Jordan Sissel, Andreas Wirooks, Ruslan Kuprieiev, jamshid, Lorenzo Castellino, Sam Hughes)
+* Enable operation of fpm on very old versions of ruby (as old as Ruby 1.9.3). This changed removed ``json`` rubygem dependency. (`#1950`_, `#1949`_, `#1741`_, `#1264`_, `#1798`_, `#1800`_, `#1784`_; Jordan Sissel and many others)
+* Fix bug where subprocesses could hang waiting for input (`#1955`_, `#1519`_, `#1522`_; Nicholas Hubbard, William N. Braswell, Jr.)
+* Update Dockerfile to use ubuntu:20.04 (`#1935`_; Gnought)
+* internal: Fix a code typo (`#1948`_; Nicholas Hubbard)
+* internal tests: Support newer versions of lintian (`#1939`_, `#1907`_; Jordan Sissel)
+* Improve support for Ruby 3.1.0 and newer that would previously crash with an error mentioning Psych::DisallowedClass (`#1898`_, `#1895`_; Jordan Sissel, Alexandre ZANNI)
+* Improve support for Ruby 3.1.0 and newer that changed the API for ERB (`#1897`_; Jordan Sissel)
+
 1.14.2 (March 30, 2022)
 ^^^^^^^^^^^^^^^^^^^^^^^
 * deb: fix bug causing ``--deb-compression none`` to invoke ``tar`` incorrectly (`#1879`_; John Howard)
