@@ -381,7 +381,7 @@ class FPM::Package::Gem < FPM::Package
       logger.debug("Gem %s did not have changelog with recognized name" % [name])
       # FIXME: check rubygems.org?
     end
-  end # detect_source_date_from_changelog
+  end # def detect_source_date_from_changelog
 
   public(:input, :output)
 end # class FPM::Package::Gem
