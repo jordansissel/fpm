@@ -60,6 +60,13 @@ $debsystemctl start <%= service %> >/dev/null || true
 <% end -%>
 }
 
+triggered() {
+  : # Ensure this if-clause is not empty. If it were empty, and we had an 'else', then it is an error in shell syntax
+<% if script?(:triggered) -%>
+<%=  script(:triggered) %>
+<% end -%>
+}
+
 if [ "${1}" = "configure" -a -z "${2}" ] || \
    [ "${1}" = "abort-remove" ]
 then
@@ -77,6 +84,13 @@ then
     # package is installed later, called "Config-Files" state.
     # basically, that still looks a _lot_ like an upgrade to me.
     after_upgrade "${2}"
+elif [ "${1}" = "triggered" ]
+then
+    # "triggered" here
+    # NOTE: This slot allows implementing package triggers according to
+    # https://wiki.debian.org/DpkgTriggers
+    shift
+    triggered "${@}"
 elif echo "${1}" | grep -E -q "(abort|fail)"
 then
     echo "Failed to install before the post-installation script was run." >&2

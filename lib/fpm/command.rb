@@ -213,6 +213,13 @@ class FPM::Command < Clamp::Command
     File.expand_path(val) # Get the full path to the script
   end # --before-upgrade
 
+  option "--triggered", "FILE",
+    "A script snippets to define and run package triggers, see\n" \
+    "https://wiki.debian.org/DpkgTriggers and\n" \
+    "https://stackoverflow.com/questions/15276535/dpkg-how-to-use-trigger\n" do |val|
+    File.expand_path(val) # Get the full path to the script
+  end # --triggered
+
   option "--template-scripts", :flag,
     "Allow scripts to be templated. This lets you use ERB to template your " \
     "packaging scripts (for --after-install, etc). For example, you can do " \
@@ -466,6 +473,7 @@ class FPM::Command < Clamp::Command
     setscript.call(:after_remove)
     setscript.call(:before_upgrade)
     setscript.call(:after_upgrade)
+    setscript.call(:triggered)
 
     # Bail if any setscript calls had errors. We don't need to log
     # anything because we've already logged the error(s) above.
