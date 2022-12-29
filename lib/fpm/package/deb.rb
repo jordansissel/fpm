@@ -591,7 +591,7 @@ class FPM::Package::Deb < FPM::Package
       end # No need to close, GzipWriter#close will close it.
     end
 
-    if File.exists?(dest_changelog) and not File.exists?(dest_upstream_changelog)
+    if File.exist?(dest_changelog) and not File.exist?(dest_upstream_changelog)
       # see https://www.debian.org/doc/debian-policy/ch-docs.html#s-changelogs
       File.rename(dest_changelog, dest_upstream_changelog)
     end
@@ -747,7 +747,7 @@ class FPM::Package::Deb < FPM::Package
 
     if origin == FPM::Package::Deb
       changelog_path = staging_path("usr/share/doc/#{name}/changelog.Debian.gz")
-      if File.exists?(changelog_path)
+      if File.exist?(changelog_path)
         logger.debug("Found a deb changelog file, using it.", :path => changelog_path)
         attributes[:deb_changelog] = build_path("deb_changelog")
         File.open(attributes[:deb_changelog], "w") do |deb_changelog|
@@ -761,7 +761,7 @@ class FPM::Package::Deb < FPM::Package
 
     if origin == FPM::Package::Deb
       changelog_path = staging_path("usr/share/doc/#{name}/changelog.gz")
-      if File.exists?(changelog_path)
+      if File.exist?(changelog_path)
         logger.debug("Found an upstream changelog file, using it.", :path => changelog_path)
         attributes[:deb_upstream_changelog] = build_path("deb_upstream_changelog")
         File.open(attributes[:deb_upstream_changelog], "w") do |deb_upstream_changelog|
@@ -1038,7 +1038,7 @@ class FPM::Package::Deb < FPM::Package
     etcfiles = []
     # Add everything in /etc
     begin
-      if !attributes[:deb_no_default_config_files?] && File.exists?(staging_path("/etc"))
+      if !attributes[:deb_no_default_config_files?] && File.exist?(staging_path("/etc"))
         logger.warn("Debian packaging tools generally labels all files in /etc as config files, " \
                     "as mandated by policy, so fpm defaults to this behavior for deb packages. " \
                     "You can disable this default behavior with --deb-no-default-config-files flag")
