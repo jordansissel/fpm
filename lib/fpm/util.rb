@@ -345,7 +345,7 @@ module FPM::Util
     when 'characterSpecial', 'blockSpecial'
       raise  UnsupportedSpecialFile.new("File is device which fpm doesn't know how to copy (#{File.ftype(src)}): #{src}")
     when 'directory'
-      FileUtils.mkdir(dst) unless File.exists? dst
+      FileUtils.mkdir(dst) unless File.exist? dst
     else
       # if the file with the same dev and inode has been copied already -
       # hard link it's copy to `dst`, otherwise make an actual copy

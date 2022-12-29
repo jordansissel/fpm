@@ -298,7 +298,7 @@ class FPM::Command < Clamp::Command
       args << "."
     end
 
-    if !File.exists?(workdir)
+    if !File.exist?(workdir)
       logger.fatal("Given --workdir=#{workdir} is not a path that exists.")
       raise FPM::Package::InvalidArgument, "The given workdir '#{workdir}' does not exist."
     end
@@ -371,7 +371,7 @@ class FPM::Command < Clamp::Command
 
     # If --inputs was specified, read it as a file.
     if !inputs.nil?
-      if !File.exists?(inputs)
+      if !File.exist?(inputs)
         logger.fatal("File given for --inputs does not exist (#{inputs})")
         return 1
       end
@@ -386,7 +386,7 @@ class FPM::Command < Clamp::Command
     # If --exclude-file was specified, read it as a file and append to
     # the exclude pattern list.
     if !exclude_file.nil?
-      if !File.exists?(exclude_file)
+      if !File.exist?(exclude_file)
         logger.fatal("File given for --exclude-file does not exist (#{exclude_file})")
         return 1
       end
@@ -451,7 +451,7 @@ class FPM::Command < Clamp::Command
       # Skip scripts not set
       next if path.nil?
 
-      if !File.exists?(path)
+      if !File.exist?(path)
         logger.error("No such file (for #{scriptname.to_s}): #{path.inspect}")
         script_errors << path
       end
