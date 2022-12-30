@@ -198,18 +198,18 @@ This will download Fennec from CPAN and build a Debian package of the Fennec Per
 By default, FPM believes the following to be true:
 
 * That your local Perl lib path will be the target Perl lib path
-* That you want the package name to be prefixed with the string perl-
-* That you want the package name to be postfixed with an empty string
-* That the dependencies from CPAN are valid and that the naming scheme for those dependencies are prefixed with perl- when building an rpm, and prefixed with lib and postfixed with -perl when building a deb. 
+* That you want the package name to be prefixed with the word perl
+* That the dependencies from CPAN are valid and that the naming scheme for those dependencies are prefixed with perl
 
-For deb packages you will want to specify two options to have the generated package name match the Debian naming standards for perl packages (libfennec-perl)::
+If you wish to change any of the above, use the following::
 
-	fpm -t deb -s cpan --cpan-package-name-prefix lib --cpan-package-name-postfix -perl Fennec
+	fpm -t deb -s cpan -–cpan-perl-lib-path /usr/share/perl5 Fennec
 
-Your local perl install may be /opt/usr/share/perl5.10 but the package will be constructed so that the module will be installed to /usr/share/perl5 using the following::
+	fpm -t deb -s cpan --cpan-package-name-prefix fubar /usr/share/perl5 Fennec
 
-	fpm -t rpm -s cpan --cpan-perl-lib-path /usr/share/perl5 Fennec
+The first command will change the target path to where perl will be. Your local perl install may be /opt/usr/share/perl5.10 but the package will be constructed so that the module will be installed to /usr/share/perl5
 
+The second command will change the prefix of the package, i.e., from perl-Fennec to fubar-Fennec.
 
 Configuration file
 -------------------
