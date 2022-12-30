@@ -709,6 +709,14 @@ class FPM::Package::Deb < FPM::Package
     end.flatten
 
     if origin == FPM::Package::CPAN
+
+      # By default, we'd prefer to name Debian-targeted Perl packages using the
+      # same naming scheme that Debian itself uses, which is usually something
+      # like "lib<module-name-hyphenated>-perl", such as libregexp-common-perl
+      #
+      logger.info("Changing package name to match Debian's typical libmodule-name-perl style")
+      self.name = "lib#{self.name.sub(/^perl-/, "")}-perl"
+
       # The fpm cpan code presents dependencies and provides fields as perl(ModuleName)
       # so we'll need to convert them to something debian supports.
 
