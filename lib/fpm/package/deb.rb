@@ -735,9 +735,7 @@ class FPM::Package::Deb < FPM::Package
         end
       end
 
-      rejects = attributes[:rejects].map do |skip|
-        "perl(#{skip})"
-      end
+      rejects = [ "perl(vars)", "perl(warnings)", "perl(strict)", "perl(Config)" ]
       self.dependencies = self.dependencies.reject do |dep|
         # Reject non-module Perl dependencies like 'vars' and 'warnings'
         rejects.include?(dep)

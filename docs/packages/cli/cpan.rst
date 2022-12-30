@@ -10,8 +10,6 @@
     - Name to prefix the package name with.
 * ``--cpan-package-name-postfix NAME_POSTFIX``
     - Name to prefix the package name with.
-* ``--cpan-package-reject-from-depends MODULE``
-    - Remove module from those generated with auto-depend.
 * ``--cpan-perl-bin PERL_EXECUTABLE``
     - The path to the perl executable you wish to run.
 * ``--cpan-perl-lib-path PERL_LIB_PATH``
