@@ -27,7 +27,7 @@ Install trigger
 
 The following fpm command installs the trigger:
 
-    fpm --triggered /path/to/triggers.sh
+    fpm --deb-trigger /path/to/triggers.sh
 
 The resulting postinst-script in the packages looks like this:
 

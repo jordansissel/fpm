@@ -200,6 +200,13 @@ class FPM::Package::Deb < FPM::Package
     next File.expand_path(file)
   end
 
+  option "--trigger", "FILEPATH", "Add FILEPATH as trigger script. " \
+    "See https://wiki.debian.org/DpkgTriggers and " \
+    "https://stackoverflow.com/questions/15276535/dpkg-how-to-use-trigger",
+    :multivalued => true do |file|
+    next File.expand_path(file)
+  end # --trigger
+
   option "--upstart", "FILEPATH", "Add FILEPATH as an upstart script",
     :multivalued => true do |file|
     next File.expand_path(file)
