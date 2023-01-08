@@ -200,10 +200,9 @@ class FPM::Package::Deb < FPM::Package
     next File.expand_path(file)
   end
 
-  option "--trigger", "FILEPATH", "Add FILEPATH as trigger script. " \
+  option "--trigger", "FILE", "Add FILE as trigger script. " \
     "See https://wiki.debian.org/DpkgTriggers and " \
-    "https://stackoverflow.com/questions/15276535/dpkg-how-to-use-trigger",
-    :multivalued => true do |file|
+    "https://stackoverflow.com/questions/15276535/dpkg-how-to-use-trigger" do |file|
     next File.expand_path(file)
   end # --trigger
 
@@ -534,7 +533,7 @@ class FPM::Package::Deb < FPM::Package
       attributes[:deb_systemd] << name
     end
 
-    if script?(:before_upgrade) or script?(:after_upgrade) or attributes[:deb_systemd].any? or script?(:triggered)
+    if script?(:before_upgrade) or script?(:after_upgrade) or attributes[:deb_systemd].any? or script?(:trigger)
       puts "Adding action files"
       if script?(:before_install) or script?(:before_upgrade)
         scripts[:before_install] = template("deb/preinst_upgrade.sh.erb").result(binding)
@@ -542,7 +541,7 @@ class FPM::Package::Deb < FPM::Package
       if script?(:before_remove) or not attributes[:deb_systemd].empty?
         scripts[:before_remove] = template("deb/prerm_upgrade.sh.erb").result(binding)
       end
-      if script?(:after_install) or script?(:after_upgrade) or attributes[:deb_systemd].any? or script?(:triggered)
+      if script?(:after_install) or script?(:after_upgrade) or attributes[:deb_systemd].any? or script?(:trigger)
         scripts[:after_install] = template("deb/postinst_upgrade.sh.erb").result(binding)
       end
       if script?(:after_remove)
