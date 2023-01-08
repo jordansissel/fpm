@@ -66,10 +66,8 @@ triggered() {
 <%# the script is non-empty, but just whitespace and/or comments -%>
     :
 <%# if any trigger specified, loop through and start them -%>
-<% if attributes[:trigger].any? -%>
-<% attributes[:trigger].each do |trigger| -%>
-<%= trigger %>
-<% end -%>
+<% if script?(:deb_trigger) -%>
+<%=  script(:deb_trigger) %>
 <% end -%>
 }
 
