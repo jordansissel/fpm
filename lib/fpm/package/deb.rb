@@ -1090,7 +1090,7 @@ class FPM::Package::Deb < FPM::Package
       end
       upstarts.each do |upstart|
         name = File.basename(upstart, ".upstart")
-        upstartscript = "etc/init/#{name}.conf"
+        upstartscript = "/etc/init/#{name}.conf"
         logger.debug("Add conf file declaration for upstart script", :script => upstartscript)
         allconfigs << upstartscript[1..-1]
       end
