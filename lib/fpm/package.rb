@@ -109,6 +109,9 @@ class FPM::Package
   # source-package's spec file).
   attr_accessor :install_procedure
 
+  # Arguments to pass to dh in a SDEB's debian/rules file.
+  attr_accessor :dh_args
+
   # hash of scripts for maintainer/package scripts (postinstall, etc)
   #
   # The keys are :before_install, etc
@@ -213,10 +216,10 @@ class FPM::Package
     # copy other bits
     ivars = [
       :@architecture, :@build_procedure, :@category, :@config_files, :@conflicts,
-      :@dependencies, :@description, :@epoch, :@install_procedure, :@iteration,
-      :@license, :@maintainer, :@name, :@provides, :@replaces, :@scripts, :@url,
-      :@vendor, :@version, :@directories, :@source_archive, :@staging_path,
-      :@attrs
+      :@dependencies, :@description, :@dh_args, :@epoch, :@install_procedure,
+      :@iteration, :@license, :@maintainer, :@name, :@provides, :@replaces,
+      :@scripts, :@url, :@vendor, :@version, :@directories, :@source_archive,
+      :@staging_path, :@attrs
     ]
     ivars.each do |ivar|
       #logger.debug("Copying ivar", :ivar => ivar, :value => instance_variable_get(ivar),

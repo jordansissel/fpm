@@ -266,6 +266,9 @@ class FPM::Package::CPAN < FPM::Package
           "Build.PL found"
       end
 
+      # dh recognizes perl code automatically
+      self.dh_args = ''
+
       # Fix any files likely to cause conflicts that are duplicated
       # across packages.
       # https://github.com/jordansissel/fpm/issues/443

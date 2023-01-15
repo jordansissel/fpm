@@ -223,6 +223,7 @@ class FPM::Package::Gem < FPM::Package
     # in case we are building a source-based package
     self.build_procedure = ""
     self.install_procedure = "gem install #{File.basename(gem_path)}"
+    self.dh_args = "--buildsystem=ruby --with ruby"
   end # def load_package_info
 
   def install_to_staging(gem_path)
