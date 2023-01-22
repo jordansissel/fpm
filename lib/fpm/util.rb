@@ -90,7 +90,7 @@ module FPM::Util
   # OPTIONS:
   #
   #   :process (default: false) -- pass process object as the first argument the to block,
-  #   :stdin   (default: true)  -- pass stdin object of the child process to the block for writting,
+  #   :stdin   (default: true)  -- pass stdin object of the child process to the block for writing,
   #   :stdout  (default: true)  -- pass stdout object of the child process to the block for reading,
   #   :stderr  (default: true)  -- pass stderr object of the child process to the block for reading,
   #

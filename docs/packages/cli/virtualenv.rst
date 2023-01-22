@@ -11,7 +11,7 @@
 * ``--virtualenv-pypi PYPI_URL``
     - PyPi Server uri for retrieving packages.
 * ``--virtualenv-pypi-extra-url PYPI_EXTRA_URL``
-    - PyPi extra-index-url for pointing to your priviate PyPi
+    - PyPi extra-index-url for pointing to your private PyPi
 * ``--[no-]virtualenv-setup-install``
     - After building virtualenv run setup.py install useful when building a virtualenv for packages and including their requirements from 
 * ``--[no-]virtualenv-system-site-packages``

@@ -570,7 +570,7 @@ describe FPM::Package::Deb do
           skip("Missing lintian program") unless have_lintian
 
           # Have lintian run with only one check. The goal here is to check if
-          # lintian crashes or not. This 'symlinks' check would normaly check
+          # lintian crashes or not. This 'symlinks' check would normally check
           # for broken symlinks. Since this package has no files, this check
           # should always succeed. It would fail if fpm generated any invalid
           # packages, such as ones with a bzip2-compressed control.tar file (#1840)
