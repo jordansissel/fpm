@@ -80,6 +80,10 @@ class FPM::Package::Python < FPM::Package
     "Arbitrary argument(s) to be passed to setup.py",
     :multivalued => true, :attribute_name => :python_setup_py_arguments,
     :default => []
+  option "--build-backend-arguments", "build_backend_argument",
+         "Arbitrary argument(s) to be passed to pep517 build backend",
+     :multivalued => true, :attribute_name => :python_build_backend_arguments,
+     :default => []
   option "--internal-pip", :flag,
     "Use the pip module within python to install modules - aka 'python -m pip'. This is the recommended usage since Python 3.4 (2014) instead of invoking the 'pip' script",
     :attribute_name => :python_internal_pip,
@@ -99,17 +103,28 @@ class FPM::Package::Python < FPM::Package
 
     if File.directory?(path_to_package)
       setup_py = File.join(path_to_package, "setup.py")
+      pyproject_toml = File.join(path_to_package, "pyproject.toml")
     else
       setup_py = path_to_package
+      pyproject_toml = path_to_package
     end
 
-    if !File.exist?(setup_py)
-      logger.error("Could not find 'setup.py'", :path => setup_py)
-      raise "Unable to find python package; tried #{setup_py}"
+    # @todo Swap it! - TOML priority is for debugging only!
+    if File.exist?(pyproject_toml)
+      logger.debug("Do job with pyproject.toml")
+      wheel_path = build_py_wheel(setup_py)
+      load_package_info_wheel(setup_py, wheel_path)
+      # install_to_staging_toml(setup_py)
+      install_to_staging_toml(wheel_path)
+    elsif File.exist?(setup_py)
+      logger.debug("Do job with setup.py")
+      load_package_info(setup_py)
+      install_to_staging(setup_py)
+    else
+      logger.error("Could not find neither 'setup.py' nor 'pyproject.toml'", :path => path_to_package)
+      raise "Unable to find python package; tried #{setup_py} and #{pyproject_toml}"
     end
 
-    load_package_info(setup_py)
-    install_to_staging(setup_py)
   end # def input
 
   # Download the given package if necessary. If version is given, that version
@@ -201,8 +216,185 @@ class FPM::Package::Python < FPM::Package
     return dirs.first
   end # def download
 
-  # Load the package information like name, version, dependencies.
-  def load_package_info(setup_py)
+  # Build Python wheel file (*.whl).
+  def build_py_wheel(setup_data)
+    project_dir = File.dirname(setup_data)
+
+    prefix = "/"
+    prefix = attributes[:prefix] unless attributes[:prefix].nil?
+
+    wheel_dir = "./fpm-wheel"
+    # Some assume $PWD == current directory of package, so let's
+    # chdir first.
+    ::Dir.chdir(project_dir) do
+
+      # @todo FIXME!!! - is it necessary?
+      flags = [ "--python", attributes[:python_bin] ]
+
+      # @todo FIXME!!!
+      # pip wheel:
+      # no such option: --prefix
+      # Should we revert to install to staging not from wheel, but from original source dist?
+      # if !attributes[:prefix].nil?
+      #   flags += [ "--prefix", attributes[:prefix] ]
+      # else
+      #   flags += ["--prefix", "/usr/local/"]
+      # end
+
+      flags += [ "--wheel-dir", wheel_dir ]
+      flags += [ "--no-input"]
+      flags += [ "--disable-pip-version-check"]
+      flags += [ "--no-python-version-warning"]
+      #      flags += [ "--verbose --verbose --verbose"]
+      opt = "w"  # w == wipe
+      flags += [ "--exists-action", opt]
+      # @todo FIXME!!! is it really necessary?
+      flags += [ "--no-cache-dir"]
+      opt = "off"
+      flags += [ "--progress-bar", opt]
+      flags += [ "--no-deps" ]
+      flags += [ "--use-pep517" ]
+      flags += [ "--check-build-dependencies" ]
+
+      # @todo FIXME!!! --config-settings for PEP 517 build backend (KEY=VALUE, can be multiple)
+      # I have no clue where to get all that 'options' and any description of possible 'backends'
+      if !attributes[:python_build_backend_arguments].nil? and !attributes[:python_build_backend_arguments].empty?
+        # Add optional arguments for pep517 build backend
+        attributes[:python_build_backend_arguments].each do |a|
+          flags += [ "--config-settings", a ]
+        end
+      end
+
+      safesystem(*attributes[:python_pip], "wheel", ".", *flags)
+    end
+
+    files = ::Dir.glob(File.join(project_dir, wheel_dir, "*.whl"))
+    if files.length != 1
+      raise "Unexpected directory layout after `pip wheel ...`. This might be an fpm bug? The directory is #{build_path}"
+    end
+
+    return files[0]
+  end # def build_py_wheel
+
+  # Load the package information like name, version, dependencies from wheel file.
+  def load_package_info_wheel(setup_data, wheel_path)
+    if !attributes[:python_package_prefix].nil?
+      attributes[:python_package_name_prefix] = attributes[:python_package_prefix]
+    end
+
+    begin
+      safesystem("#{attributes[:python_bin]} -c 'import json'")
+    rescue FPM::Util::ProcessFailed => e
+      logger.error("Your python environment is missing json support. I cannot continue without this.", :python => attributes[:python_bin], :error => e)
+      raise FPM::Util::ProcessFailed, "Python (#{attributes[:python_bin]}) is missing json modules."
+    end
+
+    begin
+      safesystem("#{attributes[:python_bin]} -c 'from pkginfo import Wheel'")
+    rescue FPM::Util::ProcessFailed => e
+      logger.error("Your python environment is missing a working pkginfo.Wheel module. I tried to find the 'importlib.Wheel' module but failed.", :python => attributes[:python_bin], :error => e)
+      raise FPM::Util::ProcessFailed, "Python (#{attributes[:python_bin]}) is missing pkginfo.Wheel module."
+    end
+
+    # Add ./pyfpm_wheel/ to the python library path
+    pylib = File.expand_path(File.dirname(__FILE__))
+
+    # chdir to the directory holding setup.py because some python setups assume that you are
+    # in the same directory.
+    setup_dir = File.dirname(setup_data)
+
+    output = ::Dir.chdir(setup_dir) do
+      tmp = build_path("metadata.json")
+
+      toml_metadata_code = [
+        "from pyfpm_wheel import get_metadata_wheel",
+        "gmt = get_metadata_wheel.get_metadata_wheel('#{wheel_path}')",
+        "gmt.run('#{tmp}')"
+      ].join("\n")
+
+      get_metadata_cmd = "env PYTHONPATH=#{pylib}:$PYTHONPATH #{attributes[:python_bin]} " \
+        " -c " \
+        "#{Shellwords.escape(toml_metadata_code)}"
+
+      # @todo FIXME!
+      #      if attributes[:python_obey_requirements_txt?]
+      #        setup_cmd += " --load-requirements-txt"
+      #       end
+
+      # Capture the output, which will be JSON metadata describing this python
+      # package. See fpm/lib/fpm/package/pyfpm_wheel/get_metadata.py for more
+      # details.
+      logger.info("fetching package wheel metadata", :get_metadata_cmd => get_metadata_cmd)
+
+      success = safesystem(get_metadata_cmd)
+      #%x{#{get_metadata_cmd}}
+      if !success
+        logger.error("pyfpm_wheel get_metadata failed", :command => get_metadata_cmd,
+                     :exitcode => $?.exitstatus)
+        raise "An unexpected error occurred while processing the wheel file"
+      end
+      File.read(tmp)
+    end
+
+    logger.debug("result from `pyfpm_wheel get_metadata`", :data => output)
+    metadata = JSON.parse(output)
+    logger.info("object output of pyfpm_wheel get_metadata", :json => metadata)
+
+    self.architecture = metadata["architecture"]
+    self.description = metadata["description"]
+    # Sometimes the license field is multiple lines; do best-effort and just
+    # use the first line.
+    if metadata["license"]
+      self.license = metadata["license"].split(/[\r\n]+/).first
+    end
+    self.version = metadata["version"]
+    self.url = metadata["url"]
+
+    # name prefixing is optional, if enabled, a name 'foo' will become
+    # 'python-foo' (depending on what the python_package_name_prefix is)
+    if attributes[:python_fix_name?]
+      self.name = fix_name(metadata["name"])
+    else
+      self.name = metadata["name"]
+    end
+
+    # convert python-Foo to python-foo if flag is set
+    self.name = self.name.downcase if attributes[:python_downcase_name?]
+
+    if !attributes[:no_auto_depends?] and attributes[:python_dependencies?]
+      metadata["dependencies"].each do |dep|
+        dep_re = /^([^<>!= ]+)\s*(?:([~<>!=]{1,2})\s*(.*))?$/
+        match = dep_re.match(dep)
+        if match.nil?
+          logger.error("Unable to parse dependency", :dependency => dep)
+          raise FPM::InvalidPackageConfiguration, "Invalid dependency '#{dep}'"
+        end
+        name, cmp, version = match.captures
+
+        next if attributes[:python_disable_dependency].include?(name)
+
+        # convert == to =
+        if cmp == "==" or cmp == "~="
+          logger.info("Converting == dependency requirement to =", :dependency => dep )
+          cmp = "="
+        end
+
+        # dependency name prefixing is optional, if enabled, a name 'foo' will
+        # become 'python-foo' (depending on what the python_package_name_prefix
+        # is)
+        name = fix_name(name) if attributes[:python_fix_dependencies?]
+
+        # convert dependencies from python-Foo to python-foo
+        name = name.downcase if attributes[:python_downcase_dependencies?]
+
+        self.dependencies << "#{name} #{cmp} #{version}"
+      end
+    end # if attributes[:python_dependencies?]
+  end # def load_package_info_wheel
+
+
+  # Load the package information like name, version, dependencies via setup.py.
+  def load_package_info(setup_data)
     if !attributes[:python_package_prefix].nil?
       attributes[:python_package_name_prefix] = attributes[:python_package_prefix]
     end
@@ -232,7 +424,7 @@ class FPM::Package::Python < FPM::Package
 
     # chdir to the directory holding setup.py because some python setup.py's assume that you are
     # in the same directory.
-    setup_dir = File.dirname(setup_py)
+    setup_dir = File.dirname(setup_data)
 
     output = ::Dir.chdir(setup_dir) do
       tmp = build_path("metadata.json")
@@ -328,9 +520,57 @@ class FPM::Package::Python < FPM::Package
     end
   end # def fix_name
 
-  # Install this package to the staging directory
-  def install_to_staging(setup_py)
-    project_dir = File.dirname(setup_py)
+
+  # Install this package to the staging directory via pyproject.toml
+  def install_to_staging_toml(wheel_path)
+    project_dir = File.dirname(wheel_path)
+
+    prefix = "/"
+    prefix = attributes[:prefix] unless attributes[:prefix].nil?
+
+    # Some setup's assume $PWD == current directory of pyproject.toml, so let's
+    # chdir first.
+    ::Dir.chdir(project_dir) do
+      flags = [ "--root", staging_path ]
+
+      # if !attributes[:python_install_lib].nil?
+      #   flags += [ "--prefix", attributes[:python_install_lib] ]
+      # elsif !attributes[:prefix].nil?
+      #   # since prefix is given, but not python_install_lib, assume PREFIX/lib
+      #   flags += [ "--prefix", File.join(prefix, "lib") ]
+      # end
+
+      if !attributes[:python_install_lib].nil?
+        # @todo FIXME!!! --target does really strange things...
+        # When specified, all package content goes to /tmp in result deb.
+        #flags += [ "--target", attributes[:python_install_lib] ]
+        #
+        # With --prefix things is not getting easier -
+        # when --python-install-lib=/usr/local-mega/lib/python3.9/dist-packages/ specified
+        # all package content goes to
+        # /usr/local-mega/lib/python3.9/dist-packages/lib/python3.9/site-packages
+        # in result deb.
+        #flags += [ "--prefix", attributes[:python_install_lib] ]
+      elsif !attributes[:prefix].nil?
+        # since prefix is given, but not python_install_lib, assume PREFIX/lib
+        flags += [ "--prefix", File.join(prefix, "lib") ]
+      end
+
+      opt = "off"
+      flags += [ "--progress-bar", opt]
+      flags += [ "--no-deps" ]
+      # Otherwise it'll complain on already installed distribution packages.
+      # Why? Have no idea, since --root is always specified, it supposed to be safe.
+      flags += [ "--ignore-installed" ]
+
+      safesystem(*attributes[:python_pip], "install", *flags, wheel_path)
+    end
+  end # def install_to_staging_toml
+
+
+  # Install this package to the staging directory via setup.py
+  def install_to_staging(setup_data)
+    project_dir = File.dirname(setup_data)
 
     prefix = "/"
     prefix = attributes[:prefix] unless attributes[:prefix].nil?
