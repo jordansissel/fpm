@@ -172,12 +172,15 @@ class FPM::Package::Python < FPM::Package
       # For example, `pip download ... Django` puts `Django-4.0.4.tar.tz` into the build_path directory.
       # If we expect `pip` to leave an unknown-named file in the `build_path` directory, let's check for
       # a single file and unpack it.  I don't know if it will /always/ be a .tar.gz though.
-      files = ::Dir.glob(File.join(build_path, "*.tar.gz"))
-      if files.length != 1
-        raise "Unexpected directory layout after `pip download ...`. This might be an fpm bug? The directory is #{build_path}"
+      source = ::Dir.chdir(build_path) do
+        files = ::Dir.glob(["*.tar.gz", "*.tgz"])
+        if files.length != 1
+          raise "Unexpected directory layout after `pip download ...`. This might be an fpm bug? The directory is #{build_path}"
+        end
+        File.join(build_path, files[0])
       end
 
-      safesystem("tar", "-zxf", files[0], "-C", target)
+      safesystem("tar", "-zxf", source, "-C", target)
     else
       # no pip, use easy_install
       logger.debug("no pip, defaulting to easy_install", :easy_install => attributes[:python_easyinstall])
