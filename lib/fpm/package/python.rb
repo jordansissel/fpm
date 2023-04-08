@@ -223,13 +223,14 @@ class FPM::Package::Python < FPM::Package
     prefix = "/"
     prefix = attributes[:prefix] unless attributes[:prefix].nil?
 
-    wheel_dir = "./fpm-wheel"
+    wheel_dir = ".fpm-wheel"
     # Some assume $PWD == current directory of package, so let's
     # chdir first.
     ::Dir.chdir(project_dir) do
 
       # @todo FIXME!!! - is it necessary?
-      flags = [ "--python", attributes[:python_bin] ]
+#      flags = [ "--python", attributes[:python_bin] ]
+      flags = [  ]
 
       # @todo FIXME!!!
       # pip wheel:
