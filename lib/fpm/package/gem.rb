@@ -76,15 +76,24 @@ class FPM::Package::Gem < FPM::Package
 
   def input(gem)
     # 'arg'  is the name of the rubygem we should unpack.
-    path_to_gem = download_if_necessary(gem, version)
+    @path_to_gem = download_if_necessary(gem, version)
 
     # Got a good gem now (downloaded or otherwise)
     #
     # 1. unpack it into staging_path
     # 2. take the metadata from it and update our wonderful package with it.
-    load_package_info(path_to_gem)
-    install_to_staging(path_to_gem)
+    load_package_info(@path_to_gem)
   end # def input
+
+  def build_and_install
+    install_to_staging(@path_to_gem)
+  end # def build_and_install
+
+  def shell_code
+    build_procedure = ""
+    install_procedure = "gem install #{File.basename(@path_to_gem)}"
+    return { :build_procedure => build_procedure, :install_procedure => install_procedure }
+  end # def shell_code
 
   def download_if_necessary(gem, gem_version)
     path = gem
