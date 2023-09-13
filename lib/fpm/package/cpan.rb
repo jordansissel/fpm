@@ -112,6 +112,7 @@ class FPM::Package::CPAN < FPM::Package
     self.vendor = case metadata["author"]
       when String; metadata["author"]
       when Array; metadata["author"].join(", ")
+      when NilClass; "No Vendor Or Author Provided"
       else
         raise FPM::InvalidPackageConfiguration, "Unexpected CPAN 'author' field type: #{metadata["author"].class}. This is a bug."
     end if metadata.include?("author")
@@ -304,7 +305,7 @@ class FPM::Package::CPAN < FPM::Package
     directory = build_path("module")
     ::Dir.mkdir(directory)
     args = [ "-C", directory, "-zxf", tarball,
-      "--strip-components", "1" ]
+             %q{--transform=s,[./]*[^/]*/,,} ]
     safesystem("tar", *args)
     return directory
   end

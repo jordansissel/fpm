@@ -4,7 +4,6 @@ require "rubygems"
 require "fileutils"
 require "fpm/util"
 require "yaml"
-require "git"
 
 # A rubygems package.
 #
@@ -106,17 +105,17 @@ class FPM::Package::Gem < FPM::Package
 
     if attributes[:gem_git_repo]
       logger.debug("Git cloning in directory #{download_dir}")
-      g = Git.clone(attributes[:gem_git_repo],gem_name,:path => download_dir)
+      safesystem("git", "-C", download_dir, "clone", attributes[:gem_git_repo], ".")
       if attributes[:gem_git_branch]
-        g.branch(attributes[:gem_git_branch]).checkout
-        g.pull('origin',attributes[:gem_git_branch])
+        safesystem("git", "-C", download_dir, "checkout", attributes[:gem_git_branch])
       end
-      gem_build = [ "#{attributes[:gem_gem]}", "build", "#{g.dir.to_s}/#{gem_name}.gemspec"]
-      ::Dir.chdir(g.dir.to_s) do |dir|
+
+      gem_build = [ "#{attributes[:gem_gem]}", "build", "#{download_dir}/#{gem_name}.gemspec"]
+      ::Dir.chdir(download_dir) do |dir|
         logger.debug("Building in directory #{dir}")
         safesystem(*gem_build)
       end
-      gem_files = ::Dir.glob(File.join(g.dir.to_s, "*.gem"))
+      gem_files = ::Dir.glob(File.join(download_dir, "*.gem"))
     else
       gem_fetch = [ "#{attributes[:gem_gem]}", "fetch", gem_name]
       gem_fetch += ["--prerelease"] if attributes[:gem_prerelease?]
@@ -135,9 +134,19 @@ class FPM::Package::Gem < FPM::Package
     return gem_files.first
   end # def download
 
+  GEMSPEC_YAML_CLASSES = [ ::Gem::Specification, ::Gem::Version, Time, ::Gem::Dependency, ::Gem::Requirement, Symbol ]
   def load_package_info(gem_path)
-
-    spec = YAML.load(%x{#{attributes[:gem_gem]} specification #{gem_path} --yaml})
+    # TODO(sissel): Maybe we should check if `safe_load` method exists instead of this version check?
+    if ::Gem::Version.new(RUBY_VERSION) >= ::Gem::Version.new("3.1.0")
+      # Ruby 3.1.0 switched to a Psych/YAML version that defaults to "safe" loading
+      # and unfortunately `gem specification --yaml` emits YAML that requires
+      # class loaders to process correctly
+      spec = YAML.load(%x{#{attributes[:gem_gem]} specification #{gem_path} --yaml},
+                      :permitted_classes => GEMSPEC_YAML_CLASSES)
+    else
+      # Older versions of ruby call this method YAML.safe_load
+      spec = YAML.safe_load(%x{#{attributes[:gem_gem]} specification #{gem_path} --yaml}, GEMSPEC_YAML_CLASSES)
+    end
 
     if !attributes[:gem_package_prefix].nil?
       attributes[:gem_package_name_prefix] = attributes[:gem_package_prefix]

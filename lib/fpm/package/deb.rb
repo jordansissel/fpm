@@ -3,9 +3,14 @@ require "fpm/namespace"
 require "fpm/package"
 require "fpm/errors"
 require "fpm/util"
-require "backports"
+require "backports/latest"
 require "fileutils"
 require "digest"
+require "zlib"
+
+# For handling conversion
+require "fpm/package/cpan"
+require "fpm/package/gem"
 
 # Support for debian packages (.deb files)
 #
@@ -23,6 +28,30 @@ class FPM::Package::Deb < FPM::Package
 
   # The list of supported compression types. Default is gz (gzip)
   COMPRESSION_TYPES = [ "gz", "bzip2", "xz", "none" ]
+
+  # https://www.debian.org/doc/debian-policy/ch-relationships.html#syntax-of-relationship-fields
+  # Example value with version relationship: libc6 (>= 2.2.1)
+  # Example value: libc6
+
+  # Package name docs here: https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-source
+  # Package names (both source and binary, see Package) must consist only of lower case letters (a-z),
+  # digits (0-9), plus (+) and minus (-) signs, and periods (.).
+  # They must be at least two characters long and must start with an alphanumeric character.
+
+  # Version string docs here: https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-version
+  # The format is: [epoch:]upstream_version[-debian_revision].
+  # epoch - This is a single (generally small) unsigned integer
+  # upstream_version - must contain only alphanumerics 6 and the characters . + - ~
+  # debian_revision - only alphanumerics and the characters + . ~
+  VERSION_FIELD_PATTERN = /
+    (?:(?:[0-9]+):)?        # The epoch, an unsigned int
+    (?:[A-Za-z0-9+~.-]+)     # upstream version, probably should not contain dashes?
+    (?:-[A-Za-z0-9+~.]+)?  # debian_revision
+  /x # Version field pattern
+  RELATIONSHIP_FIELD_PATTERN = /^
+    (?<name>[A-z0-9][A-z0-9_.-]+)
+    (?:\s*\((?<relation>[<>=]+)\s(?<version>#{VERSION_FIELD_PATTERN})\))?
+  $/x # Relationship field pattern
 
   option "--ignore-iteration-in-dependencies", :flag,
             "For '=' (equal) dependencies, allow iterations on the specified " \
@@ -77,7 +106,7 @@ class FPM::Package::Deb < FPM::Package
   end
 
   option "--priority", "PRIORITY",
-    "The debian package 'priority' value.", :default => "extra"
+    "The debian package 'priority' value.", :default => "optional"
 
   option "--use-file-permissions", :flag,
     "Use existing file permissions when defining ownership and modes"
@@ -177,7 +206,7 @@ class FPM::Package::Deb < FPM::Package
   end
 
   option "--systemd", "FILEPATH", "Add FILEPATH as a systemd script",
-	:multivalued => true do |file|
+    :multivalued => true do |file|
     next File.expand_path(file)
   end
 
@@ -193,9 +222,14 @@ class FPM::Package::Deb < FPM::Package
     File.expand_path(val) # Get the full path to the script
   end # --after-purge
 
+  option "--maintainerscripts-force-errorchecks", :flag ,
+    "Activate errexit shell option according to lintian. " \
+    "https://lintian.debian.org/tags/maintainer-script-ignores-errors.html",
+    :default => false
+
   def initialize(*args)
     super(*args)
-    attributes[:deb_priority] = "extra"
+    attributes[:deb_priority] = "optional"
   end # def initialize
 
   private
@@ -222,6 +256,9 @@ class FPM::Package::Deb < FPM::Package
     when "x86_64"
       # Debian calls x86_64 "amd64"
       @architecture = "amd64"
+    when "aarch64"
+      # Debian calls aarch64 "arm64"
+      @architecture = "arm64"
     when "noarch"
       # Debian calls noarch "all"
       @architecture = "all"
@@ -262,6 +299,21 @@ class FPM::Package::Deb < FPM::Package
   def prefix
     return (attributes[:prefix] or "/")
   end # def prefix
+
+  def version
+    if @version.kind_of?(String)
+      if @version.start_with?("v") && @version.gsub(/^v/, "") =~ /^#{VERSION_FIELD_PATTERN}$/
+        logger.warn("Debian 'Version' field needs to start with a digit. I was provided '#{@version}' which seems like it just has a 'v' prefix to an otherwise-valid Debian version, I'll remove the 'v' for you.")
+        @version = @version.gsub(/^v/, "")
+      end
+
+      if @version !~ /^#{VERSION_FIELD_PATTERN}$/
+        raise FPM::InvalidPackageConfiguration, "The version looks invalid for Debian packages. Debian version field must contain only alphanumerics and . (period), + (plus), - (hyphen) or ~ (tilde). I have '#{@version}' which which isn't valid."
+      end
+    end
+
+    return @version
+  end
 
   def input(input_path)
     extract_info(input_path)
@@ -418,6 +470,12 @@ class FPM::Package::Deb < FPM::Package
 
   def output(output_path)
     self.provides = self.provides.collect { |p| fix_provides(p) }
+
+    self.provides.each do |provide|
+      if !valid_provides_field?(provide)
+        raise FPM::InvalidPackageConfiguration, "Found invalid Provides field values (#{provide.inspect}). This is not valid in a Debian package."
+      end
+    end
     output_check(output_path)
     # Abort if the target path already exists.
 
@@ -533,7 +591,7 @@ class FPM::Package::Deb < FPM::Package
       end # No need to close, GzipWriter#close will close it.
     end
 
-    if File.exists?(dest_changelog) and not File.exists?(dest_upstream_changelog)
+    if File.exist?(dest_changelog) and not File.exist?(dest_upstream_changelog)
       # see https://www.debian.org/doc/debian-policy/ch-docs.html#s-changelogs
       File.rename(dest_changelog, dest_upstream_changelog)
     end
@@ -582,22 +640,25 @@ class FPM::Package::Deb < FPM::Package
     case self.attributes[:deb_compression]
       when "gz", nil
         datatar = build_path("data.tar.gz")
-        compression = "-z"
+        controltar = build_path("control.tar.gz")
+        compression_flags = ["-z"]
       when "bzip2"
         datatar = build_path("data.tar.bz2")
-        compression = "-j"
+        controltar = build_path("control.tar.gz")
+        compression_flags = ["-j"]
       when "xz"
         datatar = build_path("data.tar.xz")
-        compression = "-J"
+        controltar = build_path("control.tar.xz")
+        compression_flags = ["-J"]
       when "none"
         datatar = build_path("data.tar")
-        compression = ""
+        controltar = build_path("control.tar")
+        compression_flags = []
       else
         raise FPM::InvalidPackageConfiguration,
           "Unknown compression type '#{self.attributes[:deb_compression]}'"
     end
-
-    args = [ tar_cmd, "-C", staging_path, compression ] + data_tar_flags + [ "-cf", datatar, "." ]
+    args = [ tar_cmd, "-C", staging_path ] + compression_flags + data_tar_flags + [ "-cf", datatar, "." ]
     if tar_cmd_supports_sort_names_and_set_mtime? and not attributes[:source_date_epoch].nil?
       # Use gnu tar options to force deterministic file order and timestamp
       args += ["--sort=name", ("--mtime=@%s" % attributes[:source_date_epoch])]
@@ -610,7 +671,7 @@ class FPM::Package::Deb < FPM::Package
     # the 'debian-binary' file has to be first
     File.expand_path(output_path).tap do |output_path|
       ::Dir.chdir(build_path) do
-        safesystem(*ar_cmd, output_path, "debian-binary", "control.tar.gz", datatar)
+        safesystem(*ar_cmd, output_path, "debian-binary", controltar, datatar)
       end
     end
 
@@ -647,9 +708,46 @@ class FPM::Package::Deb < FPM::Package
       fix_provides(provides)
     end.flatten
 
+    if origin == FPM::Package::CPAN
+      # The fpm cpan code presents dependencies and provides fields as perl(ModuleName)
+      # so we'll need to convert them to something debian supports.
+
+      # Replace perl(ModuleName) > 1.0 with Debian-style perl-ModuleName (> 1.0)
+      perldepfix = lambda do |dep|
+        m = dep.match(/perl\((?<name>[A-Za-z0-9_:]+)\)\s*(?<op>.*$)/)
+        if m.nil?
+          # 'dep' syntax didn't look like 'perl(Name) > 1.0'
+          dep
+        else
+          # Also replace '::' in the perl module name with '-'
+          modulename = m["name"].gsub("::", "-")
+         
+          # Fix any upper-casing or other naming concerns Debian has about packages
+          name = "#{attributes[:cpan_package_name_prefix]}-#{modulename}"
+
+          if m["op"].empty?
+            name
+          else
+            # 'dep' syntax was like this (version constraint): perl(Module) > 1.0
+            "#{name} (#{m["op"]})"
+          end
+        end
+      end
+
+      rejects = [ "perl(vars)", "perl(warnings)", "perl(strict)", "perl(Config)" ]
+      self.dependencies = self.dependencies.reject do |dep|
+        # Reject non-module Perl dependencies like 'vars' and 'warnings'
+        rejects.include?(dep)
+      end.collect(&perldepfix).collect(&method(:fix_dependency))
+
+      # Also fix the Provides field 'perl(ModuleName) = version' to be 'perl-modulename (= version)'
+      self.provides = self.provides.collect(&perldepfix).collect(&method(:fix_provides))
+
+    end # if origin == FPM::Packagin::CPAN
+
     if origin == FPM::Package::Deb
       changelog_path = staging_path("usr/share/doc/#{name}/changelog.Debian.gz")
-      if File.exists?(changelog_path)
+      if File.exist?(changelog_path)
         logger.debug("Found a deb changelog file, using it.", :path => changelog_path)
         attributes[:deb_changelog] = build_path("deb_changelog")
         File.open(attributes[:deb_changelog], "w") do |deb_changelog|
@@ -663,7 +761,7 @@ class FPM::Package::Deb < FPM::Package
 
     if origin == FPM::Package::Deb
       changelog_path = staging_path("usr/share/doc/#{name}/changelog.gz")
-      if File.exists?(changelog_path)
+      if File.exist?(changelog_path)
         logger.debug("Found an upstream changelog file, using it.", :path => changelog_path)
         attributes[:deb_upstream_changelog] = build_path("deb_upstream_changelog")
         File.open(attributes[:deb_upstream_changelog], "w") do |deb_upstream_changelog|
@@ -672,6 +770,19 @@ class FPM::Package::Deb < FPM::Package
           end
         end
         File.unlink(changelog_path)
+      end
+    end
+
+    if origin == FPM::Package::Gem
+      # fpm's gem input will have provides as "rubygem-name = version"
+      # and we need to convert this to Debian-style "rubygem-name (= version)"
+      self.provides = self.provides.collect do |provides|
+        m = /^(#{attributes[:gem_package_name_prefix]})-([^\s]+)\s*=\s*(.*)$/.match(provides)
+        if m
+          "#{m[1]}-#{m[2]} (= #{m[3]})"
+        else
+          provides
+        end
       end
     end
   end # def converted_from
@@ -715,8 +826,13 @@ class FPM::Package::Deb < FPM::Package
       name, version = dep.gsub(/[()~>]/, "").split(/ +/)[0..1]
       nextversion = version.split(".").collect { |v| v.to_i }
       l = nextversion.length
-      nextversion[l-2] += 1
-      nextversion[l-1] = 0
+      if l > 1
+        nextversion[l-2] += 1
+        nextversion[l-1] = 0
+      else
+        # Single component versions ~> 1
+        nextversion[l-1] += 1
+      end
       nextversion = nextversion.join(".")
       return ["#{name} (>= #{version})", "#{name} (<< #{nextversion})"]
     elsif (m = dep.match(/(\S+)\s+\(!= (.+)\)/))
@@ -743,6 +859,32 @@ class FPM::Package::Deb < FPM::Package
     end
   end # def fix_dependency
 
+  def valid_provides_field?(text)
+    m = RELATIONSHIP_FIELD_PATTERN.match(text)
+    if m.nil?
+      logger.error("Invalid relationship field for debian package: #{text}")
+      return false
+    end
+
+    # Per Debian Policy manual, https://www.debian.org/doc/debian-policy/ch-relationships.html#syntax-of-relationship-fields
+    # >> The relations allowed are <<, <=, =, >= and >> for strictly earlier, earlier or equal,
+    # >> exactly equal, later or equal and strictly later, respectively. The exception is the
+    # >> Provides field, for which only = is allowed
+    if m["relation"] == "=" || m["relation"] == nil
+      return true
+    end
+    return false
+  end
+
+  def valid_relationship_field?(text)
+    m = RELATIONSHIP_FIELD_PATTERN.match(text)
+    if m.nil?
+      logger.error("Invalid relationship field for debian package: #{text}")
+      return false
+    end
+    return true
+  end
+
   def fix_provides(provides)
     name_re = /^[^ \(]+/
     name = provides[name_re]
@@ -756,6 +898,11 @@ class FPM::Package::Deb < FPM::Package
       logger.warn("Replacing 'provides' underscores with dashes in '#{provides}' because " \
                    "debs don't like underscores")
       provides = provides.gsub("_", "-")
+    end
+
+    if m = provides.match(/^([A-Za-z0-9_-]+)\s*=\s*(\d+.*$)/)
+      logger.warn("Replacing 'provides' entry #{provides} with syntax 'name (= version)'")
+      provides = "#{m[1]} (= #{m[2]})"
     end
     return provides.rstrip
   end
@@ -784,28 +931,25 @@ class FPM::Package::Deb < FPM::Package
 
     # Tar up the staging_path into control.tar.{compression type}
     case self.attributes[:deb_compression]
-      when "gz", nil
-        controltar = build_path("control.tar.gz")
-        compression = "-z"
-      when "bzip2"
-        controltar = build_path("control.tar.bz2")
-        compression = "-j"
+      when "gz", "bzip2", nil
+        controltar = "control.tar.gz"
+        compression_flags = ["-z"]
       when "xz"
-        controltar = build_path("control.tar.xz")
-        compression = "-J"
+        controltar = "control.tar.xz"
+        compression_flags = ["-J"]
       when "none"
-        controltar = build_path("control.tar")
-        compression = ""
+        controltar = "control.tar"
+        compression_flags = []
       else
         raise FPM::InvalidPackageConfiguration,
           "Unknown compression type '#{self.attributes[:deb_compression]}'"
     end
 
     # Make the control.tar.gz
-    build_path("control.tar.gz").tap do |controltar|
+    build_path(controltar).tap do |controltar|
       logger.info("Creating", :path => controltar, :from => control_path)
 
-      args = [ tar_cmd, "-C", control_path, compression, "-cf", controltar,
+      args = [ tar_cmd, "-C", control_path ] + compression_flags + [ "-cf", controltar,
         "--owner=0", "--group=0", "--numeric-owner", "." ]
       if tar_cmd_supports_sort_names_and_set_mtime? and not attributes[:source_date_epoch].nil?
         # Force deterministic file order and timestamp
@@ -894,7 +1038,7 @@ class FPM::Package::Deb < FPM::Package
     etcfiles = []
     # Add everything in /etc
     begin
-      if !attributes[:deb_no_default_config_files?]
+      if !attributes[:deb_no_default_config_files?] && File.exist?(staging_path("/etc"))
         logger.warn("Debian packaging tools generally labels all files in /etc as config files, " \
                     "as mandated by policy, so fpm defaults to this behavior for deb packages. " \
                     "You can disable this default behavior with --deb-no-default-config-files flag")
@@ -1068,5 +1212,5 @@ class FPM::Package::Deb < FPM::Package
     return data_tar_flags
   end # def data_tar_flags
 
-  public(:input, :output, :architecture, :name, :prefix, :converted_from, :to_s, :data_tar_flags)
+  public(:input, :output, :architecture, :name, :prefix, :version, :converted_from, :to_s, :data_tar_flags)
 end # class FPM::Target::Deb

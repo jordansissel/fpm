@@ -1,27 +1,21 @@
 require "fpm/namespace"
-require "childprocess"
-require "ffi"
 require "fileutils"
+require "stud/temporary"
 
 # Some utility functions
 module FPM::Util
-  extend FFI::Library
-  ffi_lib FFI::Library::LIBC
-
-  # mknod is __xmknod in glibc a wrapper around mknod to handle
-  # various stat struct formats. See bits/stat.h in glibc source
-  begin
-    attach_function :mknod, :mknod, [:string, :uint, :ulong], :int
-  rescue FFI::NotFoundError
-    # glibc/io/xmknod.c int __xmknod (int vers, const char *path, mode_t mode, dev_t *dev)
-    attach_function :xmknod, :__xmknod, [:int, :string, :uint, :pointer], :int
-  end
 
   # Raised if safesystem cannot find the program to run.
   class ExecutableNotFound < StandardError; end
 
   # Raised if a safesystem program exits nonzero
   class ProcessFailed < StandardError; end
+
+  # Raised when a named pipe cannot be copied due to missing functions in fpm and ruby.
+  class NamedPipeCannotBeCopied < StandardError; end
+
+  # Raised when an attempting to copy a special file such as a block device.
+  class UnsupportedSpecialFile < StandardError; end
 
   # Is the given program in the system's PATH?
   def program_in_path?(program)
@@ -146,42 +140,37 @@ module FPM::Util
 
     stdout_r, stdout_w = IO.pipe
     stderr_r, stderr_w = IO.pipe
+    stdin_r, stdin_w = IO.pipe
 
-    process = ChildProcess.build(*args2)
-    process.environment.merge!(env)
-
-    process.io.stdout = stdout_w
-    process.io.stderr = stderr_w
-
-    if block_given? and opts[:stdin]
-      process.duplex = true
-    end
-
-    process.start
+    pid = Process.spawn(env, *args2, :out => stdout_w, :err => stderr_w, :in => stdin_r)
 
     stdout_w.close; stderr_w.close
-    logger.debug("Process is running", :pid => process.pid)
+    logger.debug("Process is running", :pid => pid)
     if block_given?
       args3 = []
       args3.push(process)           if opts[:process]
-      args3.push(process.io.stdin)  if opts[:stdin]
+      args3.push(stdin_w)           if opts[:stdin]
       args3.push(stdout_r)          if opts[:stdout]
       args3.push(stderr_r)          if opts[:stderr]
 
       yield(*args3)
 
-      process.io.stdin.close        if opts[:stdin] and not process.io.stdin.closed?
+      stdin_w.close                 if opts[:stdin] and not stdin_w.closed?
       stdout_r.close                unless stdout_r.closed?
       stderr_r.close                unless stderr_r.closed?
     else
+      # If no block given (not interactive) we should close stdin_w because we
+      # won't be able to give input which may cause a hang.
+      stdin_w.close
       # Log both stdout and stderr as 'info' because nobody uses stderr for
       # actually reporting errors and as a result 'stderr' is a misnomer.
       logger.pipe(stdout_r => :info, stderr_r => :info)
     end
 
-    process.wait if process.alive?
+    Process.waitpid(pid)
+    status = $?
 
-    return process.exit_code
+    return status.exitstatus
   end # def execmd
 
   # Run a command safely in a way that gets reports useful errors.
@@ -241,15 +230,18 @@ module FPM::Util
     @@ar_cmd_deterministic = false
 
     # FIXME: don't assume current directory writeable
-    FileUtils.touch(["fpm-dummy.tmp"])
+    emptyfile = Stud::Temporary.pathname
+    testarchive = Stud::Temporary.pathname
+    FileUtils.touch([emptyfile])
+
     ["ar", "gar"].each do |ar|
       ["-qc", "-qcD"].each do |ar_create_opts|
-        FileUtils.rm_f(["fpm-dummy.ar.tmp"])
+        FileUtils.rm_f([testarchive])
         # Return this combination if it creates archives without uids or timestamps.
         # Exitstatus will be nonzero if the archive can't be created,
         # or its table of contents doesn't match the regular expression.
         # Be extra-careful about locale and timezone when matching output.
-        system("#{ar} #{ar_create_opts} fpm-dummy.ar.tmp fpm-dummy.tmp 2>/dev/null && env TZ=UTC LANG=C LC_TIME=C #{ar} -tv fpm-dummy.ar.tmp | grep '0/0.*1970' > /dev/null 2>&1")
+        system("#{ar} #{ar_create_opts} #{testarchive} #{emptyfile} 2>/dev/null && env TZ=UTC LANG=C LC_TIME=C #{ar} -tv #{testarchive} | grep '0/0.*1970' > /dev/null 2>&1")
         if $?.exitstatus == 0
            @@ar_cmd = [ar, ar_create_opts]
            @@ar_cmd_deterministic = true
@@ -259,10 +251,8 @@ module FPM::Util
     end
     # If no combination of ar and options omits timestamps, fall back to default.
     @@ar_cmd = ["ar", "-qc"]
+    FileUtils.rm_f([testarchive, emptyfile])
     return @@ar_cmd
-  ensure
-    # Clean up
-    FileUtils.rm_f(["fpm-dummy.ar.tmp", "fpm-dummy.tmp"])
   end # def ar_cmd
 
   # Return whether the command returned by ar_cmd can create deterministic archives
@@ -276,7 +266,10 @@ module FPM::Util
     return @@tar_cmd if defined? @@tar_cmd
 
     # FIXME: don't assume current directory writeable
-    FileUtils.touch(["fpm-dummy.tmp"])
+    emptyfile = Stud::Temporary.pathname
+    testarchive = Stud::Temporary.pathname
+
+    FileUtils.touch([emptyfile])
 
     # Prefer tar that supports more of the features we want, stop if we find tar of our dreams
     best="tar"
@@ -288,7 +281,7 @@ module FPM::Util
       opts=[]
       score=0
       ["--sort=name", "--mtime=@0"].each do |opt|
-        system("#{tar} #{opt} -cf fpm-dummy.tar.tmp fpm-dummy.tmp > /dev/null 2>&1")
+        system("#{tar} #{opt} -cf #{testarchive} #{emptyfile} > /dev/null 2>&1")
         if $?.exitstatus == 0
           opts << opt
           score += 1
@@ -304,29 +297,15 @@ module FPM::Util
       end
     end
     @@tar_cmd = best
+    FileUtils.rm_f([testarchive, emptyfile])
+
     return @@tar_cmd
-  ensure
-    # Clean up
-    FileUtils.rm_f(["fpm-dummy.tar.tmp", "fpm-dummy.tmp"])
   end # def tar_cmd
 
   # Return whether the command returned by tar_cmd can create deterministic archives
   def tar_cmd_supports_sort_names_and_set_mtime?
     tar_cmd if not defined? @@tar_cmd_deterministic
     return @@tar_cmd_deterministic
-  end
-
-  # wrapper around mknod ffi calls
-  def mknod_w(path, mode, dev)
-    rc = -1
-    case %x{uname -s}.chomp
-    when 'Linux'
-      # bits/stat.h #define _MKNOD_VER_LINUX  0
-      rc = xmknod(0, path, mode, FFI::MemoryPointer.new(dev))
-    else
-      rc = mknod(path, mode, dev)
-    end
-    rc
   end
 
   def copy_metadata(source, destination)
@@ -354,12 +333,23 @@ module FPM::Util
 
   def copy_entry(src, dst, preserve=false, remove_destination=false)
     case File.ftype(src)
-    when 'fifo', 'characterSpecial', 'blockSpecial', 'socket'
-      st = File.stat(src)
-      rc = mknod_w(dst, st.mode, st.dev)
-      raise SystemCallError.new("mknod error", FFI.errno) if rc == -1
+    when 'fifo'
+      if File.respond_to?(:mkfifo)
+        File.mkfifo(dst)
+      elsif program_exists?("mkfifo")
+        safesystem("mkfifo", dst)
+      else
+        raise NamedPipeCannotBeCopied("Unable to copy. Cannot find program 'mkfifo' and Ruby is missing the 'File.mkfifo' method: #{src}")
+      end
+    when 'socket'
+      require "socket"
+      # In 2019, Ruby's FileUtils added this as a way to "copy" a unix socket.
+      # Reference: https://github.com/ruby/fileutils/pull/36/files
+      UNIXServer.new(dst).close()
+    when 'characterSpecial', 'blockSpecial'
+      raise  UnsupportedSpecialFile.new("File is device which fpm doesn't know how to copy (#{File.ftype(src)}): #{src}")
     when 'directory'
-      FileUtils.mkdir(dst) unless File.exists? dst
+      FileUtils.mkdir(dst) unless File.exist? dst
     else
       # if the file with the same dev and inode has been copied already -
       # hard link it's copy to `dst`, otherwise make an actual copy
@@ -423,6 +413,33 @@ module FPM::Util
   def logger
     @logger ||= Cabin::Channel.get
   end # def logger
+
+  def erbnew(template_code)
+    # In Ruby 2.6(?), Ruby changed how ERB::new is invoked.
+    # First, it added keyword args like `ERB.new(..., trim_mode: "-")`
+    # Later, it deprecated then removed the safe_level feature.
+    # As of Ruby 3.1, warnings are printed at runtime when ERB.new is called with the old syntax.
+    # Ruby 2.5 and older does not support the ERB.new keyword args.
+    #
+    # My tests showed:
+    # * Ruby 2.3.0 through 3.0 work correctly with the old syntax.
+    # * Ruby 3.1.0 and newer (at time of writing, Ruby 3.2) require the new syntax
+    # Therefore, in order to support the most versions of ruby, we need to do a version check
+    # to invoke ERB.new correctly and without printed warnings.
+    # References: https://github.com/jordansissel/fpm/issues/1894
+    # Honestly, I'm not sure if Gem::Version is correct to use in this situation, but it works.
+
+    # on older versions of Ruby, RUBY_VERSION is a frozen string, and
+    # Gem::Version.new calls String#strip! which throws an exception.
+    # so we have to call String#dup to get an unfrozen copy.
+    if Gem::Version.new(RUBY_VERSION.dup) < Gem::Version.new("3.1.0")
+      # Ruby 3.0.x and older
+      return ERB.new(template_code, nil, "-")
+    else
+      # Ruby 3.1.0 and newer
+      return ERB.new(template_code, trim_mode: "-")
+    end
+  end
 end # module FPM::Util
 
 require 'fpm/util/tar_writer'

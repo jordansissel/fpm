@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 require "fpm/package"
 require "fpm/util"
-require "backports"
+require "backports/latest"
 require "fileutils"
 require "find"
 
@@ -18,10 +18,10 @@ class FPM::Package::Pacman < FPM::Package
   option "--group", "GROUP", "The group owner of files in this package", :default => 'root'
 
   # The list of supported compression types. Default is xz (LZMA2)
-  COMPRESSION_TYPES = [ "gz", "bzip2", "xz", "none" ]
+  COMPRESSION_TYPES = [ "gz", "bzip2", "xz", "zstd", "none" ]
 
   option "--compression", "COMPRESSION", "The compression type to use, must " \
-    "be one of #{COMPRESSION_TYPES.join(", ")}.", :default => "xz" do |value|
+    "be one of #{COMPRESSION_TYPES.join(", ")}.", :default => "zstd" do |value|
     if !COMPRESSION_TYPES.include?(value)
       raise ArgumentError, "Pacman compression value of '#{value}' is invalid. " \
         "Must be one of #{COMPRESSION_TYPES.join(", ")}"
@@ -209,31 +209,39 @@ class FPM::Package::Pacman < FPM::Package
 
   def compression_option
     case self.attributes[:pacman_compression]
-      when nil, "xz"
-        return "--xz"
+      when nil, "zstd"
+        return "--zstd"
       when "none"
         return ""
       when "gz"
         return "-z"
+      when "xz"
+        return "--xz"
       when "bzip2"
         return "-j"
+      when "zstd"
+        return "--zstd"
       else
-        return "--xz"
+        return "--zstd"
       end
   end
 
   def compression_ending
     case self.attributes[:pacman_compression]
-      when nil, "xz"
-        return ".xz"
+      when nil, "zstd"
+        return ".zst"
       when "none"
         return ""
       when "gz"
         return ".gz"
+      when "xz"
+        return ".xz"
       when "bzip2"
         return ".bz2"
+      when "zstd"
+        return ".zst"
       else
-        return ".xz"
+        return ".zst"
       end
   end
 
@@ -245,7 +253,11 @@ class FPM::Package::Pacman < FPM::Package
     Find.find(staging_path) do |path|
       src = path.gsub(/^#{staging_path}/, '')
       dst = build_path(src)
-      copy_entry(path, dst, preserve=true, remove_destination=true)
+      begin
+        copy_entry(path, dst, preserve=true, remove_destination=true)
+      rescue
+        copy_entry(path, dst, preserve=false, remove_destination=true)
+      end
       copy_metadata(path, dst)
     end
 

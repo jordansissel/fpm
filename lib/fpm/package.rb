@@ -4,7 +4,7 @@ require "pathname" # stdlib
 require "find"
 require "tmpdir" # stdlib
 require "ostruct"
-require "backports/2.0.0/stdlib/ostruct"
+require "backports/latest"
 require "socket" # stdlib, for Socket.gethostname
 require "shellwords" # stdlib, for Shellwords.escape
 require "erb" # stdlib, for template processing
@@ -316,7 +316,7 @@ class FPM::Package
     # the path before returning.
     #
     # Wrapping Find.find in an Enumerator is required for sane operation in ruby 1.8.7,
-    # but requires the 'backports' gem (which is used in other places in fpm)
+    # but requires the 'backports/latest' gem (which is used in other places in fpm)
     return Enumerator.new { |y| Find.find(staging_path) { |path| y << path } } \
       .select { |path| path != staging_path } \
       .select { |path| is_leaf.call(path) } \
@@ -331,10 +331,11 @@ class FPM::Package
     template_path = File.join(template_dir, path)
     template_code = File.read(template_path)
     logger.info("Reading template", :path => template_path)
-    erb = ERB.new(template_code, nil, "-")
+    erb = erbnew(template_code)
     erb.filename = template_path
     return erb
   end # def template
+
 
   #######################################
   # The following methods are provided to
@@ -518,7 +519,7 @@ class FPM::Package
   # flag), then apply it as an ERB template.
   def script(script_name)
     if attributes[:template_scripts?]
-      erb = ERB.new(scripts[script_name], nil, "-")
+      erb = erbnew(scripts[script_name])
       # TODO(sissel): find the original file name for the file.
       erb.filename = "script(#{script_name})"
       return erb.result(binding)

@@ -268,7 +268,12 @@ function clean_out_old_releases(){
 function print_package_metadata(){
     local metadata_line=$(grep -a -n -m1 '__METADATA__$' $0 | sed 's/:.*//')
     local archive_line=$(grep -a -n -m1 '__ARCHIVE__$' $0 | sed 's/:.*//')
-    sed -n "$((metadata_line + 1)),$((archive_line - 1)) p" $0
+
+    # This used to be a sed call but it was taking _forever_ and this method is super fast
+    local start_at=$((metadata_line + 1))
+    local take_num=$((archive_line - start_at))
+
+    head -n${start_at} $0 | tail -n${take_num}
 }
 
 function print_usage(){

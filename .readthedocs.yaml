@@ -1,0 +1,6 @@
+# https://blog.readthedocs.com/build-errors-docutils-0-18/
+version: 2
+
+python:
+  install:
+  - requirements: docs/requirements.txt

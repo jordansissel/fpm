@@ -33,6 +33,11 @@ describe FPM::Package::Deb do
       expect(subject.architecture).to(be == "amd64")
     end
 
+    it "should convert aarch64 to arm64" do
+      subject.architecture = "aarch64"
+      expect(subject.architecture).to(be == "arm64")
+    end
+
     it "should convert noarch to all" do
       subject.architecture = "noarch"
       expect(subject.architecture).to(be == "all")
@@ -48,7 +53,13 @@ describe FPM::Package::Deb do
 
     it "should default to native" do
       # Convert kernel name to debian name
-      expected = native == "x86_64" ? "amd64" : native
+      expected = if native == "x86_64"
+        "amd64"
+      elsif native == "aarch64"
+        "arm64"
+      else
+        native
+      end
       expect(subject.architecture).to(be == expected)
     end
   end
@@ -66,8 +77,8 @@ describe FPM::Package::Deb do
   end
 
   describe "priority" do
-    it "should default to 'extra'" do
-      expect(subject.attributes[:deb_priority]).to(be == "extra")
+    it "should default to 'optional'" do
+      expect(subject.attributes[:deb_priority]).to(be == "optional")
     end
   end
 
@@ -121,6 +132,31 @@ describe FPM::Package::Deb do
     end
   end
 
+  context "when validating the version field" do
+    [ "_", "1_2", "abc def", "%", "1^a"].each do |v|
+      it "should reject as invalid, '#{v}'" do
+        subject.version = v
+        insist { subject.version }.raises FPM::InvalidPackageConfiguration
+      end
+    end
+
+    [ "1", "1.2", "1.2.3", "20200101", "1~beta", "1whatever"].each do |v|
+      it "should accept '#{v}'" do
+        subject.version = v
+
+        # should not raise exception
+        insist { subject.version } == v
+      end
+
+      it "should remove a leading 'v' from v#{v} and still accept it" do
+        subject.version = "v#{v}"
+
+        # should not raise exception
+        insist { subject.version } == v
+      end
+    end
+  end
+
   describe "#output" do
     let(:original) { FPM::Package::Deb.new }
     let(:input) { FPM::Package::Deb.new }
@@ -138,7 +174,7 @@ describe FPM::Package::Deb do
       original.architecture = "all"
       original.dependencies << "something > 10"
       original.dependencies << "hello >= 20"
-      original.provides << "#{original.name} = #{original.version}"
+      original.provides << "#{original.name} (= #{original.version})"
 
       # Test to cover PR#591 (fix provides names)
       original.provides << "Some-SILLY_name"
@@ -231,18 +267,17 @@ describe FPM::Package::Deb do
         end
       end
 
-      it "should ignore versions and conditions in 'provides' (#280)" do
-        # Provides is an array because rpm supports multiple 'provides'
-        insist { input.provides }.include?(original.name)
-      end
-
       it "should fix capitalization and underscores-to-dashes (#591)" do
         insist { input.provides }.include?("some-silly-name")
       end
     end # package attributes
 
     # This section mainly just verifies that 'dpkg-deb' can parse the package.
-    context "when read with dpkg", :if => have_dpkg_deb do
+    context "when read with dpkg" do
+      before do
+        skip("Missing dpkg-deb program") unless have_dpkg_deb
+      end
+
       def dpkg_field(field)
         return `dpkg-deb -f #{target} #{field}`.chomp
       end # def dpkg_field
@@ -365,6 +400,7 @@ describe FPM::Package::Deb do
       subject.attributes[:deb_user] = "root"
       subject.attributes[:deb_group] = "root"
       subject.category = "comm"
+      subject.dependencies << "lsb-base"
 
       subject.instance_variable_set(:@staging_path, staging_path)
 
@@ -375,7 +411,11 @@ describe FPM::Package::Deb do
       FileUtils.rm_r staging_path if File.exist? staging_path
     end # after
 
-    context "when run against lintian", :if => have_lintian do
+    context "when run against lintian" do
+      before do
+        skip("Missing lintian program") unless have_lintian 
+      end
+
       lintian_errors_to_ignore = [
         "no-copyright-file",
         "script-in-etc-init.d-not-registered-via-update-rc.d"
@@ -384,6 +424,56 @@ describe FPM::Package::Deb do
       it "should return no errors" do
         lintian_output = `lintian #{target} --suppress-tags '#{lintian_errors_to_ignore.join(",")}'`
         expect($CHILD_STATUS).to eq(0), lintian_output
+      end
+    end
+  end
+
+  describe "#output with Provides values" do
+    let(:original) { FPM::Package::Deb.new }
+
+    before do
+      # output a package, use it as the input, set the subject to that input
+      # package. This helps ensure that we can write and read packages
+      # properly.
+
+      original.name = "name"
+      original.version = "123"
+    end
+
+    after do
+      original.cleanup
+    end # after
+
+    invalid = [
+      "this is not valid",
+      "hello = world",
+      "hello ()",
+      "hello (>)",
+      "hello (1234)",
+      "foo (<< 1.0.0-54)"
+    ]
+
+    valid = [
+      "libc",
+      "libc (= 6)",
+      "bar (= 1:1.0)",
+      "bar (= 1:1.0-1)",
+      "foo (= 1.0.0-54)"
+    ]
+
+    invalid.each do |i|
+      it "should reject '#{i}'" do
+        original.provides << i
+
+        insist { original.output(target) }.raises FPM::InvalidPackageConfiguration
+      end
+    end
+
+    valid.each do |i|
+      it "should accept '#{i}'" do
+        original.provides << i
+
+        original.output(target)
       end
     end
   end
@@ -408,11 +498,11 @@ describe FPM::Package::Deb do
     end # after
 
     it "it should output bit-for-bit identical packages" do
-      lamecmds = []
-      lamecmds << "ar" if not ar_cmd_deterministic?
-      lamecmds << "tar" if not tar_cmd_supports_sort_names_and_set_mtime?
-      if not lamecmds.empty?
-        skip("fpm searched for variants of #{lamecmds.join(", ")} that support(s) deterministic archives, but found none, so can't test reproducibility.")
+      cmds = []
+      cmds << "ar" if not ar_cmd_deterministic?
+      cmds << "tar" if not tar_cmd_supports_sort_names_and_set_mtime?
+      if not cmds.empty?
+        skip("fpm searched for variants of [#{cmds.join(", ")}] that support(s) deterministic archives, but found none, so can't test reproducibility.")
         return
       end
 
@@ -440,4 +530,59 @@ describe FPM::Package::Deb do
       expect(FileUtils.compare_file(target, target + '.orig')).to be true
     end
   end # #reproducible
+
+  describe "compression" do
+    {
+      "bzip2" => "bz2",
+      "xz" => "xz",
+      "gz" => "gz"
+    }.each do |flag,suffix|
+      context "when --deb-compression is #{flag}" do
+        let(:target) { Stud::Temporary.pathname + ".deb" }
+        after do
+          subject.cleanup
+          File.unlink(target) if File.exist?(target)
+        end
+
+        before do
+          deb = FPM::Package::Deb.new
+          deb.name = "name"
+          deb.attributes[:deb_compression] = flag
+          deb.output(target)
+        end
+
+        control_suffix = case flag
+          when 'bzip2'
+            'gz'
+          else
+            suffix
+        end
+
+        it "should use #{suffix} for data file and #{control_suffix} for control file" do
+          list = `ar t #{target}`.split("\n")
+          insist { list }.include?("control.tar.#{control_suffix}")
+          insist { list }.include?("data.tar.#{suffix}")
+        end
+
+        # For issue #1840, PR #1841
+        # fpm should generate deb packages that do not cause lintian to crash
+        it "should not cause lintian to crash" do
+          skip("Missing lintian program") unless have_lintian
+
+          # Have lintian run with only one check. The goal here is to check if
+          # lintian crashes or not. This 'symlinks' check would normaly check
+          # for broken symlinks. Since this package has no files, this check
+          # should always succeed. It would fail if fpm generated any invalid
+          # packages, such as ones with a bzip2-compressed control.tar file (#1840)
+          #
+          # Note: At some point, Debian renamed the "symlinks" check to "files/symbolic-links/broken"
+          # In order to support both newer and older Debian derivatives, the test suite will try both checks,
+          # and if both fail, we should know something is wrong with the package.
+          insist {
+            system("lintian", "-C", "symlinks", target) || system("lintian", "-C", "files/symbolic-links/broken", target)
+          } == true
+        end
+      end
+    end
+  end
 end # describe FPM::Package::Deb

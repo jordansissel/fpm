@@ -21,6 +21,11 @@ describe FPM::Package::RPM do
       insist { subject.architecture } == "x86_64"
     end
 
+    it "should convert arm64 to aarch64" do
+      subject.architecture = "arm64"
+      expect(subject.architecture).to(be == "aarch64")
+    end
+
     it "should convert 'all' to 'noarch'" do
       subject.architecture = "all"
       insist { subject.architecture } == "noarch"
@@ -135,7 +140,11 @@ describe FPM::Package::RPM do
     end # context
   end
 
-  describe "#output", :if => program_exists?("rpmbuild") do
+  describe "#output" do
+    before do
+      skip("Missing rpmbuild program") unless program_exists?("rpmbuild")
+    end
+
     context "architecture" do
       it "can be basically anything" do
         subject.name = "example"
@@ -151,6 +160,22 @@ describe FPM::Package::RPM do
         insist { rpm.tags[:arch] } == subject.architecture
 
         File.unlink(target)
+      end
+    end
+
+    context "with slight corrections" do
+      context "on the version attribute" do
+        it "should replace dash(-) with underscore(_)" do
+          subject.version = "123-456"
+          insist { subject.version } == "123_456"
+        end
+      end
+      context "on the iteration attribute" do
+        # Found in https://github.com/electron-userland/electron-builder/issues/5976
+        it "should replace dash(-) with underscore(_)" do
+          subject.iteration = "123-456"
+          insist { subject.iteration } == "123_456"
+        end
       end
     end
     context "package attributes" do
@@ -479,7 +504,11 @@ describe FPM::Package::RPM do
     end
   end
 
-  describe "regressions should not occur", :if => program_exists?("rpmbuild") do
+  describe "regressions should not occur" do
+    before do
+      skip("Missing rpmbuild program") unless program_exists?("rpmbuild")
+    end
+
     before :each do
       @tempfile_handle =
       @target = Stud::Temporary.pathname
@@ -499,6 +528,21 @@ describe FPM::Package::RPM do
 
       rpm = ::RPM::File.new(@target)
       insist { rpm.files } == [ "/example/%name%" ]
+    end
+
+    it "should correctly include files with spaces and quotation marks" do
+      names = [
+        "/It's time to go.txt",
+        "/It's \"time\" to go.txt"
+      ]
+
+      names.each do |n|
+        File.write(subject.staging_path("#{n}"), "Hello")
+      end
+      subject.output(@target)
+
+      rpm = ::RPM::File.new(@target)
+      insist { rpm.files.sort } == names.sort
     end
 
     it "should escape '%' characters in filenames while preserving permissions" do
@@ -577,7 +621,11 @@ describe FPM::Package::RPM do
     end
   end # regression stuff
 
-  describe "input validation stuff", :if => program_exists?("rpmbuild") do
+  describe "input validation stuff" do
+    before do
+      skip("Missing rpmbuild program") unless program_exists?("rpmbuild")
+    end
+
     before :each do
       @tempfile_handle =
       @target = Stud::Temporary.pathname
@@ -596,14 +644,14 @@ describe FPM::Package::RPM do
     it "should not cause errors when reading basic rpm in input (#802)" do
       # Write the rpm out
       @generator.output(@target)
-      
+
       # Load generated rpm
       subject.input(@target)
-      
+
       # Value sanity check
       insist { subject.name } == "name"
       insist { subject.version } == "1.23"
-    end 
+    end
 
     it "should not cause errors when reading more complete rpm in input (#802)" do
       @generator.architecture = "all"
@@ -632,7 +680,7 @@ describe FPM::Package::RPM do
       insist { subject.conflicts[0] } == "bad < 2"
       insist { subject.license } == @generator.license.split("\n").join(" ") # See issue #252
       insist { subject.provides[0] } == "bacon = 1.0"
-      
+
     end
     it "should not cause errors when reading rpm with script in input (#802)" do
       @generator.scripts[:before_install] = "example before_install"
@@ -700,14 +748,16 @@ describe FPM::Package::RPM do
       File.delete(target) rescue nil
     end
 
-    it "should respect file user and group ownership", :if => program_exists?("rpmbuild") do
+    it "should respect file user and group ownership" do
+      skip("Missing rpmbuild program") unless program_exists?("rpmbuild")
       subject.attributes[:rpm_use_file_permissions?] = true
       subject.output(target)
       insist { rpm.tags[:fileusername].first } == Etc.getpwuid(path_stat.uid).name
       insist { rpm.tags[:filegroupname].first } == Etc.getgrgid(path_stat.gid).name
     end
 
-    it "rpm_group should override rpm_use_file_permissions-derived owner", :if => program_exists?("rpmbuild") do
+    it "rpm_group should override rpm_use_file_permissions-derived owner" do
+      skip("Missing rpmbuild program") unless program_exists?("rpmbuild")
       subject.attributes[:rpm_use_file_permissions?] = true
       subject.attributes[:rpm_user] = "hello"
       subject.attributes[:rpm_group] = "world"
@@ -717,7 +767,11 @@ describe FPM::Package::RPM do
     end
   end
 
-  describe "#output with digest and compression settings", :if => program_exists?("rpmbuild") do
+  describe "#output with digest and compression settings" do
+    before do
+      skip("Missing rpmbuild program") unless program_exists?("rpmbuild")
+    end
+
     context "bzip2/sha1" do
       before :each do
         @target = Stud::Temporary.pathname

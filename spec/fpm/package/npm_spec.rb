@@ -13,7 +13,11 @@ describe FPM::Package::NPM do
     subject.cleanup
   end
 
-  describe "::default_prefix", :if => have_npm do
+  describe "::default_prefix" do
+    before do
+      skip("Missing npm program") unless have_npm
+    end
+
     it "should provide a valid default_prefix" do
       stat = File.stat(FPM::Package::NPM.default_prefix)
       insist { stat }.directory?

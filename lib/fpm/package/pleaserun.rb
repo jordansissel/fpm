@@ -18,6 +18,7 @@ class FPM::Package::PleaseRun < FPM::Package
 
   option "--name", "SERVICE_NAME", "The name of the service you are creating"
   option "--chdir", "CHDIR", "The working directory used by the service"
+  option "--user", "USER", "The user to use for executing this program."
 
   private
   def input(command)

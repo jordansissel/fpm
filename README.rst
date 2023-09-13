@@ -1,7 +1,7 @@
 fpm
 ===
 
-|Build| |Chat| |Gem|
+|Chat| |Gem|
 
 The goal of fpm is to make it easy and quick to build packages such as rpms,
 debs, OSX packages, etc.
@@ -23,7 +23,7 @@ You can find out how to use fpm in the `documentation`_.
 
 You can learn how to install fpm on your platform in the `installation guide`_.
 
-.. _installation guide: http://fpm.readthedocs.io/en/latest/installing.html
+.. _installation guide: https://fpm.readthedocs.io/en/latest/installation.html
 
 Project Principles
 ------------------
@@ -41,7 +41,7 @@ situations), but small tweaks can fix it.
 
 And sometimes, there isn't a package available for the tool you need.
 
-And sometimes if you ask "How do I get python 3 on CentOS 5?" some unhelpful
+And sometimes if you ask "How do I get python 3.9 on RHEL 8?" some unhelpful
 trolls will tell you to "Use another distro"
 
 Further, job switches have me flipping between Ubuntu and CentOS. These use
@@ -97,8 +97,6 @@ Targets:
 
 .. include: docs/contributing
 
-.. |Build| image:: https://img.shields.io/travis/jordansissel/fpm.svg
-   :target: https://travis-ci.org/jordansissel/fpm
 .. |Chat| image:: https://img.shields.io/badge/irc-%23fpm%20on%20freenode-brightgreen.svg
    :target: https://webchat.freenode.net/?channels=fpm
 .. |Gem| image:: https://img.shields.io/gem/v/fpm.svg

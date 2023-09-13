@@ -29,7 +29,7 @@ end # module FPM
 
 module FPM; module Util; end; end
 
-# Like the ::Gem::Package::TarWriter but contains some backports and bug fixes
+# Like the ::Gem::Package::TarWriter but contains some backports/latest and bug fixes
 class FPM::Util::TarWriter < ::Gem::Package::TarWriter
   if FPM::Issues::TarWriter.has_issues_with_split_name?
     def split_name(name)

@@ -3,13 +3,19 @@ require "fpm" # local
 require "fpm/package/python" # local
 require "find" # stdlib
 
+def find_python
+  [ "python", "python3", "python2" ].each do |i|
+    return i if program_exists?(i)
+  end
+  return nil
+end
+
 def python_usable?
-  return program_exists?("python") && program_exists?("easy_install")
+  return find_python
 end
 
 if !python_usable?
-  Cabin::Channel.get("rspec").warn("Skipping Python#input tests because " \
-    "'python' and/or 'easy_install' isn't in your PATH")
+  Cabin::Channel.get("rspec").warn("Skipping Python#input tests because 'python' wasn't found in $PATH")
 end
 
 is_travis = ENV["TRAVIS_OS_NAME"] && !ENV["TRAVIS_OS_NAME"].empty?
@@ -26,7 +32,12 @@ def easy_install_default(python_bin, option)
   return result
 end
 
-describe FPM::Package::Python, :if => python_usable? do
+describe FPM::Package::Python do
+  before do
+    skip("Python program not found") unless python_usable?
+    subject.attributes[:python_bin] = find_python
+  end
+
   let (:example_dir) do
     File.expand_path("../../fixtures/python/", File.dirname(__FILE__))
   end
@@ -120,7 +131,8 @@ describe FPM::Package::Python, :if => python_usable? do
 
     it "it should include the dependencies from setup.py" do
       subject.input(example_dir)
-      insist { subject.dependencies.sort } == ["python-dependency1  ","python-dependency2  "]
+      # XXX: Why is there extra whitespace in these strings?
+      insist { subject.dependencies.sort } == ["python-dependency1  ","python-dependency2  ", "python-rtxt-dep4  "]
     end
 
     context "and :python_disable_dependency is set" do
@@ -130,7 +142,7 @@ describe FPM::Package::Python, :if => python_usable? do
 
       it "it should exclude the dependency" do
         subject.input(example_dir)
-        insist { subject.dependencies.sort } == ["python-dependency2  "]
+        insist { subject.dependencies.sort } == ["python-dependency2  ", "python-rtxt-dep4  "]
       end
     end
   end
@@ -178,7 +190,8 @@ describe FPM::Package::Python, :if => python_usable? do
 
   context "python_scripts_executable is set" do
     it "should have scripts with a custom hashbang line" do
-      pending("Disabled on travis-ci because it always fails, and there is no way to debug it?") if is_travis
+      pending("Disabled on travis-ci becaulamese it always fails, and there is no way to debug it?") if is_travis
+      skip("Requires python3 executable") unless program_exists?("python3")
 
       subject.attributes[:python_scripts_executable] = "fancypants"
       # Newer versions of Django require Python 3.
@@ -191,7 +204,7 @@ describe FPM::Package::Python, :if => python_usable? do
 
       # Hardcode /usr/local/bin here. On newer Python 3's I cannot figure out how to 
       # determine the script_dir at installation time. easy_install's method is gone.
-      path = subject.staging_path("/usr/local/bin/django-admin.py")
+      path = subject.staging_path("/usr/local/bin/django-admin")
 
       # Read the first line (the hashbang line) of the django-admin.py script
       fd = File.new(path, "r")

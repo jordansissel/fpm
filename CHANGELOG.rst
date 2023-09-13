@@ -1,6 +1,98 @@
 Release Notes and Change Log
 ============================
 
+1.15.1 (January 31, 2023)
+^^^^^^^^^^^^^^^^^^^^^^^^^
+* Ruby 3.2.0 now supported. This fixes error 'undefined method exists? for File' '(`#1981`_, `#1988`_; Nicholas Hubbard, romulasry)
+
+1.15.0 (November 13, 2022)
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+* New flag ``--fpm-options-file path/to/file`` which allows you to specify additional fpm flags in an external file of your choosing. (`#1905`_, `#1902`_, `#1827`_; Jordan Sissel, Will Furnell, hjpotter92)
+* deb: Periods are now accepted in package names (`#1899`_; C. Cooke)
+* Fix bug where fpm would crash if ``--workdir`` pointed at a path that didn't
+  exist. (`#1959`_; Jordan Sissel)
+* osxpkg: this package format now supports the fpm ``--prefix`` flag(`#1909`_, `#1908`_; Jordan Sissel, mcataga)
+* cpan: Fix bug where fpm would fail on certain Perl modules due to their source tarball structure (`#1940`_; Nicholas Hubbard, William N. Braswell, Jr.)
+* cpan: Fix crash on certain CPAN modules where the author field was blank (`#1942`_, `#1937`_, `#1523`_, `#1528`_; Nicholas Hubbard, William N. Braswell, Jr.)
+* deb: The distribution field of the debian changelog and changes files will now use the value set by ``--deb-dist`` (default is "unstable") (`#1934`_; Chabert Loïc)
+* python: Fix errors in how fpm invoked ``pip``. Previously, fpm would use pip's ``--build`` flag, but this was removed a while ago, and fpm is now aware! (`#1896`_, `#1831`_, `#1893`_, `#1916`_; Jordan Sissel, Svyatogor Chuykov)
+* pleaserun: Add ``--pleaserun-user`` flag. (`#1912`_; Evgeny Stambulchik)
+* deb: The default ``--deb-priority`` is now "optional" instead of "extra" (`#1913`_; Chris Novakovic)
+* Enable installation of fpm on older versions of ruby. This change removed ``git`` rubygem dependency. (`#1946`_, `#1923`_; Jordan Sissel, Andreas Wirooks, Ruslan Kuprieiev, jamshid, Lorenzo Castellino, Sam Hughes)
+* Enable operation of fpm on very old versions of ruby (as old as Ruby 1.9.3). This changed removed ``json`` rubygem dependency. (`#1950`_, `#1949`_, `#1741`_, `#1264`_, `#1798`_, `#1800`_, `#1784`_; Jordan Sissel and many others)
+* Fix bug where subprocesses could hang waiting for input (`#1955`_, `#1519`_, `#1522`_; Nicholas Hubbard, William N. Braswell, Jr.)
+* Update Dockerfile to use ubuntu:20.04 (`#1935`_; Gnought)
+* internal: Fix a code typo (`#1948`_; Nicholas Hubbard)
+* internal tests: Support newer versions of lintian (`#1939`_, `#1907`_; Jordan Sissel)
+* Improve support for Ruby 3.1.0 and newer that would previously crash with an error mentioning Psych::DisallowedClass (`#1898`_, `#1895`_; Jordan Sissel, Alexandre ZANNI)
+* Improve support for Ruby 3.1.0 and newer that changed the API for ERB (`#1897`_; Jordan Sissel)
+
+1.14.2 (March 30, 2022)
+^^^^^^^^^^^^^^^^^^^^^^^
+* deb: fix bug causing ``--deb-compression none`` to invoke ``tar`` incorrectly (`#1879`_; John Howard)
+* rpm: Better support for paths that have spaces and mixed quotation marks in them. (`#1882`_, `#1886`_, `#1385`_; John Bollinger and Jordan Sissel)
+* pacman: Fix typo preventing the use of ``--pacman-compression xz`` (`#1876`_; mszprejda)
+* docs: All supported package types now have dedicated documentation pages. Some pages are small stubs and would benefit from future improvement. (`#1884`_; mcandre, Jordan Sissel)
+* docs: Small but lovely documentation fixes (`#1875`_ by Corey Quinn, `#1864`_ by Geoff Beier)
+* Fixed mistake causing the test suite to fail when ``rake`` wasn't available. (`#1877`_; Jordan Sissel)
+
+1.14.1 (November 10, 2021)
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+* Fix a bug that impacted fpm api usage (from other ruby programs) that caused an error "NameError: uninitialized constant FPM::Package::CPAN" when trying to output a Deb package. (`#1854`_, `#1856`_; Karol Bucek, Jordan Sissel)
+
+1.14.0 (November 9, 2021)
+^^^^^^^^^^^^^^^^^^^^^^^^^
+* python: Use pip by default for fetching Python packages. This matches the Python 3 "installation" docs which recommend calling pip as ``python -m pip`` where ``python`` depends on ``--python-bin`` (default "python"). Previous default was to use `easy_install` which is no longer available on many newer systems. To use easy_install, you can set ``--no-python-internal-pip`` to revert this pip default. Further, you can specify your own pip path instead of using ``python -m pip`` with the ``--python-pip /path/to/pip`` flag. (`#1820`_, `#1821`_; Jordan Sissel)
+* python: Support extras_require build markers in python packages (`#1307`_, `#1816`_; Joris Vandermeersch)
+* freebsd: Fix bug which caused fpm to generate incorrect FreeBSD packages "missing leading `/`" (`#1811`_, `#1812`_, `#1844`_, `#1832`_, `#1845`_; Vlastimil Holer, Clayton Wong, Markus Ueberall, Jordan Sissel)
+* deb: In order to only allow fpm to create valid packages, fpm now rejects packages with invalid "provides" (``--provides``) values. (`#1829`_, `#1825`_; Jordan Sissel, Peter Teichman)
+* deb: Only show a warning about /etc and config files if there are files in /etc (`#1852`_, `#1851`_; Jordan Sissel)
+
+* rpm: replace dash with underscore in rpm's "Release" field aka what fpm calls ``--iteration``. (`#1834`_, `#1833`_; Jordan Sissel)
+* empty: `fpm -s empty ...` now defaults to "all" architecture instead of "native". (`#1850`_, `#1846`_; Jordan Sissel)
+* Significant documentation improvements rewriting most of the documentation. New overview pages, full CLI flag listing, and new sections dedicated package types (rpm, cpan, deb, etc). (`#1815`_, `#1817`_, `#1838`_; Vedant K, Jordan Sissel)
+* Typo fixes in documentation are always appreciated! (`#1842`_; Clayton Wong)
+* fpm can now (we hope!) now be tested more easily from docker (`#1818`_, `#1682`_, `#1453`_; @directionless, Jordan Sissel, Douglas Muth)
+
+1.13.1 (July 6, 2021)
+^^^^^^^^^^^^^^^^^^^^^
+* deb: The `--provides` flag now allows for versions. Previously, fpm would
+  remove the version part of a provides field when generating deb packages.
+  (`#1788`_, `#1803`_; Jordan Sissel, Phil Schwartz, tympanix)
+* osxpkg: Update documentation to include installing `rpm` tools on OSX
+  (`#1797`_; allen joslin)
+
+1.13.0 (June 19, 2021)
+^^^^^^^^^^^^^^^^^^^^^^
+* Apple M1 users should now work (`#1772`_, `#1785`_, `#1786`_; Jordan Sissel)
+* Removed `ffi` ruby library as a dependency. This should make it easier to support a wider range of Ruby versions (Ruby 2.2, 3.0, etc) and platforms (like arm64, Apple M1, etc) in the future. (`#1785`_, `#1786`_; Jordan Sissel)
+* Now uses the correct architecture synonym for ARM 64 systems. Debian uses `arm64` as a synonym for what other systems call `aarch64` (linux kernel, RPM, Arch Linux). (`#1775`_; Steve Kamerman)
+* Docs: Fix a typo in an example (`#1785`_; Zoe O'Connell)
+* rpm: File paths can now contain single-quote characters (`#1774`_; Jordan Sissel)
+* rpm: Use correct SPEC syntax when using --after-upgrade or similar features (`#1761`_; Jo Vandeginste. Robert Fielding)
+* Ruby 3.0 support: Added `rexml` as a runtime dependency. In Ruby 2.0, `rexml` came by default, but in Ruby 3.0, `rexml` is now a bundled gem and some distributiosn do not include it by default. (`#1794`_; Jordan Sissel)
+* Fix error "git: not found (Git::GitExecuteError)". Now loads `git` library only when using git features. (`#1753`_, `#1748`_, `#1751`_, `#1766`_; Jordan Sissel, Cameron Nemo, Jason Rogers, Luke Short)
+* deb: Fix syntax error in `postinst` (`--after-install`) script. (`#1752`_, `#1749`_, `#1764`_; rmanus, Adam Mohammed, Elliot Murphy, kimw, Jordan Sissel)
+* deb: --deb-compression now uses the same compression and file suffix on the control.tar file (`#1760`_; Philippe Poilbarbe)
+
+
+1.12.0 (January 19, 2021)
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Pin ffi dependency to ruby ffi 1.12.x to try keeping fpm compatible with older/abandoned rubies like 2.0 and 2.1. (`#1709`_; Matt Patterson)
+* deb: New flag to add 'set -e' to all scripts. `--deb-maintainerscripts-force-errorchecks` which defaults to off. (`#1697`_; Andreas Ulm)
+* deb: Fix bug when converting rubygems to debs where certain constraints like `~>1` would generate a deb dependency that couldn't be satisfied. (`#1699`_; Vlastimil Holer)
+* deb: Fix error 'uninitialized constant FPM::Package::Deb::Zlib' (`#1739`_, `#1740`_; Federico Lancerin)
+* python: Prepend to PYTHONPATH instead of replacing it. This should help on platforms that rely heavily on PYTHONPATH, such as NixOSX (`#1711`_, `#1710`_; anarg)
+* python: Add `--python-trusted-host` flag which passes `--trusted-host` flag to `pip` (`#1737`_; Vladimir Ponarevsky)
+* Documentation improvements (`#1724`_, `#1738`_, `#1667`_, `#1636`_)
+* Dockerfile updated to Alpine 3.12 (`#1745`_; Cameron Nemo)
+* Remove the 'backports' deprecation warning (`#1727`_; Jose Galvez)
+* sh: Performance improvement when printing package metadata (`#1729`_; James Logsdon, Ed Healy)
+* rpm: Add support for `xzmt` compression (multithreaded xz compressor) to help when creating very large packages (several gigabytes). (`#1447`_, `#1419`_; amnobc)
+* rpm: Add `--rpm-macro-expansion` flag to enable macro expansion in scripts during rpmbuild. See https://rpm.org/user_doc/scriptlet_expansion.html for more details. (`#1642`_; juliantrzeciak)
+* deb: use correct control.tar filename (`#1668`_; Mike Perham)
+
 1.11.0 (January 30, 2019)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -19,7 +111,7 @@ Release Notes and Change Log
 * cpan: Adds `--[no-]cpan-verbose` flag which, when set, runs `cpanm` with the `--verbose` flag (`#1511`_; William N. Braswell, Jr)
 
 1.10.0 (May 21, 2018)
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
 
 * Pin `ruby-xz` dependency to one which allows Ruby versions older than 2.3.0 (`#1494`_; Marat Sharafutdinov)
 * Documentation improvements: `#1488`_; Arthur Burkart. `#1384`_; Justin Kolberg. `#1452`_; Anatoli Babenia.
@@ -47,7 +139,7 @@ Release Notes and Change Log
 * rpm: Fix `--config-files` handling (`#1390`_, `#1391`_; Jordan Sissel)
 
 1.9.1 (July 28, 2017) happy sysadmin day!
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Documentation improvements: `#1291`_; Pablo Castellano. `#1321`_; ge-fa. `#1309`_; jesusbagpuss. `#1349`_; Perry Stole. `#1352`_, Jordan Sissel. `#1384`_; Justin Kolberg.
 * Testing improvements: `#1320`_; Rob Young. `#1266`_; Ryan Parman. `#1374`_; Thiago Figueiró.
@@ -76,9 +168,9 @@ Release Notes and Change Log
 * Other: Remove unused archive-tar-minitar as a dependency of fpm (`#1355`_; Diego Martins)
 * Other: Add stud as a runtime dependency (`#1354`_; Elan Ruusamäe)
 
-.. _reproducible_builds:: https://reproducible-builds.org/
-.. _path mapping:: http://fpm.readthedocs.io/en/latest/source/dir.html#path-mapping
-.. _Deterministic output:: http://fpm.readthedocs.io/en/latest/source/gem.html
+.. _reproducible_builds: https://reproducible-builds.org/
+.. _path mapping: source/dir.html#path-mapping
+.. _Deterministic output: source/gem.html
 
 1.9.0 (July 28, 2017)
 ^^^^^^^^^^^^^^^^^^^^^

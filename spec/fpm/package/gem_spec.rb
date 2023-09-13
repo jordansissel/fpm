@@ -8,7 +8,11 @@ if !have_gem
     .warn("Skipping Gem#input tests because 'gem' isn't in your PATH")
 end
 
-describe FPM::Package::Gem, :if => have_gem do
+describe FPM::Package::Gem do
+  before do
+    skip("Missing program 'gem'") unless program_exists?("gem")
+  end
+
   let (:example_gem) do
     File.expand_path("../../fixtures/gem/example/example-1.0.gem", File.dirname(__FILE__))
   end

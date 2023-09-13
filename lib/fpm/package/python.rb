@@ -29,6 +29,9 @@ class FPM::Package::Python < FPM::Package
   option "--pypi", "PYPI_URL",
     "PyPi Server uri for retrieving packages.",
     :default => "https://pypi.python.org/simple"
+  option "--trusted-host", "PYPI_TRUSTED",
+    "Mark this host or host:port pair as trusted for pip",
+    :default => nil
   option "--package-prefix", "NAMEPREFIX",
     "(DEPRECATED, use --package-name-prefix) Name to prefix the package " \
     "name with." do |value|
@@ -76,7 +79,11 @@ class FPM::Package::Python < FPM::Package
   option "--setup-py-arguments", "setup_py_argument",
     "Arbitrary argument(s) to be passed to setup.py",
     :multivalued => true, :attribute_name => :python_setup_py_arguments,
-    :default => []
+    :default => [] 
+  option "--internal-pip", :flag,
+    "Use the pip module within python to install modules - aka 'python -m pip'. This is the recommended usage since Python 3.4 (2014) instead of invoking the 'pip' script",
+    :attribute_name => :python_internal_pip,
+    :default => true
 
   private
 
@@ -127,16 +134,56 @@ class FPM::Package::Python < FPM::Package
     target = build_path(package)
     FileUtils.mkdir(target) unless File.directory?(target)
 
-    if attributes[:python_pip].nil?
+    if attributes[:python_internal_pip?]
+      # XXX: Should we detect if internal pip is available?
+      attributes[:python_pip] = [ attributes[:python_bin], "-m", "pip"]
+    end
+
+    # attributes[:python_pip] -- expected to be a path
+    if attributes[:python_pip]
+      logger.debug("using pip", :pip => attributes[:python_pip])
+      # TODO: Support older versions of pip
+
+      pip = [attributes[:python_pip]] if pip.is_a?(String)
+      setup_cmd = [
+        *attributes[:python_pip],
+        "download",
+        "--no-clean",
+        "--no-deps",
+        "--no-binary", ":all:",
+        "-d", build_path,
+        "-i", attributes[:python_pypi],
+      ]
+
+      if attributes[:python_trusted_host]
+        setup_cmd += [
+          "--trusted-host",
+          attributes[:python_trusted_host],
+        ]
+      end
+
+      setup_cmd << want_pkg
+
+      safesystem(*setup_cmd)
+
+      # Pip removed the --build flag sometime in 2021, it seems: https://github.com/pypa/pip/issues/8333
+      # A workaround for pip removing the `--build` flag. Previously, `pip download --build ...` would leave
+      # behind a directory with the Python package extracted and ready to be used.
+      # For example, `pip download ... Django` puts `Django-4.0.4.tar.tz` into the build_path directory.
+      # If we expect `pip` to leave an unknown-named file in the `build_path` directory, let's check for
+      # a single file and unpack it.  I don't know if it will /always/ be a .tar.gz though.
+      files = ::Dir.glob(File.join(build_path, "*.tar.gz"))
+      if files.length != 1
+        raise "Unexpected directory layout after `pip download ...`. This might be an fpm bug? The directory is #{build_path}"
+      end
+
+      safesystem("tar", "-zxf", files[0], "-C", target)
+    else
       # no pip, use easy_install
       logger.debug("no pip, defaulting to easy_install", :easy_install => attributes[:python_easyinstall])
       safesystem(attributes[:python_easyinstall], "-i",
                  attributes[:python_pypi], "--editable", "-U",
                  "--build-directory", target, want_pkg)
-    else
-      logger.debug("using pip", :pip => attributes[:python_pip])
-      # TODO: Support older versions of pip
-      safesystem(attributes[:python_pip], "download", "--no-clean", "--no-deps", "--no-binary", ":all:", "-i", attributes[:python_pypi], "--build", target,  want_pkg)
     end
 
     # easy_install will put stuff in @tmpdir/packagename/, so find that:
@@ -183,7 +230,7 @@ class FPM::Package::Python < FPM::Package
 
     output = ::Dir.chdir(setup_dir) do
       tmp = build_path("metadata.json")
-      setup_cmd = "env PYTHONPATH=#{pylib} #{attributes[:python_bin]} " \
+      setup_cmd = "env PYTHONPATH=#{pylib}:$PYTHONPATH #{attributes[:python_bin]} " \
         "setup.py --command-packages=pyfpm get_metadata --output=#{tmp}"
 
       if attributes[:python_obey_requirements_txt?]
@@ -212,7 +259,9 @@ class FPM::Package::Python < FPM::Package
     self.description = metadata["description"]
     # Sometimes the license field is multiple lines; do best-effort and just
     # use the first line.
-    self.license = metadata["license"].split(/[\r\n]+/).first
+    if metadata["license"]
+      self.license = metadata["license"].split(/[\r\n]+/).first
+    end
     self.version = metadata["version"]
     self.url = metadata["url"]
 

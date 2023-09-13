@@ -1,8 +1,11 @@
 require "fpm/package"
-require "backports"
+require "backports/latest"
 require "fileutils"
 require "find"
 require "arr-pm/file" # gem 'arr-pm'
+
+# For conversion handling
+require "fpm/package/gem"
 
 # RPM Package type.
 #
@@ -24,10 +27,10 @@ class FPM::Package::RPM < FPM::Package
 
   COMPRESSION_MAP = {
     "none" => "w0.gzdio",
-    "xz" => "w9.xzdio",
-    "xzmt" => "w9T.xzdio",
-    "gzip" => "w9.gzdio",
-    "bzip2" => "w9.bzdio"
+    "xz" => ".xzdio",
+    "xzmt" => "T.xzdio",
+    "gzip" => ".gzdio",
+    "bzip2" => ".bzdio"
   } unless defined?(COMPRESSION_MAP)
 
   option "--use-file-permissions", :flag,
@@ -66,6 +69,15 @@ class FPM::Package::RPM < FPM::Package
         "include: #{DIGEST_ALGORITHM_MAP.keys.join(", ")}"
     end
     value.downcase
+  end
+
+  option "--compression-level", "[0-9]", "Select a compression level. 0 is store-only. 9 is max compression.",
+    :default => "9" do |value|
+    valint = value.to_i
+    unless value =~ /^\d$/ && valint >= 0 && valint <= 9
+      raise "Invalid compression level '#{value}'. Valid values are integers between 0 and 9 inclusive."
+    end
+    valint
   end
 
   option "--compression", COMPRESSION_MAP.keys.join("|"),
@@ -142,6 +154,10 @@ class FPM::Package::RPM < FPM::Package
            "names in rpm requires instead of the redhat style " \
            "rubygem(foo).", :default => false
 
+  option "--macro-expansion", :flag,
+           "install-time macro expansion in %pre %post %preun %postun scripts " \
+           "(see: https://rpm.org/user_doc/scriptlet_expansion.html)", :default => false
+
   option "--verifyscript", "FILE",
     "a script to be run on verification" do |val|
     File.expand_path(val) # Get the full path to the script
@@ -176,16 +192,26 @@ class FPM::Package::RPM < FPM::Package
   # Replace * with [*] to make rpm not use globs
   # Replace ? with [?] to make rpm not use globs
   # Replace % with [%] to make rpm not expand macros
+  # Replace whitespace with ? to make rpm not split the filename
+  # If and only if any of the above are done, then also replace ' with \', " with \", and \ with \\\\
+  #   to accommodate escape and quote processing that rpm will perform in that case (but not otherwise)
   def rpm_fix_name(name)
-    name = name.gsub(/(\ |\[|\]|\*|\?|\%|\$)/, {
-      ' ' => '?',
-      '%' => '[%]',
-      '$' => '[$]',
-      '?' => '[?]',
-      '*' => '[*]',
-      '[' => '[\[]',
-      ']' => '[\]]'
-    })
+    if name.match?(/[ \t*?%$\[\]]/)
+      name = name.gsub(/(\ |\t|\[|\]|\*|\?|\%|\$|'|"|\\)/, {
+        ' '  => '?',
+        "\t" => '?',
+        '%'  => '[%]',
+        '$'  => '[$]',
+        '?'  => '[?]',
+        '*'  => '[*]',
+        '['  => '[\[]',
+        ']'  => '[\]]',
+        '"'  => '\\"',
+        "'"  => "\\'",
+        '\\' => '\\\\\\\\',
+      })
+    end
+    name
   end
 
   def rpm_file_entry(file)
@@ -226,6 +252,8 @@ class FPM::Package::RPM < FPM::Package
         return %x{uname -m}.chomp   # default to current arch
       when "amd64" # debian and redhat disagree on architecture names
         return "x86_64"
+      when "arm64" # debian and redhat disagree on architecture names
+        return "aarch64"
       when "native"
         return %x{uname -m}.chomp   # 'native' is current arch
       when "all"
@@ -238,6 +266,12 @@ class FPM::Package::RPM < FPM::Package
 
   # This method ensures a default value for iteration if none is provided.
   def iteration
+    if @iteration.kind_of?(String) and @iteration.include?("-")
+      logger.warn("Package iteration '#{@iteration}' includes dashes, converting" \
+                   " to underscores. rpmbuild does not allow the dashes in the package iteration (called 'Release' in rpm)")
+      @iteration = @iteration.gsub(/-/, "_")
+    end
+
     return @iteration ? @iteration : 1
   end # def iteration
 
@@ -598,7 +632,12 @@ class FPM::Package::RPM < FPM::Package
   end # def to_s
 
   def payload_compression
-    return COMPRESSION_MAP[attributes[:rpm_compression]]
+    if attributes[:rpm_compression] == 'none'
+      # when 'none' ignore any compression level and return w0.gzdio
+      return COMPRESSION_MAP[attributes[:rpm_compression]]
+    else
+      return "w#{attributes[:rpm_compression_level]}" + COMPRESSION_MAP[attributes[:rpm_compression]]
+    end
   end # def payload_compression
 
   def digest_algorithm

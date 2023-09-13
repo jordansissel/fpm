@@ -90,6 +90,11 @@ class get_metadata(Command):
                 for dep in pkg_resources.parse_requirements(
                         self.distribution.install_requires):
                     final_deps.extend(self.process_dep(dep))
+            if getattr(self.distribution, 'extras_require', None):
+                for dep in pkg_resources.parse_requirements(
+                        v for k, v in self.distribution.extras_require.items()
+                        if k.startswith(':') and pkg_resources.evaluate_marker(k[1:])):
+                    final_deps.extend(self.process_dep(dep))
 
         data["dependencies"] = final_deps
 
@@ -107,3 +112,4 @@ class get_metadata(Command):
         else:
             # For Python 2.5 and Debian's python-json
             output.write(json.write(data))
+        output.close()
