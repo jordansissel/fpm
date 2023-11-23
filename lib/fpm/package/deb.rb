@@ -79,6 +79,19 @@ class FPM::Package::Deb < FPM::Package
     value
   end
 
+  option "--compression-level", "[0-9]", "Select a compression level. 0 is none or minimal. 9 is max compression.",
+    # Specify which compression level to use on the compressor backend, when building a package
+    :default => nil do |value|
+    valint = value.to_i
+    # if self.attributes[:deb_compression].nil?
+    #   raise "Can't specify a compression level with compression disabled"
+    # end
+    unless value =~ /^\d$/ && valint >= 0 && valint <= 9
+      raise "Invalid compression level '#{value}'. Valid values are integers between 0 and 9 inclusive."
+    end
+    valint
+  end
+
   option "--dist", "DIST-TAG", "Set the deb distribution.", :default => "unstable"
 
   # Take care about the case when we want custom control file but still use fpm ...
@@ -642,18 +655,24 @@ class FPM::Package::Deb < FPM::Package
         datatar = build_path("data.tar.gz")
         controltar = build_path("control.tar.gz")
         compression_flags = ["-z"]
+      # gnu tar obeys GZIP environment variable with options for gzip; -n = forget original filename and date
+        compressor_options = {"GZIP" => "-#{self.attributes[:deb_compression_level] || 9}" +
+            "#{'n' if tar_cmd_supports_sort_names_and_set_mtime? and not attributes[:source_date_epoch].nil?}"}
       when "bzip2"
         datatar = build_path("data.tar.bz2")
         controltar = build_path("control.tar.gz")
         compression_flags = ["-j"]
+        compressor_options = {"BZIP" => "-#{self.attributes[:deb_compression_level] || 9}"}
       when "xz"
         datatar = build_path("data.tar.xz")
         controltar = build_path("control.tar.xz")
         compression_flags = ["-J"]
+        compressor_options = {"XZ_OPT" => "-#{self.attributes[:deb_compression_level] || 3}"}
       when "none"
         datatar = build_path("data.tar")
         controltar = build_path("control.tar")
         compression_flags = []
+        compressor_options = {}
       else
         raise FPM::InvalidPackageConfiguration,
           "Unknown compression type '#{self.attributes[:deb_compression]}'"
@@ -662,9 +681,8 @@ class FPM::Package::Deb < FPM::Package
     if tar_cmd_supports_sort_names_and_set_mtime? and not attributes[:source_date_epoch].nil?
       # Use gnu tar options to force deterministic file order and timestamp
       args += ["--sort=name", ("--mtime=@%s" % attributes[:source_date_epoch])]
-      # gnu tar obeys GZIP environment variable with options for gzip; -n = forget original filename and date
-      args.unshift({"GZIP" => "-9n"})
     end
+    args.unshift(compressor_options)
     safesystem(*args)
 
     # pack up the .deb, which is just an 'ar' archive with 3 files
@@ -721,7 +739,7 @@ class FPM::Package::Deb < FPM::Package
         else
           # Also replace '::' in the perl module name with '-'
           modulename = m["name"].gsub("::", "-")
-         
+
           # Fix any upper-casing or other naming concerns Debian has about packages
           name = "#{attributes[:cpan_package_name_prefix]}-#{modulename}"
 
@@ -934,12 +952,17 @@ class FPM::Package::Deb < FPM::Package
       when "gz", "bzip2", nil
         controltar = "control.tar.gz"
         compression_flags = ["-z"]
+        # gnu tar obeys GZIP environment variable with options for gzip; -n = forget original filename and date
+        compressor_options = {"GZIP" => "-#{self.attributes[:deb_compression_level] || 9}" +
+            "#{'n' if tar_cmd_supports_sort_names_and_set_mtime? and not attributes[:source_date_epoch].nil?}"}
       when "xz"
         controltar = "control.tar.xz"
         compression_flags = ["-J"]
+        compressor_options = {"XZ_OPT" => "-#{self.attributes[:deb_compression_level] || 3}"}
       when "none"
         controltar = "control.tar"
         compression_flags = []
+        compressor_options = {}
       else
         raise FPM::InvalidPackageConfiguration,
           "Unknown compression type '#{self.attributes[:deb_compression]}'"
@@ -954,9 +977,8 @@ class FPM::Package::Deb < FPM::Package
       if tar_cmd_supports_sort_names_and_set_mtime? and not attributes[:source_date_epoch].nil?
         # Force deterministic file order and timestamp
         args += ["--sort=name", ("--mtime=@%s" % attributes[:source_date_epoch])]
-        # gnu tar obeys GZIP environment variable with options for gzip; -n = forget original filename and date
-        args.unshift({"GZIP" => "-9n"})
       end
+      args.unshift(compressor_options)
       safesystem(*args)
     end
 
