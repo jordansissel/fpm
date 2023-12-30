@@ -38,7 +38,7 @@ describe FPM::Package::Virtualenv, :if => virtualenv_usable? do
 
       activate_path = File.join(subject.build_path, '/usr/share/python/pip/bin/activate')
 
-      expect(File.exists?(activate_path)).to(be_truthy)
+      expect(File.exist?(activate_path)).to(be_truthy)
     end
 
     it "can override the version specified on the input" do
@@ -85,7 +85,7 @@ describe FPM::Package::Virtualenv, :if => virtualenv_usable? do
       subject.input("pip==8.1.2")
 
       activate_path = File.join(subject.build_path, '/opt/foo/pip/bin/activate')
-      expect(File.exists?(activate_path)).to(be_truthy)
+      expect(File.exist?(activate_path)).to(be_truthy)
     end
   end
 
@@ -95,10 +95,10 @@ describe FPM::Package::Virtualenv, :if => virtualenv_usable? do
       subject.input("pip==8.1.2")
 
       activate_path = File.join(subject.build_path, '/usr/share/python/pip/bin/activate')
-      expect(File.exists?(activate_path)).to(be_truthy)
+      expect(File.exist?(activate_path)).to(be_truthy)
 
       egg_path =  File.join(subject.build_path, '/setup.py')
-      expect(File.exists?(egg_path)).to(be_truthy)
+      expect(File.exist?(egg_path)).to(be_truthy)
     end
   end
 
@@ -118,7 +118,7 @@ describe FPM::Package::Virtualenv, :if => virtualenv_usable? do
         subject.input(File.join(fixtures_dir, 'requirements.txt'))
 
         activate_path = File.join(subject.build_path, '/usr/share/python/virtualenv/bin/activate')
-        expect(File.exists?(activate_path)).to(be_truthy)
+        expect(File.exist?(activate_path)).to(be_truthy)
         expect(subject.name).to eq("virtualenv-virtualenv")
       end
     end
@@ -129,7 +129,7 @@ describe FPM::Package::Virtualenv, :if => virtualenv_usable? do
         subject.input(File.join(fixtures_dir, 'requirements.txt'))
         activate_path = File.join(subject.build_path, '/usr/share/python/virtualenv/bin/activate')
 
-        expect(File.exists?(activate_path)).to(be_truthy)
+        expect(File.exist?(activate_path)).to(be_truthy)
 
         expect(subject.name).to eq("virtualenv-foo")
       end
@@ -143,7 +143,7 @@ describe FPM::Package::Virtualenv, :if => virtualenv_usable? do
 
       activate_path = File.join(subject.staging_path, '/opt/foo/bin/activate')
 
-      expect(File.exists?(activate_path)).to(be_truthy)
+      expect(File.exist?(activate_path)).to(be_truthy)
     end
 
     it "takes precedence over other folder options" do
@@ -153,7 +153,7 @@ describe FPM::Package::Virtualenv, :if => virtualenv_usable? do
 
       activate_path = File.join(subject.staging_path, '/opt/foo/bin/activate')
 
-      expect(File.exists?(activate_path)).to(be_truthy)
+      expect(File.exist?(activate_path)).to(be_truthy)
     end
   end
 end

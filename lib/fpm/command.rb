@@ -298,7 +298,7 @@ class FPM::Command < Clamp::Command
       args << "."
     end
 
-    if !File.exists?(workdir)
+    if !File.exist?(workdir)
       logger.fatal("Given --workdir=#{workdir} is not a path that exists.")
       raise FPM::Package::InvalidArgument, "The given workdir '#{workdir}' does not exist."
     end
@@ -371,7 +371,7 @@ class FPM::Command < Clamp::Command
 
     # If --inputs was specified, read it as a file.
     if !inputs.nil?
-      if !File.exists?(inputs)
+      if !File.exist?(inputs)
         logger.fatal("File given for --inputs does not exist (#{inputs})")
         return 1
       end
@@ -386,7 +386,7 @@ class FPM::Command < Clamp::Command
     # If --exclude-file was specified, read it as a file and append to
     # the exclude pattern list.
     if !exclude_file.nil?
-      if !File.exists?(exclude_file)
+      if !File.exist?(exclude_file)
         logger.fatal("File given for --exclude-file does not exist (#{exclude_file})")
         return 1
       end
@@ -410,7 +410,12 @@ class FPM::Command < Clamp::Command
     set = proc do |object, attribute|
       # if the package's attribute is currently nil *or* the flag setting for this
       # attribute is non-default, use the value.
-      if object.send(attribute).nil? || send(attribute) != send("default_#{attribute}")
+
+      # Not all options have a default value, so we assume `nil` if there's no default. (#1543)
+      # In clamp >= 1.3.0, options without `:default => ..` will not have any # `default_xyz` 
+      # methods generated, so we need to check for the presence of this method first.
+      default = respond_to?("default_#{attribute}") ? send("default_#{attribute}") : nil
+      if object.send(attribute).nil? || send(attribute) != default
         logger.info("Setting from flags: #{attribute}=#{send(attribute)}")
         object.send("#{attribute}=", send(attribute))
       end
@@ -451,7 +456,7 @@ class FPM::Command < Clamp::Command
       # Skip scripts not set
       next if path.nil?
 
-      if !File.exists?(path)
+      if !File.exist?(path)
         logger.error("No such file (for #{scriptname.to_s}): #{path.inspect}")
         script_errors << path
       end

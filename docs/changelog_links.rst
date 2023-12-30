@@ -205,6 +205,8 @@
 .. _#1955: https://github.com/jordansissel/fpm/issues/1955
 .. _#1959: https://github.com/jordansissel/fpm/issues/1959
 .. _#196: https://github.com/jordansissel/fpm/issues/196
+.. _#1981: https://github.com/jordansissel/fpm/issues/1981
+.. _#1988: https://github.com/jordansissel/fpm/issues/1988
 .. _#198: https://github.com/jordansissel/fpm/issues/198
 .. _#202: https://github.com/jordansissel/fpm/issues/202
 .. _#204: https://github.com/jordansissel/fpm/issues/204

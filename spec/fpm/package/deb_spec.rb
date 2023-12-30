@@ -53,7 +53,13 @@ describe FPM::Package::Deb do
 
     it "should default to native" do
       # Convert kernel name to debian name
-      expected = native == "x86_64" ? "amd64" : native
+      expected = if native == "x86_64"
+        "amd64"
+      elsif native == "aarch64"
+        "arm64"
+      else
+        native
+      end
       expect(subject.architecture).to(be == expected)
     end
   end
