@@ -1068,6 +1068,7 @@ class FPM::Package::Deb < FPM::Package
             logger.debug("Adding config file #{path} to Staging area #{staging_path}")
             FileUtils.mkdir_p(File.dirname(dcl))
             FileUtils.cp_r path, dcl
+            add_path(path, allconfigs)
           else
             logger.debug("Config file aready exists in staging area.")
           end
