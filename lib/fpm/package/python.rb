@@ -19,6 +19,8 @@ require "json"
 #
 class FPM::Package::Python < FPM::Package
   # Flags '--foo' will be accessable  as attributes[:python_foo]
+  option "--allow-underscores", :flag, "Should underscores be allowed in " \
+    " package names and dependencies?", :default => true
   option "--bin", "PYTHON_EXECUTABLE",
     "The path to the python executable you wish to run.", :default => "python"
   option "--easyinstall", "EASYINSTALL_EXECUTABLE",
@@ -231,7 +233,11 @@ class FPM::Package::Python < FPM::Package
     output = ::Dir.chdir(setup_dir) do
       tmp = build_path("metadata.json")
       setup_cmd = "env PYTHONPATH=#{pylib}:$PYTHONPATH #{attributes[:python_bin]} " \
-        "setup.py --command-packages=pyfpm get_metadata --output=#{tmp}"
+        "#{pylib}/python_patch.py --command-packages=pyfpm get_metadata --output=#{tmp}"
+
+      if attributes[:python_allow_underscores?]
+        setup_cmd += " --allow-underscores"
+      end
 
       if attributes[:python_obey_requirements_txt?]
         setup_cmd += " --load-requirements-txt"
