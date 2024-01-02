@@ -7,7 +7,7 @@ Installing FPM
 --------------
 
 .. note::
-	You must have ruby installed on your machine before installing fpm. `Here` are instructions to install Ruby on your machine.
+	You must have ruby installed on your machine before installing fpm. `Here`_ are instructions to install Ruby on your machine.
 
 .. _Here: https://www.ruby-lang.org/en/documentation/installation/
 
