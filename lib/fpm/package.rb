@@ -293,6 +293,14 @@ class FPM::Package
     end
   end # def cleanup_build
 
+  def download_from_git(download_dir, url, branch)
+    logger.debug("Git cloning in directory #{download_dir}")
+    safesystem("git", "-C", download_dir, "clone", url, ".")
+    if branch
+      safesystem("git", "-C", download_dir, "checkout", branch)
+    end
+  end
+
   # List all files in the staging_path
   #
   # The paths will all be relative to staging_path and will not include that
