@@ -210,6 +210,9 @@ General Options
 * ``--deb-templates FILEPATH``
     - (deb only) Add FILEPATH as debconf templates file.
 
+* ``--deb-trigger FILEPATH``
+    - (deb only) Add FILEPATH as trigger script
+
 * ``--deb-upstart FILEPATH``
     - (deb only) Add FILEPATH as an upstart script
 
