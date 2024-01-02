@@ -40,7 +40,7 @@ The above shell will find the latest version of ``kubectl`` and download it. We'
 
 .. note::
   We use ``${version#v*}`` in our shell to set the package version. This is
-  because Kuberenetes versions have a text that starts with "v" and this is not
+  because Kubernetes versions have a text that starts with "v" and this is not
   valid in Debian packages. This will turn "v1.2.3" into "1.2.3" for our package.
 
 Now we can check our package to make sure it looks the way we want::

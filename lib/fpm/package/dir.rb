@@ -110,7 +110,7 @@ class FPM::Package::Dir < FPM::Package
   # Copy a file or directory to a destination
   #
   # This is special because it respects the full path of the source.
-  # Aditionally, hardlinks will be used instead of copies.
+  # Additionally, hardlinks will be used instead of copies.
   #
   # Example:
   #

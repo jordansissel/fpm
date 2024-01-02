@@ -44,7 +44,7 @@ class FPM::Package
 
   # The epoch version of this package
   # This is used most when an upstream package changes it's versioning
-  # style so standard comparisions wouldn't work.
+  # style so standard comparisons wouldn't work.
   attr_accessor :epoch
 
   # The iteration of this package.
@@ -180,7 +180,7 @@ class FPM::Package
     @attrs = {}
 
     build_path
-    # Dont' initialize staging_path just yet, do it lazily so subclass can get a word in.
+    # Don't initialize staging_path just yet, do it lazily so subclass can get a word in.
   end # def initialize
 
   # Get the 'type' for this instance.

@@ -1,7 +1,7 @@
 pleaserun - Pleaserun services
 ==============================
 
-Pleaserun helps generate service definitions for a variety of service manangers
+Pleaserun helps generate service definitions for a variety of service managers
 such as systemd and sysv.
 
 When used as an input, fpm will generate a package that include multiple service

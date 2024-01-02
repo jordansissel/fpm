@@ -15,7 +15,7 @@ require "yaml"
 # * :gem_package_name_prefix
 # * :gem_gem
 class FPM::Package::Gem < FPM::Package
-  # Flags '--foo' will be accessable  as attributes[:gem_foo]
+  # Flags '--foo' will be accessible  as attributes[:gem_foo]
   option "--bin-path", "DIRECTORY", "The directory to install gem executables"
   option "--package-prefix", "NAMEPREFIX",
     "(DEPRECATED, use --package-name-prefix) Name to prefix the package " \

@@ -22,7 +22,7 @@ class FPM::Package::OSXpkg < FPM::Package
 
   option "--identifier-prefix", "IDENTIFIER_PREFIX",
     "Reverse domain prefix prepended to package identifier, " \
-    "ie. 'org.great.my'. If this is omitted, the identifer " \
+    "ie. 'org.great.my'. If this is omitted, the identifier " \
     "will be the package name."
   option "--payload-free", :flag, "Define no payload, assumes use of script options.",
     :default => false

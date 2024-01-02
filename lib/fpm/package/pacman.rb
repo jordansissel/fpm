@@ -59,7 +59,7 @@ class FPM::Package::Pacman < FPM::Package
 
   def dependencies
     bogus_regex = /[^\sA-Za-z0-9><=+._@-]/
-    # Actually modifies depencies if they are not right
+    # Actually modifies dependencies if they are not right
     bogus_dependencies = @dependencies.grep bogus_regex
     if bogus_dependencies.any?
       @dependencies.reject! { |a| a =~ bogus_regex }
