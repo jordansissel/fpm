@@ -262,6 +262,9 @@ class FPM::Package::Deb < FPM::Package
     when "noarch"
       # Debian calls noarch "all"
       @architecture = "all"
+    when "ppc64le"
+      # Debian calls ppc64le "ppc64el"
+      @architecture = "ppc64el"
     end
     return @architecture
   end # def architecture
@@ -707,6 +710,9 @@ class FPM::Package::Deb < FPM::Package
     self.provides = self.provides.collect do |provides|
       fix_provides(provides)
     end.flatten
+    # If an invalid provides field was found i.e. mypackage(arch) then fix_provides will blank it
+    # Make sure we remove this blank here
+    self.provides = self.provides.reject { |p| p.empty? }
 
     if origin == FPM::Package::CPAN
       # The fpm cpan code presents dependencies and provides fields as perl(ModuleName)
@@ -898,6 +904,11 @@ class FPM::Package::Deb < FPM::Package
       logger.warn("Replacing 'provides' underscores with dashes in '#{provides}' because " \
                    "debs don't like underscores")
       provides = provides.gsub("_", "-")
+    end
+
+    if provides.include?("(") and !provides.include?("(=")
+      logger.warn("Blanking 'provides' field '#{provides}' because it's invalid")
+      provides = ""
     end
 
     if m = provides.match(/^([A-Za-z0-9_-]+)\s*=\s*(\d+.*$)/)
