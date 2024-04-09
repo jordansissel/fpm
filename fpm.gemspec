@@ -35,7 +35,7 @@ Gem::Specification.new do |spec|
 
   # For command-line flag support
   # https://github.com/mdub/clamp/blob/master/README.markdown
-  spec.add_dependency("clamp", "~> 1.0.0") # license: MIT
+  spec.add_dependency("clamp", ">= 1.0.0") # license: MIT
 
   # For sourcing from pleaserun
   spec.add_dependency("pleaserun", "~> 0.0.29") # license: Apache 2
