@@ -342,7 +342,15 @@ class FPM::Package::CPAN < FPM::Package
 
     # Search metacpan to get download URL for this version of the module
     metacpan_search_url = "https://fastapi.metacpan.org/v1/release/_search"
-    metacpan_search_query = '{"fields":["download_url"],"filter":{"term":{"name":"' + "#{distribution}-#{self.version}" + '"}}}'
+    metacpan_search_query = JSON.dump({
+      fields: ["download_url"],
+      filter: {
+        term: {
+          name: "#{distribution}-#{self.version}",
+        },
+      },
+    })
+
     begin
       search_response = httppost(metacpan_search_url,metacpan_search_query)
     rescue Net::HTTPServerException => e
