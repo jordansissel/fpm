@@ -205,57 +205,43 @@ class FPM::Package::CPAN < FPM::Package
       prefix = attributes[:prefix] || "/usr/local"
       # TODO(sissel): Set default INSTALL path?
 
-      # Try Makefile.PL, Build.PL
-      #
-      if File.exist?("Build.PL")
-        # Module::Build is in use here; different actions required.
-        safesystem(attributes[:cpan_perl_bin],
-                   "-Mlocal::lib=#{build_path("cpan")}",
-                   "Build.PL")
-        safesystem(attributes[:cpan_perl_bin],
-                   "-Mlocal::lib=#{build_path("cpan")}",
-                   "./Build")
+      with_local_lib_env(build_path("cpan")) do
+        if File.exist?("Build.PL")
+          # Module::Build is in use here; different actions required.
+          safesystem(attributes[:cpan_perl_bin], "Build.PL")
+          safesystem(attributes[:cpan_perl_bin], "./Build")
 
-        if attributes[:cpan_test?]
-          safesystem(attributes[:cpan_perl_bin],
-                   "-Mlocal::lib=#{build_path("cpan")}",
-                   "./Build", "test")
-        end
-        if attributes[:cpan_perl_lib_path]
-          perl_lib_path = attributes[:cpan_perl_lib_path]
-          safesystem("./Build install --install_path lib=#{perl_lib_path} \
-                     --destdir #{staging_path} --prefix #{prefix} --destdir #{staging_path}")
+          if attributes[:cpan_test?]
+            safesystem(attributes[:cpan_perl_bin], "./Build", "test")
+          end
+          if attributes[:cpan_perl_lib_path]
+            perl_lib_path = attributes[:cpan_perl_lib_path]
+            safesystem("./Build install --install_path lib=#{perl_lib_path} \
+                       --destdir #{staging_path} --prefix #{prefix} --destdir #{staging_path}")
+          else
+             safesystem("./Build", "install",
+                       "--prefix", prefix, "--destdir", staging_path)
+          end
+        elsif File.exist?("Makefile.PL")
+          if attributes[:cpan_perl_lib_path]
+            perl_lib_path = attributes[:cpan_perl_lib_path]
+            safesystem(attributes[:cpan_perl_bin],
+                       "Makefile.PL", "PREFIX=#{prefix}", "LIB=#{perl_lib_path}")
+          else
+            safesystem(attributes[:cpan_perl_bin],
+                       "Makefile.PL", "PREFIX=#{prefix}")
+          end
+          make = [ "env", "PERL5LIB=#{build_path("cpan/lib/perl5")}", "make" ]
+          safesystem(*make)
+          safesystem(*(make + ["test"])) if attributes[:cpan_test?]
+          safesystem(*(make + ["DESTDIR=#{staging_path}", "install"]))
+
+
         else
-           safesystem("./Build", "install",
-                     "--prefix", prefix, "--destdir", staging_path,
-                     # Empty install_base to avoid local::lib being used.
-                     "--install_base", "")
+          raise FPM::InvalidPackageConfiguration,
+            "I don't know how to build #{name}. No Makefile.PL nor " \
+            "Build.PL found"
         end
-      elsif File.exist?("Makefile.PL")
-        if attributes[:cpan_perl_lib_path]
-          perl_lib_path = attributes[:cpan_perl_lib_path]
-          safesystem(attributes[:cpan_perl_bin],
-                     "-Mlocal::lib=#{build_path("cpan")}",
-                     "Makefile.PL", "PREFIX=#{prefix}", "LIB=#{perl_lib_path}",
-                     # Empty install_base to avoid local::lib being used.
-                     "INSTALL_BASE=")
-        else
-          safesystem(attributes[:cpan_perl_bin],
-                     "-Mlocal::lib=#{build_path("cpan")}",
-                     "Makefile.PL", "PREFIX=#{prefix}",
-                     # Empty install_base to avoid local::lib being used.
-                     "INSTALL_BASE=")
-        end
-        make = [ "env", "PERL5LIB=#{build_path("cpan/lib/perl5")}", "make" ]
-        safesystem(*make)
-        safesystem(*(make + ["test"])) if attributes[:cpan_test?]
-        safesystem(*(make + ["DESTDIR=#{staging_path}", "install"]))
-
-
-      else
-        raise FPM::InvalidPackageConfiguration,
-          "I don't know how to build #{name}. No Makefile.PL nor " \
-          "Build.PL found"
       end
 
       # Fix any files likely to cause conflicts that are duplicated
@@ -301,6 +287,35 @@ class FPM::Package::CPAN < FPM::Package
     end
   end
 
+  # Set up ENV with values from Perl's local::lib module.  Serialize pertinent
+  # environment variables as JSON, then read them into this process' ENV hash.
+  def local_lib_env(local_lib_path)
+    JSON.parse safesystemout(
+      attributes[:cpan_perl_bin],
+      "-MJSON::PP",
+      "-mlocal::lib",
+      "-le",
+      "print encode_json(+{ local::lib->build_environment_vars_for($ARGV[0]) })",
+      local_lib_path,
+    )
+  end
+
+  def with_local_lib_env(local_lib_path)
+    orig_env = ENV.to_h
+
+    local_lib_env(local_lib_path).each_pair do |k, v|
+      # PERL_MM_OPT and PERL_MB_OPT are incompatible with setting PREFIX, which
+      # is done during the build process.
+      next if ["PERL_MM_OPT", "PERL_MB_OPT"].include?(k)
+
+      ENV[k] = v
+    end
+
+    yield
+  ensure
+    ENV.replace(orig_env)
+  end
+
   def unpack(tarball)
     directory = build_path("module")
     ::Dir.mkdir(directory)
@@ -327,7 +342,15 @@ class FPM::Package::CPAN < FPM::Package
 
     # Search metacpan to get download URL for this version of the module
     metacpan_search_url = "https://fastapi.metacpan.org/v1/release/_search"
-    metacpan_search_query = '{"fields":["download_url"],"filter":{"term":{"name":"' + "#{distribution}-#{self.version}" + '"}}}'
+    metacpan_search_query = JSON.dump({
+      fields: ["download_url"],
+      filter: {
+        term: {
+          name: "#{distribution}-#{self.version}",
+        },
+      },
+    })
+
     begin
       search_response = httppost(metacpan_search_url,metacpan_search_query)
     rescue Net::HTTPServerException => e
