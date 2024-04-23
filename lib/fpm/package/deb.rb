@@ -824,6 +824,12 @@ class FPM::Package::Deb < FPM::Package
       return dep
     end
 
+    if dep.include?("rpmlib")
+      logger.warn("Blanking 'dependency' field '#{dep}' because it's invalid")
+      dep = ""
+      return dep
+    end
+
     name_re = /^[^ \(]+/
     name = dep[name_re]
     if name =~ /[A-Z]/
