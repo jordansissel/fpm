@@ -911,6 +911,11 @@ class FPM::Package::Deb < FPM::Package
       provides = ""
     end
 
+    if provides.start_with?("/")
+      logger.warn("Blanking 'provides' field '#{provides}' because it's invalid")
+      provides = ""
+    end
+
     if m = provides.match(/^([A-Za-z0-9_-]+)\s*=\s*(\d+.*$)/)
       logger.warn("Replacing 'provides' entry #{provides} with syntax 'name (= version)'")
       provides = "#{m[1]} (= #{m[2]})"
