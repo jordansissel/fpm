@@ -707,6 +707,11 @@ class FPM::Package::Deb < FPM::Package
     self.dependencies = self.dependencies.collect do |dep|
       fix_dependency(dep)
     end.flatten
+
+    # If an invalid depends field was found i.e. /bin.sh then fix_depends will blank it
+    # Make sure we remove this blank here
+    self.dependencies = self.dependencies.reject { |p| p.empty? }
+
     self.provides = self.provides.collect do |provides|
       fix_provides(provides)
     end.flatten
@@ -813,6 +818,12 @@ class FPM::Package::Deb < FPM::Package
       end
     end
 
+    if dep.start_with?("/")
+      logger.warn("Blanking 'dependency' field '#{dep}' because it's invalid")
+      dep = ""
+      return dep
+    end
+
     name_re = /^[^ \(]+/
     name = dep[name_re]
     if name =~ /[A-Z]/
@@ -907,11 +918,6 @@ class FPM::Package::Deb < FPM::Package
     end
 
     if provides.include?("(") and !provides.include?("(=")
-      logger.warn("Blanking 'provides' field '#{provides}' because it's invalid")
-      provides = ""
-    end
-
-    if provides.start_with?("/")
       logger.warn("Blanking 'provides' field '#{provides}' because it's invalid")
       provides = ""
     end
