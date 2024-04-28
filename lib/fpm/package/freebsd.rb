@@ -86,7 +86,7 @@ class FPM::Package::FreeBSD < FPM::Package
     # We use --files-from here to keep the tar entries from having `./` as the prefix.
     # This is done as a best effor to mimic what FreeBSD packages do, having everything at the top-level as
     # file names, like "+MANIFEST" instead of "./+MANIFEST"
-    safesystem("tar", "-Jcf", output_path, "-C", staging_path, "--files-from", build_path("file_list"), "--transform", 's|^\([^+]\)|/\1|')
+    safesystem("tar", "-Jcf", output_path, "-C", staging_path, "--files-from", build_path("file_list"), "-s", '/^\([^+]\)/\1/')
   end # def output
 
   # Handle architecture naming conversion:
