@@ -104,11 +104,7 @@ class FPM::Package::Gem < FPM::Package
     FileUtils.mkdir(download_dir) unless File.directory?(download_dir)
 
     if attributes[:gem_git_repo]
-      logger.debug("Git cloning in directory #{download_dir}")
-      safesystem("git", "-C", download_dir, "clone", attributes[:gem_git_repo], ".")
-      if attributes[:gem_git_branch]
-        safesystem("git", "-C", download_dir, "checkout", attributes[:gem_git_branch])
-      end
+      download_from_git(download_dir, attributes[:gem_git_repo], attributes[:gem_git_branch])
 
       gem_build = [ "#{attributes[:gem_gem]}", "build", "#{download_dir}/#{gem_name}.gemspec"]
       ::Dir.chdir(download_dir) do |dir|
