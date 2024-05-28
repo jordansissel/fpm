@@ -6,7 +6,7 @@ require "find"
 require "pathname"
 
 class FPM::Package::CPAN < FPM::Package
-  # Flags '--foo' will be accessable  as attributes[:npm_foo]
+  # Flags '--foo' will be accessible  as attributes[:npm_foo]
   option "--perl-bin", "PERL_EXECUTABLE",
     "The path to the perl executable you wish to run.", :default => "perl"
 

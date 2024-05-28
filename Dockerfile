@@ -2,7 +2,7 @@
 
 # Are we running against the minimal container, or the everything
 # container? Minimal is mostly the compiled package tools. Everything
-# pulls in scripting langauges.
+# pulls in scripting languages.
 ARG BASE_ENV=everything
 
 # Are we running tests, or a release? Tests build and run against the
@@ -66,7 +66,7 @@ EOF
 
 # Run tests against the current working directory. This is a bit
 # orthogonal to the container release process, but it has a lot of
-# same dependancies, so we reuse it. This uses COPY to allow rspect to
+# same dependencies, so we reuse it. This uses COPY to allow rspect to
 # initall the gems, but runtime usage expects you to mount a volume
 # into /src
 FROM base AS test

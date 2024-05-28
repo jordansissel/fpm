@@ -9,7 +9,7 @@ require "fpm/package/dir"
 # This supports input, but not output.
 #
 class FPM::Package::Virtualenv < FPM::Package
-  # Flags '--foo' will be accessable  as attributes[:virtualenv_foo]
+  # Flags '--foo' will be accessible  as attributes[:virtualenv_foo]
 
   option "--pypi", "PYPI_URL",
   "PyPi Server uri for retrieving packages.",
@@ -31,7 +31,7 @@ class FPM::Package::Virtualenv < FPM::Package
   "specified directory may be added to the package. This is useful if the " \
   "virtualenv needs configuration files, etc.", :default => nil
   option "--pypi-extra-url", "PYPI_EXTRA_URL",
-    "PyPi extra-index-url for pointing to your priviate PyPi",
+    "PyPi extra-index-url for pointing to your private PyPi",
     :multivalued => true, :attribute_name => :virtualenv_pypi_extra_index_urls,
     :default => nil
 
