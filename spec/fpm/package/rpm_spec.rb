@@ -567,6 +567,17 @@ describe FPM::Package::RPM do
     end
 
     it "should permit brackets in filenames (issue #202)" do
+      on_linux = false
+      begin
+        if %x{uname -a} =~ /linux/i
+          on_linux = true
+        end
+      rescue
+        #noop
+      end
+
+      skip('This test only works on Linux systems') unless on_linux
+
       File.write(subject.staging_path("file[with]bracket"), "Hello")
 
       # This will raise an exception if rpmbuild fails.
