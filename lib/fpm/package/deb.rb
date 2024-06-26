@@ -210,6 +210,11 @@ class FPM::Package::Deb < FPM::Package
     next File.expand_path(file)
   end
 
+  option "--systemd-path", "FILEPATH", "Relative path to the systemd service directory",
+    :default => "lib/systemd/system" do |file|
+    next file.gsub(/^\/*/, '')
+  end
+
   option "--systemd-enable", :flag , "Enable service on install or upgrade", :default => false
 
   option "--systemd-auto-start", :flag , "Start service after install or upgrade", :default => false
@@ -518,7 +523,7 @@ class FPM::Package::Deb < FPM::Package
     attributes[:deb_systemd] = []
     attributes.fetch(:deb_systemd_list, []).each do |systemd|
       name = File.basename(systemd, ".service")
-      dest_systemd = staging_path("lib/systemd/system/#{name}.service")
+      dest_systemd = staging_path(File.join(attributes[:deb_systemd_path], "#{name}.service"))
       mkdir_p(File.dirname(dest_systemd))
       FileUtils.cp(systemd, dest_systemd)
       File.chmod(0644, dest_systemd)
@@ -628,7 +633,7 @@ class FPM::Package::Deb < FPM::Package
 
     attributes.fetch(:deb_systemd_list, []).each do |systemd|
       name = File.basename(systemd, ".service")
-      dest_systemd = staging_path("lib/systemd/system/#{name}.service")
+      dest_systemd = staging_path(File.join(attributes[:deb_systemd_path], "#{name}.service"))
       mkdir_p(File.dirname(dest_systemd))
       FileUtils.cp(systemd, dest_systemd)
       File.chmod(0644, dest_systemd)
