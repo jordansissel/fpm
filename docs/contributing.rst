@@ -56,9 +56,14 @@ when it lists the FPM gem:
 If your system doesn't have `bsdtar` by default, make sure to install it or some
 tests will fail:
 
-    apt-get install bsdtar
+    apt-get install bsdtar || apt install libarchive-tools
     
     yum install bsdtar
+
+
+You also need these tools:
+
+    apt-get install lintian cpanminus
 
 Next, run make in root of the FPM repo. If there are any problems (such as
 missing dependencies) you should receive an error
