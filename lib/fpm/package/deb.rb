@@ -517,14 +517,23 @@ class FPM::Package::Deb < FPM::Package
 
     attributes[:deb_systemd] = []
     attributes.fetch(:deb_systemd_list, []).each do |systemd|
-      name = File.basename(systemd, ".service")
-      dest_systemd = staging_path("lib/systemd/system/#{name}.service")
+      name = File.basename(systemd)
+      extname = File.extname(name)
+
+      name_with_extension = if extname.empty?
+                              "#{name}.service"
+                            elsif [".service", ".timer"].include?(extname)
+                              name
+                            else
+                              raise ArgumentError, "Invalid systemd unit file extension: #{extname}. Expected .service or .timer, or no extension."
+                            end
+
+      dest_systemd = staging_path("lib/systemd/system/#{name_with_extension}")
       mkdir_p(File.dirname(dest_systemd))
       FileUtils.cp(systemd, dest_systemd)
       File.chmod(0644, dest_systemd)
 
-      # add systemd service name to attribute
-      attributes[:deb_systemd] << name
+      attributes[:deb_systemd] << name_with_extension
     end
 
     if script?(:before_upgrade) or script?(:after_upgrade) or attributes[:deb_systemd].any?
@@ -627,8 +636,11 @@ class FPM::Package::Deb < FPM::Package
     end
 
     attributes.fetch(:deb_systemd_list, []).each do |systemd|
-      name = File.basename(systemd, ".service")
-      dest_systemd = staging_path("lib/systemd/system/#{name}.service")
+      name = File.basename(systemd)
+      extname = File.extname(systemd)
+      name_with_extension = extname.empty? ? "#{name}.service" : name
+
+      dest_systemd = staging_path("lib/systemd/system/#{name_with_extension}")
       mkdir_p(File.dirname(dest_systemd))
       FileUtils.cp(systemd, dest_systemd)
       File.chmod(0644, dest_systemd)
