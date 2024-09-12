@@ -73,7 +73,7 @@ class FPM::Package::Deb < FPM::Package
   option "--compression", "COMPRESSION", "The compression type to use, must " \
     "be one of #{COMPRESSION_TYPES.join(", ")}.", :default => "gz" do |value|
     if !COMPRESSION_TYPES.include?(value)
-      raise ArgumentError, "deb compression value of '#{value}' is invalid. " \
+      raise FPM::InvalidPackageConfiguration, "deb compression value of '#{value}' is invalid. " \
         "Must be one of #{COMPRESSION_TYPES.join(", ")}"
     end
     value
@@ -364,7 +364,7 @@ class FPM::Package::Deb < FPM::Package
       version_re = /^(?:([0-9]+):)?(.+?)(?:-(.*))?$/
       m = version_re.match(parse.call("Version"))
       if !m
-        raise "Unsupported version string '#{parse.call("Version")}'"
+        raise FPM::InvalidPackageConfiguration, "Unsupported version string '#{parse.call("Version")}'"
       end
       self.epoch, self.version, self.iteration = m.captures
 
@@ -504,15 +504,15 @@ class FPM::Package::Deb < FPM::Package
     end
     if attributes[:source_date_epoch] == "0"
       logger.error("Alas, ruby's Zlib::GzipWriter does not support setting an mtime of zero.  Aborting.")
-      raise "#{name}: source_date_epoch of 0 not supported."
+      raise FPM::InvalidPackageConfiguration, "#{name}: source_date_epoch of 0 not supported."
     end
     if not attributes[:source_date_epoch].nil? and not ar_cmd_deterministic?
       logger.error("Alas, could not find an ar that can handle -D option. Try installing recent gnu binutils. Aborting.")
-      raise "#{name}: ar is insufficient to support source_date_epoch."
+      raise FPM::InvalidPackageConfiguration, "#{name}: ar is insufficient to support source_date_epoch."
     end
     if not attributes[:source_date_epoch].nil? and not tar_cmd_supports_sort_names_and_set_mtime?
       logger.error("Alas, could not find a tar that can set mtime and sort.  Try installing recent gnu tar. Aborting.")
-      raise "#{name}: tar is insufficient to support source_date_epoch."
+      raise FPM::InvalidPackageConfiguration, "#{name}: tar is insufficient to support source_date_epoch."
     end
 
     attributes[:deb_systemd] = []
@@ -525,7 +525,7 @@ class FPM::Package::Deb < FPM::Package
                             elsif [".service", ".timer"].include?(extname)
                               name
                             else
-                              raise ArgumentError, "Invalid systemd unit file extension: #{extname}. Expected .service or .timer, or no extension."
+                              raise FPM::InvalidPackageConfiguration, "Invalid systemd unit file extension: #{extname}. Expected .service or .timer, or no extension."
                             end
 
       dest_systemd = staging_path("lib/systemd/system/#{name_with_extension}")
