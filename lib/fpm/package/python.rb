@@ -85,6 +85,15 @@ class FPM::Package::Python < FPM::Package
     :attribute_name => :python_internal_pip,
     :default => true
 
+  option "--git-repo", "GIT_REPO",
+    "Use this git repo address as the source of the module instead of " \
+    "pypi.", :default => nil
+
+  option "--git-branch", "GIT_BRANCH",
+    "When using a git repo as the source of the module instead of " \
+    "pypi, use this git branch.",
+    :default => nil
+
   private
 
   # Input a package.
@@ -125,14 +134,22 @@ class FPM::Package::Python < FPM::Package
 
     logger.info("Trying to download", :package => package)
 
+    target = build_path(package)
+    FileUtils.mkdir(target) unless File.directory?(target)
+    if attributes[:python_git_repo]
+      download_from_git(target, attributes[:python_git_repo], attributes[:python_git_branch])
+      return target
+    else
+      return download_from_pypi(package, version, target)
+    end
+  end # def download_if_necessary
+
+  def download_from_pypi(package, version, target)
     if version.nil?
       want_pkg = "#{package}"
     else
       want_pkg = "#{package}==#{version}"
     end
-
-    target = build_path(package)
-    FileUtils.mkdir(target) unless File.directory?(target)
 
     if attributes[:python_internal_pip?]
       # XXX: Should we detect if internal pip is available?
@@ -193,7 +210,7 @@ class FPM::Package::Python < FPM::Package
       raise "Unexpected directory layout after easy_install. Maybe file a bug? The directory is #{build_path}"
     end
     return dirs.first
-  end # def download
+  end # def download_from_pypi
 
   # Load the package information like name, version, dependencies.
   def load_package_info(setup_py)
