@@ -179,7 +179,7 @@ describe FPM::Package::Pacman do
           # incorrectly permissioned path (but that's what these tests are for)
           File.chmod(0700, 'usr/lib')
           File.open('usr/lib/libfoo.so', 'w') do |lib|
-            lib.write("I don't even excercise.")
+            lib.write("I don't even exercise.")
           end
           File.chmod(0755, 'usr/lib/libfoo.so')
           FileUtils::mkdir_p 'etc'

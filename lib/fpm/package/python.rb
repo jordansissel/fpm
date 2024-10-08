@@ -18,7 +18,7 @@ require "json"
 #     pkg.input("Django")
 #
 class FPM::Package::Python < FPM::Package
-  # Flags '--foo' will be accessable  as attributes[:python_foo]
+  # Flags '--foo' will be accessible  as attributes[:python_foo]
   option "--bin", "PYTHON_EXECUTABLE",
     "The path to the python executable you wish to run.", :default => "python"
   option "--easyinstall", "EASYINSTALL_EXECUTABLE",
