@@ -99,6 +99,18 @@ General Options
 * ``--cpan-package-name-prefix NAME_PREFIX``
     - (cpan only) Name to prefix the package name with.
 
+* ``--[no-]cpan-test``
+    - (cpan only) Run the tests before packaging?
+
+* ``--[no-]cpan-verbose``
+    - (cpan only) Produce verbose output from cpanm?
+
+* ``--[no-]cpan-test``
+    - (cpan only) Run the tests before packaging?
+
+* ``--[no-]cpan-verbose``
+    - (cpan only) Produce verbose output from cpanm?
+
 * ``--cpan-perl-bin PERL_EXECUTABLE``
     - (cpan only) The path to the perl executable you wish to run.
 

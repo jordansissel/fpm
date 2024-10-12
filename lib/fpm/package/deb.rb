@@ -721,10 +721,19 @@ class FPM::Package::Deb < FPM::Package
     end.flatten
 
     if origin == FPM::Package::CPAN
+
+      # By default, we'd prefer to name Debian-targeted Perl packages using the
+      # same naming scheme that Debian itself uses, which is usually something
+      # like "lib<module-name-hyphenated>-perl", such as libregexp-common-perl
+      #
+      logger.info("Changing package name to match Debian's typical libmodule-name-perl style")
+      self.name = "lib#{self.name.sub(/^perl-/, "")}-perl"
+
       # The fpm cpan code presents dependencies and provides fields as perl(ModuleName)
       # so we'll need to convert them to something debian supports.
 
-      # Replace perl(ModuleName) > 1.0 with Debian-style perl-ModuleName (> 1.0)
+      # Replace perl(Module::Name) > 1.0 with Debian-style libmodule-name-perl (> 1.0)
+      # per: https://www.debian.org/doc/packaging-manuals/perl-policy/ch-module_packages.html
       perldepfix = lambda do |dep|
         m = dep.match(/perl\((?<name>[A-Za-z0-9_:]+)\)\s*(?<op>.*$)/)
         if m.nil?
@@ -735,7 +744,7 @@ class FPM::Package::Deb < FPM::Package
           modulename = m["name"].gsub("::", "-")
          
           # Fix any upper-casing or other naming concerns Debian has about packages
-          name = "#{attributes[:cpan_package_name_prefix]}-#{modulename}"
+          name = "lib#{modulename}-perl"
 
           if m["op"].empty?
             name
@@ -746,7 +755,9 @@ class FPM::Package::Deb < FPM::Package
         end
       end
 
-      rejects = [ "perl(vars)", "perl(warnings)", "perl(strict)", "perl(Config)" ]
+      rejects = attributes[:rejects].map do |skip|
+        "perl(#{skip})"
+      end
       self.dependencies = self.dependencies.reject do |dep|
         # Reject non-module Perl dependencies like 'vars' and 'warnings'
         rejects.include?(dep)
