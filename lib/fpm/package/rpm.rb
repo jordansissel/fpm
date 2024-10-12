@@ -118,9 +118,11 @@ class FPM::Package::RPM < FPM::Package
     :multivalued => true, :attribute_name => :attrs
 
   option "--init", "FILEPATH", "Add FILEPATH as an init script",
-	:multivalued => true do |file|
+  :multivalued => true do |file|
     next File.expand_path(file)
   end
+
+  option "--with-source", :flag, "Also output an SRPM.", :default => false
 
   rpmbuild_filter_from_provides = []
   option "--filter-from-provides", "REGEX",
@@ -343,7 +345,7 @@ class FPM::Package::RPM < FPM::Package
       next if script_path.nil?
       if !File.exist?(script_path)
         logger.error("No such file (for #{scriptname.to_s}): #{script_path.inspect}")
-        script_errors	 << script_path
+        script_errors  << script_path
       end
       # Load the script into memory.
       scripts[scriptname] = File.read(script_path)
@@ -452,8 +454,11 @@ class FPM::Package::RPM < FPM::Package
 
   def output(output_path)
     output_check(output_path)
-    %w(BUILD RPMS SRPMS SOURCES SPECS).each { |d| FileUtils.mkdir_p(build_path(d)) }
-    args = ["rpmbuild", "-bb"]
+    %w(BUILD BUILDROOT RPMS SRPMS SOURCES SPECS).each { |d| FileUtils.mkdir_p(build_path(d)) }
+    args = ["rpmbuild", attributes[:rpm_with_source?] ? "-ba" : "-bb"]
+
+    # Workaround rpm#2265 in case we've specified an unexpected architecture name
+    args += [ "--define", "_smp_build_ncpus 1" ]
 
     if %x{uname -m}.chomp != self.architecture
       rpm_target = self.architecture
@@ -473,10 +478,7 @@ class FPM::Package::RPM < FPM::Package
     args += ["--define", "dist .#{attributes[:rpm_dist]}"] if attributes[:rpm_dist]
 
     args += [
-      "--define", "buildroot #{build_path}/BUILD",
       "--define", "_topdir #{build_path}",
-      "--define", "_sourcedir #{build_path}",
-      "--define", "_rpmdir #{build_path}/RPMS",
       "--define", "_tmppath #{attributes[:workdir]}"
     ]
 
@@ -549,12 +551,18 @@ class FPM::Package::RPM < FPM::Package
       args += ["--define", define]
     end
 
-    # copy all files from staging to BUILD dir
-    # [#1538] Be sure to preserve the original timestamps.
-    Find.find(staging_path) do |path|
-      src = path.gsub(/^#{staging_path}/, '')
-      dst = File.join(build_path, build_sub_dir, src)
-      copy_entry(path, dst, preserve=true)
+    args += ["--define", "_builddir #{staging_path}"]
+
+    # If there are files in the staging path, put them in a tarball so we can
+    # produce an srpm.
+    sources = []
+    if !::Dir.empty?(staging_path)
+      # Got to create a tarball to include in the SRPM
+      sources_tar = "#{name}-#{version}-#{iteration}.tgz"
+      tarpath = File.join(build_path, sources_sub_dir, sources_tar)
+      safesystem("tar", "-zcf", tarpath, "-C", staging_path, ".")
+
+      sources << tarpath
     end
 
     rpmspec = template("rpm.erb").result(binding)
@@ -569,8 +577,40 @@ class FPM::Package::RPM < FPM::Package
     safesystem(*args)
 
     ::Dir["#{build_path}/RPMS/**/*.rpm"].each do |rpmpath|
-      # This should only output one rpm, should we verify this?
       FileUtils.cp(rpmpath, output_path)
+    end
+
+    if attributes[:rpm_with_source?]
+      # Copy out the SRPM packages
+      ::Dir["#{build_path}/SRPMS/**/*.rpm"].each do |rpmpath|
+        # Try to use the same naming scheme if we are specifying a custom output path?
+        # Replace the .ARCH.EXTENSION with .src.EXTENSION ?
+        #
+        # For example, if the output wanted "foo.noarch.rpm"
+        # then the srpm should be named "foo.src.rpm"
+        #
+        # But for the cases where someone asked for a file with just ".rpm" at the end,
+        # we can also write the srpm as ".src.rpm"
+        extension_checks = [
+          # Try .<arch>.rpm ending
+          Regexp.compile(to_s(".ARCH.EXTENSION$")),
+          # Try just .rpm ending
+          Regexp.compile(to_s(".EXTENSION$")),
+
+          # Last effort to just append `.src.rpm` to the end of the filename
+          /$/
+        ]
+
+        extension_checks.each do |re|
+          if output_path =~ re
+            filename = File.basename(output_path).gsub(re, to_s(".src.EXTENSION"))
+            outpath = File.join(File.dirname(output_path), filename)
+            logger.log("Created SRPM", :path => outpath)
+            FileUtils.cp(rpmpath, outpath)
+            break
+          end
+        end
+      end
     end
   end # def output
 
@@ -584,8 +624,11 @@ class FPM::Package::RPM < FPM::Package
 
   def build_sub_dir
     return "BUILD"
-    #return File.join("BUILD", prefix)
   end # def build_sub_dir
+
+  def sources_sub_dir
+    return "SOURCES"
+  end # def sources_sub_dir
 
   def summary
     if !attributes[:rpm_summary]
