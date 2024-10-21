@@ -49,7 +49,7 @@ class FPM::Package::Deb < FPM::Package
     (?:-[A-Za-z0-9+~.]+)?  # debian_revision
   /x # Version field pattern
   RELATIONSHIP_FIELD_PATTERN = /^
-    (?<name>[A-z0-9][A-z0-9_.-]+)
+    (?<name>[A-z0-9+][A-z0-9_.-]+)
     (?:\s*\((?<relation>[<>=]+)\s(?<version>#{VERSION_FIELD_PATTERN})\))?
   $/x # Relationship field pattern
 
@@ -733,7 +733,7 @@ class FPM::Package::Deb < FPM::Package
         else
           # Also replace '::' in the perl module name with '-'
           modulename = m["name"].gsub("::", "-")
-         
+
           # Fix any upper-casing or other naming concerns Debian has about packages
           name = "#{attributes[:cpan_package_name_prefix]}-#{modulename}"
 
