@@ -474,6 +474,7 @@ class FPM::Package::RPM < FPM::Package
 
     args += [
       "--buildroot", "#{build_path}/BUILD",
+      "--define", "buildroot #{build_path}/BUILD",
       "--define", "_topdir #{build_path}",
       "--define", "_sourcedir #{build_path}",
       "--define", "_rpmdir #{build_path}/RPMS",
