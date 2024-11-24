@@ -83,17 +83,14 @@ class get_metadata(Command):
 
         if self.load_requirements_txt:
             requirement = open(self.requirements_txt).readlines()
-#            print('REQ-SETUP-PY-REQ-TXT:', requirement, file=sys.stderr)
             for dep in pkg_resources.parse_requirements(requirement):
                 final_deps.extend(self.process_dep(dep))
         else:
             if getattr(self.distribution, 'install_requires', None):
-#                print('REQ-SETUP-PY-INSTALL:', self.distribution.install_requires, file=sys.stderr)
                 for dep in pkg_resources.parse_requirements(
                         self.distribution.install_requires):
                     final_deps.extend(self.process_dep(dep))
             if getattr(self.distribution, 'extras_require', None):
-#                print('REQ-SETUP-PY-EXTRA:', self.distribution.extras_require, file=sys.stderr)
                 for dep in pkg_resources.parse_requirements(
                         v for k, v in self.distribution.extras_require.items()
                         if k.startswith(':') and pkg_resources.evaluate_marker(k[1:])):
