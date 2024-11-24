@@ -104,6 +104,12 @@ class FPM::Package::Python < FPM::Package
     if File.directory?(path_to_package)
       setup_py = File.join(path_to_package, "setup.py")
       pyproject_toml = File.join(path_to_package, "pyproject.toml")
+    elsif File.basename(path_to_package) == "setup.py"
+      setup_py = path_to_package
+      pyproject_toml = ""
+    elsif File.basename(path_to_package) == "pyproject.toml"
+      setup_py = ""
+      pyproject_toml = path_to_package
     else
       setup_py = path_to_package
       pyproject_toml = path_to_package
