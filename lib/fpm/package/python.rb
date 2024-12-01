@@ -153,7 +153,7 @@ class FPM::Package::Python < FPM::Package
 
     if package_type == PY_PACKAGE_TYPE[:unspecified]
       logger.error("Could not find neither 'setup.py' nor 'pyproject.toml' nor '*.whl'", :path => path_to_package)
-      raise "Unable to find python package; tried #{setup_py} and #{pyproject_toml} (*.whl NYI)"
+      raise "Unable to find python package; tried #{setup_py} and #{pyproject_toml} and *.whl"
     elsif package_type == PY_PACKAGE_TYPE[:wheel]
       logger.debug("Do job with *.whl file")
       #      raise "Unable to create python package due to wrong hands curvature (NYI)"
@@ -164,7 +164,7 @@ class FPM::Package::Python < FPM::Package
       logger.debug("Do job with setup.py")
     else
       logger.error("Complete enum!", :path => path_to_package)
-      raise "Unable to create python package due to wrong hands curvature"
+      raise "Unable to create python package due to wrong hands curvature (please report this bug to developers)"
     end
 
     load_package_info(path_to_package, package_type)
@@ -176,8 +176,8 @@ class FPM::Package::Python < FPM::Package
     elsif package_type == PY_PACKAGE_TYPE[:wheel]
       logger.debug("Complete job with wheel file")
     else
-      logger.error("NYI", :path => path_to_package)
-      raise "Unable to create python package due to wrong hands curvature (NYI)"
+      logger.error("Complete enum!", :path => path_to_package)
+      raise "Unable to create python package due to wrong hands curvature (please report this bug to developers)"
     end
 
     install_to_staging(path_to_package, package_type)
@@ -376,7 +376,6 @@ class FPM::Package::Python < FPM::Package
         raise FPM::Util::ProcessFailed, "Python (#{attributes[:python_bin]}) is missing pkg_resources module."
       end
 
-      logger.error(setup_dir)
       output = ::Dir.chdir(setup_dir) do
         tmp = build_path("metadata.json")
         get_metadata_cmd = "env PYTHONPATH=#{pylib}:$PYTHONPATH #{attributes[:python_bin]} " \
@@ -449,7 +448,7 @@ class FPM::Package::Python < FPM::Package
       end
     else
       logger.error("NYI", :path => setup_dir)
-      raise "Unable to create python package due to wrong hands curvature (NYI)"
+      raise "Unable to create python package due to wrong hands curvature (please report this bug to developers)"
     end
 
     logger.debug("result from get_metadata", :data => output)
@@ -544,7 +543,7 @@ class FPM::Package::Python < FPM::Package
       logger.error("Can not guess package setup type.")
       raise FPM::Util::ProcessFailed, "Can not guess package setup type."
 
-      # Install this package to the staging directory via setup.py
+    # Install this package to the staging directory via setup.py
     elsif package_type == PY_PACKAGE_TYPE[:setup_py]
       # Some setup.py's assume $PWD == current directory of setup.py, so let's
       # chdir first.
@@ -590,7 +589,7 @@ class FPM::Package::Python < FPM::Package
         safesystem(attributes[:python_bin], "setup.py", "install", *flags)
       end
 
-      # Install this package to the staging directory via wheel (possibly converted from pyproject.toml)
+    # Install this package to the staging directory via wheel (possibly converted from pyproject.toml)
     elsif package_type == PY_PACKAGE_TYPE[:pyproject_toml] or package_type == PY_PACKAGE_TYPE[:wheel]
       # Some setup's assume $PWD == current directory of pyproject.toml, so let's
       # chdir first.
@@ -630,8 +629,8 @@ class FPM::Package::Python < FPM::Package
         safesystem(*attributes[:python_pip], "install", *flags, package_data)
       end
     else
-      logger.error("NYI", :path => path_to_package)
-      raise "Unable to create python package due to wrong hands curvature (NYI)"
+      logger.error("NYI", :path => staging_path)
+      raise "Unable to create python package due to wrong hands curvature (please report this bug to developers)"
     end
   end # def install_to_staging
 
