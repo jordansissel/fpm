@@ -126,29 +126,31 @@ class FPM::Package::Python < FPM::Package
     path_to_package = download_if_necessary(package, version)
     package_type = PY_PACKAGE_TYPE[:unspecified]
 
-    if File.file?(path_to_package)
-      package_type = guess_py_pack_type(path_to_package)
-    elsif File.directory?(path_to_package)
-      files = ::Dir.glob(File.join(path_to_package, "*.whl"))
-      if files.length == 1
-        # 			package_type = guess_py_pack_type(File.join(path_to_package, files.first))
-        package_type = PY_PACKAGE_TYPE[:wheel]
-        path_to_package = files.first
-      elsif files.length > 1
-        raise "Must be only one *.whl file! The directory is #{path_to_package}"
-      else
-        package_type = guess_py_pack_type(File.join(path_to_package, "pyproject.toml"))
-        if package_type != PY_PACKAGE_TYPE[:unspecified]
-          path_to_package = File.join(path_to_package, "pyproject.toml")
-        else
-          package_type = guess_py_pack_type(File.join(path_to_package, "setup.py"))
-          if package_type != PY_PACKAGE_TYPE[:unspecified]
-            path_to_package = File.join(path_to_package, "setup.py")
-          else
-            raise "Unable to guess package type in #{path_to_package}"
-          end
-        end
-      end
+	if File.file?(path_to_package)
+		package_type = guess_py_pack_type(path_to_package)
+	elsif File.directory?(path_to_package)
+		files = ::Dir.glob(File.join(path_to_package, "*.whl"))
+		if files.length == 1
+# 			package_type = guess_py_pack_type(File.join(path_to_package, files.first))
+ 			package_type = PY_PACKAGE_TYPE[:wheel]
+			path_to_package = files.first
+		elsif files.length > 1
+		  raise "Must be only one *.whl file! The directory is #{path_to_package}"
+		else
+
+			package_type = guess_py_pack_type(File.join(path_to_package, "pyproject.toml"))
+			if package_type != PY_PACKAGE_TYPE[:unspecified]
+				path_to_package = File.join(path_to_package, "pyproject.toml")
+			else
+				package_type = guess_py_pack_type(File.join(path_to_package, "setup.py"))
+				if package_type != PY_PACKAGE_TYPE[:unspecified]
+					path_to_package = File.join(path_to_package, "setup.py")
+				else
+					raise "Unable to guess package type in #{path_to_package}"
+				end
+			end
+		end
+
     end
 
     if package_type == PY_PACKAGE_TYPE[:unspecified]
@@ -219,12 +221,15 @@ class FPM::Package::Python < FPM::Package
       setup_cmd = [
         *attributes[:python_pip],
         "download",
+        "--no-input",
+        "--progress-bar", "off",
+        "--exists-action", "w",
         "--no-clean",
         "--no-deps",
         "--disable-pip-version-check",
         "--no-python-version-warning",
         "--prefer-binary",
-        #        "--no-binary", ":all:",
+#        "--no-binary", ":all:",
         "--dest", build_path,
         "--index-url", attributes[:python_pypi],
       ]
@@ -248,15 +253,16 @@ class FPM::Package::Python < FPM::Package
       # a single file and unpack it.  I don't know if it will /always/ be a .tar.gz though.
       files = ::Dir.glob(File.join(build_path, "*.whl"))
       if files.length == 1
-        FileUtils.cp(files.first, target)
+		  FileUtils.cp(files.first, target)
       else
-        files = ::Dir.glob(File.join(build_path, "*.tar.gz"))
-        if files.length != 1
-          raise "Unexpected directory layout after `pip download ...`. This might be an fpm bug? The directory is #{build_path}"
-        end
+		  files = ::Dir.glob(File.join(build_path, "*.tar.gz"))
+		  if files.length != 1
+			raise "Unexpected directory layout after `pip download ...`. This might be an fpm bug? The directory is #{build_path}"
+		  end
 
-        safesystem("tar", "-zxf", files.first, "-C", target)
+	      safesystem("tar", "-zxf", files.first, "-C", target)
       end
+
     else
       # no pip, use easy_install
       logger.debug("no pip, defaulting to easy_install", :easy_install => attributes[:python_easyinstall])
@@ -269,7 +275,7 @@ class FPM::Package::Python < FPM::Package
     #  @tmpdir/somepackage/setup.py
     dirs = ::Dir.glob(File.join(target, "*"))
     if dirs.length != 1
-      raise "Unexpected directory layout after easy_install. Maybe file a bug? The directory is #{build_path}"
+      raise "Unexpected directory layout after pip download/easy_install. Maybe file a bug? The directory is #{build_path}"
     end
     return dirs.first
   end # def download
@@ -390,20 +396,21 @@ class FPM::Package::Python < FPM::Package
 
         success = safesystem(get_metadata_cmd)
 
-        if !success
-          logger.error("setup.py get_metadata failed", :command => get_metadata_cmd,
-                                                       :exitcode => $?.exitstatus)
-          raise "An unexpected error occurred while processing the setup.py file"
-        end
-        File.read(tmp)
-      end
-    elsif package_type == PY_PACKAGE_TYPE[:pyproject_toml] or package_type == PY_PACKAGE_TYPE[:wheel]
-      begin
-        safesystem("#{attributes[:python_bin]} -c 'import json'")
-      rescue FPM::Util::ProcessFailed => e
-        logger.error("Your python environment is missing json support. I cannot continue without this.", :python => attributes[:python_bin], :error => e)
-        raise FPM::Util::ProcessFailed, "Python (#{attributes[:python_bin]}) is missing json module."
-      end
+		  if !success
+			logger.error("setup.py get_metadata failed", :command => get_metadata_cmd,
+						  :exitcode => $?.exitstatus)
+			raise "An unexpected error occurred while processing the setup.py file"
+		  end
+		  File.read(tmp)
+		end
+
+	elsif package_type == PY_PACKAGE_TYPE[:pyproject_toml] or package_type == PY_PACKAGE_TYPE[:wheel]
+		begin
+		  safesystem("#{attributes[:python_bin]} -c 'import json'")
+		rescue FPM::Util::ProcessFailed => e
+		  logger.error("Your python environment is missing json support. I cannot continue without this.", :python => attributes[:python_bin], :error => e)
+		  raise FPM::Util::ProcessFailed, "Python (#{attributes[:python_bin]}) is missing json module."
+		end
 
       begin
         safesystem("#{attributes[:python_bin]} -c 'from pkginfo import Wheel'")
@@ -437,14 +444,15 @@ class FPM::Package::Python < FPM::Package
 
         success = safesystem(get_metadata_cmd)
 
-        if !success
-          logger.error("pyfpm_wheel get_metadata failed", :command => get_metadata_cmd,
-                                                          :exitcode => $?.exitstatus)
-          raise "An unexpected error occurred while processing the wheel file"
-        end
-        File.read(tmp)
-      end
-    else
+		  if !success
+			logger.error("pyfpm_wheel get_metadata failed", :command => get_metadata_cmd,
+						 :exitcode => $?.exitstatus)
+			raise "An unexpected error occurred while processing the wheel file"
+		  end
+		  File.read(tmp)
+		end
+
+	else
       logger.error("NYI", :path => setup_dir)
       raise "Unable to create python package due to wrong hands curvature (NYI)"
     end
@@ -587,12 +595,12 @@ class FPM::Package::Python < FPM::Package
         safesystem(attributes[:python_bin], "setup.py", "install", *flags)
       end
 
-      # Install this package to the staging directory via wheel (possibly converted from pyproject.toml)
-    elsif package_type == PY_PACKAGE_TYPE[:pyproject_toml] or package_type == PY_PACKAGE_TYPE[:wheel]
-      # Some setup's assume $PWD == current directory of pyproject.toml, so let's
-      # chdir first.
-      ::Dir.chdir(project_dir) do
-        flags = ["--root", staging_path]
+    # Install this package to the staging directory via wheel (possibly converted from pyproject.toml)
+	elsif package_type == PY_PACKAGE_TYPE[:pyproject_toml]  or package_type == PY_PACKAGE_TYPE[:wheel]
+		# Some setup's assume $PWD == current directory of pyproject.toml, so let's
+		# chdir first.
+		::Dir.chdir(project_dir) do
+		  flags = [ "--root", staging_path ]
 
         # if !attributes[:python_install_lib].nil?
         #   flags += [ "--prefix", attributes[:python_install_lib] ]
