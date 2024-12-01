@@ -349,7 +349,6 @@ class FPM::Package::Python < FPM::Package
 
     # chdir to the directory holding setup.py because some python setup.py's assume that you are
     # in the same directory.
-    logger.error(package_data)
     setup_dir = File.dirname(package_data)
 
     if package_type == PY_PACKAGE_TYPE[:unspecified]
