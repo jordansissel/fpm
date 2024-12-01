@@ -66,11 +66,16 @@ class get_metadata_wheel:
             "license": fpm_wheel.license,
         }
 
-        data["author"] = "Unknown <unknown@unknown.unknown>"
         if fpm_wheel.author:
             data["author"] = "%s" % fpm_wheel.author
+        else:
+            data["author"] = "Unknown"
+
         if fpm_wheel.author_email:
             data["author"] = data["author"] + " <%s>" % fpm_wheel.author_email
+        else:
+            data["author"] = data["author"] + " <unknown@unknown.unknown>"
+
 
         if fpm_wheel.home_page:
             data["url"] =  fpm_wheel.home_page
@@ -91,7 +96,6 @@ class get_metadata_wheel:
                     final_deps.extend(self.process_dep(dep))
         except Exception as e:
             raise
-
 
         data["dependencies"] = final_deps
 
