@@ -473,6 +473,7 @@ class FPM::Package::RPM < FPM::Package
     args += ["--define", "dist .#{attributes[:rpm_dist]}"] if attributes[:rpm_dist]
 
     args += [
+      "--buildroot", "#{build_path}/BUILD",
       "--define", "buildroot #{build_path}/BUILD",
       "--define", "_topdir #{build_path}",
       "--define", "_sourcedir #{build_path}",
