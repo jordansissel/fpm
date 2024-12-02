@@ -755,7 +755,7 @@ class FPM::Package::Deb < FPM::Package
       # Also fix the Provides field 'perl(ModuleName) = version' to be 'perl-modulename (= version)'
       self.provides = self.provides.collect(&perldepfix).collect(&method(:fix_provides))
 
-    end # if origin == FPM::Packagin::CPAN
+    end # if origin == FPM::Package::CPAN
 
     if origin == FPM::Package::Deb
       changelog_path = staging_path("usr/share/doc/#{name}/changelog.Debian.gz")
@@ -1081,7 +1081,7 @@ class FPM::Package::Deb < FPM::Package
             FileUtils.mkdir_p(File.dirname(dcl))
             FileUtils.cp_r path, dcl
           else
-            logger.debug("Config file aready exists in staging area.")
+            logger.debug("Config file already exists in staging area.")
           end
         end
       end
