@@ -304,6 +304,7 @@ class FPM::Package::Python < FPM::Package
       # end
 
       flags += ["--wheel-dir", wheel_dir]
+      flags += ["--prefer-binary"]
       flags += ["--no-input"]
       flags += ["--disable-pip-version-check"]
       flags += ["--no-python-version-warning"]
@@ -311,7 +312,7 @@ class FPM::Package::Python < FPM::Package
       opt = "w"  # w == wipe
       flags += ["--exists-action", opt]
       # @todo FIXME!!! is it really necessary?
-      flags += ["--no-cache-dir"]
+      # flags += ["--no-cache-dir"]
       opt = "off"
       flags += ["--progress-bar", opt]
       flags += ["--no-deps"]
