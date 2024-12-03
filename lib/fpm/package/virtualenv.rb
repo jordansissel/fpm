@@ -112,9 +112,9 @@ class FPM::Package::Virtualenv < FPM::Package
         virtualenv_args << virtualenv_build_folder
     end
 
-    if self.attributes[:python?]
-      logger.info("Creating virtualenv with python executable #{self.attributes[:python]}")
-      virtualenv_args.concat(["--python", self.attributes[:python]])
+    if self.attributes[:virtualenv_python]
+      logger.info("Creating virtualenv with python executable #{self.attributes[:virtualenv_python]}")
+      virtualenv_args.concat(["--python", self.attributes[:virtualenv_python]])
     end
 
     safesystem(*virtualenv_args)
