@@ -1,6 +1,18 @@
 Release Notes and Change Log
 ============================
 
+Unreleased (...)
+^^^^^^^^^^^^^^^^
+
+This is a stub of changes since the last release.
+* https://github.com/jordansissel/fpm/pull/2068 (`#2068`_; Matt Ezell, `#2074`_; hussainbani)
+* https://github.com/jordansissel/fpm/pull/2009 (`#2009`_; Ștefan Rusu)
+* https://github.com/jordansissel/fpm/pull/2082 (`#2082`_; Wayne Heaney)
+* https://github.com/jordansissel/fpm/pull/2064 (`#2064`_; David Newhall II)
+* https://github.com/jordansissel/fpm/pull/2067 (`#2067`_; Jordan Sissel)
+* https://github.com/jordansissel/fpm/pull/2065 (`#2065`_; phillipp)
+
+
 1.15.1 (January 31, 2023)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 * Ruby 3.2.0 now supported. This fixes error 'undefined method exists? for File' '(`#1981`_, `#1988`_; Nicholas Hubbard, romulasry)
