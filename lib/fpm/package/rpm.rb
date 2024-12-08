@@ -275,6 +275,24 @@ class FPM::Package::RPM < FPM::Package
     return @iteration ? @iteration : 1
   end # def iteration
 
+  # Generate a generic changelog or return an existing definition
+  def changelog
+    if attributes[:rpm_changelog]
+      return attributes[:rpm_changelog]
+    end
+
+    reldate = if attributes[:source_date_epoch].nil?
+                Time.now()
+              else
+                Time.at(attributes[:source_date_epoch].to_i)
+              end
+    changed = reldate.strftime("%a %b %_e %Y")
+    changev = "#{version}-#{iteration}"
+    changev += "%{?dist}" if attributes[:rpm_dist]
+
+    "* #{changed}  #{maintainer} - #{changev}\n- Package created with FPM\n"
+  end
+
   # See FPM::Package#converted_from
   def converted_from(origin)
     if origin == FPM::Package::Gem
@@ -473,6 +491,7 @@ class FPM::Package::RPM < FPM::Package
     args += ["--define", "dist .#{attributes[:rpm_dist]}"] if attributes[:rpm_dist]
 
     args += [
+      "--buildroot", "#{build_path}/BUILD",
       "--define", "buildroot #{build_path}/BUILD",
       "--define", "_topdir #{build_path}",
       "--define", "_sourcedir #{build_path}",
