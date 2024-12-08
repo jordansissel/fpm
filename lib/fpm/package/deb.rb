@@ -210,6 +210,11 @@ class FPM::Package::Deb < FPM::Package
     next File.expand_path(file)
   end
 
+  option "--systemd-path", "FILEPATH", "Relative path to the systemd service directory",
+    :default => "lib/systemd/system" do |file|
+    next file.gsub(/^\/*/, '')
+  end
+
   option "--systemd-enable", :flag , "Enable service on install or upgrade", :default => false
 
   option "--systemd-auto-start", :flag , "Start service after install or upgrade", :default => false
@@ -534,7 +539,7 @@ class FPM::Package::Deb < FPM::Package
                               raise FPM::InvalidPackageConfiguration, "Invalid systemd unit file extension: #{extname}. Expected .service or .timer, or no extension."
                             end
 
-      dest_systemd = staging_path("lib/systemd/system/#{name_with_extension}")
+      dest_systemd = staging_path(File.join(attributes[:deb_systemd_path], "#{name_with_extension}"))
       mkdir_p(File.dirname(dest_systemd))
       FileUtils.cp(systemd, dest_systemd)
       File.chmod(0644, dest_systemd)
@@ -646,7 +651,8 @@ class FPM::Package::Deb < FPM::Package
       extname = File.extname(systemd)
       name_with_extension = extname.empty? ? "#{name}.service" : name
 
-      dest_systemd = staging_path("lib/systemd/system/#{name_with_extension}")
+      dest_systemd = staging_path(File.join(attributes[:deb_systemd_path], "#{name_with_extension}"))
+
       mkdir_p(File.dirname(dest_systemd))
       FileUtils.cp(systemd, dest_systemd)
       File.chmod(0644, dest_systemd)
