@@ -27,7 +27,7 @@ class FPM::Package::Deb < FPM::Package
   } unless defined?(SCRIPT_MAP)
 
   # The list of supported compression types. Default is gz (gzip)
-  COMPRESSION_TYPES = [ "gz", "bzip2", "xz", "none" ]
+  COMPRESSION_TYPES = [ "gz", "bzip2", "xz", "zst", "none" ]
 
   # https://www.debian.org/doc/debian-policy/ch-relationships.html#syntax-of-relationship-fields
   # Example value with version relationship: libc6 (>= 2.2.1)
@@ -332,6 +332,9 @@ class FPM::Package::Deb < FPM::Package
       when "xz"
         controltar = "control.tar.xz"
         compression = "-J"
+      when "zst"
+        controltar = "control.tar.zst"
+        compression = "-I zstd"
       when 'tar'
         controltar = "control.tar"
         compression = ""
@@ -344,7 +347,7 @@ class FPM::Package::Deb < FPM::Package
 
     build_path("control").tap do |path|
       FileUtils.mkdir(path) if !File.directory?(path)
-      # unpack the control.tar.{,gz,bz2,xz} from the deb package into staging_path
+      # unpack the control.tar.{,gz,bz2,xz,zst} from the deb package into staging_path
       # Unpack the control tarball
       safesystem(ar_cmd[0] + " p #{package} #{controltar} | tar #{compression} -xf - -C #{path}")
 
@@ -454,6 +457,9 @@ class FPM::Package::Deb < FPM::Package
       when "xz"
         datatar = "data.tar.xz"
         compression = "-J"
+      when "zst"
+        datatar = "data.tar.zst"
+        compression = "-I zstd"
       when 'tar'
         datatar = "data.tar"
         compression = ""
@@ -662,6 +668,10 @@ class FPM::Package::Deb < FPM::Package
         datatar = build_path("data.tar.xz")
         controltar = build_path("control.tar.xz")
         compression_flags = ["-J"]
+      when "zst"
+        datatar = build_path("data.tar.zst")
+        controltar = build_path("control.tar.zst")
+        compression_flags = ["-I zstd"]
       when "none"
         datatar = build_path("data.tar")
         controltar = build_path("control.tar")
@@ -733,7 +743,7 @@ class FPM::Package::Deb < FPM::Package
         else
           # Also replace '::' in the perl module name with '-'
           modulename = m["name"].gsub("::", "-")
-         
+
           # Fix any upper-casing or other naming concerns Debian has about packages
           name = "#{attributes[:cpan_package_name_prefix]}-#{modulename}"
 
@@ -949,6 +959,9 @@ class FPM::Package::Deb < FPM::Package
       when "xz"
         controltar = "control.tar.xz"
         compression_flags = ["-J"]
+      when "zst"
+        controltar = "control.tar.zst"
+        compression_flags = ["-I zstd"]
       when "none"
         controltar = "control.tar"
         compression_flags = []
