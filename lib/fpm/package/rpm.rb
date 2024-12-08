@@ -295,7 +295,19 @@ class FPM::Package::RPM < FPM::Package
 
   # See FPM::Package#converted_from
   def converted_from(origin)
-    if origin == FPM::Package::Gem
+    if origin == FPM::Package::CPAN
+      fixed_deps = []
+      self.dependencies.collect do |dep|
+        # RPM package "perl" is a metapackage which install all the Perl bits and core modules, then gcc...
+        # this must be replaced by perl-interpreter
+        if name=/^perl([\s<>=].*)$/.match(dep)
+          fixed_deps.push("perl-interpreter#{name[1]}")
+        else
+          fixed_deps.push(dep)
+        end
+      end
+      self.dependencies = fixed_deps
+    elsif origin == FPM::Package::Gem
       fixed_deps = []
       self.dependencies.collect do |dep|
         # Gem dependency operator "~>" is not compatible with rpm. Translate any found.
