@@ -334,7 +334,7 @@ class FPM::Package::Deb < FPM::Package
         compression = "-J"
       when "zst"
         controltar = "control.tar.zst"
-        compression = "-I zstd"
+        compression = "--use-compress-program 'zstd -d'"
       when 'tar'
         controltar = "control.tar"
         compression = ""
@@ -459,7 +459,7 @@ class FPM::Package::Deb < FPM::Package
         compression = "-J"
       when "zst"
         datatar = "data.tar.zst"
-        compression = "-I zstd"
+        compression = "--use-compress-program 'zstd -d'"
       when 'tar'
         datatar = "data.tar"
         compression = ""
@@ -671,7 +671,7 @@ class FPM::Package::Deb < FPM::Package
       when "zst"
         datatar = build_path("data.tar.zst")
         controltar = build_path("control.tar.zst")
-        compression_flags = ["-I zstd"]
+        compression_flags = ["--use-compress-program", "zstd"]
       when "none"
         datatar = build_path("data.tar")
         controltar = build_path("control.tar")
@@ -961,7 +961,7 @@ class FPM::Package::Deb < FPM::Package
         compression_flags = ["-J"]
       when "zst"
         controltar = "control.tar.zst"
-        compression_flags = ["-I zstd"]
+        compression_flags = ["--use-compress-program", "zstd"]
       when "none"
         controltar = "control.tar"
         compression_flags = []
