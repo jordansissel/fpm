@@ -79,7 +79,7 @@ class FPM::Package::Python < FPM::Package
   option "--setup-py-arguments", "setup_py_argument",
     "Arbitrary argument(s) to be passed to setup.py",
     :multivalued => true, :attribute_name => :python_setup_py_arguments,
-    :default => [] 
+    :default => []
   option "--internal-pip", :flag,
     "Use the pip module within python to install modules - aka 'python -m pip'. This is the recommended usage since Python 3.4 (2014) instead of invoking the 'pip' script",
     :attribute_name => :python_internal_pip,
@@ -171,13 +171,19 @@ class FPM::Package::Python < FPM::Package
       # behind a directory with the Python package extracted and ready to be used.
       # For example, `pip download ... Django` puts `Django-4.0.4.tar.tz` into the build_path directory.
       # If we expect `pip` to leave an unknown-named file in the `build_path` directory, let's check for
-      # a single file and unpack it.  I don't know if it will /always/ be a .tar.gz though.
-      files = ::Dir.glob(File.join(build_path, "*.tar.gz"))
+      # a single file and unpack it.
+      files = ::Dir.glob(File.join(build_path, "*.{tar.gz,zip}"))
       if files.length != 1
         raise "Unexpected directory layout after `pip download ...`. This might be an fpm bug? The directory is #{build_path}"
       end
 
-      safesystem("tar", "-zxf", files[0], "-C", target)
+      if files[0].end_with?("tar.gz")
+        safesystem("tar", "-zxf", files[0], "-C", target)
+      elsif files[0].end_with?("zip")
+        safesystem("unzip", files[0], "-d", target)
+      else
+        raise "Unexpected file format after `pip download ...`. This might be an fpm bug? The file is #{files[0]}"
+      end
     else
       # no pip, use easy_install
       logger.debug("no pip, defaulting to easy_install", :easy_install => attributes[:python_easyinstall])
@@ -230,7 +236,7 @@ class FPM::Package::Python < FPM::Package
 
     output = ::Dir.chdir(setup_dir) do
       tmp = build_path("metadata.json")
-      setup_cmd = "env PYTHONPATH=#{pylib}:$PYTHONPATH #{attributes[:python_bin]} " \
+      setup_cmd = "env PYTHONPATH=#{pylib.shellescape}:$PYTHONPATH #{attributes[:python_bin]} " \
         "setup.py --command-packages=pyfpm get_metadata --output=#{tmp}"
 
       if attributes[:python_obey_requirements_txt?]
