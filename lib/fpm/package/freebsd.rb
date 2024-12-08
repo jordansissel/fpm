@@ -16,6 +16,10 @@ class FPM::Package::FreeBSD < FPM::Package
          "Sets the FreeBSD 'origin' pkg field",
          :default => "fpm/<name>"
 
+  option "--osversion", "VERSION",
+         "Sets the FreeBSD 'version' pkg field, ie 12 or 13, use '*' for all.",
+         :default => "13"
+
   def output(output_path)
     output_check(output_path)
 
@@ -90,28 +94,36 @@ class FPM::Package::FreeBSD < FPM::Package
   end # def output
 
   # Handle architecture naming conversion:
-  # <osname>:<osversion>:<arch>:<wordsize>[.other]
+  # <osname>:<osversion>:<arch>
   def architecture
-    osname    = %x{uname -s}.chomp
-    osversion = %x{uname -r}.chomp.split('.').first
+    osname    = 'FreeBSD'
 
-    # Essentially because no testing on other platforms
-    arch = 'x86'
-
-    wordsize = case @architecture
+    arch = case @architecture
     when nil, 'native'
       %x{getconf LONG_BIT}.chomp # 'native' is current arch
     when 'arm64'
-      '64'
+      'arm64'
+    when 'aarch64'
+      'arm64'
     when 'amd64'
-      '64'
+      'amd64'
+    when 'x86_64'
+      'amd64'
     when 'i386'
-      '32'
+      'i386'
+    when 'i686'
+      'i386'
+    when 'any'
+      '*'
+    when 'all'
+      '*'
+    when 'noarch'
+      '*'
     else
       %x{getconf LONG_BIT}.chomp # default to native, the current arch
     end
 
-    return [osname, osversion, arch, wordsize].join(':')
+    return [osname, attributes[:freebsd_osversion], arch].join(':')
   end
 
   def add_path(tar, tar_path, path)
