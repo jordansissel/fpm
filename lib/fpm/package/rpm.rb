@@ -275,9 +275,39 @@ class FPM::Package::RPM < FPM::Package
     return @iteration ? @iteration : 1
   end # def iteration
 
+  # Generate a generic changelog or return an existing definition
+  def changelog
+    if attributes[:rpm_changelog]
+      return attributes[:rpm_changelog]
+    end
+
+    reldate = if attributes[:source_date_epoch].nil?
+                Time.now()
+              else
+                Time.at(attributes[:source_date_epoch].to_i)
+              end
+    changed = reldate.strftime("%a %b %_e %Y")
+    changev = "#{version}-#{iteration}"
+    changev += "%{?dist}" if attributes[:rpm_dist]
+
+    "* #{changed}  #{maintainer} - #{changev}\n- Package created with FPM\n"
+  end
+
   # See FPM::Package#converted_from
   def converted_from(origin)
-    if origin == FPM::Package::Gem
+    if origin == FPM::Package::CPAN
+      fixed_deps = []
+      self.dependencies.collect do |dep|
+        # RPM package "perl" is a metapackage which install all the Perl bits and core modules, then gcc...
+        # this must be replaced by perl-interpreter
+        if name=/^perl([\s<>=].*)$/.match(dep)
+          fixed_deps.push("perl-interpreter#{name[1]}")
+        else
+          fixed_deps.push(dep)
+        end
+      end
+      self.dependencies = fixed_deps
+    elsif origin == FPM::Package::Gem
       fixed_deps = []
       self.dependencies.collect do |dep|
         # Gem dependency operator "~>" is not compatible with rpm. Translate any found.
