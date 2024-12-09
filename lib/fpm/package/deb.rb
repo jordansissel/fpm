@@ -355,7 +355,7 @@ class FPM::Package::Deb < FPM::Package
         compression = "-J"
       when "zst"
         controltar = "control.tar.zst"
-        compression = "-I zstd"
+        compression = "--use-compress-program 'zstd -d'"
       when 'tar'
         controltar = "control.tar"
         compression = ""
@@ -480,7 +480,7 @@ class FPM::Package::Deb < FPM::Package
         compression = "-J"
       when "zst"
         datatar = "data.tar.zst"
-        compression = "-I zstd"
+        compression = "--use-compress-program 'zstd -d'"
       when 'tar'
         datatar = "data.tar"
         compression = ""
@@ -698,7 +698,7 @@ class FPM::Package::Deb < FPM::Package
       when "zst"
         datatar = build_path("data.tar.zst")
         controltar = build_path("control.tar.zst")
-        compression_flags = ["-I zstd"]
+        compression_flags = ["--use-compress-program", "zstd"]
         compressor_options = {"ZSTD_CLEVEL" => "-#{self.attributes[:deb_compression_level] || 3}"}
       when "none"
         datatar = build_path("data.tar")
@@ -1018,7 +1018,7 @@ class FPM::Package::Deb < FPM::Package
         compressor_options = {"XZ_OPT" => "-#{self.attributes[:deb_compression_level] || 3}"}
       when "zst"
         controltar = "control.tar.zst"
-        compression_flags = ["-I zstd"]
+        compression_flags = ["--use-compress-program", "zstd"]
         compressor_options = {"ZSTD_CLEVEL" => "-#{self.attributes[:deb_compression_level] || 3}"}
       when "none"
         controltar = "control.tar"
