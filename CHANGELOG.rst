@@ -1,16 +1,22 @@
 Release Notes and Change Log
 ============================
 
-Unreleased (...)
-^^^^^^^^^^^^^^^^
+1.16.0 (December 8, 2024)
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This is a stub of changes since the last release.
-* https://github.com/jordansissel/fpm/pull/2068 (`#2068`_; Matt Ezell, `#2074`_; hussainbani)
-* https://github.com/jordansissel/fpm/pull/2009 (`#2009`_; Ștefan Rusu)
-* https://github.com/jordansissel/fpm/pull/2082 (`#2082`_; Wayne Heaney)
-* https://github.com/jordansissel/fpm/pull/2064 (`#2064`_; David Newhall II)
-* https://github.com/jordansissel/fpm/pull/2067 (`#2067`_; Jordan Sissel)
-* https://github.com/jordansissel/fpm/pull/2065 (`#2065`_; phillipp)
+* deb: Add support for zstd compression (`#2009`_, `#2084`_; Ștefan Rusu)
+* deb: Add compression level setting, ``--deb-compression-level`` (`#2036`_; Hugo Beauzée-Luyssen)
+* rpm: Generate an empty rpm changelog if none is given. This should help cases where ``rpmlint`` would complain about missing a changelog entry in the rpm. (`#2041`_; Gordon Bleux)
+* deb: When converting from an rpm, remove package information that is not valid on Debian systems. (`#2053`_, `#1627`; Jordan Stopford, Jamesits)
+* python: Fix bug when PYTHONPATH has spaces in it (`#2062`_; Kristof Willaert)
+* deb: You can now choose a different systemd directory with ``--deb-systemd-path`` (`#2063`_; Reinier Schoof)
+* freebsd: OS version can now be specified with ``--freebsd-osversion``: (`#2064`_; David Newhall II)
+* freebsd: Improve the 'architecture' value used by fpm to generate freebsd packages (`#2064`_, `#1880`_; David Newhall II, Matthew R Kasun)
+* deb: Timer units can be given to ``--deb-systemd`` now (`#2065`_, `#1978`_; phillipp, Robert Schneider)
+* rpm: When converting cpan packages, use newer ``perl-interpreter`` dependency name. To use the old dependency name ``perl``, use the flag ``--rpm-old-perl-dependency-name`` (`#2066`_, `#2085`_; Kevin Duret, Nicholas Hubbard, William N. Braswell, Jr., Jordan Sissel))
+* Some errors now correctly print just an error message instead of dumping a ruby stack trace (`#2067`_; Jordan Sissel)
+* python: Support modules which download as zip files (`#2068`_, `#2074`_, `#2072`_; Matt Ezell, hussainbani, hbani)
+* rpm: Fix rpm build failures on Fedora 41 (`#2082`_, `#2076`_; Wayne Heaney, Antheas Kapenekakis, Romain Geissler)
 
 
 1.15.1 (January 31, 2023)
