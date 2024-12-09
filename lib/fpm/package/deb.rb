@@ -280,6 +280,9 @@ class FPM::Package::Deb < FPM::Package
     when "noarch"
       # Debian calls noarch "all"
       @architecture = "all"
+    when "ppc64le"
+      # Debian calls ppc64le "ppc64el"
+      @architecture = "ppc64el"
     end
     return @architecture
   end # def architecture
@@ -751,9 +754,17 @@ class FPM::Package::Deb < FPM::Package
     self.dependencies = self.dependencies.collect do |dep|
       fix_dependency(dep)
     end.flatten
+
+    # If an invalid depends field was found i.e. /bin.sh then fix_depends will blank it
+    # Make sure we remove this blank here
+    self.dependencies = self.dependencies.reject { |p| p.empty? }
+
     self.provides = self.provides.collect do |provides|
       fix_provides(provides)
     end.flatten
+    # If an invalid provides field was found i.e. mypackage(arch) then fix_provides will blank it
+    # Make sure we remove this blank here
+    self.provides = self.provides.reject { |p| p.empty? }
 
     if origin == FPM::Package::CPAN
       # The fpm cpan code presents dependencies and provides fields as perl(ModuleName)
@@ -854,6 +865,18 @@ class FPM::Package::Deb < FPM::Package
       end
     end
 
+    if dep.start_with?("/")
+      logger.warn("Blanking 'dependency' field '#{dep}' because it's invalid")
+      dep = ""
+      return dep
+    end
+
+    if dep.include?("rpmlib")
+      logger.warn("Blanking 'dependency' field '#{dep}' because it's invalid")
+      dep = ""
+      return dep
+    end
+
     name_re = /^[^ \(]+/
     name = dep[name_re]
     if name =~ /[A-Z]/
@@ -945,6 +968,11 @@ class FPM::Package::Deb < FPM::Package
       logger.warn("Replacing 'provides' underscores with dashes in '#{provides}' because " \
                    "debs don't like underscores")
       provides = provides.gsub("_", "-")
+    end
+
+    if provides.include?("(") and !provides.include?("(=")
+      logger.warn("Blanking 'provides' field '#{provides}' because it's invalid")
+      provides = ""
     end
 
     if m = provides.match(/^([A-Za-z0-9_-]+)\s*=\s*(\d+.*$)/)
