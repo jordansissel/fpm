@@ -185,6 +185,9 @@ class FPM::Package::RPM < FPM::Package
      end
    end
 
+  option "--old-perl-dependency-name", :flag,
+    "Use older 'perl' depdency name. Newer Red Hat (and derivatives) use a dependency named 'perl-interpreter'."
+
   private
 
   # Fix path name
@@ -278,17 +281,19 @@ class FPM::Package::RPM < FPM::Package
   # See FPM::Package#converted_from
   def converted_from(origin)
     if origin == FPM::Package::CPAN
-      fixed_deps = []
-      self.dependencies.collect do |dep|
-        # RPM package "perl" is a metapackage which install all the Perl bits and core modules, then gcc...
-        # this must be replaced by perl-interpreter
-        if name=/^perl([\s<>=].*)$/.match(dep)
-          fixed_deps.push("perl-interpreter#{name[1]}")
-        else
-          fixed_deps.push(dep)
+      if !attributes[:rpm_old_perl_dependency_name?]
+        fixed_deps = []
+        self.dependencies.collect do |dep|
+          # RPM package "perl" is a metapackage which install all the Perl bits and core modules, then gcc...
+          # this must be replaced by perl-interpreter
+          if name=/^perl([\s<>=].*)$/.match(dep)
+            fixed_deps.push("perl-interpreter#{name[1]}")
+          else
+            fixed_deps.push(dep)
+          end
         end
+        self.dependencies = fixed_deps
       end
-      self.dependencies = fixed_deps
     elsif origin == FPM::Package::Gem
       fixed_deps = []
       self.dependencies.collect do |dep|
