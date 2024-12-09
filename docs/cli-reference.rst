@@ -133,7 +133,10 @@ General Options
     - (deb only) Add FILEPATH as debian changelog
 
 * ``--deb-compression COMPRESSION``
-    - (deb only) The compression type to use, must be one of gz, bzip2, xz, none.
+    - (deb only) The compression type to use, must be one of gz, bzip2, xz, zst, none.
+
+* ``--deb-compression-level [0-9]``
+    - (deb only) Select a compression level. 0 is none or minimal. 9 is max compression.
 
 * ``--deb-config SCRIPTPATH``
     - (deb only) Add SCRIPTPATH as debconf config file.
@@ -204,6 +207,9 @@ General Options
 * ``--[no-]deb-systemd-enable``
     - (deb only) Enable service on install or upgrade
 
+* ``--deb-systemd-path FILEPATH``
+    - (deb only) Relative path to the systemd service directory
+
 * ``--[no-]deb-systemd-restart-after-upgrade``
     - (deb only) Restart service after upgrade
 
@@ -247,7 +253,7 @@ General Options
     - (freebsd only) Sets the FreeBSD 'origin' pkg field
 
 * ``--freebsd-osversion VERSION``
-    - (freebsd only) Sets the FreeBSD 'version' pkg field, ie. 12 or 13, use '*' for all.
+    - (freebsd only) Sets the FreeBSD 'version' pkg field, ie 12 or 13, use '*' for all.
 
 * ``--gem-bin-path DIRECTORY``
     - (gem only) The directory to install gem executables
@@ -537,6 +543,9 @@ General Options
 * ``--[no-]rpm-macro-expansion``
     - (rpm only) install-time macro expansion in %pre %post %preun %postun scripts (see: https://rpm.org/user_doc/scriptlet_expansion.html)
 
+* ``--[no-]rpm-old-perl-dependency-name``
+    - (rpm only) Use older 'perl' depdency name. Newer Red Hat (and derivatives) use a dependency named 'perl-interpreter'.
+
 * ``--rpm-os OS``
     - (rpm only) The operating system to target this rpm for. You want to set this to 'linux' if you are using fpm on OS X, for example
 
@@ -693,7 +702,9 @@ deb
 * ``--deb-changelog FILEPATH``
     - Add FILEPATH as debian changelog
 * ``--deb-compression COMPRESSION``
-    - The compression type to use, must be one of gz, bzip2, xz, none.
+    - The compression type to use, must be one of gz, bzip2, xz, zst, none.
+* ``--deb-compression-level [0-9]``
+    - Select a compression level. 0 is none or minimal. 9 is max compression.
 * ``--deb-config SCRIPTPATH``
     - Add SCRIPTPATH as debconf config file.
 * ``--deb-custom-control FILEPATH``
@@ -740,6 +751,8 @@ deb
     - Start service after install or upgrade
 * ``--[no-]deb-systemd-enable``
     - Enable service on install or upgrade
+* ``--deb-systemd-path FILEPATH``
+    - Relative path to the systemd service directory
 * ``--[no-]deb-systemd-restart-after-upgrade``
     - Restart service after upgrade
 * ``--deb-templates FILEPATH``
@@ -768,9 +781,8 @@ freebsd
 
 * ``--freebsd-origin ABI``
     - Sets the FreeBSD 'origin' pkg field
-
 * ``--freebsd-osversion VERSION``
-    - Sets the FreeBSD 'version' pkg field, ie. 12 or 13, use '*' for all.
+    - Sets the FreeBSD 'version' pkg field, ie 12 or 13, use '*' for all.
 
 gem
 ---
@@ -983,6 +995,8 @@ rpm
     - Add FILEPATH as an init script
 * ``--[no-]rpm-macro-expansion``
     - install-time macro expansion in %pre %post %preun %postun scripts (see: https://rpm.org/user_doc/scriptlet_expansion.html)
+* ``--[no-]rpm-old-perl-dependency-name``
+    - Use older 'perl' depdency name. Newer Red Hat (and derivatives) use a dependency named 'perl-interpreter'.
 * ``--rpm-os OS``
     - The operating system to target this rpm for. You want to set this to 'linux' if you are using fpm on OS X, for example
 * ``--rpm-posttrans FILE``

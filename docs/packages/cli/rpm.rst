@@ -36,6 +36,8 @@
     - Add FILEPATH as an init script
 * ``--[no-]rpm-macro-expansion``
     - install-time macro expansion in %pre %post %preun %postun scripts (see: https://rpm.org/user_doc/scriptlet_expansion.html)
+* ``--[no-]rpm-old-perl-dependency-name``
+    - Use older 'perl' depdency name. Newer Red Hat (and derivatives) use a dependency named 'perl-interpreter'.
 * ``--rpm-os OS``
     - The operating system to target this rpm for. You want to set this to 'linux' if you are using fpm on OS X, for example
 * ``--rpm-posttrans FILE``
