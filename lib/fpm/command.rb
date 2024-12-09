@@ -240,7 +240,7 @@ class FPM::Command < Clamp::Command
 
   option "--source-date-epoch-default", "SOURCE_DATE_EPOCH_DEFAULT",
     "If no release date otherwise specified, use this value as timestamp on generated files to reduce nondeterminism. " \
-    "Reproducible build environments such as dpkg-dev and rpmbuild set this via envionment variable SOURCE_DATE_EPOCH " \
+    "Reproducible build environments such as dpkg-dev and rpmbuild set this via environment variable SOURCE_DATE_EPOCH " \
     "variable to the integer unix timestamp to use in generated archives, " \
     "and expect tools like fpm to use it as a hint to avoid nondeterministic output. " \
     "This is a Unix timestamp, i.e. number of seconds since 1 Jan 1970 UTC. " \

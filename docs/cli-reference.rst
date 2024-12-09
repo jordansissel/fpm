@@ -331,7 +331,7 @@ General Options
     - (osxpkg only) A file path for which to 'dont-obsolete' in the built PackageInfo. Can be specified multiple times.
 
 * ``--osxpkg-identifier-prefix IDENTIFIER_PREFIX``
-    - (osxpkg only) Reverse domain prefix prepended to package identifier, ie. 'org.great.my'. If this is omitted, the identifer will be the package name.
+    - (osxpkg only) Reverse domain prefix prepended to package identifier, ie. 'org.great.my'. If this is omitted, the identifier will be the package name.
 
 * ``--osxpkg-ownership OWNERSHIP``
     - (osxpkg only) --ownership option passed to pkgbuild. Defaults to 'recommended'. See pkgbuild(1).
@@ -568,16 +568,16 @@ General Options
     - (rpm only) Adds a custom tag in the spec file as is. Example: --rpm-tag 'Requires(post): /usr/sbin/alternatives'
 
 * ``--rpm-trigger-after-install '[OPT]PACKAGE: FILEPATH'``
-    - (rpm only) Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
+    - (rpm only) Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma separated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
 
 * ``--rpm-trigger-after-target-uninstall '[OPT]PACKAGE: FILEPATH'``
-    - (rpm only) Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
+    - (rpm only) Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma separated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
 
 * ``--rpm-trigger-before-install '[OPT]PACKAGE: FILEPATH'``
-    - (rpm only) Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
+    - (rpm only) Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma separated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
 
 * ``--rpm-trigger-before-uninstall '[OPT]PACKAGE: FILEPATH'``
-    - (rpm only) Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
+    - (rpm only) Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma separated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
 
 * ``--[no-]rpm-use-file-permissions``
     - (rpm only) Use existing file permissions when defining ownership and modes.
@@ -607,7 +607,7 @@ General Options
     - (solaris only) Set the user to USER in the prototype files.
 
 * ``--source-date-epoch-default SOURCE_DATE_EPOCH_DEFAULT``
-    - If no release date otherwise specified, use this value as timestamp on generated files to reduce nondeterminism. Reproducible build environments such as dpkg-dev and rpmbuild set this via envionment variable SOURCE_DATE_EPOCH variable to the integer unix timestamp to use in generated archives, and expect tools like fpm to use it as a hint to avoid nondeterministic output. This is a Unix timestamp, i.e. number of seconds since 1 Jan 1970 UTC. See https://reproducible-builds.org/specs/source-date-epoch 
+    - If no release date otherwise specified, use this value as timestamp on generated files to reduce nondeterminism. Reproducible build environments such as dpkg-dev and rpmbuild set this via environment variable SOURCE_DATE_EPOCH variable to the integer unix timestamp to use in generated archives, and expect tools like fpm to use it as a hint to avoid nondeterministic output. This is a Unix timestamp, i.e. number of seconds since 1 Jan 1970 UTC. See https://reproducible-builds.org/specs/source-date-epoch 
 
 * ``--source-date-epoch-from-changelog``
     - Use release date from changelog as timestamp on generated files to reduce nondeterminism. Experimental; only implemented for gem so far. 
@@ -646,7 +646,7 @@ General Options
     - (virtualenv only) PyPi Server uri for retrieving packages.
 
 * ``--virtualenv-pypi-extra-url PYPI_EXTRA_URL``
-    - (virtualenv only) PyPi extra-index-url for pointing to your priviate PyPi
+    - (virtualenv only) PyPi extra-index-url for pointing to your private PyPi
 
 * ``--[no-]virtualenv-setup-install``
     - (virtualenv only) After building virtualenv run setup.py install useful when building a virtualenv for packages and including their requirements from 
@@ -834,7 +834,7 @@ osxpkg
 * ``--osxpkg-dont-obsolete DONT_OBSOLETE_PATH``
     - A file path for which to 'dont-obsolete' in the built PackageInfo. Can be specified multiple times.
 * ``--osxpkg-identifier-prefix IDENTIFIER_PREFIX``
-    - Reverse domain prefix prepended to package identifier, ie. 'org.great.my'. If this is omitted, the identifer will be the package name.
+    - Reverse domain prefix prepended to package identifier, ie. 'org.great.my'. If this is omitted, the identifier will be the package name.
 * ``--osxpkg-ownership OWNERSHIP``
     - --ownership option passed to pkgbuild. Defaults to 'recommended'. See pkgbuild(1).
 * ``--[no-]osxpkg-payload-free``
@@ -1012,13 +1012,13 @@ rpm
 * ``--rpm-tag TAG``
     - Adds a custom tag in the spec file as is. Example: --rpm-tag 'Requires(post): /usr/sbin/alternatives'
 * ``--rpm-trigger-after-install '[OPT]PACKAGE: FILEPATH'``
-    - Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
+    - Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma separated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
 * ``--rpm-trigger-after-target-uninstall '[OPT]PACKAGE: FILEPATH'``
-    - Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
+    - Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma separated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
 * ``--rpm-trigger-before-install '[OPT]PACKAGE: FILEPATH'``
-    - Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
+    - Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma separated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
 * ``--rpm-trigger-before-uninstall '[OPT]PACKAGE: FILEPATH'``
-    - Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
+    - Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma separated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
 * ``--[no-]rpm-use-file-permissions``
     - Use existing file permissions when defining ownership and modes.
 * ``--rpm-user USER``
@@ -1072,7 +1072,7 @@ virtualenv
 * ``--virtualenv-pypi PYPI_URL``
     - PyPi Server uri for retrieving packages.
 * ``--virtualenv-pypi-extra-url PYPI_EXTRA_URL``
-    - PyPi extra-index-url for pointing to your priviate PyPi
+    - PyPi extra-index-url for pointing to your private PyPi
 * ``--[no-]virtualenv-setup-install``
     - After building virtualenv run setup.py install useful when building a virtualenv for packages and including their requirements from 
 * ``--[no-]virtualenv-system-site-packages``

@@ -1152,7 +1152,7 @@ class FPM::Package::Deb < FPM::Package
             FileUtils.mkdir_p(File.dirname(dcl))
             FileUtils.cp_r path, dcl
           else
-            logger.debug("Config file aready exists in staging area.")
+            logger.debug("Config file already exists in staging area.")
           end
         end
       end
