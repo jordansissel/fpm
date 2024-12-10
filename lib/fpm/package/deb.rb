@@ -49,7 +49,7 @@ class FPM::Package::Deb < FPM::Package
     (?:-[A-Za-z0-9+~.]+)?  # debian_revision
   /x # Version field pattern
   RELATIONSHIP_FIELD_PATTERN = /^
-    (?<name>[A-z0-9][A-z0-9+~.-]+)
+    (?<name>[A-z0-9][A-z0-9+.-]+)
     (?:\s*\((?<relation>[<>=]+)\s(?<version>#{VERSION_FIELD_PATTERN})\))?
   $/x # Relationship field pattern
 
