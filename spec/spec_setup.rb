@@ -13,6 +13,11 @@ $: << File.join(File.dirname(File.dirname(__FILE__)), "lib")
 require "fpm/util"
 include FPM::Util
 
+Cabin::Channel.get.level = :error
+spec_logger = Cabin::Channel.get("rspec")
+spec_logger.subscribe(STDOUT)
+spec_logger.level = :error
+
 # Enable debug logs if requested.
 if $DEBUG or ENV["DEBUG"]
   Cabin::Channel.get.level = :debug
@@ -28,10 +33,6 @@ else
   end
 end
 
-Cabin::Channel.get.level = :error
-spec_logger = Cabin::Channel.get("rspec")
-spec_logger.subscribe(STDOUT)
-spec_logger.level = :error
 
 # Quiet the output of all system() calls
 module Kernel
