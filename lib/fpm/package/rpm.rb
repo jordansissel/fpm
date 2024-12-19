@@ -199,8 +199,8 @@ class FPM::Package::RPM < FPM::Package
   # If and only if any of the above are done, then also replace ' with \', " with \", and \ with \\\\
   #   to accommodate escape and quote processing that rpm will perform in that case (but not otherwise)
   def rpm_fix_name(name)
-    if name.match?(/[ \t*?%$\[\]]/)
-      name = name.gsub(/(\ |\t|\[|\]|\*|\?|\%|\$|'|"|\\)/, {
+    if name.match?(/[ \t*?%${}\[\]]/)
+      name = name.gsub(/(\ |\t|\[|\]|\*|\?|\%|\$|'|"|\{|\}|\\)/, {
         ' '  => '?',
         "\t" => '?',
         '%'  => '[%]',
@@ -209,6 +209,8 @@ class FPM::Package::RPM < FPM::Package
         '*'  => '[*]',
         '['  => '[\[]',
         ']'  => '[\]]',
+        '{'  => '[\{]',
+        '}'  => '[\}]',
         '"'  => '\\"',
         "'"  => "\\'",
         '\\' => '\\\\\\\\',
