@@ -308,7 +308,7 @@ class FPM::Package::Python < FPM::Package
         # convert dependencies from python-Foo to python-foo
         name = name.downcase if attributes[:python_downcase_dependencies?]
 
-        self.dependencies << "#{name} #{cmp} #{version}"
+        self.dependencies << "#{name} #{cmp} #{version}".strip
       end
     end # if attributes[:python_dependencies?]
   end # def load_package_info
