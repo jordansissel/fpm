@@ -42,7 +42,7 @@ then
     # 'apt-get purge' runs 'on remove' section, then this section.
     # There is no equivalent in RPM or ARCH.
     after_purge
-elif [ "${1}" = "upgrade" ]
+elif [ "${1}" = "upgrade" -o "${1}" = "abort-upgrade" ]
 then
     # This represents the case where the old package's postrm is called after
     # the 'preinst' script is called.
