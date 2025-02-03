@@ -263,6 +263,7 @@ module FPM::Util
 
   # Get the recommended 'tar' command for this platform.
   def tar_cmd
+    @@tar_cmd = "tar"
     return @@tar_cmd if defined? @@tar_cmd
 
     # FIXME: don't assume current directory writeable
