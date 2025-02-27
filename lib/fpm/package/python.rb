@@ -263,7 +263,7 @@ class FPM::Package::Python < FPM::Package
         elsif files.first.end_with?("zip")
           safesystem("unzip", files.first, "-d", target)
         else
-          raise "Unexpected file format after `pip download ...`. This might be an fpm bug? The file is #{files[0]}"
+          raise "Unexpected file format after `pip download ...`. This might be an fpm bug? The file is #{files.first}"
         end
       end
     else
@@ -317,15 +317,13 @@ class FPM::Package::Python < FPM::Package
       #      flags += [ "--verbose --verbose --verbose"]
       opt = "w"  # w == wipe
       flags += ["--exists-action", opt]
-      # @todo FIXME!!! is it really necessary?
-      # flags += ["--no-cache-dir"]
       opt = "off"
       flags += ["--progress-bar", opt]
       flags += ["--no-deps"]
       flags += ["--use-pep517"]
       flags += ["--check-build-dependencies"]
 
-      # @todo FIXME!!! --config-settings for PEP 517 build backend (KEY=VALUE, can be multiple)
+      # --config-settings for PEP 517 build backend (KEY=VALUE, can be multiple)
       # I have no clue where to get all that 'options' and any description of possible 'backends'
       if !attributes[:python_build_backend_arguments].nil? and !attributes[:python_build_backend_arguments].empty?
         # Add optional arguments for pep517 build backend
@@ -457,84 +455,6 @@ class FPM::Package::Python < FPM::Package
       raise "Unable to create python package due to wrong hands curvature (please report this bug to developers)"
     end
 
-        next if attributes[:python_disable_dependency].include?(name)
-
-        # convert == to =
-        if cmp == "==" or cmp == "~="
-          logger.info("Converting == dependency requirement to =", :dependency => dep )
-          cmp = "="
-        end
-
-        # dependency name prefixing is optional, if enabled, a name 'foo' will
-        # become 'python-foo' (depending on what the python_package_name_prefix
-        # is)
-        name = fix_name(name) if attributes[:python_fix_dependencies?]
-
-        # convert dependencies from python-Foo to python-foo
-        name = name.downcase if attributes[:python_downcase_dependencies?]
-
-        self.dependencies << "#{name} #{cmp} #{version}"
-      end
-    end # if attributes[:python_dependencies?]
-  end # def load_package_info_wheel
-
-
-  # Load the package information like name, version, dependencies via setup.py.
-  def load_package_info(setup_data)
-    if !attributes[:python_package_prefix].nil?
-      attributes[:python_package_name_prefix] = attributes[:python_package_prefix]
-    end
-
-    begin
-      json_test_code = [
-        "try:",
-        "  import json",
-        "except ImportError:",
-        "  import simplejson as json"
-      ].join("\n")
-      safesystem("#{attributes[:python_bin]} -c '#{json_test_code}'")
-    rescue FPM::Util::ProcessFailed => e
-      logger.error("Your python environment is missing json support (either json or simplejson python module). I cannot continue without this.", :python => attributes[:python_bin], :error => e)
-      raise FPM::Util::ProcessFailed, "Python (#{attributes[:python_bin]}) is missing simplejson or json modules."
-    end
-
-    begin
-      safesystem("#{attributes[:python_bin]} -c 'import pkg_resources'")
-    rescue FPM::Util::ProcessFailed => e
-      logger.error("Your python environment is missing a working setuptools module. I tried to find the 'pkg_resources' module but failed.", :python => attributes[:python_bin], :error => e)
-      raise FPM::Util::ProcessFailed, "Python (#{attributes[:python_bin]}) is missing pkg_resources module."
-    end
-
-    # Add ./pyfpm/ to the python library path
-    pylib = File.expand_path(File.dirname(__FILE__))
-
-    # chdir to the directory holding setup.py because some python setup.py's assume that you are
-    # in the same directory.
-    setup_dir = File.dirname(setup_data)
-
-    output = ::Dir.chdir(setup_dir) do
-      tmp = build_path("metadata.json")
-      setup_cmd = "env PYTHONPATH=#{pylib.shellescape}:$PYTHONPATH #{attributes[:python_bin]} " \
-        "setup.py --command-packages=pyfpm get_metadata --output=#{tmp}"
-
-      if attributes[:python_obey_requirements_txt?]
-        setup_cmd += " --load-requirements-txt"
-      end
-
-      # Capture the output, which will be JSON metadata describing this python
-      # package. See fpm/lib/fpm/package/pyfpm/get_metadata.py for more
-      # details.
-      logger.info("fetching package metadata", :setup_cmd => setup_cmd)
-
-      success = safesystem(setup_cmd)
-      #%x{#{setup_cmd}}
-      if !success
-        logger.error("setup.py get_metadata failed", :command => setup_cmd,
-                      :exitcode => $?.exitstatus)
-        raise "An unexpected error occurred while processing the setup.py file"
-      end
-      File.read(tmp)
-    end
     logger.debug("result from `setup.py get_metadata`", :data => output)
     metadata = JSON.parse(output)
     logger.info("object output of get_metadata", :json => metadata)
@@ -600,6 +520,7 @@ class FPM::Package::Python < FPM::Package
       end
     end # if attributes[:python_dependencies?]
   end # def load_package_info
+
 
   # Sanitize package name.
   # Some PyPI packages can be named 'python-foo', so we don't want to end up
@@ -706,7 +627,7 @@ class FPM::Package::Python < FPM::Package
         opt = "off"
         flags += ["--progress-bar", opt]
         flags += ["--no-deps"]
-        # Otherwise it'll complain on already installed distribution packages.
+        # Otherwise pip install will complain on already installed distribution packages.
         # Why? Have no idea, since --root is always specified, it supposed to be safe.
         flags += ["--ignore-installed"]
 
