@@ -156,7 +156,7 @@ class FPM::Package::RPM < FPM::Package
 
   option "--macro-expansion", :flag,
            "install-time macro expansion in %pre %post %preun %postun scripts " \
-           "(see: https://rpm.org/user_doc/scriptlet_expansion.html)", :default => false
+           "(see: https://rpm-software-management.github.io/rpm/manual/scriptlet_expansion.html)", :default => false
 
   option "--verifyscript", "FILE",
     "a script to be run on verification" do |val|
@@ -175,7 +175,7 @@ class FPM::Package::RPM < FPM::Package
      rpm_trigger = []
      option "--trigger-#{trigger_type}", "'[OPT]PACKAGE: FILEPATH'", "Adds a rpm trigger script located in FILEPATH, " \
             "having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. " \
-            "See: http://rpm.org/api/4.4.2.2/triggers.html" do |trigger|
+            "See: https://rpm-software-management.github.io/rpm/manual/triggers.html" do |trigger|
        match = trigger.match(/^(\[.*\]|)(.*): (.*)$/)
        @logger.fatal("Trigger '#{trigger_type}' definition can't be parsed ('#{trigger}')") unless match
        opt, pkg, file = match.captures
