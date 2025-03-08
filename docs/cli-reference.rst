@@ -133,7 +133,7 @@ General Options
     - (deb only) Add FILEPATH as debian changelog
 
 * ``--deb-compression COMPRESSION``
-    - (deb only) The compression type to use, must be one of gz, bzip2, xz, zst, none.
+    - (deb only) The compression type to use, must be one of gz, bzip2, pigz, xz, zst, none.
 
 * ``--deb-compression-level [0-9]``
     - (deb only) Select a compression level. 0 is none or minimal. 9 is max compression.
