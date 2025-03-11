@@ -56,6 +56,9 @@ describe FPM::Package::CPAN do
 
   it "should package File::Spec" do
     pending("Disabled on travis-ci because it always fails, and there is no way to debug it?") if is_travis
+
+    # Disabled for the reasons articulated above with respect to `Digest::MD5`.
+    subject.attributes[:cpan_test?] = false
     subject.input("File::Spec")
 
     # the File::Spec module comes from the PathTools CPAN distribution
@@ -76,9 +79,32 @@ describe FPM::Package::CPAN do
     it "should package IPC::Session" do
       pending("Disabled on travis-ci because it always fails, and there is no way to debug it?") if is_travis
 
-      # IPC::Session fails 'make test'
+      # Disabled for the reasons articulated above with respect to
+      # `Digest::MD5`.
       subject.attributes[:cpan_test?] = false
       subject.input("IPC::Session")
     end
   end
+
+  context "given a build root directory" do
+    let(:build_path) { Dir.getwd }
+
+    it "should export local::lib environment variables relative to the specified directory" do
+      subject.send(:with_local_lib_env, build_path) do
+        insist { ENV["PATH"].split(":").first } == File.join(build_path, "bin")
+        insist { ENV["PERL5LIB"].split(":").first } == File.join(build_path, "lib", "perl5")
+        insist { ENV["PERL_LOCAL_LIB_ROOT"] } == build_path
+      end
+    end
+
+    it "should not allow local::lib to touch PERL_MB_OPT and PERL_MM_OPT" do
+      stored_perl_mb_opt = ENV["PERL_MB_OPT"]
+      stored_perl_mm_opt = ENV["PERL_MM_OPT"]
+      subject.send(:with_local_lib_env, build_path) do
+        insist { ENV["PERL_MB_OPT"] } == stored_perl_mb_opt
+        insist { ENV["PERL_MM_OPT"] } == stored_perl_mm_opt
+      end
+    end
+  end
+
 end # describe FPM::Package::CPAN
