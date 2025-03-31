@@ -23,7 +23,6 @@ class FPM::Package::Deb < FPM::Package
     :after_install      => "postinst",
     :before_remove      => "prerm",
     :after_remove       => "postrm",
-    :after_purge        => "postrm",
   } unless defined?(SCRIPT_MAP)
 
   # The list of supported compression types. Default is gz (gzip)
@@ -212,6 +211,12 @@ class FPM::Package::Deb < FPM::Package
     :multivalued => true do |file|
     next File.expand_path(file)
   end
+
+  option "--trigger", "FILE", "Add FILE as trigger script. " \
+    "See https://wiki.debian.org/DpkgTriggers and " \
+    "https://stackoverflow.com/questions/15276535/dpkg-how-to-use-trigger" do |file|
+    next File.expand_path(file)
+  end # --trigger
 
   option "--upstart", "FILEPATH", "Add FILEPATH as an upstart script",
     :multivalued => true do |file|
@@ -563,23 +568,26 @@ class FPM::Package::Deb < FPM::Package
       attributes[:deb_systemd] << name_with_extension
     end
 
-    if script?(:before_upgrade) or script?(:after_upgrade) or attributes[:deb_systemd].any?
-      puts "Adding action files"
-      if script?(:before_install) or script?(:before_upgrade)
-        scripts[:before_install] = template("deb/preinst_upgrade.sh.erb").result(binding)
-      end
-      if script?(:before_remove) or not attributes[:deb_systemd].empty?
-        scripts[:before_remove] = template("deb/prerm_upgrade.sh.erb").result(binding)
-      end
-      if script?(:after_install) or script?(:after_upgrade) or attributes[:deb_systemd].any?
-        scripts[:after_install] = template("deb/postinst_upgrade.sh.erb").result(binding)
-      end
-      if script?(:after_remove)
-        scripts[:after_remove] = template("deb/postrm_upgrade.sh.erb").result(binding)
-      end
-      if script?(:after_purge)
-        scripts[:after_purge] = template("deb/postrm_upgrade.sh.erb").result(binding)
-      end
+    if not attributes[:deb_trigger].nil?
+      scripts[:deb_trigger] = File.read(attributes[:deb_trigger])
+    end
+
+    if not attributes[:deb_after_purge].nil?
+      scripts[:after_purge] = File.read(attributes[:deb_after_purge])
+    end
+
+    puts "Adding action files"
+    if script?(:before_install) or script?(:before_upgrade)
+      scripts[:before_install] = template("deb/preinst_upgrade.sh.erb").result(binding)
+    end
+    if script?(:before_remove) or attributes[:deb_systemd].any?
+      scripts[:before_remove] = template("deb/prerm_upgrade.sh.erb").result(binding)
+    end
+    if script?(:after_install) or script?(:after_upgrade) or attributes[:deb_systemd].any? or script?(:deb_trigger)
+      scripts[:after_install] = template("deb/postinst_upgrade.sh.erb").result(binding)
+    end
+    if script?(:after_remove) or script?(:after_purge)
+      scripts[:after_remove] = template("deb/postrm_upgrade.sh.erb").result(binding)
     end
 
     # There are two changelogs that may appear:
@@ -629,7 +637,9 @@ class FPM::Package::Deb < FPM::Package
 
     if File.exist?(dest_changelog) and not File.exist?(dest_upstream_changelog)
       # see https://www.debian.org/doc/debian-policy/ch-docs.html#s-changelogs
-      File.rename(dest_changelog, dest_upstream_changelog)
+      # to solve Lintian rule debian-changelog-file-missing-or-wrong-name the file
+      # is copied and not renamed
+      FileUtils.cp(dest_changelog, dest_upstream_changelog)
     end
 
     attributes.fetch(:deb_init_list, []).each do |init|

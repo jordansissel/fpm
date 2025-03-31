@@ -212,7 +212,6 @@ class FPM::Command < Clamp::Command
         "Currently only supports deb, rpm and pacman packages." do |val|
     File.expand_path(val) # Get the full path to the script
   end # --before-upgrade
-
   option "--template-scripts", :flag,
     "Allow scripts to be templated. This lets you use ERB to template your " \
     "packaging scripts (for --after-install, etc). For example, you can do " \
