@@ -77,6 +77,9 @@ then
     # package is installed later, called "Config-Files" state.
     # basically, that still looks a _lot_ like an upgrade to me.
     after_upgrade "${2}"
+elif [ "${1}" = "abort-upgrade" ]; then
+    # nothing to do for postinst if we're just aborting an upgrade
+    :
 elif echo "${1}" | grep -E -q "(abort|fail)"
 then
     echo "Failed to install before the post-installation script was run." >&2
