@@ -126,6 +126,20 @@ describe FPM::Package::Dir do
       subject.output(output)
       insist { File }.exist?(File.join(output, "foo", "a", "a=b"))
     end
+
+    it "should respect excludes (#534)" do
+      dir = File.join(tmpdir, 'a')
+      Dir.mkdir(dir)
+      File.write(File.join(dir, 'foo'), 'hello foo')
+      File.write(File.join(dir, 'bar'), 'hello bar')
+
+      subject.attributes[:excludes] = ['a/bar']
+      subject.input(File.join(tmpdir, "/a=/b"))
+      subject.output(output)
+
+      insist { File }.exist?(File.join(output, "b", "a", "foo"))
+      insist { File.exist?(File.join(output, "b", "a", "bar")) } == false
+    end
   end
 
   context "SYMLINKS." do
