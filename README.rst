@@ -83,6 +83,7 @@ Sources:
 * deb
 * node packages (npm)
 * pacman (ArchLinux) packages
+* virtualenvs
 
 Targets:
 
