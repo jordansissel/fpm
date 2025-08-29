@@ -542,6 +542,20 @@ class FPM::Package::Deb < FPM::Package
       raise FPM::InvalidPackageConfiguration, "#{name}: tar is insufficient to support source_date_epoch."
     end
 
+    systemd_file_extensions = [
+        ".service",
+        ".socket",
+        ".device",
+        ".mount",
+        ".automount",
+        ".swap",
+        ".target",
+        ".path",
+        ".timer",
+        ".slice",
+        ".scope",
+    ]
+
     attributes[:deb_systemd] = []
     attributes.fetch(:deb_systemd_list, []).each do |systemd|
       name = File.basename(systemd)
@@ -549,7 +563,7 @@ class FPM::Package::Deb < FPM::Package
 
       name_with_extension = if extname.empty?
                               "#{name}.service"
-                            elsif [".service", ".timer"].include?(extname)
+                            elsif systemd_file_extensions.include?(extname)
                               name
                             else
                               raise FPM::InvalidPackageConfiguration, "Invalid systemd unit file extension: #{extname}. Expected .service or .timer, or no extension."
