@@ -3,7 +3,6 @@ require "fpm/namespace"
 require "fpm/version"
 require "fpm/util"
 require "clamp"
-require "ostruct"
 require "fpm"
 require "tmpdir" # for Dir.tmpdir
 
