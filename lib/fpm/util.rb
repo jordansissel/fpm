@@ -340,7 +340,6 @@ module FPM::Util
       st.ftype
     end
 
-      
     case filetype
     when 'fifo'
       if File.respond_to?(:mkfifo)
@@ -366,7 +365,7 @@ module FPM::Util
       known_entry = copied_entries[[st.dev, st.ino]]
       if known_entry
         FileUtils.ln(known_entry, dst)
-        logger.debug("Found already-copied file [dev:#{st.dev}, ino:#{st.ino}]", :src => src, :dst => dst)
+        logger.debug("Copying hardlink", :src => src, :dst => dst, :link => known_entry)
       else
         FileUtils.copy_entry(src, dst, preserve, false,
                              remove_destination)
