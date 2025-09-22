@@ -332,7 +332,16 @@ module FPM::Util
 
 
   def copy_entry(src, dst, preserve=false, remove_destination=false)
-    case File.ftype(src)
+    st = File.lstat(src)
+
+    filetype = if st.ftype == "file" && st.nlink > 1
+      "hardlink"
+    else
+      st.ftype
+    end
+
+      
+    case filetype
     when 'fifo'
       if File.respond_to?(:mkfifo)
         File.mkfifo(dst)
@@ -350,18 +359,23 @@ module FPM::Util
       raise  UnsupportedSpecialFile.new("File is device which fpm doesn't know how to copy (#{File.ftype(src)}): #{src}")
     when 'directory'
       FileUtils.mkdir(dst) unless File.exist? dst
-    else
-      # if the file with the same dev and inode has been copied already -
+    when 'hardlink'
+      # Handle hardlinks
+      # if the file with the same dev and inode has been copied already.
       # hard link it's copy to `dst`, otherwise make an actual copy
-      st = File.lstat(src)
       known_entry = copied_entries[[st.dev, st.ino]]
       if known_entry
         FileUtils.ln(known_entry, dst)
+        logger.debug("Found already-copied file [dev:#{st.dev}, ino:#{st.ino}]", :src => src, :dst => dst)
       else
         FileUtils.copy_entry(src, dst, preserve, false,
                              remove_destination)
         copied_entries[[st.dev, st.ino]] = dst
       end
+    else
+      # Normal file, just copy it.
+      FileUtils.copy_entry(src, dst, preserve, false,
+                           remove_destination)
     end # else...
   end # def copy_entry
 
