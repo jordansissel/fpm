@@ -197,10 +197,6 @@ class FPM::Package::Dir < FPM::Package
     else
       # Otherwise try copying the file.
       begin
-        logger.debug("Linking", :source => source, :destination => destination)
-        File.link(source, destination)
-      rescue Errno::ENOENT, Errno::EXDEV, Errno::EPERM
-        # Hardlink attempt failed, copy it instead
         logger.debug("Copying", :source => source, :destination => destination)
         copy_entry(source, destination)
       rescue Errno::EEXIST
