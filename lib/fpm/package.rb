@@ -227,7 +227,7 @@ class FPM::Package
   def converted_from(origin)
     # nothing to do by default. Subclasses may implement this.
     # See the RPM package class for an example.
-  end # def converted
+  end # def convert_from
 
   # Add a new source to this package.
   # The exact behavior depends on the kind of package being managed.
@@ -325,7 +325,7 @@ class FPM::Package
 
   def template_dir
     File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "templates"))
-  end
+  end # def template_dir
 
   def template(path)
     template_path = File.join(template_dir, path)
@@ -438,7 +438,7 @@ class FPM::Package
 
       help = "(#{type} only) #{help}"
       @options << [flag, param, help, options, block]
-    end # def options
+    end # def option
 
     # Apply the options for this package on the clamp command
     #
@@ -511,7 +511,7 @@ class FPM::Package
         File.chmod(0755, out)
       end
     end
-  end
+  end # def write_scripts
 
   # Get the contents of the script by a given name.
   #
@@ -548,7 +548,7 @@ class FPM::Package
     else
       @provides = value
     end
-  end
+  end # def provides=
 
   # General public API
   public(:type, :initialize, :convert, :input, :output, :to_s, :cleanup, :files,
