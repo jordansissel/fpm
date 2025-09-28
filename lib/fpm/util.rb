@@ -136,7 +136,7 @@ module FPM::Util
       raise ExecutableNotFound.new(program)
     end
 
-    logger.debug("Running command", :args => args2)
+    logger.info("Running command", :args => args2)
 
     stdout_r, stdout_w = IO.pipe
     stderr_r, stderr_w = IO.pipe
