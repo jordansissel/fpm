@@ -215,3 +215,48 @@ describe FPM::Package::Python do
     end
   end
 end # describe FPM::Package::Python
+
+describe FPM::Package::Python::PythonMetadata do
+
+  context "processing simple examples" do
+    it "should" do
+      parsed = subject.from("hello: world\n")
+      insist { parsed["hello"] } == "world"
+    end
+  end
+
+  context "when parsing Django METADATA" do
+    let(:metadata) do
+      File.read(File.expand_path("../../fixtures/python/METADATA", File.dirname(__FILE__)))
+    end
+
+    expectations = {
+      "Metadata-Version" => "2.4",
+      "Name" => "Django",
+      "Version" => "5.2.6",
+      "Summary" => "A high-level Python web framework that encourages rapid development and clean, pragmatic design.",
+      "Author-email" => "Django Software Foundation <foundation@djangoproject.com>",
+      "License" => "BSD-3-Clause",
+    }
+
+    let(:parsed) { subject.from(metadata) }
+
+    expectations.each do |field, value|
+      it "the #{field} field should be #{value.inspect}" do
+        insist { parsed[field] } == value
+      end
+    end
+
+    it "should parse multivalue fields into an array value" do
+      insist { parsed["Classifier"] }.is_a?(Enumerable)
+      insist { parsed["Project-URL"] }.is_a?(Enumerable)
+      insist { parsed["Requires-Dist"] }.is_a?(Enumerable)
+
+      insist { parsed["Requires-Dist"] }.include?('asgiref>=3.8.1')
+      insist { parsed["Requires-Dist"] }.include?('sqlparse>=0.3.1')
+      insist { parsed["Requires-Dist"] }.include?('tzdata; sys_platform == "win32"')
+      insist { parsed["Requires-Dist"] }.include?('argon2-cffi>=19.1.0; extra == "argon2"')
+      insist { parsed["Requires-Dist"] }.include?('bcrypt; extra == "bcrypt"')
+    end
+  end
+end

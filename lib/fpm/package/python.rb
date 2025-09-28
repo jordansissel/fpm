@@ -85,7 +85,41 @@ class FPM::Package::Python < FPM::Package
     :attribute_name => :python_internal_pip,
     :default => true
 
-  private
+  module PythonMetadata
+    require "strscan"
+
+    # METADATA files are described in Python Packaging "Core Metadata"[1] and appear to have roughly RFC822 syntax.
+    # [1] https://packaging.python.org/en/latest/specifications/core-metadata/#core-metadata
+    def from(input)
+      s = StringScanner.new(input)
+      headers = {}
+
+      while !s.eos? and !s.scan("\n") do 
+        # Field is non-space up, but excluding the colon
+        field = s.scan(/[^\s:]+/)
+
+        # Skip colon and following whitespace
+        s.scan(/:\s*/)
+
+        # Value is text until newline, and any following lines if they have leading spaces.
+        value = s.scan(/[^\n]+\n(?:[ \t][^\n]+\n)*/).chomp
+
+        if headers.include?(field)
+          if headers[field].is_a?(Array)
+            headers[field] << value
+          else
+            headers[field] = [headers[field], value]
+          end
+        else
+          headers[field] = value
+        end
+      end
+
+      return headers
+    end
+
+    module_function :from
+  end
 
   # Input a package.
   #
@@ -95,29 +129,65 @@ class FPM::Package::Python < FPM::Package
   # * The path to a directory containing setup.py
   # * The path to a setup.py
   def input(package)
+    if !attributes[:python_bin_given?]
+      # If --python-bin isn't set, try to find a good default python executable path, because it might not be "python"
+      pythons = [ "python", "python3", "python2" ]
+      default_python = pythons.find { |py| program_exists?(py) }
+
+      if default_python.nil?
+        raise FPM::Util::ExecutableNotFound, "Could not find any python interpreter. Tried the following: #{pythons.join(", ")}"
+      end
+
+      logger.info("Setting default python executable", :name => default_python)
+      attributes[:python_bin] = default_python
+
+      p :name_prefix => attributes[:python_package_name_prefix]
+      if !attributes[:python_package_name_prefix_given?]
+        attributes[:python_package_name_prefix] = default_python
+      end
+      p :name_prefix => attributes[:python_package_name_prefix]
+    end
+
     path_to_package = download_if_necessary(package, version)
 
+    # Expect a setup.py or pypackage.toml if it's a directory.
     if File.directory?(path_to_package)
-      setup_py = File.join(path_to_package, "setup.py")
-    else
-      setup_py = path_to_package
+      if !(File.exist?(File.join(path_to_package, "setup.py")) or File.exist?(File.join(path_to_package, "pypackage.toml")))
+        logger.error("The path doesn't appear to be a python package directory. I expected either a pypackage.toml or setup.py but found neither.", :package => package)
+        raise "Unable to find python package; tried #{setup_py}"
+      end
     end
 
-    if !File.exist?(setup_py)
-      logger.error("Could not find 'setup.py'", :path => setup_py)
-      raise "Unable to find python package; tried #{setup_py}"
+    if path_to_package.end_with?(".tar.gz")
+      # Have pip convert the .tar.gz (source dist?) into a wheel
+      logger.debug("Found tarball and assuming it's a python source package.")
+      safesystem(*attributes[:python_pip], "wheel", "--no-deps", "-w", build_path, path)
+
+      path_to_package = ::Dir.glob(build_path("*.whl")).first
+      if path_to_package.nil?
+        log.error("Failed building python package wheel format. This might be a bug in fpm.")
+        raise "Failed building python package format."
+      end
+    else File.directory?(path_to_package)
+      logger.debug("Found directory and assuming it's a python source package.")
+      safesystem(*attributes[:python_pip], "wheel", "--no-deps", "-w", build_path, path_to_package)
+
+      path_to_package = ::Dir.glob(build_path("*.whl")).first
+      if path_to_package.nil?
+        log.error("Failed building python package wheel format. This might be a bug in fpm.")
+        raise "Failed building python package format."
+      end
     end
 
-    load_package_info(setup_py)
-    install_to_staging(setup_py)
+    load_package_info(path_to_package)
+    install_to_staging(path_to_package)
   end # def input
 
   # Download the given package if necessary. If version is given, that version
   # will be downloaded, otherwise the latest is fetched.
   def download_if_necessary(package, version=nil)
-    # TODO(sissel): this should just be a 'download' method, the 'if_necessary'
-    # part should go elsewhere.
     path = package
+
     # If it's a path, assume local build.
     if File.directory?(path) or (File.exist?(path) and File.basename(path) == "setup.py")
       return path
@@ -142,16 +212,13 @@ class FPM::Package::Python < FPM::Package
     # attributes[:python_pip] -- expected to be a path
     if attributes[:python_pip]
       logger.debug("using pip", :pip => attributes[:python_pip])
-      # TODO: Support older versions of pip
-
       pip = [attributes[:python_pip]] if pip.is_a?(String)
       setup_cmd = [
         *attributes[:python_pip],
         "download",
         "--no-clean",
         "--no-deps",
-        "--no-binary", ":all:",
-        "-d", build_path,
+        "-d", target,
         "-i", attributes[:python_pypi],
       ]
 
@@ -166,130 +233,106 @@ class FPM::Package::Python < FPM::Package
 
       safesystem(*setup_cmd)
 
-      # Pip removed the --build flag sometime in 2021, it seems: https://github.com/pypa/pip/issues/8333
-      # A workaround for pip removing the `--build` flag. Previously, `pip download --build ...` would leave
-      # behind a directory with the Python package extracted and ready to be used.
-      # For example, `pip download ... Django` puts `Django-4.0.4.tar.tz` into the build_path directory.
-      # If we expect `pip` to leave an unknown-named file in the `build_path` directory, let's check for
-      # a single file and unpack it.
-      files = ::Dir.glob(File.join(build_path, "*.{tar.gz,zip}"))
+      files = ::Dir.glob(File.join(target, "*.{whl,tar.gz,zip}"))
       if files.length != 1
-        raise "Unexpected directory layout after `pip download ...`. This might be an fpm bug? The directory is #{build_path}"
+        raise "Unexpected directory layout after `pip download ...`. This might be an fpm bug? The directory contains these files: #{files.inspect}"
       end
-
-      if files[0].end_with?("tar.gz")
-        safesystem("tar", "-zxf", files[0], "-C", target)
-      elsif files[0].end_with?("zip")
-        safesystem("unzip", files[0], "-d", target)
-      else
-        raise "Unexpected file format after `pip download ...`. This might be an fpm bug? The file is #{files[0]}"
-      end
+      return files.first
     else
       # no pip, use easy_install
       logger.debug("no pip, defaulting to easy_install", :easy_install => attributes[:python_easyinstall])
       safesystem(attributes[:python_easyinstall], "-i",
                  attributes[:python_pypi], "--editable", "-U",
                  "--build-directory", target, want_pkg)
+      # easy_install will put stuff in @tmpdir/packagename/, so find that:
+      #  @tmpdir/somepackage/setup.py
+      dirs = ::Dir.glob(File.join(target, "*"))
+      if dirs.length != 1
+        raise "Unexpected directory layout after easy_install. Maybe file a bug? The directory is #{build_path}"
+      end
+      return dirs.first
     end
-
-    # easy_install will put stuff in @tmpdir/packagename/, so find that:
-    #  @tmpdir/somepackage/setup.py
-    dirs = ::Dir.glob(File.join(target, "*"))
-    if dirs.length != 1
-      raise "Unexpected directory layout after easy_install. Maybe file a bug? The directory is #{build_path}"
-    end
-    return dirs.first
   end # def download
 
   # Load the package information like name, version, dependencies.
-  def load_package_info(setup_py)
+  def load_package_info(path)
     if !attributes[:python_package_prefix].nil?
       attributes[:python_package_name_prefix] = attributes[:python_package_prefix]
     end
 
-    begin
-      json_test_code = [
-        "try:",
-        "  import json",
-        "except ImportError:",
-        "  import simplejson as json"
-      ].join("\n")
-      safesystem("#{attributes[:python_bin]} -c '#{json_test_code}'")
-    rescue FPM::Util::ProcessFailed => e
-      logger.error("Your python environment is missing json support (either json or simplejson python module). I cannot continue without this.", :python => attributes[:python_bin], :error => e)
-      raise FPM::Util::ProcessFailed, "Python (#{attributes[:python_bin]}) is missing simplejson or json modules."
-    end
-
-    begin
-      safesystem("#{attributes[:python_bin]} -c 'import pkg_resources'")
-    rescue FPM::Util::ProcessFailed => e
-      logger.error("Your python environment is missing a working setuptools module. I tried to find the 'pkg_resources' module but failed.", :python => attributes[:python_bin], :error => e)
-      raise FPM::Util::ProcessFailed, "Python (#{attributes[:python_bin]}) is missing pkg_resources module."
-    end
-
-    # Add ./pyfpm/ to the python library path
-    pylib = File.expand_path(File.dirname(__FILE__))
-
-    # chdir to the directory holding setup.py because some python setup.py's assume that you are
-    # in the same directory.
-    setup_dir = File.dirname(setup_py)
-
-    output = ::Dir.chdir(setup_dir) do
-      tmp = build_path("metadata.json")
-      setup_cmd = "env PYTHONPATH=#{pylib.shellescape}:$PYTHONPATH #{attributes[:python_bin]} " \
-        "setup.py --command-packages=pyfpm get_metadata --output=#{tmp}"
-
-      if attributes[:python_obey_requirements_txt?]
-        setup_cmd += " --load-requirements-txt"
+    if path.end_with?(".whl")
+      # XXX: Maybe use rubyzip to parse the .whl (zip) file instead?
+      metadata = nil
+      execmd(["unzip", "-p", path, "*.dist-info/METADATA"], :stdin => false, :stderr => false) do |stdout|
+        metadata = PythonMetadata.from(stdout.read(64<<10))
       end
 
-      # Capture the output, which will be JSON metadata describing this python
-      # package. See fpm/lib/fpm/package/pyfpm/get_metadata.py for more
-      # details.
-      logger.info("fetching package metadata", :setup_cmd => setup_cmd)
-
-      success = safesystem(setup_cmd)
-      #%x{#{setup_cmd}}
-      if !success
-        logger.error("setup.py get_metadata failed", :command => setup_cmd,
-                      :exitcode => $?.exitstatus)
-        raise "An unexpected error occurred while processing the setup.py file"
+      wheeldata = nil
+      execmd(["unzip", "-p", path, "*.dist-info/WHEEL"], :stdin => false, :stderr => false) do |stdout|
+        wheeldata = PythonMetadata.from(stdout.read(64<<10))
       end
-      File.read(tmp)
+    else
+      raise "Unexpected python package path. This might be an fpm bug? The path is #{path}"
     end
-    logger.debug("result from `setup.py get_metadata`", :data => output)
-    metadata = JSON.parse(output)
+
     logger.info("object output of get_metadata", :json => metadata)
 
-    self.architecture = metadata["architecture"]
+    #self.architecture = metadata["architecture"]
+    self.architecture = wheeldata["Root-Is-Purelib"] == "true" ? "all" : "native"
     self.description = metadata["description"]
-    # Sometimes the license field is multiple lines; do best-effort and just
-    # use the first line.
-    if metadata["license"]
-      self.license = metadata["license"].split(/[\r\n]+/).first
+
+    if metadata["License"]
+      self.license = metadata["License"]
     end
-    self.version = metadata["version"]
-    self.url = metadata["url"]
+
+    self.version = metadata["Version"]
+
+    if metadata["Project-URL"].is_a?(Array)
+      self.url = metadata["Project-URL"].find(metadata["Project-URL"].method(:first)) do |entry|
+        entry.start_with?("Homepage,")
+      end.split(/, */, 2).last
+    end
+
+    self.name = metadata["Name"]
 
     # name prefixing is optional, if enabled, a name 'foo' will become
     # 'python-foo' (depending on what the python_package_name_prefix is)
-    if attributes[:python_fix_name?]
-      self.name = fix_name(metadata["name"])
-    else
-      self.name = metadata["name"]
-    end
+    self.name = fix_name(self.name) if attributes[:python_fix_name?] 
 
     # convert python-Foo to python-foo if flag is set
     self.name = self.name.downcase if attributes[:python_downcase_name?]
 
     if !attributes[:no_auto_depends?] and attributes[:python_dependencies?]
-      metadata["dependencies"].each do |dep|
-        dep_re = /^([^<>!= ]+)\s*(?:([~<>!=]{1,2})\s*(.*))?$/
+      sys_platform = nil
+      execmd([attributes[:python_bin], "-c", "import sys; print(sys.platform)"], :stdin => false, :stderr => false) do |stdout|
+        sys_platform = stdout.read.chomp
+      end
+
+      dep_re = /^([^<>!= ]+)\s*(?:([~<>!=]{1,2})\s*(.*))?$/
+
+      # Requires-Dist: name>=version; environment marker
+      # Example:
+      # Requires-Dist: tzdata; sys_platform = win32
+      # Requires-Dist: asgiref>=3.8.1
+
+      metadata["Requires-Dist"].each do |dep|
+        dep, environment = dep.split(/ *; */)
         match = dep_re.match(dep)
         if match.nil?
           logger.error("Unable to parse dependency", :dependency => dep)
           raise FPM::InvalidPackageConfiguration, "Invalid dependency '#{dep}'"
         end
+
+        if environment && environment.include?("sys_platform ==") && !environment.include?("sys_platform == #{sys_platform}")
+          logger.info("Ignoring dependency because it doesn't match the current platform", :current => sys_platform, :target => environment, :dependency => dep)
+          next
+        end
+
+        if environment && environment.include?("extra ==")
+          logger.info("Ignoring extra/optional dependency", :dependency => dep, :extra => environment)
+          next
+        end
+
         name, cmp, version = match.captures
 
         next if attributes[:python_disable_dependency].include?(name)
@@ -329,55 +372,17 @@ class FPM::Package::Python < FPM::Package
   end # def fix_name
 
   # Install this package to the staging directory
-  def install_to_staging(setup_py)
-    project_dir = File.dirname(setup_py)
-
+  def install_to_staging(path)
     prefix = "/"
     prefix = attributes[:prefix] unless attributes[:prefix].nil?
 
-    # Some setup.py's assume $PWD == current directory of setup.py, so let's
-    # chdir first.
-    ::Dir.chdir(project_dir) do
-      flags = [ "--root", staging_path ]
-      if !attributes[:python_install_lib].nil?
-        flags += [ "--install-lib", File.join(prefix, attributes[:python_install_lib]) ]
-      elsif !attributes[:prefix].nil?
-        # setup.py install --prefix PREFIX still installs libs to
-        # PREFIX/lib64/python2.7/site-packages/
-        # but we really want something saner.
-        #
-        # since prefix is given, but not python_install_lib, assume PREFIX/lib
-        flags += [ "--install-lib", File.join(prefix, "lib") ]
-      end
+    # XXX: Note: pip doesn't seem to have any equivalent to `--install-lib` or similar flags.
+    # XXX: Deprecate :python_install_data, :python_install_lib, :python_install_bin
+    # XXX: Deprecate: :python_setup_py_arguments
+    flags = [ "--root", staging_path ]
+    flags += [ "--prefix", prefix ] if !attributes[:prefix].nil?
 
-      if !attributes[:python_install_data].nil?
-        flags += [ "--install-data", File.join(prefix, attributes[:python_install_data]) ]
-      elsif !attributes[:prefix].nil?
-        # prefix given, but not python_install_data, assume PREFIX/data
-        flags += [ "--install-data", File.join(prefix, "data") ]
-      end
-
-      if !attributes[:python_install_bin].nil?
-        flags += [ "--install-scripts", File.join(prefix, attributes[:python_install_bin]) ]
-      elsif !attributes[:prefix].nil?
-        # prefix given, but not python_install_bin, assume PREFIX/bin
-        flags += [ "--install-scripts", File.join(prefix, "bin") ]
-      end
-
-      if !attributes[:python_scripts_executable].nil?
-        # Overwrite installed python scripts shebang binary with provided executable
-        flags += [ "build_scripts", "--executable", attributes[:python_scripts_executable] ]
-      end
-
-      if !attributes[:python_setup_py_arguments].nil? and !attributes[:python_setup_py_arguments].empty?
-        # Add optional setup.py arguments
-        attributes[:python_setup_py_arguments].each do |a|
-          flags += [ a ]
-        end
-      end
-
-      safesystem(attributes[:python_bin], "setup.py", "install", *flags)
-    end
+    safesystem(*attributes[:python_pip], "install", "--no-deps", *flags, path)
   end # def install_to_staging
 
   public(:input)
