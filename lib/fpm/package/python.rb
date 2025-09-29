@@ -5,7 +5,6 @@ require "rubygems/package"
 require "rubygems"
 require "fileutils"
 require "tmpdir"
-require "json"
 
 # Support for python packages.
 #
@@ -88,11 +87,20 @@ class FPM::Package::Python < FPM::Package
   module PythonMetadata
     require "strscan"
 
+    # According to https://packaging.python.org/en/latest/specifications/core-metadata/
+    # > Core Metadata v2.4 - August 2024
+    MULTIPLE_USE =  %w(Dynamic Platform Supported-Platform License-File Classifier Requires-Dist Requires-External Project-URL Provides-Extra Provides-Dist Obsoletes-Dist)
+
     # METADATA files are described in Python Packaging "Core Metadata"[1] and appear to have roughly RFC822 syntax.
     # [1] https://packaging.python.org/en/latest/specifications/core-metadata/#core-metadata
     def from(input)
       s = StringScanner.new(input)
       headers = {}
+
+      # Default "Multiple use" fields to empty array instead of nil.
+      MULTIPLE_USE.each do |field|
+        headers[field] = []
+      end
 
       while !s.eos? and !s.scan("\n") do 
         # Field is non-space up, but excluding the colon
@@ -102,23 +110,69 @@ class FPM::Package::Python < FPM::Package
         s.scan(/:\s*/)
 
         # Value is text until newline, and any following lines if they have leading spaces.
-        value = s.scan(/[^\n]+\n(?:[ \t][^\n]+\n)*/).chomp
+        #value = s.scan(/[^\n]+(?:$|\n(?:[ \t][^\n]+\n)*)/)
+        value = s.scan(/[^\n]+(?:\Z|\n(?:[ \t][^\n]+\n)*)/)
+        if value.nil?
+          raise "Failed parsing Python package metadata value at field #{field}, char offset #{s.pos}"
+        end
+        value = value.chomp
 
-        if headers.include?(field)
-          if headers[field].is_a?(Array)
-            headers[field] << value
-          else
-            headers[field] = [headers[field], value]
-          end
+        if MULTIPLE_USE.include?(field)
+          raise "Header field should be an array. This is a bug in fpm." if !headers[field].is_a?(Array)
+          headers[field] << value
         else
           headers[field] = value
         end
       end
 
+      # Do any extra processing on fields to turn them into their expected content.
+      #
+      if headers["Description"]
+        # Per python core-metadata spec:
+        # > To support empty lines and lines with indentation with respect to the
+        # > RFC 822 format, any CRLF character has to be suffixed by 7 spaces
+        # > followed by a pipe (“|”) char. As a result, the Description field is
+        # > encoded into a folded field that can be interpreted by RFC822 parser [2].
+        headers["Description"].gsub!(/^       |/, "")
+      end
+
+      # If there's more content beyond the last header, then it's a content body.
+      # In Python Metadata >= 2.1, the descriptino can be written in the body.
+      if !s.eos? 
+        if headers["Metadata-Version"].to_f >= 2.1
+          # Per Python core-metadata spec:
+          # > Changed in version 2.1: This field may be specified in the message body instead.
+
+          if !headers["Description"].nil?
+            # What to do if we find a description body but already have a Description field set in the headers?
+            raise "Found a description in the body of the python package metadata, but the package already set the Description field. I don't know what to do. This is probably a bug in fpm."
+          end
+
+          # The description is simply the rest of the METADATA file after the headers.
+          headers["Description"] = s.string[s.pos ...]
+
+          # XXX: The description field can be markdown, plain text, or reST. 
+          # Content type is noted in the "Description-Content-Type" field
+          # Should we transform this to plain text?
+        else
+          raise "After reading METADATA headers, extra data is in the file but was not expected. This may be a bug in fpm."
+        end
+      end
+
       return headers
+    rescue => e
+      puts "String scan failed: #{e}"
+      puts "Position: #{s.pointer}"
+      puts "---"
+      puts input
+      puts "==="
+      puts input[s.pointer...]
+      puts "---"
+      raise e
     end
 
     module_function :from
+
   end
 
   # Input a package.
@@ -129,24 +183,7 @@ class FPM::Package::Python < FPM::Package
   # * The path to a directory containing setup.py
   # * The path to a setup.py
   def input(package)
-    if !attributes[:python_bin_given?]
-      # If --python-bin isn't set, try to find a good default python executable path, because it might not be "python"
-      pythons = [ "python", "python3", "python2" ]
-      default_python = pythons.find { |py| program_exists?(py) }
-
-      if default_python.nil?
-        raise FPM::Util::ExecutableNotFound, "Could not find any python interpreter. Tried the following: #{pythons.join(", ")}"
-      end
-
-      logger.info("Setting default python executable", :name => default_python)
-      attributes[:python_bin] = default_python
-
-      p :name_prefix => attributes[:python_package_name_prefix]
-      if !attributes[:python_package_name_prefix_given?]
-        attributes[:python_package_name_prefix] = default_python
-      end
-      p :name_prefix => attributes[:python_package_name_prefix]
-    end
+    explore_environment
 
     path_to_package = download_if_necessary(package, version)
 
@@ -161,7 +198,7 @@ class FPM::Package::Python < FPM::Package
     if path_to_package.end_with?(".tar.gz")
       # Have pip convert the .tar.gz (source dist?) into a wheel
       logger.debug("Found tarball and assuming it's a python source package.")
-      safesystem(*attributes[:python_pip], "wheel", "--no-deps", "-w", build_path, path)
+      safesystem(*attributes[:python_pip], "wheel", "--no-deps", "-w", build_path, path_to_package)
 
       path_to_package = ::Dir.glob(build_path("*.whl")).first
       if path_to_package.nil?
@@ -183,14 +220,53 @@ class FPM::Package::Python < FPM::Package
     install_to_staging(path_to_package)
   end # def input
 
+  def explore_environment
+    if !attributes[:python_bin_given?]
+      # If --python-bin isn't set, try to find a good default python executable path, because it might not be "python"
+      pythons = [ "python", "python3", "python2" ]
+      default_python = pythons.find { |py| program_exists?(py) }
+
+      if default_python.nil?
+        raise FPM::Util::ExecutableNotFound, "Could not find any python interpreter. Tried the following: #{pythons.join(", ")}"
+      end
+
+      logger.info("Setting default python executable", :name => default_python)
+      attributes[:python_bin] = default_python
+
+      if !attributes[:python_package_name_prefix_given?]
+        attributes[:python_package_name_prefix] = default_python
+        logger.info("Setting package name prefix", :name => default_python)
+      end
+    end
+
+    if attributes[:python_internal_pip?]
+      # XXX: Should we detect if internal pip is available?
+      attributes[:python_pip] = [ attributes[:python_bin], "-m", "pip"]
+    end
+  end # explore_environment
+
+
+
   # Download the given package if necessary. If version is given, that version
   # will be downloaded, otherwise the latest is fetched.
   def download_if_necessary(package, version=nil)
     path = package
 
     # If it's a path, assume local build.
-    if File.directory?(path) or (File.exist?(path) and File.basename(path) == "setup.py")
-      return path
+    if File.exist?(path)
+      return path if File.directory?(path)
+      return path if path.end_with?(".tar.gz")
+      return path if path.end_with?(".whl")
+      return path if path.end_with?(".zip")
+      return path if File.exist?(File.join(path, "setup.py"))
+      return path if File.exist?(File.join(path, "pyproject.toml"))
+
+      raise [
+        "Local file doesn't appear to be a supported type for a python package. Expected one of:",
+        "  - A directory containing setup.py or pyproject.toml",
+        "  - A file ending in .tar.gz (a python source dist)",
+        "  - A file ending in .whl (a python wheel)",
+      ].join("\n")
     end
 
     logger.info("Trying to download", :package => package)
@@ -203,11 +279,6 @@ class FPM::Package::Python < FPM::Package
 
     target = build_path(package)
     FileUtils.mkdir(target) unless File.directory?(target)
-
-    if attributes[:python_internal_pip?]
-      # XXX: Should we detect if internal pip is available?
-      attributes[:python_pip] = [ attributes[:python_bin], "-m", "pip"]
-    end
 
     # attributes[:python_pip] -- expected to be a path
     if attributes[:python_pip]
@@ -275,11 +346,9 @@ class FPM::Package::Python < FPM::Package
       raise "Unexpected python package path. This might be an fpm bug? The path is #{path}"
     end
 
-    logger.info("object output of get_metadata", :json => metadata)
-
     #self.architecture = metadata["architecture"]
     self.architecture = wheeldata["Root-Is-Purelib"] == "true" ? "all" : "native"
-    self.description = metadata["description"]
+    self.description = metadata["Description"]
 
     if metadata["License"]
       self.license = metadata["License"]
@@ -287,7 +356,7 @@ class FPM::Package::Python < FPM::Package
 
     self.version = metadata["Version"]
 
-    if metadata["Project-URL"].is_a?(Array)
+    if metadata["Project-URL"].is_a?(Array) && metadata["Project-URL"].any?
       self.url = metadata["Project-URL"].find(metadata["Project-URL"].method(:first)) do |entry|
         entry.start_with?("Homepage,")
       end.split(/, */, 2).last
@@ -301,6 +370,8 @@ class FPM::Package::Python < FPM::Package
 
     # convert python-Foo to python-foo if flag is set
     self.name = self.name.downcase if attributes[:python_downcase_name?]
+
+    self.maintainer = metadata["Maintainer-Email"] unless metadata["Maintainer-Email"].nil?
 
     if !attributes[:no_auto_depends?] and attributes[:python_dependencies?]
       sys_platform = nil
@@ -352,7 +423,7 @@ class FPM::Package::Python < FPM::Package
         name = name.downcase if attributes[:python_downcase_dependencies?]
 
         self.dependencies << "#{name} #{cmp} #{version}"
-      end
+      end # parse Requires-Dist dependencies
     end # if attributes[:python_dependencies?]
   end # def load_package_info
 
