@@ -167,7 +167,6 @@ describe FPM::Package::Python do
 
   context "when python_obey_requirements_txt? is true" do
     before :each do
-      raise "--python-obey-requirements-txt is temporarily unsupported at this time."
       subject.attributes[:python_obey_requirements_txt?] = true
       subject.attributes[:python_dependencies?] = true
     end
