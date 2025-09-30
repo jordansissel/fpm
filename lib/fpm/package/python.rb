@@ -165,6 +165,10 @@ class FPM::Package::Python < FPM::Package
           # > Changed in version 2.1: This field may be specified in the message body instead.
           #return PythonMetadata.new(headers, s.string[s.pos ...])
           return headers, s.string[s.pos ... ]
+        elsif headers["Metadata-Version"].to_f >= 2.0
+          # dnspython v1.15.0 has a description body and Metadata-Version 2.0 
+          # this seems out of spec, but let's accept it anyway.
+          return headers, s.string[s.pos ... ]
         else
           raise "After reading METADATA headers, extra data is in the file but was not expected. This may be a bug in fpm."
         end
@@ -246,6 +250,10 @@ class FPM::Package::Python < FPM::Package
           # > Changed in version 2.1: [Description] field may be specified in the message body instead.
           # 
           # The description is simply the rest of the METADATA file after the headers.
+          @description = body
+        elsif headers["Metadata-Version"].to_f >= 2.0
+          # dnspython v1.15.0 has a description body and Metadata-Version 2.0 
+          # this seems out of spec, but let's accept it anyway.
           @description = body
         else
           raise UnexpectedContent, "Found a content body in METADATA file, but Metadata-Version(#{headers["Metadata-Version"]}) is below 2.1 and doesn't support this. This may be a bug in fpm or a malformed python package."
@@ -350,7 +358,7 @@ class FPM::Package::Python < FPM::Package
       end
     end
 
-    if path_to_package.end_with?(".tar.gz")
+    if [".tar.gz", ".tgz"].any? { |suffix| path_to_package.end_with?(suffix) }
       # Have pip convert the .tar.gz (source dist?) into a wheel
       logger.debug("Found tarball and assuming it's a python source package.")
       safesystem(*attributes[:python_pip], "wheel", "--no-deps", "-w", build_path, path_to_package)
@@ -411,6 +419,7 @@ class FPM::Package::Python < FPM::Package
     if File.exist?(path)
       return path if File.directory?(path)
       return path if path.end_with?(".tar.gz")
+      return path if path.end_with?(".tgz") # amqplib v1.0.2 does this
       return path if path.end_with?(".whl")
       return path if path.end_with?(".zip")
       return path if File.exist?(File.join(path, "setup.py"))
@@ -459,8 +468,7 @@ class FPM::Package::Python < FPM::Package
 
       safesystem(*setup_cmd)
 
-      #files = ::Dir.glob(File.join(target, "*.{whl,tar.gz,zip}"))
-      files = ::Dir.entries(target).filter { |entry| entry =~ /\.(whl|tar\.gz|zip)$/ }
+      files = ::Dir.entries(target).filter { |entry| entry =~ /\.(whl|tgz|tar\.gz|zip)$/ }
       if files.length != 1
         raise "Unexpected directory layout after `pip download ...`. This might be an fpm bug? The directory contains these files: #{files.inspect}"
       end
