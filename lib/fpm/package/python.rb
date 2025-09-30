@@ -594,7 +594,7 @@ class FPM::Package::Python < FPM::Package
     if name.start_with?("python")
       # If the python package is called "python-foo" strip the "python-" part while
       # prepending the package name prefix.
-      return [attributes[:ptython_package_name_prefix], name.gsub(/^python-/, "")].join("-")
+      return [attributes[:python_package_name_prefix], name.gsub(/^python-/, "")].join("-")
     else
       return [attributes[:python_package_name_prefix], name].join("-")
     end
