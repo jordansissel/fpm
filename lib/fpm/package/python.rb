@@ -5,6 +5,7 @@ require "rubygems/package"
 require "rubygems"
 require "fileutils"
 require "tmpdir"
+require "json"
 
 # Support for python packages.
 #
@@ -324,9 +325,9 @@ class FPM::Package::Python < FPM::Package
   # * The path to a python sdist file ending in .tar.gz
   # * The path to a python wheel file ending in .whl
   def input(package)
-    if attributes[:python_obey_requirements_txt?]
-      raise "--python-obey-requirements-txt is temporarily unsupported at this time."
-    end
+    #if attributes[:python_obey_requirements_txt?]
+      #raise "--python-obey-requirements-txt is temporarily unsupported at this time."
+    #end
     explore_environment
 
     path_to_package = download_if_necessary(package, version)
@@ -336,6 +337,10 @@ class FPM::Package::Python < FPM::Package
       if !(File.exist?(File.join(path_to_package, "setup.py")) or File.exist?(File.join(path_to_package, "pypackage.toml")))
         logger.error("The path doesn't appear to be a python package directory. I expected either a pypackage.toml or setup.py but found neither.", :package => package)
         raise "Unable to find python package; tried #{setup_py}"
+      end
+
+      if attributes[:python_obey_requirements_txt?] && File.exist?(File.join(path_to_package, "requirements.txt"))
+        @requirements_txt = File.read(File.join(path_to_package, "requirements.txt"))
       end
     end
 
@@ -355,7 +360,7 @@ class FPM::Package::Python < FPM::Package
         log.error("Failed building python package wheel format. This might be a bug in fpm.")
         raise "Failed building python package format."
       end
-    else File.directory?(path_to_package)
+    elsif File.directory?(path_to_package)
       logger.debug("Found directory and assuming it's a python source package.")
       safesystem(*attributes[:python_pip], "wheel", "--no-deps", "-w", build_path, path_to_package)
 
@@ -454,11 +459,12 @@ class FPM::Package::Python < FPM::Package
 
       safesystem(*setup_cmd)
 
-      files = ::Dir.glob(File.join(target, "*.{whl,tar.gz,zip}"))
+      #files = ::Dir.glob(File.join(target, "*.{whl,tar.gz,zip}"))
+      files = ::Dir.entries(target).filter { |entry| entry =~ /\.(whl|tar\.gz|zip)$/ }
       if files.length != 1
         raise "Unexpected directory layout after `pip download ...`. This might be an fpm bug? The directory contains these files: #{files.inspect}"
       end
-      return files.first
+      return File.join(target, files.first)
     else
       # no pip, use easy_install
       logger.debug("no pip, defaulting to easy_install", :easy_install => attributes[:python_easyinstall])
@@ -467,7 +473,8 @@ class FPM::Package::Python < FPM::Package
                  "--build-directory", target, want_pkg)
       # easy_install will put stuff in @tmpdir/packagename/, so find that:
       #  @tmpdir/somepackage/setup.py
-      dirs = ::Dir.glob(File.join(target, "*"))
+      #dirs = ::Dir.glob(File.join(target, "*"))
+      files = ::Dir.entries(target).filter { |entry| entry != "." && entry != ".." }
       if dirs.length != 1
         raise "Unexpected directory layout after easy_install. Maybe file a bug? The directory is #{build_path}"
       end
@@ -511,51 +518,45 @@ class FPM::Package::Python < FPM::Package
     self.maintainer = metadata.maintainer 
 
     if !attributes[:no_auto_depends?] and attributes[:python_dependencies?]
-      sys_platform = nil
-      execmd([attributes[:python_bin], "-c", "import sys; print(sys.platform)"], :stdin => false, :stderr => false) do |stdout|
-        sys_platform = stdout.read.chomp
-      end
-
-      dep_re = /^([^<>!= ]+)\s*(?:([~<>!=]{1,2})\s*(.*))?$/
-
       # Python Dependency specifiers are a somewhat complex format described here:
       # https://packaging.python.org/en/latest/specifications/dependency-specifiers/#environment-markers
       #
-      # It would be ideal to support the entire specifier format, but it's unclear if that's necessary 
-      # for most packaging situations.
-      #
-      # If a specifier is found to not work under fpm, please file an issue on the fpm issue tracker
-      # and hopefully support for it can be added.
+      # We can ask python's packaging module to parse and evaluate these.
+      # XXX: Allow users to override environnment values.
       #
       # Example:
       # Requires-Dist: tzdata; sys_platform = win32
       # Requires-Dist: asgiref>=3.8.1
 
-      metadata.requires.each do |text|
-        dep, environment = text.split(/ *; */)
+      dep_re = /^([^<>!= ]+)\s*(?:([~<>!=]{1,2})\s*(.*))?$/
+
+      reqs = []
+
+      # --python-obey-requirements-txt should replace the requirments listed from the metadata
+      if attributes[:python_obey_requirements_txt?] && !@requirements_txt.nil?
+        requires = @requirements_txt.split("\n")
+      else
+        requires = metadata.requires
+      end
+
+      # Evaluate python package requirements and only show ones matching the current environment
+      # (Environment markers, etc)
+      # Additionally, 'extra' features such as a requirement named `django[bcrypt]` isn't quite supported yet,
+      # since the marker.evaluate() needs to be passed some environment like { "extra": "bcrypt" }
+      execmd([attributes[:python_bin], File.expand_path(File.join("pyfpm", "parse_requires.py"), File.dirname(__FILE__))]) do |stdin, stdout, stderr|
+        requires.each { |r| stdin.puts(r) }
+        stdin.close
+        data = stdout.read
+        logger.pipe(stderr => :warn)
+        reqs += JSON.parse(data)
+      end
+
+      reqs.each do |dep|
         match = dep_re.match(dep)
         if match.nil?
           logger.error("Unable to parse dependency", :dependency => dep)
           raise FPM::InvalidPackageConfiguration, "Invalid dependency '#{dep}'"
         end
-
-        if environment
-          if environment.include?("sys_platform ==") && !environment.include?("sys_platform == #{sys_platform}")
-            logger.debug("Ignoring dependency because it doesn't match the current platform", :current => sys_platform, :target => environment, :dependency => text)
-            next
-          end
-
-          if environment.include?("extra ==")
-            logger.debug("Ignoring extra/optional dependency", :dependency => text, :extra => environment)
-            next
-          end
-
-          unsupported_markers = UNSUPPORTED_DEPENDENCY_MARKERS.filter { |m| environment.include?(m) }
-          if unsupported_markers.any?
-            logger.debug("Package contains an unsupported Requires-Dist 'environment marker' which fpm doesn't yet support. If you want support for these, please file an issue.", :markers => unsupported_markers, :dependency => text)
-            next
-          end
-        end # if environment
 
         name, cmp, version = match.captures
 
@@ -593,7 +594,7 @@ class FPM::Package::Python < FPM::Package
     if name.start_with?("python")
       # If the python package is called "python-foo" strip the "python-" part while
       # prepending the package name prefix.
-      return [attributes[:python_package_name_prefix], name.gsub(/^python-/, "")].join("-")
+      return [attributes[:ptython_package_name_prefix], name.gsub(/^python-/, "")].join("-")
     else
       return [attributes[:python_package_name_prefix], name].join("-")
     end
