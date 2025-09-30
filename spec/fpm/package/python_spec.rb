@@ -149,7 +149,7 @@ describe FPM::Package::Python do
       #       not supported by fpm.
       #       In this test, there are (at time of writing) some python_version markers and fpm doesn't
       #       support those.
-      insist { subject.dependencies.sort } == ["#{prefix}-dependency1","#{prefix}-dependency2"]
+      insist { subject.dependencies.sort } == ["#{prefix}-dependency1","#{prefix}-dependency2", "#{prefix}-rtxt-dep4"]
     end
 
     context "and :python_disable_dependency is set" do
@@ -160,7 +160,7 @@ describe FPM::Package::Python do
       it "it should exclude the dependency" do
         subject.input(example_dir)
         prefix = subject.attributes[:python_package_name_prefix]
-        insist { subject.dependencies.sort } == ["#{prefix}-dependency2"]
+        insist { subject.dependencies.sort } == ["#{prefix}-dependency2", "#{prefix}-rtxt-dep4"]
       end
     end
   end
@@ -179,13 +179,14 @@ describe FPM::Package::Python do
       it "it should prefix requirements.txt" do
         subject.input(example_dir)
         prefix = subject.attributes[:python_package_name_prefix]
-        insist { subject.dependencies.sort } == ["#{prefix}-rtxt-dep3", "#{prefix}-rtxt-dep4"]
+        insist { subject.dependencies.sort } == ["#{prefix}-rtxt-dep1 > 0.1", "#{prefix}-rtxt-dep2 = 0.1", "#{prefix}-rtxt-dep4"]
       end
 
       it "it should exclude the dependency" do
         subject.attributes[:python_disable_dependency] = "rtxt-dep1"
         subject.input(example_dir)
-        insist { subject.dependencies.sort } == ["python-rtxt-dep2 = 0.1", "python-rtxt-dep4  "]
+        prefix = subject.attributes[:python_package_name_prefix]
+        insist { subject.dependencies.sort } == ["#{prefix}-rtxt-dep2 = 0.1", "#{prefix}-rtxt-dep4"]
       end
     end
 
@@ -196,21 +197,20 @@ describe FPM::Package::Python do
 
       it "it should load requirements.txt" do
         subject.input(example_dir)
-        insist { subject.dependencies.sort } == ["rtxt-dep1 > 0.1", "rtxt-dep2 = 0.1", "rtxt-dep4  "]
+        insist { subject.dependencies.sort } == ["rtxt-dep1 > 0.1", "rtxt-dep2 = 0.1", "rtxt-dep4"]
       end
 
       it "it should exclude the dependency" do
         subject.attributes[:python_disable_dependency] = "rtxt-dep1"
         subject.input(example_dir)
-        insist { subject.dependencies.sort } == ["rtxt-dep2 = 0.1", "rtxt-dep4  "]
+        insist { subject.dependencies.sort } == ["rtxt-dep2 = 0.1", "rtxt-dep4"]
       end
     end
   end
 
   context "python_scripts_executable is set" do
     it "should have scripts with a custom hashbang line" do
-      pending("Disabled on travis-ci becaulamese it always fails, and there is no way to debug it?") if is_travis
-      skip("Requires python3 executable") unless program_exists?("python3")
+      skip("setup.py-specific feature is no longer supported")
 
       subject.attributes[:python_scripts_executable] = "fancypants"
       # Newer versions of Django require Python 3.
@@ -243,7 +243,7 @@ describe FPM::Package::Python do
       insist { subject.version } == "8.3.0"
       insist { subject.maintainer } == "Pallets <contact@palletsprojects.com>"
       insist { subject.architecture } == "all"
-      insist { subject.depends }.include? "python3-colorama"
+      insist { subject.dependencies } == [ ]
 
     end
   end
