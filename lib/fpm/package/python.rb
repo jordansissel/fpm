@@ -324,7 +324,7 @@ class FPM::Package::Python < FPM::Package
   # * The path to a python sdist file ending in .tar.gz
   # * The path to a python wheel file ending in .whl
   def input(package)
-    if subject.attributes[:python_obey_requirements_txt?]
+    if attributes[:python_obey_requirements_txt?]
       raise "--python-obey-requirements-txt is temporarily unsupported at this time."
     end
     explore_environment
