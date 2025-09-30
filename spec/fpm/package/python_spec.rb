@@ -214,19 +214,42 @@ describe FPM::Package::Python do
       insist { topline.chomp } == "#!fancypants"
     end
   end
+
+  context "when input is a name" do
+    it "should download from pypi" do
+      subject.input("click==8.3.0")
+
+      insist { subject.name } == "click"
+      insist { subject.version } == "8.3.0"
+      insist { subject.maintainer } == "Pallets <contact@palletsprojects.com>"
+      insist { subject.architecture } == "all"
+      insist { subject.depends }.include? "python3-colorama"
+
+    end
+  end
 end # describe FPM::Package::Python
 
 describe FPM::Package::Python::PythonMetadata do
 
   context "processing simple examples" do
+    let(:text) {
+      [ 
+        "Metadata-Version: 2.4",
+        "Name: hello",
+        "Version: 1.0",
+      ].join("\n") + "\n"
+    }
+    subject { described_class.from(text) }
+
     it "should" do
-      parsed = subject.from("hello: world\n")
-      insist { parsed["hello"] } == "world"
+      insist { subject.name } == "hello"
+      insist { subject.version } == "1.0"
     end
   end
 
-  context "when parsing Django METADATA" do
-    let(:metadata) do
+  # Use a known METADATA file from a real Python package
+  context "when parsing Django 5.2.6's METADATA" do
+    let(:text) do
       File.read(File.expand_path("../../fixtures/python/METADATA", File.dirname(__FILE__)))
     end
 
@@ -239,24 +262,37 @@ describe FPM::Package::Python::PythonMetadata do
       "License" => "BSD-3-Clause",
     }
 
-    let(:parsed) { subject.from(metadata) }
+    let(:parsed) { described_class.parse(text) }
+    let(:headers) { parsed[0] }
+    let(:body) { parsed[1] }
+
+    let(:metadata) { described_class.from(text) }
 
     expectations.each do |field, value|
       it "the #{field} field should be #{value.inspect}" do
-        insist { parsed[field] } == value
+        insist { headers[field] } == value
       end
     end
 
     it "should parse multivalue fields into an array value" do
-      insist { parsed["Classifier"] }.is_a?(Enumerable)
-      insist { parsed["Project-URL"] }.is_a?(Enumerable)
-      insist { parsed["Requires-Dist"] }.is_a?(Enumerable)
+      insist { headers["Classifier"] }.is_a?(Enumerable)
+      insist { headers["Project-URL"] }.is_a?(Enumerable)
+      insist { headers["Requires-Dist"] }.is_a?(Enumerable)
 
-      insist { parsed["Requires-Dist"] }.include?('asgiref>=3.8.1')
-      insist { parsed["Requires-Dist"] }.include?('sqlparse>=0.3.1')
-      insist { parsed["Requires-Dist"] }.include?('tzdata; sys_platform == "win32"')
-      insist { parsed["Requires-Dist"] }.include?('argon2-cffi>=19.1.0; extra == "argon2"')
-      insist { parsed["Requires-Dist"] }.include?('bcrypt; extra == "bcrypt"')
+      insist { headers["Requires-Dist"] }.include?('asgiref>=3.8.1')
+      insist { headers["Requires-Dist"] }.include?('sqlparse>=0.3.1')
+      insist { headers["Requires-Dist"] }.include?('tzdata; sys_platform == "win32"')
+      insist { headers["Requires-Dist"] }.include?('argon2-cffi>=19.1.0; extra == "argon2"')
+      insist { headers["Requires-Dist"] }.include?('bcrypt; extra == "bcrypt"')
     end
-  end
+
+    it "should provide correctly parsed values" do
+      insist { metadata.name } == "Django"
+      insist { metadata.version } == "5.2.6"
+      insist { metadata.summary } == "A high-level Python web framework that encourages rapid development and clean, pragmatic design."
+      insist { metadata.license } == "BSD-3-Clause"
+      insist { metadata.homepage } == "https://www.djangoproject.com/"
+    end
+  end # parsing Django METADATA
+
 end
