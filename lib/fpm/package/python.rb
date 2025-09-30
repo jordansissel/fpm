@@ -84,8 +84,11 @@ class FPM::Package::Python < FPM::Package
     :attribute_name => :python_internal_pip,
     :default => true
 
-  module PythonMetadata
+  class PythonMetadata
     require "strscan"
+
+    class MissingField < StandardError; end
+    class UnexpectedContent < StandardError; end
 
     # According to https://packaging.python.org/en/latest/specifications/core-metadata/
     # > Core Metadata v2.4 - August 2024
@@ -93,7 +96,7 @@ class FPM::Package::Python < FPM::Package
 
     # METADATA files are described in Python Packaging "Core Metadata"[1] and appear to have roughly RFC822 syntax.
     # [1] https://packaging.python.org/en/latest/specifications/core-metadata/#core-metadata
-    def from(input)
+    def self.parse(input)
       s = StringScanner.new(input)
       headers = {}
 
@@ -123,18 +126,7 @@ class FPM::Package::Python < FPM::Package
         else
           headers[field] = value
         end
-      end
-
-      # Do any extra processing on fields to turn them into their expected content.
-      #
-      if headers["Description"]
-        # Per python core-metadata spec:
-        # > To support empty lines and lines with indentation with respect to the
-        # > RFC 822 format, any CRLF character has to be suffixed by 7 spaces
-        # > followed by a pipe (“|”) char. As a result, the Description field is
-        # > encoded into a folded field that can be interpreted by RFC822 parser [2].
-        headers["Description"].gsub!(/^       |/, "")
-      end
+      end # while reading headers
 
       # If there's more content beyond the last header, then it's a content body.
       # In Python Metadata >= 2.1, the descriptino can be written in the body.
@@ -142,24 +134,15 @@ class FPM::Package::Python < FPM::Package
         if headers["Metadata-Version"].to_f >= 2.1
           # Per Python core-metadata spec:
           # > Changed in version 2.1: This field may be specified in the message body instead.
-
-          if !headers["Description"].nil?
-            # What to do if we find a description body but already have a Description field set in the headers?
-            raise "Found a description in the body of the python package metadata, but the package already set the Description field. I don't know what to do. This is probably a bug in fpm."
-          end
-
-          # The description is simply the rest of the METADATA file after the headers.
-          headers["Description"] = s.string[s.pos ...]
-
-          # XXX: The description field can be markdown, plain text, or reST. 
-          # Content type is noted in the "Description-Content-Type" field
-          # Should we transform this to plain text?
+          #return PythonMetadata.new(headers, s.string[s.pos ...])
+          return headers, s.string[s.pos ... ]
         else
           raise "After reading METADATA headers, extra data is in the file but was not expected. This may be a bug in fpm."
         end
       end
 
-      return headers
+      #return PythonMetadata.new(headers)
+      return headers, nil # nil means no body in this metadata
     rescue => e
       puts "String scan failed: #{e}"
       puts "Position: #{s.pointer}"
@@ -169,11 +152,129 @@ class FPM::Package::Python < FPM::Package
       puts input[s.pointer...]
       puts "---"
       raise e
+    end # self.parse
+
+    def self.from(input)
+      return PythonMetadata.new(*parse(input))
     end
 
-    module_function :from
+    # Only focusing on terms fpm may care about
+    attr_reader :name, :version, :summary, :description, :keywords, :maintainer, :license, :requires, :homepage
 
-  end
+    FIELD_MAP = {
+      :@name => "Name",
+      :@version => "Version",
+      :@summary => "Summary",
+      :@description => "Description",
+      :@keywords => "Keywords",
+      :@maintainer => "Author-email",
+
+      # Note: License can also come from the deprecated "License" field
+      # This is processed later in this method.
+      :@license => "License-Expression",
+
+      :@requires => "Requires-Dist",
+    }
+    
+    REQUIRED_FIELDS = [ "Metadata-Version", "Name", "Version" ]
+
+    # headers - a Hash containing field-value pairs from headers as read from a python METADATA file.
+    # body - optional, a string containing the body text of a METADATA file
+    def initialize(headers, body=nil)
+      REQUIRED_FIELDS.each do |field|
+        if !headers.include?(field)
+          raise MissingField, "Missing required Python metadata field, '#{field}'. This might be a bug in the package or in fpm."
+        end
+      end
+
+      FIELD_MAP.each do |attr, field|
+        if headers.include?(field)
+          instance_variable_set(attr, headers.fetch(field))
+        end
+      end
+
+      # Do any extra processing on fields to turn them into their expected content.
+      process_description(headers, body)
+      process_license(headers)
+      process_homepage(headers)
+    end # def initialize
+
+    private
+    def process_description(headers, body)
+      if @description
+        # Per python core-metadata spec:
+        # > To support empty lines and lines with indentation with respect to the
+        # > RFC 822 format, any CRLF character has to be suffixed by 7 spaces
+        # > followed by a pipe (“|”) char. As a result, the Description field is
+        # > encoded into a folded field that can be interpreted by RFC822 parser [2].
+        @description = @description.gsub!(/^       |/, "")
+      end
+
+      if !body.nil?
+        if headers["Metadata-Version"].to_f >= 2.1
+          # Per Python core-metadata spec:
+          # > Changed in version 2.1: [Description] field may be specified in the message body instead.
+          # 
+          # The description is simply the rest of the METADATA file after the headers.
+          @description = body
+        else
+          raise UnexpectedContent, "Found a content body in METADATA file, but Metadata-Version(#{headers["Metadata-Version"]}) is below 2.1 and doesn't support this. This may be a bug in fpm or a malformed python package."
+        end
+
+        # What to do if we find a description body but already have a Description field set in the headers?
+        if headers.include?("Description")
+          raise "Found a description in the body of the python package metadata, but the package already set the Description field. I don't know what to do. This is probably a bug in fpm."
+        end
+      end
+
+      # XXX: The description field can be markdown, plain text, or reST. 
+      # Content type is noted in the "Description-Content-Type" field
+      # Should we transform this to plain text?
+    end # process_description
+
+    def process_license(headers)
+      # Ignore the "License" field if License-Expression is also present.
+      return if headers["Metadata-Version"].to_f >= 2.4 && headers.include?("License-Expression")
+
+      # Deprecated field, License,  as described in python core-metadata:
+      # > As of Metadata 2.4, License and License-Expression are mutually exclusive. 
+      # > If both are specified, tools which parse metadata will disregard License
+      # > and PyPI will reject uploads. See PEP 639.
+      if headers["License"]
+        # Note: This license can be free form text, so it's unclear if it's a great choice.
+        #       however, the original python metadata License field is quite old/deprecated
+        #       so maybe nobody uses it anymore?
+        @license = headers["License"]
+      elsif license_classifier = headers["Classifier"].find { |value| value =~ /^License ::/ }
+        # The license could also show up in the "Classifier" header with "License ::" as a prefix.
+          @license = license_classifier.sub(/^License ::/, "")
+      end # check for deprecated License field
+    end # process_license
+
+    def process_homepage(headers)
+      return if headers["Project-URL"].empty?
+
+      # Create a hash of Project-URL where the label is the key, url the value.
+      urls = Hash[*headers["Project-URL"].map do |text|
+        label, url = text.split(/, */, 2)
+        # Normalize the label by removing punctuation and spaces
+        # Reference: https://packaging.python.org/en/latest/specifications/well-known-project-urls/#label-normalization
+        # > In plain language: a label is normalized by deleting all ASCII punctuation and whitespace, and then converting the result to lowercase.
+        label = label.gsub(/[[:punct:][:space:]]/, "").downcase
+        [label, url]
+      end.flatten(1)]
+
+      # Prioritize certain URL labels when choosing the homepage url.
+      [ "homepage", "source", "documentation", "releasenotes" ].each do |label|
+        if urls.include?(label)
+          @homepage = urls[label]
+        end
+      end
+
+      # Otherwise, default to the first URL
+      @homepage = urls.values.first
+    end
+  end # class PythonMetadata
 
   # Input a package.
   #
@@ -340,7 +441,7 @@ class FPM::Package::Python < FPM::Package
 
       wheeldata = nil
       execmd(["unzip", "-p", path, "*.dist-info/WHEEL"], :stdin => false, :stderr => false) do |stdout|
-        wheeldata = PythonMetadata.from(stdout.read(64<<10))
+        wheeldata, _ = PythonMetadata.parse(stdout.read(64<<10))
       end
     else
       raise "Unexpected python package path. This might be an fpm bug? The path is #{path}"
@@ -348,13 +449,10 @@ class FPM::Package::Python < FPM::Package
 
     #self.architecture = metadata["architecture"]
     self.architecture = wheeldata["Root-Is-Purelib"] == "true" ? "all" : "native"
-    self.description = metadata["Description"]
 
-    if metadata["License"]
-      self.license = metadata["License"]
-    end
-
-    self.version = metadata["Version"]
+    self.description = metadata.description unless metadata.description.nil?
+    self.license = metadata.license unless metadata.license.nil?
+    self.version = metadata.version
 
     if metadata["Project-URL"].is_a?(Array) && metadata["Project-URL"].any?
       self.url = metadata["Project-URL"].find(metadata["Project-URL"].method(:first)) do |entry|
@@ -371,7 +469,13 @@ class FPM::Package::Python < FPM::Package
     # convert python-Foo to python-foo if flag is set
     self.name = self.name.downcase if attributes[:python_downcase_name?]
 
-    self.maintainer = metadata["Maintainer-Email"] unless metadata["Maintainer-Email"].nil?
+    # Python metadata supports both "Author-email" and "Maintainer-email"
+    # Of the "Maintainer" fields, python core-metadata says:
+    # > Note that this field is intended for use when a project is being maintained by someone other than the original author
+    #
+    # So we should prefer Maintainer-email if it exists, but fall back to Author-email otherwise.
+    self.maintainer = metadata["Author-email"] if metadata["Author-email"]
+    self.maintainer = metadata["Maintainer-email"] if metadata["Maintainer-email"]
 
     if !attributes[:no_auto_depends?] and attributes[:python_dependencies?]
       sys_platform = nil
