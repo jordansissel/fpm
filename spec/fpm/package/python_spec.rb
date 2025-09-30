@@ -35,7 +35,7 @@ end
 describe FPM::Package::Python do
   before do
     skip("Python program not found") unless python_usable?
-    subject.attributes[:python_bin] = find_python
+    #subject.attributes[:python_bin] = find_python
   end
 
   let (:example_dir) do
@@ -50,16 +50,15 @@ describe FPM::Package::Python do
     before :each do
       subject.attributes[:python_downcase_name?] = false
     end
-
     context "when :python_fix_name? is true" do
       before :each do
         subject.attributes[:python_fix_name?] = true
       end
 
       context "and :python_package_name_prefix is nil/default" do
-        it "should prefix the package with 'python-'" do
+        it "should prefix the package name based on detected python-bin name" do
           subject.input(example_dir)
-          insist { subject.name } == "python-Example"
+          insist { subject.name } == "#{subject.attributes[:python_bin]}-Example"
         end
       end
 
@@ -67,6 +66,7 @@ describe FPM::Package::Python do
         it "should prefix the package name appropriately" do
           prefix = "whoa"
           subject.attributes[:python_package_name_prefix] = prefix
+          subject.attributes[:python_package_name_prefix_given?] = true
           subject.input(example_dir)
           insist { subject.name } == "#{prefix}-Example"
         end
@@ -96,9 +96,10 @@ describe FPM::Package::Python do
       end
 
       context "and :python_package_name_prefix is nil/default" do
-        it "should prefix the package with 'python-'" do
+        it "should prefix the package based on the version of python" do
           subject.input(example_dir)
-          insist { subject.name } == "python-example"
+          insist { subject.attributes[:python_package_name_prefix_given?] }.nil?
+          insist { subject.name } == "#{subject.attributes[:python_bin]}-example"
         end
       end
 
@@ -106,6 +107,7 @@ describe FPM::Package::Python do
         it "should prefix the package name appropriately" do
           prefix = "whoa"
           subject.attributes[:python_package_name_prefix] = prefix
+          subject.attributes[:python_package_name_prefix_given?] = true
           subject.input(example_dir)
           insist { subject.name } == "#{prefix}-example"
         end
@@ -130,9 +132,24 @@ describe FPM::Package::Python do
     end
 
     it "it should include the dependencies from setup.py" do
+      # Insist on using the defaults for this test, prefix not given and
+      # prefix should automatically be based on the python major version
+      insist { subject.attributes[:python_package_name_prefix_given?] }.nil?
       subject.input(example_dir)
+
+      prefix = subject.attributes[:python_package_name_prefix]
+
+      # The package name prefix attribute should be set to _something_ by default
+      reject { prefix }.nil?
+
       # XXX: Why is there extra whitespace in these strings?
-      insist { subject.dependencies.sort } == ["python-dependency1  ","python-dependency2  ", "python-rtxt-dep4  "]
+      #
+      # Note: The dependency list should only include entries which are supported by fpm.
+      #       python dependencies can have 'environment markers' and most of those markers are
+      #       not supported by fpm.
+      #       In this test, there are (at time of writing) some python_version markers and fpm doesn't
+      #       support those.
+      insist { subject.dependencies.sort } == ["#{prefix}-dependency1","#{prefix}-dependency2"]
     end
 
     context "and :python_disable_dependency is set" do
@@ -142,13 +159,15 @@ describe FPM::Package::Python do
 
       it "it should exclude the dependency" do
         subject.input(example_dir)
-        insist { subject.dependencies.sort } == ["python-dependency2  ", "python-rtxt-dep4  "]
+        prefix = subject.attributes[:python_package_name_prefix]
+        insist { subject.dependencies.sort } == ["#{prefix}-dependency2"]
       end
     end
   end
 
   context "when python_obey_requirements_txt? is true" do
     before :each do
+      raise "--python-obey-requirements-txt is temporarily unsupported at this time."
       subject.attributes[:python_obey_requirements_txt?] = true
       subject.attributes[:python_dependencies?] = true
     end
@@ -160,7 +179,8 @@ describe FPM::Package::Python do
 
       it "it should prefix requirements.txt" do
         subject.input(example_dir)
-        insist { subject.dependencies.sort } == ["python-rtxt-dep1 > 0.1", "python-rtxt-dep2 = 0.1", "python-rtxt-dep4  "]
+        prefix = subject.attributes[:python_package_name_prefix]
+        insist { subject.dependencies.sort } == ["#{prefix}-rtxt-dep3", "#{prefix}-rtxt-dep4"]
       end
 
       it "it should exclude the dependency" do
@@ -218,8 +238,9 @@ describe FPM::Package::Python do
   context "when input is a name" do
     it "should download from pypi" do
       subject.input("click==8.3.0")
+      prefix = subject.attributes[:python_package_name_prefix]
 
-      insist { subject.name } == "click"
+      insist { subject.name } == "#{prefix}-click"
       insist { subject.version } == "8.3.0"
       insist { subject.maintainer } == "Pallets <contact@palletsprojects.com>"
       insist { subject.architecture } == "all"
@@ -294,5 +315,4 @@ describe FPM::Package::Python::PythonMetadata do
       insist { metadata.homepage } == "https://www.djangoproject.com/"
     end
   end # parsing Django METADATA
-
 end

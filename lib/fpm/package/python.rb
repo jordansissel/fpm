@@ -50,39 +50,68 @@ class FPM::Package::Python < FPM::Package
   option "--downcase-dependencies", :flag, "Should the package dependencies " \
     "be in lowercase?", :default => true
 
-  option "--install-bin", "BIN_PATH", "The path to where python scripts " \
-    "should be installed to."
-  option "--install-lib", "LIB_PATH", "The path to where python libs " \
+  option "--install-bin", "BIN_PATH", "(DEPRECATED, does nothing) The path to where python scripts " \
+    "should be installed to." do
+    logger.warn("Using deprecated flag --install-bin")
+  end
+  option "--install-lib", "LIB_PATH", "(DEPRECATED, does nothing) The path to where python libs " \
     "should be installed to (default depends on your python installation). " \
     "Want to find out what your target platform is using? Run this: " \
     "python -c 'from distutils.sysconfig import get_python_lib; " \
-    "print get_python_lib()'"
-  option "--install-data", "DATA_PATH", "The path to where data should be " \
+    "print get_python_lib()'" do
+    logger.warn("Using deprecated flag --install-bin")
+  end
+
+  option "--install-data", "DATA_PATH", "(DEPRECATED, does nothing) The path to where data should be " \
     "installed to. This is equivalent to 'python setup.py --install-data " \
-    "DATA_PATH"
-  option "--dependencies", :flag, "Include requirements defined in setup.py" \
+    "DATA_PATH" do
+    logger.warn("Using deprecated flag --install-bin")
+  end
+
+  option "--dependencies", :flag, "Include requirements defined by the python package" \
     " as dependencies.", :default => true
   option "--obey-requirements-txt", :flag, "Use a requirements.txt file " \
     "in the top-level directory of the python package for dependency " \
     "detection.", :default => false
-  option "--scripts-executable", "PYTHON_EXECUTABLE", "Set custom python " \
+  option "--scripts-executable", "PYTHON_EXECUTABLE", "(DEPRECATED) Set custom python " \
     "interpreter in installing scripts. By default distutils will replace " \
     "python interpreter in installing scripts (specified by shebang) with " \
     "current python interpreter (sys.executable). This option is equivalent " \
     "to appending 'build_scripts --executable PYTHON_EXECUTABLE' arguments " \
-    "to 'setup.py install' command."
+    "to 'setup.py install' command." do
+    logger.warn("Using deprecated flag --install-bin")
+  end
+
   option "--disable-dependency", "python_package_name",
     "The python package name to remove from dependency list",
     :multivalued => true, :attribute_name => :python_disable_dependency,
     :default => []
   option "--setup-py-arguments", "setup_py_argument",
-    "Arbitrary argument(s) to be passed to setup.py",
+    "(DEPRECATED) Arbitrary argument(s) to be passed to setup.py",
     :multivalued => true, :attribute_name => :python_setup_py_arguments,
-    :default => []
+    :default => [] do
+    logger.warn("Using deprecated flag --install-bin")
+  end
   option "--internal-pip", :flag,
     "Use the pip module within python to install modules - aka 'python -m pip'. This is the recommended usage since Python 3.4 (2014) instead of invoking the 'pip' script",
     :attribute_name => :python_internal_pip,
     :default => true
+ 
+    # Environment markers which are known but not yet supported by fpm.
+    # For some of these markers, it's not even clear if they are useful to fpm's packaging step.
+    # https://packaging.python.org/en/latest/specifications/dependency-specifiers/#dependency-specifiers
+    # 
+    # XXX: python's setuptools.pkg_resources can help parse and evaluate such things, even if that library is deprecated:
+    # >>> f = open("spec/fixtures/python/requirements.txt"); a = pkg_resources.parse_requirements(f.read()); f.close();
+    # >>> [x for x in list(a) if x.marker is None or x.marker.evaluate()]
+    # [Requirement.parse('rtxt-dep1>0.1'), Requirement.parse('rtxt-dep2==0.1'), Requirement.parse('rtxt-dep4; python_version > "2.0"')]
+    # 
+    # Another example, showing only requirements which have environment markers which evaluate to true (or have no markers)
+    # python3 -c 'import pkg_resources; import json;import sys; r = pkg_resources.parse_requirements(sys.stdin); deps = [d for d in list(r) if d.marker is None or d.marker.evaluate()]; pr
+    # ["rtxt-dep1>0.1", "rtxt-dep2==0.1", "rtxt-dep4; python_version > \"2.0\""]
+    UNSUPPORTED_DEPENDENCY_MARKERS = %w(python_version python_full_version os_name platform_release platform_system platform_version
+      platform_machine platform_python_implementation implementation_name implementation_version)
+
 
   class PythonMetadata
     require "strscan"
@@ -113,7 +142,6 @@ class FPM::Package::Python < FPM::Package
         s.scan(/:\s*/)
 
         # Value is text until newline, and any following lines if they have leading spaces.
-        #value = s.scan(/[^\n]+(?:$|\n(?:[ \t][^\n]+\n)*)/)
         value = s.scan(/[^\n]+(?:\Z|\n(?:[ \t][^\n]+\n)*)/)
         if value.nil?
           raise "Failed parsing Python package metadata value at field #{field}, char offset #{s.pos}"
@@ -197,6 +225,7 @@ class FPM::Package::Python < FPM::Package
       process_description(headers, body)
       process_license(headers)
       process_homepage(headers)
+      process_maintainer(headers)
     end # def initialize
 
     private
@@ -274,6 +303,15 @@ class FPM::Package::Python < FPM::Package
       # Otherwise, default to the first URL
       @homepage = urls.values.first
     end
+
+    def process_maintainer(headers)
+      # Python metadata supports both "Author-email" and "Maintainer-email"
+      # Of the "Maintainer" fields, python core-metadata says:
+      # > Note that this field is intended for use when a project is being maintained by someone other than the original author
+      #
+      # So we should prefer Maintainer-email if it exists, but fall back to Author-email otherwise.
+      @maintainer = headers["Maintainer-email"] unless headers["Maintainer-email"].nil?
+    end
   end # class PythonMetadata
 
   # Input a package.
@@ -281,9 +319,14 @@ class FPM::Package::Python < FPM::Package
   # The 'package' can be any of:
   #
   # * A name of a package on pypi (ie; easy_install some-package)
-  # * The path to a directory containing setup.py
-  # * The path to a setup.py
+  # * The path to a directory containing setup.py or pypackage.toml
+  # * The path to a setup.py or pypackage.toml
+  # * The path to a python sdist file ending in .tar.gz
+  # * The path to a python wheel file ending in .whl
   def input(package)
+    if subject.attributes[:python_obey_requirements_txt?]
+      raise "--python-obey-requirements-txt is temporarily unsupported at this time."
+    end
     explore_environment
 
     path_to_package = download_if_necessary(package, version)
@@ -293,6 +336,12 @@ class FPM::Package::Python < FPM::Package
       if !(File.exist?(File.join(path_to_package, "setup.py")) or File.exist?(File.join(path_to_package, "pypackage.toml")))
         logger.error("The path doesn't appear to be a python package directory. I expected either a pypackage.toml or setup.py but found neither.", :package => package)
         raise "Unable to find python package; tried #{setup_py}"
+      end
+    end
+
+    if File.file?(path_to_package)
+      if ["setup.py", "pypackage.toml"].include?(File.basename(path_to_package))
+        path_to_package = File.dirname(path_to_package)
       end
     end
 
@@ -428,10 +477,6 @@ class FPM::Package::Python < FPM::Package
 
   # Load the package information like name, version, dependencies.
   def load_package_info(path)
-    if !attributes[:python_package_prefix].nil?
-      attributes[:python_package_name_prefix] = attributes[:python_package_prefix]
-    end
-
     if path.end_with?(".whl")
       # XXX: Maybe use rubyzip to parse the .whl (zip) file instead?
       metadata = nil
@@ -447,20 +492,14 @@ class FPM::Package::Python < FPM::Package
       raise "Unexpected python package path. This might be an fpm bug? The path is #{path}"
     end
 
-    #self.architecture = metadata["architecture"]
     self.architecture = wheeldata["Root-Is-Purelib"] == "true" ? "all" : "native"
 
     self.description = metadata.description unless metadata.description.nil?
     self.license = metadata.license unless metadata.license.nil?
     self.version = metadata.version
+    self.url = metadata.homepage unless metadata.homepage.nil?
 
-    if metadata["Project-URL"].is_a?(Array) && metadata["Project-URL"].any?
-      self.url = metadata["Project-URL"].find(metadata["Project-URL"].method(:first)) do |entry|
-        entry.start_with?("Homepage,")
-      end.split(/, */, 2).last
-    end
-
-    self.name = metadata["Name"]
+    self.name = metadata.name
 
     # name prefixing is optional, if enabled, a name 'foo' will become
     # 'python-foo' (depending on what the python_package_name_prefix is)
@@ -469,13 +508,7 @@ class FPM::Package::Python < FPM::Package
     # convert python-Foo to python-foo if flag is set
     self.name = self.name.downcase if attributes[:python_downcase_name?]
 
-    # Python metadata supports both "Author-email" and "Maintainer-email"
-    # Of the "Maintainer" fields, python core-metadata says:
-    # > Note that this field is intended for use when a project is being maintained by someone other than the original author
-    #
-    # So we should prefer Maintainer-email if it exists, but fall back to Author-email otherwise.
-    self.maintainer = metadata["Author-email"] if metadata["Author-email"]
-    self.maintainer = metadata["Maintainer-email"] if metadata["Maintainer-email"]
+    self.maintainer = metadata.maintainer 
 
     if !attributes[:no_auto_depends?] and attributes[:python_dependencies?]
       sys_platform = nil
@@ -485,28 +518,44 @@ class FPM::Package::Python < FPM::Package
 
       dep_re = /^([^<>!= ]+)\s*(?:([~<>!=]{1,2})\s*(.*))?$/
 
-      # Requires-Dist: name>=version; environment marker
+      # Python Dependency specifiers are a somewhat complex format described here:
+      # https://packaging.python.org/en/latest/specifications/dependency-specifiers/#environment-markers
+      #
+      # It would be ideal to support the entire specifier format, but it's unclear if that's necessary 
+      # for most packaging situations.
+      #
+      # If a specifier is found to not work under fpm, please file an issue on the fpm issue tracker
+      # and hopefully support for it can be added.
+      #
       # Example:
       # Requires-Dist: tzdata; sys_platform = win32
       # Requires-Dist: asgiref>=3.8.1
 
-      metadata["Requires-Dist"].each do |dep|
-        dep, environment = dep.split(/ *; */)
+      metadata.requires.each do |text|
+        dep, environment = text.split(/ *; */)
         match = dep_re.match(dep)
         if match.nil?
           logger.error("Unable to parse dependency", :dependency => dep)
           raise FPM::InvalidPackageConfiguration, "Invalid dependency '#{dep}'"
         end
 
-        if environment && environment.include?("sys_platform ==") && !environment.include?("sys_platform == #{sys_platform}")
-          logger.info("Ignoring dependency because it doesn't match the current platform", :current => sys_platform, :target => environment, :dependency => dep)
-          next
-        end
+        if environment
+          if environment.include?("sys_platform ==") && !environment.include?("sys_platform == #{sys_platform}")
+            logger.debug("Ignoring dependency because it doesn't match the current platform", :current => sys_platform, :target => environment, :dependency => text)
+            next
+          end
 
-        if environment && environment.include?("extra ==")
-          logger.info("Ignoring extra/optional dependency", :dependency => dep, :extra => environment)
-          next
-        end
+          if environment.include?("extra ==")
+            logger.debug("Ignoring extra/optional dependency", :dependency => text, :extra => environment)
+            next
+          end
+
+          unsupported_markers = UNSUPPORTED_DEPENDENCY_MARKERS.filter { |m| environment.include?(m) }
+          if unsupported_markers.any?
+            logger.debug("Package contains an unsupported Requires-Dist 'environment marker' which fpm doesn't yet support. If you want support for these, please file an issue.", :markers => unsupported_markers, :dependency => text)
+            next
+          end
+        end # if environment
 
         name, cmp, version = match.captures
 
@@ -526,7 +575,11 @@ class FPM::Package::Python < FPM::Package
         # convert dependencies from python-Foo to python-foo
         name = name.downcase if attributes[:python_downcase_dependencies?]
 
-        self.dependencies << "#{name} #{cmp} #{version}"
+        if cmp.nil? && version.nil?
+          self.dependencies << "#{name}"
+        else
+          self.dependencies << "#{name} #{cmp} #{version}"
+        end
       end # parse Requires-Dist dependencies
     end # if attributes[:python_dependencies?]
   end # def load_package_info
