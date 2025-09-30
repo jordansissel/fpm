@@ -46,7 +46,7 @@ Gem::Specification.new do |spec|
   # so I think this needs to be added explicitly?
   spec.add_dependency("rexml")
 
-  spec.add_development_dependency("rspec", "~> 3.0.0") # license: MIT (according to wikipedia)
+  spec.add_development_dependency("rspec", "~> 3.13.0") # license: MIT (according to wikipedia)
   spec.add_development_dependency("insist", "~> 1.0.0") # license: Apache 2
   spec.add_development_dependency("pry")
 
