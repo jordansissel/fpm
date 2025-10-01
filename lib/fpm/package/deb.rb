@@ -27,7 +27,7 @@ class FPM::Package::Deb < FPM::Package
   } unless defined?(SCRIPT_MAP)
 
   # The list of supported compression types. Default is gz (gzip)
-  COMPRESSION_TYPES = [ "gz", "bzip2", "xz", "zst", "none" ]
+  COMPRESSION_TYPES = [ "gz", "bzip2", "pigz", "xz", "zst", "none" ]
 
   # https://www.debian.org/doc/debian-policy/ch-relationships.html#syntax-of-relationship-fields
   # Example value with version relationship: libc6 (>= 2.2.1)
@@ -700,6 +700,11 @@ class FPM::Package::Deb < FPM::Package
         controltar = build_path("control.tar.zst")
         compression_flags = ["--use-compress-program", "zstd"]
         compressor_options = {"ZSTD_CLEVEL" => "-#{self.attributes[:deb_compression_level] || 3}"}
+      when "pigz"
+        datatar = build_path("data.tar.gz")
+        controltar = build_path("control.tar.gz")
+        compression_flags = ["-I"]
+        compressor_options = {"PIGZ" => "-#{self.attributes[:deb_compression_level] || 9}"}
       when "none"
         datatar = build_path("data.tar")
         controltar = build_path("control.tar")
@@ -1006,7 +1011,7 @@ class FPM::Package::Deb < FPM::Package
 
     # Tar up the staging_path into control.tar.{compression type}
     case self.attributes[:deb_compression]
-      when "gz", "bzip2", nil
+      when "gz", "bzip2", "pigz", nil
         controltar = "control.tar.gz"
         compression_flags = ["-z"]
         # gnu tar obeys GZIP environment variable with options for gzip; -n = forget original filename and date
