@@ -38,7 +38,7 @@ docker-prep: Dockerfile
 	|| docker build -t $(IMAGE) .
 
 .PHONY: build
-build: $(GENERATED_FILES) | docker-prep
+build: $(GENERATED_FILES) | docker-prep package-type-cli
 	docker run -it -v $$PWD/../:/project:z $(IMAGE) sh -xc 'make -C /project/docs html && chown -R 1000:1000 /project/docs'
 
 
