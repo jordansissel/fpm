@@ -1,6 +1,14 @@
 Release Notes and Change Log
 ============================
 
+1.17.0 (???)
+* https://github.com/jordansissel/fpm/pull/2027 (`#2027`_; Alexandr Zarubkin)
+* https://github.com/jordansissel/fpm/pull/2104 (`#2104`_; Jordan Sissel)
+* https://github.com/jordansissel/fpm/pull/2103 (`#2103`_; Jordan Sissel)
+* https://github.com/jordansissel/fpm/pull/2092 (`#2092`_; Jordan Sissel)
+* https://github.com/jordansissel/fpm/pull/2017 (`#2017`_; Markson Hon)
+* https://github.com/jordansissel/fpm/pull/2088 (`#2088`_; Jordan Sissel)
+
 1.16.0 (December 8, 2024)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
