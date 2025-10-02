@@ -6,7 +6,7 @@ This package format is typically used in older Solaris versions (Solaris 7, 8,
 
 If you're using Solaris 11, OpenSolaris, or Illumos, you might want to use `the newer package format, p5p`_. 
 
-.. _newer package format, p5p: /packages/p5p.html
+.. _the newer package format, p5p: /packages/p5p.html
 
 Supported Uses in FPM
 ---------------------
