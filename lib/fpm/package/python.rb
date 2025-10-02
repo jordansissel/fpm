@@ -98,22 +98,6 @@ class FPM::Package::Python < FPM::Package
     :attribute_name => :python_internal_pip,
     :default => true
  
-    # Environment markers which are known but not yet supported by fpm.
-    # For some of these markers, it's not even clear if they are useful to fpm's packaging step.
-    # https://packaging.python.org/en/latest/specifications/dependency-specifiers/#dependency-specifiers
-    # 
-    # XXX: python's setuptools.pkg_resources can help parse and evaluate such things, even if that library is deprecated:
-    # >>> f = open("spec/fixtures/python/requirements.txt"); a = pkg_resources.parse_requirements(f.read()); f.close();
-    # >>> [x for x in list(a) if x.marker is None or x.marker.evaluate()]
-    # [Requirement.parse('rtxt-dep1>0.1'), Requirement.parse('rtxt-dep2==0.1'), Requirement.parse('rtxt-dep4; python_version > "2.0"')]
-    # 
-    # Another example, showing only requirements which have environment markers which evaluate to true (or have no markers)
-    # python3 -c 'import pkg_resources; import json;import sys; r = pkg_resources.parse_requirements(sys.stdin); deps = [d for d in list(r) if d.marker is None or d.marker.evaluate()]; pr
-    # ["rtxt-dep1>0.1", "rtxt-dep2==0.1", "rtxt-dep4; python_version > \"2.0\""]
-    UNSUPPORTED_DEPENDENCY_MARKERS = %w(python_version python_full_version os_name platform_release platform_system platform_version
-      platform_machine platform_python_implementation implementation_name implementation_version)
-
-
   class PythonMetadata
     require "strscan"
 
