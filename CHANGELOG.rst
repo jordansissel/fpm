@@ -11,7 +11,7 @@ Release Notes and Change Log
 * pacman: Now can build packages with aarch64 and arm7hf architecture (`#2017`_; Markson Hon)
 * rpm: Paths with '{' and '}' characters can now be included in rpms (`#2088`_ `#2087`_; Jordan Sissel, Manish2481983)
 * docs: Updated urls which pointed at rpm documentation (`#2092`_, `#2011`_, `#2054`_; André Kelpe, Natanael Arndt)
-* Ruby 3.4.0 no longer gives warnings related to `ostruct` (`#2106`_, also `#2104` and `#2103`_; Jordan Sissel)
+* Ruby 3.4.0 no longer gives warnings related to `ostruct` (`#2106`_, also `#2104`_ and `#2103`_; Jordan Sissel)
 
 1.16.0 (December 8, 2024)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
