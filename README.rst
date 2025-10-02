@@ -1,7 +1,7 @@
 fpm
 ===
 
-|Chat| |Gem|
+|Gem|
 
 The goal of fpm is to make it easy and quick to build packages such as rpms,
 debs, OSX packages, etc.
@@ -97,7 +97,5 @@ Targets:
 
 .. include: docs/contributing
 
-.. |Chat| image:: https://img.shields.io/badge/irc-%23fpm%20on%20freenode-brightgreen.svg
-   :target: https://webchat.freenode.net/?channels=fpm
 .. |Gem| image:: https://img.shields.io/gem/v/fpm.svg
    :target: https://rubygems.org/gems/fpm
