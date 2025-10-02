@@ -259,7 +259,11 @@ class FPM::Command < Clamp::Command
     "'gem', it specifies the packages to download and use as the gem input",
     :attribute_name => :args
 
+  # Keep a copy of the original flags (ones declared above, not by package types)
+  # This helps when generating the documentation
+  GENERAL_OPTIONS = @declared_options.clone
   FPM::Package.types.each do |name, klass|
+    # This adds each package's flags to the main command
     klass.apply_options(self)
   end
 

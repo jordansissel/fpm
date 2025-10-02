@@ -15,7 +15,8 @@ if ARGV.length == 0
   puts "General Options"
   puts "---------------"
 
-  FPM::Command.instance_variable_get(:@declared_options).sort_by { |o| flagsort.call(o.switches.first) }.each do |option|
+  #FPM::Command.instance_variable_get(:@declared_options).sort_by { |o| flagsort.call(o.switches.first) }.each do |option|
+  FPM::Command::GENERAL_OPTIONS.sort_by { |o| flagsort.call(o.switches.first) }.each do |option|
       text = option.description.gsub("\n", " ")
 
       if option.type == :flag
