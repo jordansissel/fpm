@@ -1,6 +1,9 @@
 # https://blog.readthedocs.com/build-errors-docutils-0-18/
 version: 2
 
+build:
+  os: ubuntu-24.04
+
 python:
   install:
   - requirements: docs/requirements.txt
