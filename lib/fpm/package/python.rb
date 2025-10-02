@@ -312,32 +312,24 @@ class FPM::Package::Python < FPM::Package
   # The 'package' can be any of:
   #
   # * A name of a package on pypi (ie; easy_install some-package)
-  # * The path to a directory containing setup.py or pypackage.toml
-  # * The path to a setup.py or pypackage.toml
+  # * The path to a directory containing setup.py or pyproject.toml
+  # * The path to a setup.py or pyproject.toml
   # * The path to a python sdist file ending in .tar.gz
   # * The path to a python wheel file ending in .whl
   def input(package)
-    #if attributes[:python_obey_requirements_txt?]
-      #raise "--python-obey-requirements-txt is temporarily unsupported at this time."
-    #end
     explore_environment
 
     path_to_package = download_if_necessary(package, version)
 
-    # Expect a setup.py or pypackage.toml if it's a directory.
+    # Expect a setup.py or pyproject.toml if it's a directory.
     if File.directory?(path_to_package)
-      if !(File.exist?(File.join(path_to_package, "setup.py")) or File.exist?(File.join(path_to_package, "pypackage.toml")))
-        logger.error("The path doesn't appear to be a python package directory. I expected either a pypackage.toml or setup.py but found neither.", :package => package)
-        raise "Unable to find python package; tried #{setup_py}"
-      end
-
-      if attributes[:python_obey_requirements_txt?] && File.exist?(File.join(path_to_package, "requirements.txt"))
-        @requirements_txt = File.read(File.join(path_to_package, "requirements.txt"))
+      if !(File.exist?(File.join(path_to_package, "setup.py")) or File.exist?(File.join(path_to_package, "pyproject.toml")))
+        raise FPM::InvalidPackageConfiguration, "The path ('#{path_to_package}') doesn't appear to be a python package directory. I expected either a pyproject.toml or setup.py but found neither."
       end
     end
 
     if File.file?(path_to_package)
-      if ["setup.py", "pypackage.toml"].include?(File.basename(path_to_package))
+      if ["setup.py", "pyproject.toml"].include?(File.basename(path_to_package))
         path_to_package = File.dirname(path_to_package)
       end
     end
@@ -349,18 +341,22 @@ class FPM::Package::Python < FPM::Package
 
       path_to_package = ::Dir.glob(build_path("*.whl")).first
       if path_to_package.nil?
-        log.error("Failed building python package wheel format. This might be a bug in fpm.")
-        raise "Failed building python package format."
+        raise FPM::InvalidPackageConfiguration, "Failed building python package format - fpm tried to build a python wheel, but didn't find the .whl file. This might be a bug in fpm."
       end
     elsif File.directory?(path_to_package)
       logger.debug("Found directory and assuming it's a python source package.")
       safesystem(*attributes[:python_pip], "wheel", "--no-deps", "-w", build_path, path_to_package)
 
+      if attributes[:python_obey_requirements_txt?]
+        reqtxt = File.join(path_to_package, "requirements.txt")
+        @requirements_txt = File.read(reqtxt).split("\n") if File.file?(reqtxt)
+      end
+
       path_to_package = ::Dir.glob(build_path("*.whl")).first
       if path_to_package.nil?
-        log.error("Failed building python package wheel format. This might be a bug in fpm.")
-        raise "Failed building python package format."
+        raise FPM::InvalidPackageConfiguration, "Failed building python package format - fpm tried to build a python wheel, but didn't find the .whl file. This might be a bug in fpm."
       end
+
     end
 
     load_package_info(path_to_package)
@@ -402,6 +398,11 @@ class FPM::Package::Python < FPM::Package
     # If it's a path, assume local build.
     if File.exist?(path)
       return path if File.directory?(path)
+
+      basename = File.basename(path)
+      return File.dirname(path) if basename == "pyproject.toml"
+      return File.dirname(path) if basename == "setup.py"
+
       return path if path.end_with?(".tar.gz")
       return path if path.end_with?(".tgz") # amqplib v1.0.2 does this
       return path if path.end_with?(".whl")
@@ -524,9 +525,10 @@ class FPM::Package::Python < FPM::Package
 
       reqs = []
 
-      # --python-obey-requirements-txt should replace the requirments listed from the metadata
+      # --python-obey-requirements-txt should use requirements.txt
+      # (if found in the python package) and  replace the requirments listed from the metadata
       if attributes[:python_obey_requirements_txt?] && !@requirements_txt.nil?
-        requires = @requirements_txt.split("\n")
+        requires = @requirements_txt
       else
         requires = metadata.requires
       end

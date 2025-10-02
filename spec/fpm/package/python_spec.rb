@@ -208,32 +208,6 @@ describe FPM::Package::Python do
     end
   end
 
-  context "python_scripts_executable is set" do
-    it "should have scripts with a custom hashbang line" do
-      skip("setup.py-specific feature is no longer supported")
-
-      subject.attributes[:python_scripts_executable] = "fancypants"
-      # Newer versions of Django require Python 3.
-      subject.attributes[:python_bin] = "python3"
-      subject.input("django")
-
-      # Determine, where 'easy_install' is going to install scripts
-      #script_dir = easy_install_default(subject.attributes[:python_bin], 'script_dir')
-      #path = subject.staging_path(File.join(script_dir, "django-admin.py"))
-
-      # Hardcode /usr/local/bin here. On newer Python 3's I cannot figure out how to 
-      # determine the script_dir at installation time. easy_install's method is gone.
-      path = subject.staging_path("/usr/local/bin/django-admin")
-
-      # Read the first line (the hashbang line) of the django-admin.py script
-      fd = File.new(path, "r")
-      topline = fd.readline
-      fd.close
-
-      insist { topline.chomp } == "#!fancypants"
-    end
-  end
-
   context "when input is a name" do
     it "should download from pypi" do
       subject.input("click==8.3.0")
@@ -246,6 +220,31 @@ describe FPM::Package::Python do
       insist { subject.dependencies } == [ ]
 
     end
+  end
+
+  context "when given a project containing a pyproject.toml" do
+    let (:project) do
+      File.expand_path("../../fixtures/python-pyproject.toml/", File.dirname(__FILE__))
+    end
+
+    it "should package it correctly" do
+      subject.input(project)
+      prefix = subject.attributes[:python_package_name_prefix]
+
+      insist { subject.name } == "#{prefix}-example"
+      insist { subject.version } == "1.2.3"
+      insist { subject.maintainer } == "Captain Fancy <foo@example.com>"
+    end
+
+    it "should package it correctly even if the path given is directly to the pyproject.toml" do
+      subject.input(File.join(project, "pyproject.toml"))
+      prefix = subject.attributes[:python_package_name_prefix]
+
+      insist { subject.name } == "#{prefix}-example"
+      insist { subject.version } == "1.2.3"
+      insist { subject.maintainer } == "Captain Fancy <foo@example.com>"
+    end
+
   end
 end # describe FPM::Package::Python
 
