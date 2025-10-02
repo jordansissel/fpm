@@ -1,7 +1,7 @@
 * ``--python-bin PYTHON_EXECUTABLE``
     - The path to the python executable you wish to run.
 * ``--[no-]python-dependencies``
-    - Include requirements defined in setup.py as dependencies.
+    - Include requirements defined by the python package as dependencies.
 * ``--python-disable-dependency python_package_name``
     - The python package name to remove from dependency list
 * ``--[no-]python-downcase-dependencies``
@@ -15,11 +15,11 @@
 * ``--[no-]python-fix-name``
     - Should the target package name be prefixed?
 * ``--python-install-bin BIN_PATH``
-    - The path to where python scripts should be installed to.
+    - (DEPRECATED, does nothing) The path to where python scripts should be installed to.
 * ``--python-install-data DATA_PATH``
-    - The path to where data should be installed to. This is equivalent to 'python setup.py --install-data DATA_PATH
+    - (DEPRECATED, does nothing) The path to where data should be installed to. This is equivalent to 'python setup.py --install-data DATA_PATH
 * ``--python-install-lib LIB_PATH``
-    - The path to where python libs should be installed to (default depends on your python installation). Want to find out what your target platform is using? Run this: python -c 'from distutils.sysconfig import get_python_lib; print get_python_lib()'
+    - (DEPRECATED, does nothing) The path to where python libs should be installed to (default depends on your python installation). Want to find out what your target platform is using? Run this: python -c 'from distutils.sysconfig import get_python_lib; print get_python_lib()'
 * ``--[no-]python-internal-pip``
     - Use the pip module within python to install modules - aka 'python -m pip'. This is the recommended usage since Python 3.4 (2014) instead of invoking the 'pip' script
 * ``--[no-]python-obey-requirements-txt``
@@ -33,9 +33,9 @@
 * ``--python-pypi PYPI_URL``
     - PyPi Server uri for retrieving packages.
 * ``--python-scripts-executable PYTHON_EXECUTABLE``
-    - Set custom python interpreter in installing scripts. By default distutils will replace python interpreter in installing scripts (specified by shebang) with current python interpreter (sys.executable). This option is equivalent to appending 'build_scripts --executable PYTHON_EXECUTABLE' arguments to 'setup.py install' command.
+    - (DEPRECATED) Set custom python interpreter in installing scripts. By default distutils will replace python interpreter in installing scripts (specified by shebang) with current python interpreter (sys.executable). This option is equivalent to appending 'build_scripts --executable PYTHON_EXECUTABLE' arguments to 'setup.py install' command.
 * ``--python-setup-py-arguments setup_py_argument``
-    - Arbitrary argument(s) to be passed to setup.py
+    - (DEPRECATED) Arbitrary argument(s) to be passed to setup.py
 * ``--python-trusted-host PYPI_TRUSTED``
     - Mark this host or host:port pair as trusted for pip
 

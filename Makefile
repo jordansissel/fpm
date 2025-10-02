@@ -53,7 +53,7 @@ clean:
 publish-docs:
 	$(MAKE) -C docs publish
 
-release-prep:
+release-prep: package
 	rm -f docs/changelog_links.rst docs/cli-reference.rst
 	make -C docs changelog_links.rst cli-reference.rst package-type-cli
 

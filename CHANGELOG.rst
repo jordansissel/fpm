@@ -4,7 +4,7 @@ Release Notes and Change Log
 1.17.0 (October 2, 2025)
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-* python: Support modern Python project features: pyproject.toml, wheels, etc. Now, any project that can be built or installed with ``pip`` can be packaged by fpm. Previously, fpm relied on a long-deprecated features in setup.py to see a python project's metadata such as name, version, and dependencies. Fpm now uses python's package tools to identify the project's name, version, dependencies, and other information. (`#2104`_, `#2105`_; Jordan Sissel)
+* python: Support modern Python project features: pyproject.toml, wheels, etc. Now, any project that can be built or installed with ``pip`` can be packaged by fpm. Previously, fpm relied on a long-deprecated features in setup.py to see a python project's metadata such as name, version, and dependencies. Fpm now uses python's package tools to identify the project's name, version, dependencies, and other information. (`#2104`_, `#2105`_, `#2040`_, `#1982`_, `#2029`_; Jordan Sissel, cwegener, amdei, gmabey)
 * dir: When copying files, only use hardlinks if the original files were also hardlinks. (`#2103`_, `#2102`_; Michael Telatynski, Matthew Rathbone, Jordan Sissel). :w
   Related: https://github.com/electron-userland/electron-builder/issues/5721
 * deb: bug fix: when a file given with ``--config-files <path>`` copied into the package, fpm was forgetting to mark the file as being a config file in the package, aka Debian "conffiles" (`#2027`_, `#1823`_; Alexandr Zarubkin, Kientz Arnaud)

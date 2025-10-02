@@ -427,7 +427,7 @@ General Options
     - (python only) The path to the python executable you wish to run.
 
 * ``--[no-]python-dependencies``
-    - (python only) Include requirements defined in setup.py as dependencies.
+    - (python only) Include requirements defined by the python package as dependencies.
 
 * ``--python-disable-dependency python_package_name``
     - (python only) The python package name to remove from dependency list
@@ -448,13 +448,13 @@ General Options
     - (python only) Should the target package name be prefixed?
 
 * ``--python-install-bin BIN_PATH``
-    - (python only) The path to where python scripts should be installed to.
+    - (python only) (DEPRECATED, does nothing) The path to where python scripts should be installed to.
 
 * ``--python-install-data DATA_PATH``
-    - (python only) The path to where data should be installed to. This is equivalent to 'python setup.py --install-data DATA_PATH
+    - (python only) (DEPRECATED, does nothing) The path to where data should be installed to. This is equivalent to 'python setup.py --install-data DATA_PATH
 
 * ``--python-install-lib LIB_PATH``
-    - (python only) The path to where python libs should be installed to (default depends on your python installation). Want to find out what your target platform is using? Run this: python -c 'from distutils.sysconfig import get_python_lib; print get_python_lib()'
+    - (python only) (DEPRECATED, does nothing) The path to where python libs should be installed to (default depends on your python installation). Want to find out what your target platform is using? Run this: python -c 'from distutils.sysconfig import get_python_lib; print get_python_lib()'
 
 * ``--[no-]python-internal-pip``
     - (python only) Use the pip module within python to install modules - aka 'python -m pip'. This is the recommended usage since Python 3.4 (2014) instead of invoking the 'pip' script
@@ -475,10 +475,10 @@ General Options
     - (python only) PyPi Server uri for retrieving packages.
 
 * ``--python-scripts-executable PYTHON_EXECUTABLE``
-    - (python only) Set custom python interpreter in installing scripts. By default distutils will replace python interpreter in installing scripts (specified by shebang) with current python interpreter (sys.executable). This option is equivalent to appending 'build_scripts --executable PYTHON_EXECUTABLE' arguments to 'setup.py install' command.
+    - (python only) (DEPRECATED) Set custom python interpreter in installing scripts. By default distutils will replace python interpreter in installing scripts (specified by shebang) with current python interpreter (sys.executable). This option is equivalent to appending 'build_scripts --executable PYTHON_EXECUTABLE' arguments to 'setup.py install' command.
 
 * ``--python-setup-py-arguments setup_py_argument``
-    - (python only) Arbitrary argument(s) to be passed to setup.py
+    - (python only) (DEPRECATED) Arbitrary argument(s) to be passed to setup.py
 
 * ``--python-trusted-host PYPI_TRUSTED``
     - (python only) Mark this host or host:port pair as trusted for pip
@@ -541,7 +541,7 @@ General Options
     - (rpm only) Add FILEPATH as an init script
 
 * ``--[no-]rpm-macro-expansion``
-    - (rpm only) install-time macro expansion in %pre %post %preun %postun scripts (see: https://rpm.org/user_doc/scriptlet_expansion.html)
+    - (rpm only) install-time macro expansion in %pre %post %preun %postun scripts (see: https://rpm-software-management.github.io/rpm/manual/scriptlet_expansion.html)
 
 * ``--[no-]rpm-old-perl-dependency-name``
     - (rpm only) Use older 'perl' depdency name. Newer Red Hat (and derivatives) use a dependency named 'perl-interpreter'.
@@ -568,16 +568,16 @@ General Options
     - (rpm only) Adds a custom tag in the spec file as is. Example: --rpm-tag 'Requires(post): /usr/sbin/alternatives'
 
 * ``--rpm-trigger-after-install '[OPT]PACKAGE: FILEPATH'``
-    - (rpm only) Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
+    - (rpm only) Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: https://rpm-software-management.github.io/rpm/manual/triggers.html
 
 * ``--rpm-trigger-after-target-uninstall '[OPT]PACKAGE: FILEPATH'``
-    - (rpm only) Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
+    - (rpm only) Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: https://rpm-software-management.github.io/rpm/manual/triggers.html
 
 * ``--rpm-trigger-before-install '[OPT]PACKAGE: FILEPATH'``
-    - (rpm only) Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
+    - (rpm only) Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: https://rpm-software-management.github.io/rpm/manual/triggers.html
 
 * ``--rpm-trigger-before-uninstall '[OPT]PACKAGE: FILEPATH'``
-    - (rpm only) Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
+    - (rpm only) Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: https://rpm-software-management.github.io/rpm/manual/triggers.html
 
 * ``--[no-]rpm-use-file-permissions``
     - (rpm only) Use existing file permissions when defining ownership and modes.
@@ -649,7 +649,7 @@ General Options
     - (virtualenv only) PyPi extra-index-url for pointing to your priviate PyPi
 
 * ``--[no-]virtualenv-setup-install``
-    - (virtualenv only) After building virtualenv run setup.py install useful when building a virtualenv for packages and including their requirements from 
+    - (virtualenv only) After building virtualenv run setup.py install useful when building a virtualenv for packages and including their requirements from requirements.txt
 
 * ``--[no-]virtualenv-system-site-packages``
     - (virtualenv only) Give the virtual environment access to the global site-packages
@@ -916,7 +916,7 @@ python
 * ``--python-bin PYTHON_EXECUTABLE``
     - The path to the python executable you wish to run.
 * ``--[no-]python-dependencies``
-    - Include requirements defined in setup.py as dependencies.
+    - Include requirements defined by the python package as dependencies.
 * ``--python-disable-dependency python_package_name``
     - The python package name to remove from dependency list
 * ``--[no-]python-downcase-dependencies``
@@ -930,11 +930,11 @@ python
 * ``--[no-]python-fix-name``
     - Should the target package name be prefixed?
 * ``--python-install-bin BIN_PATH``
-    - The path to where python scripts should be installed to.
+    - (DEPRECATED, does nothing) The path to where python scripts should be installed to.
 * ``--python-install-data DATA_PATH``
-    - The path to where data should be installed to. This is equivalent to 'python setup.py --install-data DATA_PATH
+    - (DEPRECATED, does nothing) The path to where data should be installed to. This is equivalent to 'python setup.py --install-data DATA_PATH
 * ``--python-install-lib LIB_PATH``
-    - The path to where python libs should be installed to (default depends on your python installation). Want to find out what your target platform is using? Run this: python -c 'from distutils.sysconfig import get_python_lib; print get_python_lib()'
+    - (DEPRECATED, does nothing) The path to where python libs should be installed to (default depends on your python installation). Want to find out what your target platform is using? Run this: python -c 'from distutils.sysconfig import get_python_lib; print get_python_lib()'
 * ``--[no-]python-internal-pip``
     - Use the pip module within python to install modules - aka 'python -m pip'. This is the recommended usage since Python 3.4 (2014) instead of invoking the 'pip' script
 * ``--[no-]python-obey-requirements-txt``
@@ -948,9 +948,9 @@ python
 * ``--python-pypi PYPI_URL``
     - PyPi Server uri for retrieving packages.
 * ``--python-scripts-executable PYTHON_EXECUTABLE``
-    - Set custom python interpreter in installing scripts. By default distutils will replace python interpreter in installing scripts (specified by shebang) with current python interpreter (sys.executable). This option is equivalent to appending 'build_scripts --executable PYTHON_EXECUTABLE' arguments to 'setup.py install' command.
+    - (DEPRECATED) Set custom python interpreter in installing scripts. By default distutils will replace python interpreter in installing scripts (specified by shebang) with current python interpreter (sys.executable). This option is equivalent to appending 'build_scripts --executable PYTHON_EXECUTABLE' arguments to 'setup.py install' command.
 * ``--python-setup-py-arguments setup_py_argument``
-    - Arbitrary argument(s) to be passed to setup.py
+    - (DEPRECATED) Arbitrary argument(s) to be passed to setup.py
 * ``--python-trusted-host PYPI_TRUSTED``
     - Mark this host or host:port pair as trusted for pip
 
@@ -994,7 +994,7 @@ rpm
 * ``--rpm-init FILEPATH``
     - Add FILEPATH as an init script
 * ``--[no-]rpm-macro-expansion``
-    - install-time macro expansion in %pre %post %preun %postun scripts (see: https://rpm.org/user_doc/scriptlet_expansion.html)
+    - install-time macro expansion in %pre %post %preun %postun scripts (see: https://rpm-software-management.github.io/rpm/manual/scriptlet_expansion.html)
 * ``--[no-]rpm-old-perl-dependency-name``
     - Use older 'perl' depdency name. Newer Red Hat (and derivatives) use a dependency named 'perl-interpreter'.
 * ``--rpm-os OS``
@@ -1012,13 +1012,13 @@ rpm
 * ``--rpm-tag TAG``
     - Adds a custom tag in the spec file as is. Example: --rpm-tag 'Requires(post): /usr/sbin/alternatives'
 * ``--rpm-trigger-after-install '[OPT]PACKAGE: FILEPATH'``
-    - Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
+    - Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: https://rpm-software-management.github.io/rpm/manual/triggers.html
 * ``--rpm-trigger-after-target-uninstall '[OPT]PACKAGE: FILEPATH'``
-    - Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
+    - Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: https://rpm-software-management.github.io/rpm/manual/triggers.html
 * ``--rpm-trigger-before-install '[OPT]PACKAGE: FILEPATH'``
-    - Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
+    - Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: https://rpm-software-management.github.io/rpm/manual/triggers.html
 * ``--rpm-trigger-before-uninstall '[OPT]PACKAGE: FILEPATH'``
-    - Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
+    - Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: https://rpm-software-management.github.io/rpm/manual/triggers.html
 * ``--[no-]rpm-use-file-permissions``
     - Use existing file permissions when defining ownership and modes.
 * ``--rpm-user USER``
@@ -1074,7 +1074,7 @@ virtualenv
 * ``--virtualenv-pypi-extra-url PYPI_EXTRA_URL``
     - PyPi extra-index-url for pointing to your priviate PyPi
 * ``--[no-]virtualenv-setup-install``
-    - After building virtualenv run setup.py install useful when building a virtualenv for packages and including their requirements from 
+    - After building virtualenv run setup.py install useful when building a virtualenv for packages and including their requirements from requirements.txt
 * ``--[no-]virtualenv-system-site-packages``
     - Give the virtual environment access to the global site-packages
 
