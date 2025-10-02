@@ -1,22 +1,16 @@
 Release Notes and Change Log
 ============================
 
-1.17.0 (???)
-* python: Support modern Python project features: pyproject.toml, wheels, etc. 
-  Now, any project that can be built or installed with `pip` can be packaged by
-  fpm. Previously, fpm relied on a long-deprecated features in
-  setup.py to see a python project's metadata such as name, version,
-  and dependencies. Fpm now uses python's package tools to identify
-  the project's name, version, dependencies, and other information.
-  (`#2104`_, `#2105`_; Jordan Sissel)
-* dir: When copying files, only use hardlinks if the original files were also hardlinks. (`#2103`_, `#2102`_; Michael Telatynski, Matthew Rathbone, Jordan Sissel)
-       Related: https://github.com/electron-userland/electron-builder/issues/5721
-* deb: bug fix: when a file given with ``--config-files <path>``
-  copied into the package, fpm was forgetting to also add it to the
-  Debian package's "conffiles" list (`#2027`_, `#1823`_; Alexandr Zarubkin, Kientz Arnaud)
+1.17.0 (October 2, 2025)
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+* python: Support modern Python project features: pyproject.toml, wheels, etc. Now, any project that can be built or installed with ``pip`` can be packaged by fpm. Previously, fpm relied on a long-deprecated features in setup.py to see a python project's metadata such as name, version, and dependencies. Fpm now uses python's package tools to identify the project's name, version, dependencies, and other information. (`#2104`_, `#2105`_; Jordan Sissel)
+* dir: When copying files, only use hardlinks if the original files were also hardlinks. (`#2103`_, `#2102`_; Michael Telatynski, Matthew Rathbone, Jordan Sissel). :w
+  Related: https://github.com/electron-userland/electron-builder/issues/5721
+* deb: bug fix: when a file given with ``--config-files <path>`` copied into the package, fpm was forgetting to mark the file as being a config file in the package, aka Debian "conffiles" (`#2027`_, `#1823`_; Alexandr Zarubkin, Kientz Arnaud)
 * pacman: Now can build packages with aarch64 and arm7hf architecture (`#2017`_; Markson Hon)
 * rpm: Paths with '{' and '}' characters can now be included in rpms (`#2088`_ `#2087`_; Jordan Sissel, Manish2481983)
-* docs: Updated urls which pointed at rpm documentation (`#2092`_, `#2011`_; André Kelpe)
+* docs: Updated urls which pointed at rpm documentation (`#2092`_, `#2011`_, `#2054`_; André Kelpe, Natanael Arndt)
 * Ruby 3.4.0 no longer gives warnings related to `ostruct` (`#2106`_, also `#2104` and `#2103`_; Jordan Sissel)
 
 1.16.0 (December 8, 2024)
