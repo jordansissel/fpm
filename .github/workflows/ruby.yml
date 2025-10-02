@@ -21,6 +21,10 @@ jobs:
         ruby-version: ${{ matrix.ruby-version }}
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
     - run: |
-        bundle exec rspec
+        if [ ! -z "$RUNNER_DEBUG" ] ; then
+          DEBUG=1 bundle exec rspec -fd
+        else
+          bundle exec rspec
+        fi
       env:
         SHELL: /usr/bin/bash
