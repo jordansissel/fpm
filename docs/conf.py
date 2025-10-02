@@ -46,7 +46,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'fpm - packaging made simple'
-copyright = u'2016, Jordan Sissel'
+copyright = u'2025, Jordan Sissel and contributors'
 author = u'Jordan Sissel'
 
 # The version info for the project you're documenting, acts as replacement for
