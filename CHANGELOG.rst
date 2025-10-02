@@ -2,8 +2,18 @@ Release Notes and Change Log
 ============================
 
 1.17.0 (???)
-* https://github.com/jordansissel/fpm/pull/2027 (`#2027`_; Alexandr Zarubkin)
-* https://github.com/jordansissel/fpm/pull/2104 (`#2104`_; Jordan Sissel)
+* python: Support modern Python project features: pyproject.toml, wheels, etc. 
+  Now, any project that can be built or installed with `pip` can be packaged by
+  fpm. Previously, fpm relied on a long-deprecated features in
+  setup.py to see a python project's metadata such as name, version,
+  and dependencies. Fpm now uses python's package tools to identify
+  the project's name, version, dependencies, and other information.
+  (`#2104`_; Jordan Sissel)
+
+* deb: bug fix: when a file given with ``--config-files <path>``
+  copied into the package, fpm was forgetting to also add it to the
+  Debian package's "conffiles" list (`#2027`_, `#1823`_; Alexandr Zarubkin, Kientz Arnaud)
+
 * https://github.com/jordansissel/fpm/pull/2103 (`#2103`_; Jordan Sissel)
 * https://github.com/jordansissel/fpm/pull/2092 (`#2092`_; Jordan Sissel)
 * https://github.com/jordansissel/fpm/pull/2017 (`#2017`_; Markson Hon)
