@@ -8,16 +8,16 @@ Release Notes and Change Log
   setup.py to see a python project's metadata such as name, version,
   and dependencies. Fpm now uses python's package tools to identify
   the project's name, version, dependencies, and other information.
-  (`#2104`_; Jordan Sissel)
-
+  (`#2104`_, `#2105`_; Jordan Sissel)
+* dir: When copying files, only use hardlinks if the original files were also hardlinks. (`#2103`_, `#2102`_; Michael Telatynski, Matthew Rathbone, Jordan Sissel)
+       Related: https://github.com/electron-userland/electron-builder/issues/5721
 * deb: bug fix: when a file given with ``--config-files <path>``
   copied into the package, fpm was forgetting to also add it to the
   Debian package's "conffiles" list (`#2027`_, `#1823`_; Alexandr Zarubkin, Kientz Arnaud)
-
-* https://github.com/jordansissel/fpm/pull/2103 (`#2103`_; Jordan Sissel)
-* https://github.com/jordansissel/fpm/pull/2092 (`#2092`_; Jordan Sissel)
-* https://github.com/jordansissel/fpm/pull/2017 (`#2017`_; Markson Hon)
-* https://github.com/jordansissel/fpm/pull/2088 (`#2088`_; Jordan Sissel)
+* pacman: Now can build packages with aarch64 and arm7hf architecture (`#2017`_; Markson Hon)
+* rpm: Paths with '{' and '}' characters can now be included in rpms (`#2088`_ `#2087`_; Jordan Sissel, Manish2481983)
+* docs: Updated urls which pointed at rpm documentation (`#2092`_, `#2011`_; André Kelpe)
+* Ruby 3.4.0 no longer gives warnings related to `ostruct` (`#2106`_, also `#2104` and `#2103`_; Jordan Sissel)
 
 1.16.0 (December 8, 2024)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
