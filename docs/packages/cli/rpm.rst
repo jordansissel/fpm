@@ -35,7 +35,7 @@
 * ``--rpm-init FILEPATH``
     - Add FILEPATH as an init script
 * ``--[no-]rpm-macro-expansion``
-    - install-time macro expansion in %pre %post %preun %postun scripts (see: https://rpm.org/user_doc/scriptlet_expansion.html)
+    - install-time macro expansion in %pre %post %preun %postun scripts (see: https://rpm-software-management.github.io/rpm/manual/scriptlet_expansion.html)
 * ``--[no-]rpm-old-perl-dependency-name``
     - Use older 'perl' depdency name. Newer Red Hat (and derivatives) use a dependency named 'perl-interpreter'.
 * ``--rpm-os OS``
@@ -53,13 +53,13 @@
 * ``--rpm-tag TAG``
     - Adds a custom tag in the spec file as is. Example: --rpm-tag 'Requires(post): /usr/sbin/alternatives'
 * ``--rpm-trigger-after-install '[OPT]PACKAGE: FILEPATH'``
-    - Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
+    - Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: https://rpm-software-management.github.io/rpm/manual/triggers.html
 * ``--rpm-trigger-after-target-uninstall '[OPT]PACKAGE: FILEPATH'``
-    - Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
+    - Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: https://rpm-software-management.github.io/rpm/manual/triggers.html
 * ``--rpm-trigger-before-install '[OPT]PACKAGE: FILEPATH'``
-    - Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
+    - Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: https://rpm-software-management.github.io/rpm/manual/triggers.html
 * ``--rpm-trigger-before-uninstall '[OPT]PACKAGE: FILEPATH'``
-    - Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: http://rpm.org/api/4.4.2.2/triggers.html
+    - Adds a rpm trigger script located in FILEPATH, having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. See: https://rpm-software-management.github.io/rpm/manual/triggers.html
 * ``--[no-]rpm-use-file-permissions``
     - Use existing file permissions when defining ownership and modes.
 * ``--rpm-user USER``
