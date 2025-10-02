@@ -32,16 +32,16 @@ packages/cli/%.rst: ../lib/fpm/package/%.rb packages/cli generate-cli-reference.
 	ruby -I ../lib generate-cli-reference.rb $* > $@
 
 
-.PHONY: podman-prep
-podman-prep: Dockerfile
-	@podman images fpm-sphinx | grep -q '^fpm-sphinx ' \
-	|| podman build -t $(IMAGE) .
+.PHONY: docker-prep
+docker-prep: Dockerfile
+	@docker images fpm-sphinx | grep -q '^fpm-sphinx ' \
+	|| docker build -t $(IMAGE) .
 
 .PHONY: build
-build: $(GENERATED_FILES) | podman-prep
-	podman run -it -v $$PWD/../:/project:z $(IMAGE) sh -xc 'make -C /project/docs html && chown -R 1000:1000 /project/docs'
+build: $(GENERATED_FILES) | docker-prep
+	docker run -it -v $$PWD/../:/project:z $(IMAGE) sh -xc 'make -C /project/docs html && chown -R 1000:1000 /project/docs'
 
 
 .PHONY: build
-view: $(GENERATED_FILES) | podman-prep
-	podman run -p 127.0.0.1:8000:8000 -it -v $$PWD/../:/project:z $(IMAGE) sh -xc 'make -C /project/docs livehtml'
+view: $(GENERATED_FILES) | docker-prep
+	docker run -p 127.0.0.1:8000:8000 -it -v $$PWD/../:/project:z $(IMAGE) sh -xc 'make -C /project/docs livehtml'
