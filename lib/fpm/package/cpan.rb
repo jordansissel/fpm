@@ -51,25 +51,25 @@ class FPM::Package::CPAN < FPM::Package
     require "json"
 
     if File.exist?(package)
-      moduledir = package
+      @moduledir = package
       result = {}
     else
       result = search(package)
       tarball = download(result, version)
-      moduledir = unpack(tarball)
+      @moduledir = unpack(tarball)
     end
 
     # Read package metadata (name, version, etc)
-    if File.exist?(File.join(moduledir, "META.json"))
-      local_metadata = JSON.parse(File.read(File.join(moduledir, ("META.json"))))
-    elsif File.exist?(File.join(moduledir, ("META.yml")))
+    if File.exist?(File.join(@moduledir, "META.json"))
+      local_metadata = JSON.parse(File.read(File.join(@moduledir, ("META.json"))))
+    elsif File.exist?(File.join(@moduledir, ("META.yml")))
       require "yaml"
-      local_metadata = YAML.load_file(File.join(moduledir, ("META.yml")))
-    elsif File.exist?(File.join(moduledir, "MYMETA.json"))
-      local_metadata = JSON.parse(File.read(File.join(moduledir, ("MYMETA.json"))))
-    elsif File.exist?(File.join(moduledir, ("MYMETA.yml")))
+      local_metadata = YAML.load_file(File.join(@moduledir, ("META.yml")))
+    elsif File.exist?(File.join(@moduledir, "MYMETA.json"))
+      local_metadata = JSON.parse(File.read(File.join(@moduledir, ("MYMETA.json"))))
+    elsif File.exist?(File.join(@moduledir, ("MYMETA.yml")))
       require "yaml"
-      local_metadata = YAML.load_file(File.join(moduledir, ("MYMETA.yml")))
+      local_metadata = YAML.load_file(File.join(@moduledir, ("MYMETA.yml")))
     end
 
     # Merge the MetaCPAN query result and the metadata pulled from the local
@@ -128,9 +128,9 @@ class FPM::Package::CPAN < FPM::Package
     logger.info("Installing any build or configure dependencies")
 
     if attributes[:cpan_sandbox_non_core?]
-      cpanm_flags = ["-L", build_path("cpan"), moduledir]
+      cpanm_flags = ["-L", build_path("cpan"), @moduledir]
     else
-      cpanm_flags = ["-l", build_path("cpan"), moduledir]
+      cpanm_flags = ["-l", build_path("cpan"), @moduledir]
     end
 
     # This flag causes cpanm to ONLY download dependencies, skipping the target
@@ -195,8 +195,10 @@ class FPM::Package::CPAN < FPM::Package
         end
       end
     end #no_auto_depends
+  end # def input
 
-    ::Dir.chdir(moduledir) do
+  def build_and_install
+    ::Dir.chdir(@moduledir) do
       # TODO(sissel): install build and config dependencies to resolve
       # build/configure requirements.
       # META.yml calls it 'configure_requires' and 'build_requires'
@@ -279,7 +281,7 @@ class FPM::Package::CPAN < FPM::Package
           if ::Dir.entries(parent).sort == ['.', '..'].sort
             FileUtils.rmdir parent
           else
-            break
+
           end
         end
       end
@@ -299,7 +301,20 @@ class FPM::Package::CPAN < FPM::Package
         self.architecture = "native"
       end
     end
-  end
+  end # def build_and_install
+
+  def shell_code
+    build_procedure = ""
+    install_procedure = ""
+    if File.exist?("Build.PL") # Module::Build
+      build_procedure = "perl Build.PL\n./Build\n#{attributes[:cpan_test?] ? "./Build test\n" : "" }"
+      install_procedure = "./Build install\n"
+    elsif File.exist?("Makefile.PL") # ExtUtils::MakeMaker
+      build_procedure = "perl Makefile.PL\nmake\n#{attributes[:cpan_test?] ? "make test\n" : "" }"
+      install_procedure = "make install\n"
+    end
+    return { :build_procedure => build_procedure, :install_procedure => install_procedure }
+  end # def shell_code
 
   def unpack(tarball)
     directory = build_path("module")

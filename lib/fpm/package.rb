@@ -108,6 +108,11 @@ class FPM::Package
 
   attr_accessor :directories
 
+  # Strings that contain the shell code for building/installing a package. These
+  # are needed by source-based package types.
+  attr_accessor :build_procedure
+  attr_accessor :install_procedure
+
   # Any other attributes specific to this package.
   # This is where you'd put rpm, deb, or other specific attributes.
   attr_accessor :attributes
@@ -189,6 +194,13 @@ class FPM::Package
     self.class.type
   end # def type
 
+  # Source-based package types (such as SRPM and SDEB) should override this method to return true
+  public
+  def source_pkg?
+    return nil
+  end # def source_pkg?
+  private
+
   # Convert this package to a new package type
   def convert(klass)
     logger.info("Converting #{self.type} to #{klass.type}")
@@ -205,6 +217,18 @@ class FPM::Package
       :@name, :@provides, :@replaces, :@scripts, :@url, :@vendor, :@version,
       :@directories, :@staging_path, :@attrs
     ]
+
+    # source packages dont need to actually build the source, instead they need
+    # the shell code for the build and install procedures.
+    if pkg.source_pkg?()
+      h = shell_code() # h is a two elem hash ...
+      @build_procedure = h[:build_procedure]
+      @install_procedure = h[:install_procedure]
+      ivars += [:@build_procedure, :@install_procedure]
+    else # binary packages need to be built and installed to the staging_path
+      build_and_install
+    end
+
     ivars.each do |ivar|
       #logger.debug("Copying ivar", :ivar => ivar, :value => instance_variable_get(ivar),
                     #:from => self.type, :to => pkg.type)
@@ -239,9 +263,12 @@ class FPM::Package
   # The idea is that you can keep pumping in new things to a package
   # for later conversion or output.
   #
-  # Implementations are expected to put files relevant to the 'input' in the
-  # staging_path
-  def input(thing_to_input)
+  # Implementations are expected to leave their prepared files in the
+  # staging_path.
+  #
+  # It is important to note that the build/installation of the
+  # package now happens in the convert() method, not input().
+  def input(thing_to_prepare)
     raise NotImplementedError.new("#{self.class.name} does not yet support " \
                                   "reading #{self.type} packages")
   end # def input
@@ -251,6 +278,15 @@ class FPM::Package
     raise NotImplementedError.new("#{self.class.name} does not yet support " \
                                   "creating #{self.type} packages")
   end # def output
+
+  def shell_code
+    raise NotImplementedError.new("#{self.class.name} does not yet know how to produce " \
+                                  "shell code for its build/install procedures")
+  end # def shell_code
+
+  def build_and_install
+    raise NotImplementedError.new("TODO")
+  end # def build_and_install
 
   def staging_path(path=nil)
     @staging_path ||= Stud::Temporary.directory("package-#{type}-staging")
