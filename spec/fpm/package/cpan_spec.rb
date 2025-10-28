@@ -50,8 +50,8 @@ describe FPM::Package::CPAN do
   end
 
   it "should download precise version" do
-    metadata = subject.instance_eval { search("File::Temp") }
-    insist { File.basename(subject.instance_eval { download(metadata, "0.2310")}) } == "File-Temp-0.2310.tar.gz"
+    metadata = subject.instance_eval { search("Set::Tiny") }
+    insist { File.basename(subject.instance_eval { download(metadata, "0.01") }) } == "Set-Tiny-0.01.tar.gz"
   end
 
   it "should package Digest::MD5" do
