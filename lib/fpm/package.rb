@@ -227,7 +227,7 @@ class FPM::Package
   def converted_from(origin)
     # nothing to do by default. Subclasses may implement this.
     # See the RPM package class for an example.
-  end # def convert_from
+  end # def converted_from
 
   # Add a new source to this package.
   # The exact behavior depends on the kind of package being managed.
