@@ -48,6 +48,11 @@ class FPM::Package::Virtualenv < FPM::Package
     :multivalued => true, :attribute_name => :virtualenv_find_links_urls,
     :default => nil
 
+  option "--python", "PYTHON_EXECUTABLE", "interpreter based on what to create environment "\
+    "(path/identifier) - by default use the interpreter where virtualenv is installed - "\
+    "first found wins",
+    :default => nil
+
   private
 
   # Input a package.
@@ -100,12 +105,19 @@ class FPM::Package::Virtualenv < FPM::Package
 
     ::FileUtils.mkdir_p(virtualenv_build_folder)
 
+    virtualenv_args = ["virtualenv", virtualenv_build_folder]
+
     if self.attributes[:virtualenv_system_site_packages?]
         logger.info("Creating virtualenv with --system-site-packages")
-        safesystem("virtualenv", "--system-site-packages", virtualenv_build_folder)
-    else
-        safesystem("virtualenv", virtualenv_build_folder)
+        virtualenv_args << virtualenv_build_folder
     end
+
+    if self.attributes[:virtualenv_python]
+      logger.info("Creating virtualenv with python executable #{self.attributes[:virtualenv_python]}")
+      virtualenv_args.concat(["--python", self.attributes[:virtualenv_python]])
+    end
+
+    safesystem(*virtualenv_args)
 
     pip_exe = File.join(virtualenv_build_folder, "bin", "pip")
     python_exe = File.join(virtualenv_build_folder, "bin", "python")
