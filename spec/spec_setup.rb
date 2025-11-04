@@ -5,6 +5,9 @@ require "tmpdir" # stdlib
 require "tempfile" # stdlib
 require "fileutils" # stdlib
 require "date" # stdlib
+require "net/http" # stdlib
+require "json" # stdlib
+require "yaml" # stdlib
 
 # put "lib" in RUBYLIB
 $: << File.join(File.dirname(File.dirname(__FILE__)), "lib")
