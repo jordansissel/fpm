@@ -230,6 +230,11 @@ class FPM::Package::CPAN < FPM::Package
                      # Empty install_base to avoid local::lib being used.
                      "--install_base", "")
         end
+
+        # used for creating source-based packages (such as SRPM)
+        self.build_procedure = "perl Build.PL\n./Build"
+        self.install_procedure = "./Build install"
+
       elsif File.exist?("Makefile.PL")
         if attributes[:cpan_perl_lib_path]
           perl_lib_path = attributes[:cpan_perl_lib_path]
@@ -250,12 +255,18 @@ class FPM::Package::CPAN < FPM::Package
         safesystem(*(make + ["test"])) if attributes[:cpan_test?]
         safesystem(*(make + ["DESTDIR=#{staging_path}", "install"]))
 
+        # used for creating source-based packages (such as SRPM)
+        self.build_procedure = "perl Makefile.PL\nmake"
+        self.install_procedure = "make install"
 
       else
         raise FPM::InvalidPackageConfiguration,
           "I don't know how to build #{name}. No Makefile.PL nor " \
           "Build.PL found"
       end
+
+      # dh recognizes perl code automatically
+      self.dh_args = ''
 
       # Fix any files likely to cause conflicts that are duplicated
       # across packages.
@@ -361,6 +372,9 @@ class FPM::Package::CPAN < FPM::Package
       #response.read_body { |c| fd.write(c) }
       fd.write(response.body)
     end
+
+    self.source_archive = build_path(tarball)
+
     return build_path(tarball)
   end # def download
 
