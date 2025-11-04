@@ -673,7 +673,7 @@ class FPM::Command < Clamp::Command
         option.of(self).take(value)
       end
     end
-  end
+  end # def load_options
 
   # A simple flag validator
   #
@@ -757,4 +757,4 @@ class FPM::Command < Clamp::Command
 
     public(:initialize, :ok?, :messages)
   end # class Validator
-end # class FPM::Program
+end # class FPM::Command

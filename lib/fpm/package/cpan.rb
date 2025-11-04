@@ -46,7 +46,6 @@ class FPM::Package::CPAN < FPM::Package
         #"me know by filing an issue: " \
         #"https://github.com/jordansissel/fpm/issues"
     #end
-    #require "ftw" # for http access
     require "net/http"
     require "json"
 
@@ -299,7 +298,7 @@ class FPM::Package::CPAN < FPM::Package
         self.architecture = "native"
       end
     end
-  end
+  end # def input
 
   def unpack(tarball)
     directory = build_path("module")
@@ -308,7 +307,7 @@ class FPM::Package::CPAN < FPM::Package
              %q{--transform=s,[./]*[^/]*/,,} ]
     safesystem("tar", *args)
     return directory
-  end
+  end # def unpack
 
   def download(metadata, cpan_version=nil)
     distribution = metadata["distribution"]
@@ -383,7 +382,7 @@ class FPM::Package::CPAN < FPM::Package
     data = response.body
     metadata = JSON.parse(data)
     return metadata
-  end # def metadata
+  end # def search
 
   def cap_name(name)
     return "perl(" + name.gsub("-", "::") + ")"
@@ -411,7 +410,7 @@ class FPM::Package::CPAN < FPM::Package
       when Net::HTTPRedirection; return httpfetch(response["location"])
       else; response.error!
     end
-  end
+  end # def httpfetch
 
   def httppost(url, body)
     uri = URI.parse(url)
@@ -428,7 +427,7 @@ class FPM::Package::CPAN < FPM::Package
       when Net::HTTPRedirection; return httppost(response["location"])
       else; response.error!
     end
-  end
+  end # def httppost
 
   public(:input)
-end # class FPM::Package::NPM
+end # class FPM::Package::CPAN
