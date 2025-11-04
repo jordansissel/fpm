@@ -1,5 +1,6 @@
 require "fpm/namespace"
 require "fileutils"
+require "stud/temporary"
 
 # Some utility functions
 module FPM::Util
@@ -135,7 +136,7 @@ module FPM::Util
       raise ExecutableNotFound.new(program)
     end
 
-    logger.debug("Running command", :args => args2)
+    logger.info("Running command", :args => args2)
 
     stdout_r, stdout_w = IO.pipe
     stderr_r, stderr_w = IO.pipe
@@ -229,15 +230,18 @@ module FPM::Util
     @@ar_cmd_deterministic = false
 
     # FIXME: don't assume current directory writeable
-    FileUtils.touch(["fpm-dummy.tmp"])
+    emptyfile = Stud::Temporary.pathname
+    testarchive = Stud::Temporary.pathname
+    FileUtils.touch([emptyfile])
+
     ["ar", "gar"].each do |ar|
       ["-qc", "-qcD"].each do |ar_create_opts|
-        FileUtils.rm_f(["fpm-dummy.ar.tmp"])
+        FileUtils.rm_f([testarchive])
         # Return this combination if it creates archives without uids or timestamps.
         # Exitstatus will be nonzero if the archive can't be created,
         # or its table of contents doesn't match the regular expression.
         # Be extra-careful about locale and timezone when matching output.
-        system("#{ar} #{ar_create_opts} fpm-dummy.ar.tmp fpm-dummy.tmp 2>/dev/null && env TZ=UTC LANG=C LC_TIME=C #{ar} -tv fpm-dummy.ar.tmp | grep '0/0.*1970' > /dev/null 2>&1")
+        system("#{ar} #{ar_create_opts} #{testarchive} #{emptyfile} 2>/dev/null && env TZ=UTC LANG=C LC_TIME=C #{ar} -tv #{testarchive} | grep '0/0.*1970' > /dev/null 2>&1")
         if $?.exitstatus == 0
            @@ar_cmd = [ar, ar_create_opts]
            @@ar_cmd_deterministic = true
@@ -247,10 +251,8 @@ module FPM::Util
     end
     # If no combination of ar and options omits timestamps, fall back to default.
     @@ar_cmd = ["ar", "-qc"]
+    FileUtils.rm_f([testarchive, emptyfile])
     return @@ar_cmd
-  ensure
-    # Clean up
-    FileUtils.rm_f(["fpm-dummy.ar.tmp", "fpm-dummy.tmp"])
   end # def ar_cmd
 
   # Return whether the command returned by ar_cmd can create deterministic archives
@@ -264,7 +266,10 @@ module FPM::Util
     return @@tar_cmd if defined? @@tar_cmd
 
     # FIXME: don't assume current directory writeable
-    FileUtils.touch(["fpm-dummy.tmp"])
+    emptyfile = Stud::Temporary.pathname
+    testarchive = Stud::Temporary.pathname
+
+    FileUtils.touch([emptyfile])
 
     # Prefer tar that supports more of the features we want, stop if we find tar of our dreams
     best="tar"
@@ -276,7 +281,7 @@ module FPM::Util
       opts=[]
       score=0
       ["--sort=name", "--mtime=@0"].each do |opt|
-        system("#{tar} #{opt} -cf fpm-dummy.tar.tmp fpm-dummy.tmp > /dev/null 2>&1")
+        system("#{tar} #{opt} -cf #{testarchive} #{emptyfile} > /dev/null 2>&1")
         if $?.exitstatus == 0
           opts << opt
           score += 1
@@ -292,10 +297,9 @@ module FPM::Util
       end
     end
     @@tar_cmd = best
+    FileUtils.rm_f([testarchive, emptyfile])
+
     return @@tar_cmd
-  ensure
-    # Clean up
-    FileUtils.rm_f(["fpm-dummy.tar.tmp", "fpm-dummy.tmp"])
   end # def tar_cmd
 
   # Return whether the command returned by tar_cmd can create deterministic archives
@@ -328,7 +332,15 @@ module FPM::Util
 
 
   def copy_entry(src, dst, preserve=false, remove_destination=false)
-    case File.ftype(src)
+    st = File.lstat(src)
+
+    filetype = if st.ftype == "file" && st.nlink > 1
+      "hardlink"
+    else
+      st.ftype
+    end
+
+    case filetype
     when 'fifo'
       if File.respond_to?(:mkfifo)
         File.mkfifo(dst)
@@ -345,19 +357,24 @@ module FPM::Util
     when 'characterSpecial', 'blockSpecial'
       raise  UnsupportedSpecialFile.new("File is device which fpm doesn't know how to copy (#{File.ftype(src)}): #{src}")
     when 'directory'
-      FileUtils.mkdir(dst) unless File.exists? dst
-    else
-      # if the file with the same dev and inode has been copied already -
+      FileUtils.mkdir(dst) unless File.exist? dst
+    when 'hardlink'
+      # Handle hardlinks
+      # if the file with the same dev and inode has been copied already.
       # hard link it's copy to `dst`, otherwise make an actual copy
-      st = File.lstat(src)
       known_entry = copied_entries[[st.dev, st.ino]]
       if known_entry
         FileUtils.ln(known_entry, dst)
+        logger.debug("Copying hardlink", :src => src, :dst => dst, :link => known_entry)
       else
         FileUtils.copy_entry(src, dst, preserve, false,
                              remove_destination)
         copied_entries[[st.dev, st.ino]] = dst
       end
+    else
+      # Normal file, just copy it.
+      FileUtils.copy_entry(src, dst, preserve, false,
+                           remove_destination)
     end # else...
   end # def copy_entry
 

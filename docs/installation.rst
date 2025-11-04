@@ -7,7 +7,7 @@ Installing FPM
 --------------
 
 .. note::
-	You must have ruby installed on your machine before installing fpm. `Here` are instructions to install Ruby on your machine.
+	You must have ruby installed on your machine before installing fpm. `Here`_ are instructions to install Ruby on your machine.
 
 .. _Here: https://www.ruby-lang.org/en/documentation/installation/
 
@@ -22,7 +22,7 @@ To make sure fpm is installed correctly, try running the following command::
 You should get some output like this, although the exact output will depend on which version of FPM you have installed.::
 
     % fpm --version
-    1.14.0
+    1.17.0
 
 Now you can go on to `using FPM! <getting-started.html>`_
 

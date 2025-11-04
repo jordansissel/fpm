@@ -24,7 +24,7 @@ Gem::Specification.new do |spec|
 
   # For logging
   # https://github.com/jordansissel/ruby-cabin
-  spec.add_dependency("cabin", ">= 0.6.0") # license: Apache 2
+  spec.add_dependency("cabin", ">= 0.9.1") # license: Apache 2
 
   # For backports to older rubies
   # https://github.com/marcandre/backports
@@ -35,7 +35,7 @@ Gem::Specification.new do |spec|
 
   # For command-line flag support
   # https://github.com/mdub/clamp/blob/master/README.markdown
-  spec.add_dependency("clamp", "~> 1.0.0") # license: MIT
+  spec.add_dependency("clamp", ">= 1.0.0") # license: MIT
 
   # For sourcing from pleaserun
   spec.add_dependency("pleaserun", "~> 0.0.29") # license: Apache 2
@@ -46,7 +46,7 @@ Gem::Specification.new do |spec|
   # so I think this needs to be added explicitly?
   spec.add_dependency("rexml")
 
-  spec.add_development_dependency("rspec", "~> 3.0.0") # license: MIT (according to wikipedia)
+  spec.add_development_dependency("rspec", "~> 3.13.0") # license: MIT (according to wikipedia)
   spec.add_development_dependency("insist", "~> 1.0.0") # license: Apache 2
   spec.add_development_dependency("pry")
 

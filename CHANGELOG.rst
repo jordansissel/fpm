@@ -1,6 +1,40 @@
 Release Notes and Change Log
 ============================
 
+1.17.0 (October 2, 2025)
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+* python: Support modern Python project features: pyproject.toml, wheels, etc. Now, any project that can be built or installed with ``pip`` can be packaged by fpm. Previously, fpm relied on a long-deprecated features in setup.py to see a python project's metadata such as name, version, and dependencies. Fpm now uses python's package tools to identify the project's name, version, dependencies, and other information. (`#2104`_, `#2105`_, `#2040`_, `#1982`_, `#2029`_; Jordan Sissel, cwegener, amdei, gmabey)
+* dir: When copying files, only use hardlinks if the original files were also hardlinks. (`#2103`_, `#2102`_; Michael Telatynski, Matthew Rathbone, Jordan Sissel). :w
+  Related: https://github.com/electron-userland/electron-builder/issues/5721
+* deb: bug fix: when a file given with ``--config-files <path>`` copied into the package, fpm was forgetting to mark the file as being a config file in the package, aka Debian "conffiles" (`#2027`_, `#1823`_; Alexandr Zarubkin, Kientz Arnaud)
+* pacman: Now can build packages with aarch64 and arm7hf architecture (`#2017`_; Markson Hon)
+* rpm: Paths with '{' and '}' characters can now be included in rpms (`#2088`_ `#2087`_; Jordan Sissel, Manish2481983)
+* docs: Updated urls which pointed at rpm documentation (`#2092`_, `#2011`_, `#2054`_; André Kelpe, Natanael Arndt)
+* Ruby 3.4.0 no longer gives warnings related to `ostruct` (`#2106`_, also `#2104`_ and `#2103`_; Jordan Sissel)
+
+1.16.0 (December 8, 2024)
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* deb: Add support for zstd compression (`#2009`_, `#2084`_; Ștefan Rusu)
+* deb: Add compression level setting, ``--deb-compression-level`` (`#2036`_; Hugo Beauzée-Luyssen)
+* rpm: Generate an empty rpm changelog if none is given. This should help cases where ``rpmlint`` would complain about missing a changelog entry in the rpm. (`#2041`_; Gordon Bleux)
+* deb: When converting from an rpm, remove package information that is not valid on Debian systems. (`#2053`_, `#1627`; Jordan Stopford, Jamesits)
+* python: Fix bug when PYTHONPATH has spaces in it (`#2062`_; Kristof Willaert)
+* deb: You can now choose a different systemd directory with ``--deb-systemd-path`` (`#2063`_; Reinier Schoof)
+* freebsd: OS version can now be specified with ``--freebsd-osversion``: (`#2064`_; David Newhall II)
+* freebsd: Improve the 'architecture' value used by fpm to generate freebsd packages (`#2064`_, `#1880`_; David Newhall II, Matthew R Kasun)
+* deb: Timer units can be given to ``--deb-systemd`` now (`#2065`_, `#1978`_; phillipp, Robert Schneider)
+* rpm: When converting cpan packages, use newer ``perl-interpreter`` dependency name. To use the old dependency name ``perl``, use the flag ``--rpm-old-perl-dependency-name`` (`#2066`_, `#2085`_; Kevin Duret, Nicholas Hubbard, William N. Braswell, Jr., Jordan Sissel))
+* Some errors now correctly print just an error message instead of dumping a ruby stack trace (`#2067`_; Jordan Sissel)
+* python: Support modules which download as zip files (`#2068`_, `#2074`_, `#2072`_; Matt Ezell, hussainbani, hbani)
+* rpm: Fix rpm build failures on Fedora 41 (`#2082`_, `#2076`_; Wayne Heaney, Antheas Kapenekakis, Romain Geissler)
+
+
+1.15.1 (January 31, 2023)
+^^^^^^^^^^^^^^^^^^^^^^^^^
+* Ruby 3.2.0 now supported. This fixes error 'undefined method exists? for File' '(`#1981`_, `#1988`_; Nicholas Hubbard, romulasry)
+
 1.15.0 (November 13, 2022)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 * New flag ``--fpm-options-file path/to/file`` which allows you to specify additional fpm flags in an external file of your choosing. (`#1905`_, `#1902`_, `#1827`_; Jordan Sissel, Will Furnell, hjpotter92)

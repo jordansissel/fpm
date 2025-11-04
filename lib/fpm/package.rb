@@ -3,7 +3,6 @@ require "fpm/util" # local
 require "pathname" # stdlib
 require "find"
 require "tmpdir" # stdlib
-require "ostruct"
 require "backports/latest"
 require "socket" # stdlib, for Socket.gethostname
 require "shellwords" # stdlib, for Shellwords.escape

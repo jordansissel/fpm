@@ -60,6 +60,6 @@ Fun Examples
   Do you have any examples you want to share that use the ``cpan`` package type? Share your knowledge here: https://github.com/jordansissel/fpm/issues/new
 
 cpan-specific command line flags
--------------------------------
+--------------------------------
 
 .. include:: cli/cpan.rst

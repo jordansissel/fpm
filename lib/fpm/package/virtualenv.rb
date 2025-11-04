@@ -36,7 +36,7 @@ class FPM::Package::Virtualenv < FPM::Package
     :default => nil
 
   option "--setup-install", :flag, "After building virtualenv run setup.py install "\
-  "useful when building a virtualenv for packages and including their requirements from "
+  "useful when building a virtualenv for packages and including their requirements from "\
   "requirements.txt"
 
   option "--system-site-packages", :flag, "Give the virtual environment access to the "\
@@ -158,6 +158,31 @@ class FPM::Package::Virtualenv < FPM::Package
       end
     end
 
+    # [2025-09-30] virtualenv-tools seems broken?
+    # The --update-path will look for a VIRTUAL_ENV= line in bin/activate,
+    # however, the version I tested looks for it with quotations, like VIRTUAL_ENV='
+    # And at time of writing, my `virtualenv` tool doesn't use quotations on this variable
+    #
+    # Maybe best case we can patch it here instead. The path update tool
+    # looks for the original virtualenv path and I think updates any bin 
+    # files which point to it.
+    patched = []
+    activate_bin = File.join(virtualenv_build_folder, "bin/activate")
+    fd = File.open(activate_bin)
+    fd.each_line do |line|
+      re = /^VIRTUAL_ENV=([^'"].*)$/
+      match = line.match(re)
+      if match
+        # Quote the VIRTUAL_ENV var assignment to help virtualenv-tools work?
+        patched << "VIRTUAL_ENV='#{match}'\n"
+      else
+        patched << line
+      end
+    end
+    fd.close
+    File.write(activate_bin, patched.join)
+
+    # Rewrite the base path inside the virtualenv to prepare it to be packaged.
     ::Dir.chdir(virtualenv_build_folder) do
       safesystem("virtualenv-tools", "--update-path", virtualenv_folder)
     end
@@ -191,7 +216,6 @@ class FPM::Package::Virtualenv < FPM::Package
     dir.input(".")
     @staging_path = dir.staging_path
     dir.cleanup_build
-
   end # def input
 
   # Delete python precompiled files found in a given folder.

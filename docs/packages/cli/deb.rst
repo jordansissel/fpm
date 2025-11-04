@@ -11,7 +11,9 @@
 * ``--deb-changelog FILEPATH``
     - Add FILEPATH as debian changelog
 * ``--deb-compression COMPRESSION``
-    - The compression type to use, must be one of gz, bzip2, xz, none.
+    - The compression type to use, must be one of gz, bzip2, xz, zst, none.
+* ``--deb-compression-level [0-9]``
+    - Select a compression level. 0 is none or minimal. 9 is max compression.
 * ``--deb-config SCRIPTPATH``
     - Add SCRIPTPATH as debconf config file.
 * ``--deb-custom-control FILEPATH``
@@ -58,6 +60,8 @@
     - Start service after install or upgrade
 * ``--[no-]deb-systemd-enable``
     - Enable service on install or upgrade
+* ``--deb-systemd-path FILEPATH``
+    - Relative path to the systemd service directory
 * ``--[no-]deb-systemd-restart-after-upgrade``
     - Restart service after upgrade
 * ``--deb-templates FILEPATH``

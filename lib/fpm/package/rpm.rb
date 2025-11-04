@@ -156,7 +156,7 @@ class FPM::Package::RPM < FPM::Package
 
   option "--macro-expansion", :flag,
            "install-time macro expansion in %pre %post %preun %postun scripts " \
-           "(see: https://rpm.org/user_doc/scriptlet_expansion.html)", :default => false
+           "(see: https://rpm-software-management.github.io/rpm/manual/scriptlet_expansion.html)", :default => false
 
   option "--verifyscript", "FILE",
     "a script to be run on verification" do |val|
@@ -175,7 +175,7 @@ class FPM::Package::RPM < FPM::Package
      rpm_trigger = []
      option "--trigger-#{trigger_type}", "'[OPT]PACKAGE: FILEPATH'", "Adds a rpm trigger script located in FILEPATH, " \
             "having 'OPT' options and linking to 'PACKAGE'. PACKAGE can be a comma seperated list of packages. " \
-            "See: http://rpm.org/api/4.4.2.2/triggers.html" do |trigger|
+            "See: https://rpm-software-management.github.io/rpm/manual/triggers.html" do |trigger|
        match = trigger.match(/^(\[.*\]|)(.*): (.*)$/)
        @logger.fatal("Trigger '#{trigger_type}' definition can't be parsed ('#{trigger}')") unless match
        opt, pkg, file = match.captures
@@ -184,6 +184,9 @@ class FPM::Package::RPM < FPM::Package
        next rpm_trigger
      end
    end
+
+  option "--old-perl-dependency-name", :flag,
+    "Use older 'perl' depdency name. Newer Red Hat (and derivatives) use a dependency named 'perl-interpreter'."
 
   private
 
@@ -196,8 +199,8 @@ class FPM::Package::RPM < FPM::Package
   # If and only if any of the above are done, then also replace ' with \', " with \", and \ with \\\\
   #   to accommodate escape and quote processing that rpm will perform in that case (but not otherwise)
   def rpm_fix_name(name)
-    if name.match?(/[ \t*?%$\[\]]/)
-      name = name.gsub(/(\ |\t|\[|\]|\*|\?|\%|\$|'|"|\\)/, {
+    if name.match?(/[ \t*?%${}\[\]]/)
+      name = name.gsub(/(\ |\t|\[|\]|\*|\?|\%|\$|'|"|\{|\}|\\)/, {
         ' '  => '?',
         "\t" => '?',
         '%'  => '[%]',
@@ -206,6 +209,10 @@ class FPM::Package::RPM < FPM::Package
         '*'  => '[*]',
         '['  => '[\[]',
         ']'  => '[\]]',
+        #'{'  => '[\{]',
+        #'}'  => '[\}]',
+        '{'  => '?',
+        '}'  => '?',
         '"'  => '\\"',
         "'"  => "\\'",
         '\\' => '\\\\\\\\',
@@ -275,9 +282,41 @@ class FPM::Package::RPM < FPM::Package
     return @iteration ? @iteration : 1
   end # def iteration
 
+  # Generate a generic changelog or return an existing definition
+  def changelog
+    if attributes[:rpm_changelog]
+      return attributes[:rpm_changelog]
+    end
+
+    reldate = if attributes[:source_date_epoch].nil?
+                Time.now()
+              else
+                Time.at(attributes[:source_date_epoch].to_i)
+              end
+    changed = reldate.strftime("%a %b %_e %Y")
+    changev = "#{version}-#{iteration}"
+    changev += "%{?dist}" if attributes[:rpm_dist]
+
+    "* #{changed}  #{maintainer} - #{changev}\n- Package created with FPM\n"
+  end
+
   # See FPM::Package#converted_from
   def converted_from(origin)
-    if origin == FPM::Package::Gem
+    if origin == FPM::Package::CPAN
+      if !attributes[:rpm_old_perl_dependency_name?]
+        fixed_deps = []
+        self.dependencies.collect do |dep|
+          # RPM package "perl" is a metapackage which install all the Perl bits and core modules, then gcc...
+          # this must be replaced by perl-interpreter
+          if name=/^perl([\s<>=].*)$/.match(dep)
+            fixed_deps.push("perl-interpreter#{name[1]}")
+          else
+            fixed_deps.push(dep)
+          end
+        end
+        self.dependencies = fixed_deps
+      end
+    elsif origin == FPM::Package::Gem
       fixed_deps = []
       self.dependencies.collect do |dep|
         # Gem dependency operator "~>" is not compatible with rpm. Translate any found.
@@ -473,6 +512,7 @@ class FPM::Package::RPM < FPM::Package
     args += ["--define", "dist .#{attributes[:rpm_dist]}"] if attributes[:rpm_dist]
 
     args += [
+      "--buildroot", "#{build_path}/BUILD",
       "--define", "buildroot #{build_path}/BUILD",
       "--define", "_topdir #{build_path}",
       "--define", "_sourcedir #{build_path}",

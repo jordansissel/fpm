@@ -13,7 +13,7 @@
 * ``--virtualenv-pypi-extra-url PYPI_EXTRA_URL``
     - PyPi extra-index-url for pointing to your priviate PyPi
 * ``--[no-]virtualenv-setup-install``
-    - After building virtualenv run setup.py install useful when building a virtualenv for packages and including their requirements from 
+    - After building virtualenv run setup.py install useful when building a virtualenv for packages and including their requirements from requirements.txt
 * ``--[no-]virtualenv-system-site-packages``
     - Give the virtual environment access to the global site-packages
 

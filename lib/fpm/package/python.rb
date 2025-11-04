@@ -51,76 +51,371 @@ class FPM::Package::Python < FPM::Package
   option "--downcase-dependencies", :flag, "Should the package dependencies " \
     "be in lowercase?", :default => true
 
-  option "--install-bin", "BIN_PATH", "The path to where python scripts " \
-    "should be installed to."
-  option "--install-lib", "LIB_PATH", "The path to where python libs " \
+  option "--install-bin", "BIN_PATH", "(DEPRECATED, does nothing) The path to where python scripts " \
+    "should be installed to." do
+    logger.warn("Using deprecated flag --install-bin")
+  end
+  option "--install-lib", "LIB_PATH", "(DEPRECATED, does nothing) The path to where python libs " \
     "should be installed to (default depends on your python installation). " \
     "Want to find out what your target platform is using? Run this: " \
     "python -c 'from distutils.sysconfig import get_python_lib; " \
-    "print get_python_lib()'"
-  option "--install-data", "DATA_PATH", "The path to where data should be " \
+    "print get_python_lib()'" do
+    logger.warn("Using deprecated flag --install-bin")
+  end
+
+  option "--install-data", "DATA_PATH", "(DEPRECATED, does nothing) The path to where data should be " \
     "installed to. This is equivalent to 'python setup.py --install-data " \
-    "DATA_PATH"
-  option "--dependencies", :flag, "Include requirements defined in setup.py" \
+    "DATA_PATH" do
+    logger.warn("Using deprecated flag --install-bin")
+  end
+
+  option "--dependencies", :flag, "Include requirements defined by the python package" \
     " as dependencies.", :default => true
   option "--obey-requirements-txt", :flag, "Use a requirements.txt file " \
     "in the top-level directory of the python package for dependency " \
     "detection.", :default => false
-  option "--scripts-executable", "PYTHON_EXECUTABLE", "Set custom python " \
+  option "--scripts-executable", "PYTHON_EXECUTABLE", "(DEPRECATED) Set custom python " \
     "interpreter in installing scripts. By default distutils will replace " \
     "python interpreter in installing scripts (specified by shebang) with " \
     "current python interpreter (sys.executable). This option is equivalent " \
     "to appending 'build_scripts --executable PYTHON_EXECUTABLE' arguments " \
-    "to 'setup.py install' command."
+    "to 'setup.py install' command." do
+    logger.warn("Using deprecated flag --install-bin")
+  end
+
   option "--disable-dependency", "python_package_name",
     "The python package name to remove from dependency list",
     :multivalued => true, :attribute_name => :python_disable_dependency,
     :default => []
   option "--setup-py-arguments", "setup_py_argument",
-    "Arbitrary argument(s) to be passed to setup.py",
+    "(DEPRECATED) Arbitrary argument(s) to be passed to setup.py",
     :multivalued => true, :attribute_name => :python_setup_py_arguments,
-    :default => [] 
+    :default => [] do
+    logger.warn("Using deprecated flag --install-bin")
+  end
   option "--internal-pip", :flag,
     "Use the pip module within python to install modules - aka 'python -m pip'. This is the recommended usage since Python 3.4 (2014) instead of invoking the 'pip' script",
     :attribute_name => :python_internal_pip,
     :default => true
+ 
+  class PythonMetadata
+    require "strscan"
 
-  private
+    class MissingField < StandardError; end
+    class UnexpectedContent < StandardError; end
+
+    # According to https://packaging.python.org/en/latest/specifications/core-metadata/
+    # > Core Metadata v2.4 - August 2024
+    MULTIPLE_USE =  %w(Dynamic Platform Supported-Platform License-File Classifier Requires-Dist Requires-External Project-URL Provides-Extra Provides-Dist Obsoletes-Dist)
+
+    # METADATA files are described in Python Packaging "Core Metadata"[1] and appear to have roughly RFC822 syntax.
+    # [1] https://packaging.python.org/en/latest/specifications/core-metadata/#core-metadata
+    def self.parse(input)
+      s = StringScanner.new(input)
+      headers = {}
+
+      # Default "Multiple use" fields to empty array instead of nil.
+      MULTIPLE_USE.each do |field|
+        headers[field] = []
+      end
+
+      while !s.eos? and !s.scan("\n") do 
+        # Field is non-space up, but excluding the colon
+        field = s.scan(/[^\s:]+/)
+
+        # Skip colon and following whitespace
+        s.scan(/:\s*/)
+
+        # Value is text until newline, and any following lines if they have leading spaces.
+        value = s.scan(/[^\n]+(?:\Z|\n(?:[ \t][^\n]+\n)*)/)
+        if value.nil?
+          raise "Failed parsing Python package metadata value at field #{field}, char offset #{s.pos}"
+        end
+        value = value.chomp
+
+        if MULTIPLE_USE.include?(field)
+          raise "Header field should be an array. This is a bug in fpm." if !headers[field].is_a?(Array)
+          headers[field] << value
+        else
+          headers[field] = value
+        end
+      end # while reading headers
+
+      # If there's more content beyond the last header, then it's a content body.
+      # In Python Metadata >= 2.1, the descriptino can be written in the body.
+      if !s.eos? 
+        if headers["Metadata-Version"].to_f >= 2.1
+          # Per Python core-metadata spec:
+          # > Changed in version 2.1: This field may be specified in the message body instead.
+          #return PythonMetadata.new(headers, s.string[s.pos ...])
+          return headers, s.string[s.pos ... ]
+        elsif headers["Metadata-Version"].to_f >= 2.0
+          # dnspython v1.15.0 has a description body and Metadata-Version 2.0 
+          # this seems out of spec, but let's accept it anyway.
+          return headers, s.string[s.pos ... ]
+        else
+          raise "After reading METADATA headers, extra data is in the file but was not expected. This may be a bug in fpm."
+        end
+      end
+
+      #return PythonMetadata.new(headers)
+      return headers, nil # nil means no body in this metadata
+    rescue => e
+      puts "String scan failed: #{e}"
+      puts "Position: #{s.pointer}"
+      puts "---"
+      puts input
+      puts "==="
+      puts input[s.pointer...]
+      puts "---"
+      raise e
+    end # self.parse
+
+    def self.from(input)
+      return PythonMetadata.new(*parse(input))
+    end
+
+    # Only focusing on terms fpm may care about
+    attr_reader :name, :version, :summary, :description, :keywords, :maintainer, :license, :requires, :homepage
+
+    FIELD_MAP = {
+      :@name => "Name",
+      :@version => "Version",
+      :@summary => "Summary",
+      :@description => "Description",
+      :@keywords => "Keywords",
+      :@maintainer => "Author-email",
+
+      # Note: License can also come from the deprecated "License" field
+      # This is processed later in this method.
+      :@license => "License-Expression",
+
+      :@requires => "Requires-Dist",
+    }
+    
+    REQUIRED_FIELDS = [ "Metadata-Version", "Name", "Version" ]
+
+    # headers - a Hash containing field-value pairs from headers as read from a python METADATA file.
+    # body - optional, a string containing the body text of a METADATA file
+    def initialize(headers, body=nil)
+      REQUIRED_FIELDS.each do |field|
+        if !headers.include?(field)
+          raise MissingField, "Missing required Python metadata field, '#{field}'. This might be a bug in the package or in fpm."
+        end
+      end
+
+      FIELD_MAP.each do |attr, field|
+        if headers.include?(field)
+          instance_variable_set(attr, headers.fetch(field))
+        end
+      end
+
+      # Do any extra processing on fields to turn them into their expected content.
+      process_description(headers, body)
+      process_license(headers)
+      process_homepage(headers)
+      process_maintainer(headers)
+    end # def initialize
+
+    private
+    def process_description(headers, body)
+      if @description
+        # Per python core-metadata spec:
+        # > To support empty lines and lines with indentation with respect to the
+        # > RFC 822 format, any CRLF character has to be suffixed by 7 spaces
+        # > followed by a pipe (“|”) char. As a result, the Description field is
+        # > encoded into a folded field that can be interpreted by RFC822 parser [2].
+        @description = @description.gsub!(/^       |/, "")
+      end
+
+      if !body.nil?
+        if headers["Metadata-Version"].to_f >= 2.1
+          # Per Python core-metadata spec:
+          # > Changed in version 2.1: [Description] field may be specified in the message body instead.
+          # 
+          # The description is simply the rest of the METADATA file after the headers.
+          @description = body
+        elsif headers["Metadata-Version"].to_f >= 2.0
+          # dnspython v1.15.0 has a description body and Metadata-Version 2.0 
+          # this seems out of spec, but let's accept it anyway.
+          @description = body
+        else
+          raise UnexpectedContent, "Found a content body in METADATA file, but Metadata-Version(#{headers["Metadata-Version"]}) is below 2.1 and doesn't support this. This may be a bug in fpm or a malformed python package."
+        end
+
+        # What to do if we find a description body but already have a Description field set in the headers?
+        if headers.include?("Description")
+          raise "Found a description in the body of the python package metadata, but the package already set the Description field. I don't know what to do. This is probably a bug in fpm."
+        end
+      end
+
+      # XXX: The description field can be markdown, plain text, or reST. 
+      # Content type is noted in the "Description-Content-Type" field
+      # Should we transform this to plain text?
+    end # process_description
+
+    def process_license(headers)
+      # Ignore the "License" field if License-Expression is also present.
+      return if headers["Metadata-Version"].to_f >= 2.4 && headers.include?("License-Expression")
+
+      # Deprecated field, License,  as described in python core-metadata:
+      # > As of Metadata 2.4, License and License-Expression are mutually exclusive. 
+      # > If both are specified, tools which parse metadata will disregard License
+      # > and PyPI will reject uploads. See PEP 639.
+      if headers["License"]
+        # Note: This license can be free form text, so it's unclear if it's a great choice.
+        #       however, the original python metadata License field is quite old/deprecated
+        #       so maybe nobody uses it anymore?
+        @license = headers["License"]
+      elsif license_classifier = headers["Classifier"].find { |value| value =~ /^License ::/ }
+        # The license could also show up in the "Classifier" header with "License ::" as a prefix.
+          @license = license_classifier.sub(/^License ::/, "")
+      end # check for deprecated License field
+    end # process_license
+
+    def process_homepage(headers)
+      return if headers["Project-URL"].empty?
+
+      # Create a hash of Project-URL where the label is the key, url the value.
+      urls = Hash[*headers["Project-URL"].map do |text|
+        label, url = text.split(/, */, 2)
+        # Normalize the label by removing punctuation and spaces
+        # Reference: https://packaging.python.org/en/latest/specifications/well-known-project-urls/#label-normalization
+        # > In plain language: a label is normalized by deleting all ASCII punctuation and whitespace, and then converting the result to lowercase.
+        label = label.gsub(/[[:punct:][:space:]]/, "").downcase
+        [label, url]
+      end.flatten(1)]
+
+      # Prioritize certain URL labels when choosing the homepage url.
+      [ "homepage", "source", "documentation", "releasenotes" ].each do |label|
+        if urls.include?(label)
+          @homepage = urls[label]
+        end
+      end
+
+      # Otherwise, default to the first URL
+      @homepage = urls.values.first
+    end
+
+    def process_maintainer(headers)
+      # Python metadata supports both "Author-email" and "Maintainer-email"
+      # Of the "Maintainer" fields, python core-metadata says:
+      # > Note that this field is intended for use when a project is being maintained by someone other than the original author
+      #
+      # So we should prefer Maintainer-email if it exists, but fall back to Author-email otherwise.
+      @maintainer = headers["Maintainer-email"] unless headers["Maintainer-email"].nil?
+    end
+  end # class PythonMetadata
 
   # Input a package.
   #
   # The 'package' can be any of:
   #
   # * A name of a package on pypi (ie; easy_install some-package)
-  # * The path to a directory containing setup.py
-  # * The path to a setup.py
+  # * The path to a directory containing setup.py or pyproject.toml
+  # * The path to a setup.py or pyproject.toml
+  # * The path to a python sdist file ending in .tar.gz
+  # * The path to a python wheel file ending in .whl
   def input(package)
+    explore_environment
+
     path_to_package = download_if_necessary(package, version)
 
+    # Expect a setup.py or pyproject.toml if it's a directory.
     if File.directory?(path_to_package)
-      setup_py = File.join(path_to_package, "setup.py")
-    else
-      setup_py = path_to_package
+      if !(File.exist?(File.join(path_to_package, "setup.py")) or File.exist?(File.join(path_to_package, "pyproject.toml")))
+        raise FPM::InvalidPackageConfiguration, "The path ('#{path_to_package}') doesn't appear to be a python package directory. I expected either a pyproject.toml or setup.py but found neither."
+      end
     end
 
-    if !File.exist?(setup_py)
-      logger.error("Could not find 'setup.py'", :path => setup_py)
-      raise "Unable to find python package; tried #{setup_py}"
+    if File.file?(path_to_package)
+      if ["setup.py", "pyproject.toml"].include?(File.basename(path_to_package))
+        path_to_package = File.dirname(path_to_package)
+      end
     end
 
-    load_package_info(setup_py)
-    install_to_staging(setup_py)
+    if [".tar.gz", ".tgz"].any? { |suffix| path_to_package.end_with?(suffix) }
+      # Have pip convert the .tar.gz (source dist?) into a wheel
+      logger.debug("Found tarball and assuming it's a python source package.")
+      safesystem(*attributes[:python_pip], "wheel", "--no-deps", "-w", build_path, path_to_package)
+
+      path_to_package = ::Dir.glob(build_path("*.whl")).first
+      if path_to_package.nil?
+        raise FPM::InvalidPackageConfiguration, "Failed building python package format - fpm tried to build a python wheel, but didn't find the .whl file. This might be a bug in fpm."
+      end
+    elsif File.directory?(path_to_package)
+      logger.debug("Found directory and assuming it's a python source package.")
+      safesystem(*attributes[:python_pip], "wheel", "--no-deps", "-w", build_path, path_to_package)
+
+      if attributes[:python_obey_requirements_txt?]
+        reqtxt = File.join(path_to_package, "requirements.txt")
+        @requirements_txt = File.read(reqtxt).split("\n") if File.file?(reqtxt)
+      end
+
+      path_to_package = ::Dir.glob(build_path("*.whl")).first
+      if path_to_package.nil?
+        raise FPM::InvalidPackageConfiguration, "Failed building python package format - fpm tried to build a python wheel, but didn't find the .whl file. This might be a bug in fpm."
+      end
+
+    end
+
+    load_package_info(path_to_package)
+    install_to_staging(path_to_package)
   end # def input
+
+  def explore_environment
+    if !attributes[:python_bin_given?]
+      # If --python-bin isn't set, try to find a good default python executable path, because it might not be "python"
+      pythons = [ "python", "python3", "python2" ]
+      default_python = pythons.find { |py| program_exists?(py) }
+
+      if default_python.nil?
+        raise FPM::Util::ExecutableNotFound, "Could not find any python interpreter. Tried the following: #{pythons.join(", ")}"
+      end
+
+      logger.info("Setting default python executable", :name => default_python)
+      attributes[:python_bin] = default_python
+
+      if !attributes[:python_package_name_prefix_given?]
+        attributes[:python_package_name_prefix] = default_python
+        logger.info("Setting package name prefix", :name => default_python)
+      end
+    end
+
+    if attributes[:python_internal_pip?]
+      # XXX: Should we detect if internal pip is available?
+      attributes[:python_pip] = [ attributes[:python_bin], "-m", "pip"]
+    end
+  end # explore_environment
+
+
 
   # Download the given package if necessary. If version is given, that version
   # will be downloaded, otherwise the latest is fetched.
   def download_if_necessary(package, version=nil)
-    # TODO(sissel): this should just be a 'download' method, the 'if_necessary'
-    # part should go elsewhere.
     path = package
+
     # If it's a path, assume local build.
-    if File.directory?(path) or (File.exist?(path) and File.basename(path) == "setup.py")
-      return path
+    if File.exist?(path)
+      return path if File.directory?(path)
+
+      basename = File.basename(path)
+      return File.dirname(path) if basename == "pyproject.toml"
+      return File.dirname(path) if basename == "setup.py"
+
+      return path if path.end_with?(".tar.gz")
+      return path if path.end_with?(".tgz") # amqplib v1.0.2 does this
+      return path if path.end_with?(".whl")
+      return path if path.end_with?(".zip")
+      return path if File.exist?(File.join(path, "setup.py"))
+      return path if File.exist?(File.join(path, "pyproject.toml"))
+
+      raise [
+        "Local file doesn't appear to be a supported type for a python package. Expected one of:",
+        "  - A directory containing setup.py or pyproject.toml",
+        "  - A file ending in .tar.gz (a python source dist)",
+        "  - A file ending in .whl (a python wheel)",
+      ].join("\n")
     end
 
     logger.info("Trying to download", :package => package)
@@ -134,24 +429,16 @@ class FPM::Package::Python < FPM::Package
     target = build_path(package)
     FileUtils.mkdir(target) unless File.directory?(target)
 
-    if attributes[:python_internal_pip?]
-      # XXX: Should we detect if internal pip is available?
-      attributes[:python_pip] = [ attributes[:python_bin], "-m", "pip"]
-    end
-
     # attributes[:python_pip] -- expected to be a path
     if attributes[:python_pip]
       logger.debug("using pip", :pip => attributes[:python_pip])
-      # TODO: Support older versions of pip
-
       pip = [attributes[:python_pip]] if pip.is_a?(String)
       setup_cmd = [
         *attributes[:python_pip],
         "download",
         "--no-clean",
         "--no-deps",
-        "--no-binary", ":all:",
-        "-d", build_path,
+        "-d", target,
         "-i", attributes[:python_pypi],
       ]
 
@@ -166,124 +453,105 @@ class FPM::Package::Python < FPM::Package
 
       safesystem(*setup_cmd)
 
-      # Pip removed the --build flag sometime in 2021, it seems: https://github.com/pypa/pip/issues/8333
-      # A workaround for pip removing the `--build` flag. Previously, `pip download --build ...` would leave
-      # behind a directory with the Python package extracted and ready to be used.
-      # For example, `pip download ... Django` puts `Django-4.0.4.tar.tz` into the build_path directory.
-      # If we expect `pip` to leave an unknown-named file in the `build_path` directory, let's check for
-      # a single file and unpack it.  I don't know if it will /always/ be a .tar.gz though.
-      files = ::Dir.glob(File.join(build_path, "*.tar.gz"))
+      files = ::Dir.entries(target).filter { |entry| entry =~ /\.(whl|tgz|tar\.gz|zip)$/ }
       if files.length != 1
-        raise "Unexpected directory layout after `pip download ...`. This might be an fpm bug? The directory is #{build_path}"
+        raise "Unexpected directory layout after `pip download ...`. This might be an fpm bug? The directory contains these files: #{files.inspect}"
       end
-
-      safesystem("tar", "-zxf", files[0], "-C", target)
+      return File.join(target, files.first)
     else
       # no pip, use easy_install
       logger.debug("no pip, defaulting to easy_install", :easy_install => attributes[:python_easyinstall])
       safesystem(attributes[:python_easyinstall], "-i",
                  attributes[:python_pypi], "--editable", "-U",
                  "--build-directory", target, want_pkg)
+      # easy_install will put stuff in @tmpdir/packagename/, so find that:
+      #  @tmpdir/somepackage/setup.py
+      #dirs = ::Dir.glob(File.join(target, "*"))
+      files = ::Dir.entries(target).filter { |entry| entry != "." && entry != ".." }
+      if dirs.length != 1
+        raise "Unexpected directory layout after easy_install. Maybe file a bug? The directory is #{build_path}"
+      end
+      return dirs.first
     end
-
-    # easy_install will put stuff in @tmpdir/packagename/, so find that:
-    #  @tmpdir/somepackage/setup.py
-    dirs = ::Dir.glob(File.join(target, "*"))
-    if dirs.length != 1
-      raise "Unexpected directory layout after easy_install. Maybe file a bug? The directory is #{build_path}"
-    end
-    return dirs.first
   end # def download
 
   # Load the package information like name, version, dependencies.
-  def load_package_info(setup_py)
-    if !attributes[:python_package_prefix].nil?
-      attributes[:python_package_name_prefix] = attributes[:python_package_prefix]
-    end
-
-    begin
-      json_test_code = [
-        "try:",
-        "  import json",
-        "except ImportError:",
-        "  import simplejson as json"
-      ].join("\n")
-      safesystem("#{attributes[:python_bin]} -c '#{json_test_code}'")
-    rescue FPM::Util::ProcessFailed => e
-      logger.error("Your python environment is missing json support (either json or simplejson python module). I cannot continue without this.", :python => attributes[:python_bin], :error => e)
-      raise FPM::Util::ProcessFailed, "Python (#{attributes[:python_bin]}) is missing simplejson or json modules."
-    end
-
-    begin
-      safesystem("#{attributes[:python_bin]} -c 'import pkg_resources'")
-    rescue FPM::Util::ProcessFailed => e
-      logger.error("Your python environment is missing a working setuptools module. I tried to find the 'pkg_resources' module but failed.", :python => attributes[:python_bin], :error => e)
-      raise FPM::Util::ProcessFailed, "Python (#{attributes[:python_bin]}) is missing pkg_resources module."
-    end
-
-    # Add ./pyfpm/ to the python library path
-    pylib = File.expand_path(File.dirname(__FILE__))
-
-    # chdir to the directory holding setup.py because some python setup.py's assume that you are
-    # in the same directory.
-    setup_dir = File.dirname(setup_py)
-
-    output = ::Dir.chdir(setup_dir) do
-      tmp = build_path("metadata.json")
-      setup_cmd = "env PYTHONPATH=#{pylib}:$PYTHONPATH #{attributes[:python_bin]} " \
-        "setup.py --command-packages=pyfpm get_metadata --output=#{tmp}"
-
-      if attributes[:python_obey_requirements_txt?]
-        setup_cmd += " --load-requirements-txt"
+  def load_package_info(path)
+    if path.end_with?(".whl")
+      # XXX: Maybe use rubyzip to parse the .whl (zip) file instead?
+      metadata = nil
+      execmd(["unzip", "-p", path, "*.dist-info/METADATA"], :stdin => false, :stderr => false) do |stdout|
+        metadata = PythonMetadata.from(stdout.read(64<<10))
       end
 
-      # Capture the output, which will be JSON metadata describing this python
-      # package. See fpm/lib/fpm/package/pyfpm/get_metadata.py for more
-      # details.
-      logger.info("fetching package metadata", :setup_cmd => setup_cmd)
-
-      success = safesystem(setup_cmd)
-      #%x{#{setup_cmd}}
-      if !success
-        logger.error("setup.py get_metadata failed", :command => setup_cmd,
-                      :exitcode => $?.exitstatus)
-        raise "An unexpected error occurred while processing the setup.py file"
+      wheeldata = nil
+      execmd(["unzip", "-p", path, "*.dist-info/WHEEL"], :stdin => false, :stderr => false) do |stdout|
+        wheeldata, _ = PythonMetadata.parse(stdout.read(64<<10))
       end
-      File.read(tmp)
+    else
+      raise "Unexpected python package path. This might be an fpm bug? The path is #{path}"
     end
-    logger.debug("result from `setup.py get_metadata`", :data => output)
-    metadata = JSON.parse(output)
-    logger.info("object output of get_metadata", :json => metadata)
 
-    self.architecture = metadata["architecture"]
-    self.description = metadata["description"]
-    # Sometimes the license field is multiple lines; do best-effort and just
-    # use the first line.
-    if metadata["license"]
-      self.license = metadata["license"].split(/[\r\n]+/).first
-    end
-    self.version = metadata["version"]
-    self.url = metadata["url"]
+    self.architecture = wheeldata["Root-Is-Purelib"] == "true" ? "all" : "native"
+
+    self.description = metadata.description unless metadata.description.nil?
+    self.license = metadata.license unless metadata.license.nil?
+    self.version = metadata.version
+    self.url = metadata.homepage unless metadata.homepage.nil?
+
+    self.name = metadata.name
 
     # name prefixing is optional, if enabled, a name 'foo' will become
     # 'python-foo' (depending on what the python_package_name_prefix is)
-    if attributes[:python_fix_name?]
-      self.name = fix_name(metadata["name"])
-    else
-      self.name = metadata["name"]
-    end
+    self.name = fix_name(self.name) if attributes[:python_fix_name?] 
 
     # convert python-Foo to python-foo if flag is set
     self.name = self.name.downcase if attributes[:python_downcase_name?]
 
+    self.maintainer = metadata.maintainer 
+
     if !attributes[:no_auto_depends?] and attributes[:python_dependencies?]
-      metadata["dependencies"].each do |dep|
-        dep_re = /^([^<>!= ]+)\s*(?:([~<>!=]{1,2})\s*(.*))?$/
+      # Python Dependency specifiers are a somewhat complex format described here:
+      # https://packaging.python.org/en/latest/specifications/dependency-specifiers/#environment-markers
+      #
+      # We can ask python's packaging module to parse and evaluate these.
+      # XXX: Allow users to override environnment values.
+      #
+      # Example:
+      # Requires-Dist: tzdata; sys_platform = win32
+      # Requires-Dist: asgiref>=3.8.1
+
+      dep_re = /^([^<>!= ]+)\s*(?:([~<>!=]{1,2})\s*(.*))?$/
+
+      reqs = []
+
+      # --python-obey-requirements-txt should use requirements.txt
+      # (if found in the python package) and  replace the requirments listed from the metadata
+      if attributes[:python_obey_requirements_txt?] && !@requirements_txt.nil?
+        requires = @requirements_txt
+      else
+        requires = metadata.requires
+      end
+
+      # Evaluate python package requirements and only show ones matching the current environment
+      # (Environment markers, etc)
+      # Additionally, 'extra' features such as a requirement named `django[bcrypt]` isn't quite supported yet,
+      # since the marker.evaluate() needs to be passed some environment like { "extra": "bcrypt" }
+      execmd([attributes[:python_bin], File.expand_path(File.join("pyfpm", "parse_requires.py"), File.dirname(__FILE__))]) do |stdin, stdout, stderr|
+        requires.each { |r| stdin.puts(r) }
+        stdin.close
+        data = stdout.read
+        logger.pipe(stderr => :warn)
+        reqs += JSON.parse(data)
+      end
+
+      reqs.each do |dep|
         match = dep_re.match(dep)
         if match.nil?
           logger.error("Unable to parse dependency", :dependency => dep)
           raise FPM::InvalidPackageConfiguration, "Invalid dependency '#{dep}'"
         end
+
         name, cmp, version = match.captures
 
         next if attributes[:python_disable_dependency].include?(name)
@@ -302,8 +570,12 @@ class FPM::Package::Python < FPM::Package
         # convert dependencies from python-Foo to python-foo
         name = name.downcase if attributes[:python_downcase_dependencies?]
 
-        self.dependencies << "#{name} #{cmp} #{version}"
-      end
+        if cmp.nil? && version.nil?
+          self.dependencies << "#{name}"
+        else
+          self.dependencies << "#{name} #{cmp} #{version}"
+        end
+      end # parse Requires-Dist dependencies
     end # if attributes[:python_dependencies?]
   end # def load_package_info
 
@@ -323,55 +595,17 @@ class FPM::Package::Python < FPM::Package
   end # def fix_name
 
   # Install this package to the staging directory
-  def install_to_staging(setup_py)
-    project_dir = File.dirname(setup_py)
-
+  def install_to_staging(path)
     prefix = "/"
     prefix = attributes[:prefix] unless attributes[:prefix].nil?
 
-    # Some setup.py's assume $PWD == current directory of setup.py, so let's
-    # chdir first.
-    ::Dir.chdir(project_dir) do
-      flags = [ "--root", staging_path ]
-      if !attributes[:python_install_lib].nil?
-        flags += [ "--install-lib", File.join(prefix, attributes[:python_install_lib]) ]
-      elsif !attributes[:prefix].nil?
-        # setup.py install --prefix PREFIX still installs libs to
-        # PREFIX/lib64/python2.7/site-packages/
-        # but we really want something saner.
-        #
-        # since prefix is given, but not python_install_lib, assume PREFIX/lib
-        flags += [ "--install-lib", File.join(prefix, "lib") ]
-      end
+    # XXX: Note: pip doesn't seem to have any equivalent to `--install-lib` or similar flags.
+    # XXX: Deprecate :python_install_data, :python_install_lib, :python_install_bin
+    # XXX: Deprecate: :python_setup_py_arguments
+    flags = [ "--root", staging_path ]
+    flags += [ "--prefix", prefix ] if !attributes[:prefix].nil?
 
-      if !attributes[:python_install_data].nil?
-        flags += [ "--install-data", File.join(prefix, attributes[:python_install_data]) ]
-      elsif !attributes[:prefix].nil?
-        # prefix given, but not python_install_data, assume PREFIX/data
-        flags += [ "--install-data", File.join(prefix, "data") ]
-      end
-
-      if !attributes[:python_install_bin].nil?
-        flags += [ "--install-scripts", File.join(prefix, attributes[:python_install_bin]) ]
-      elsif !attributes[:prefix].nil?
-        # prefix given, but not python_install_bin, assume PREFIX/bin
-        flags += [ "--install-scripts", File.join(prefix, "bin") ]
-      end
-
-      if !attributes[:python_scripts_executable].nil?
-        # Overwrite installed python scripts shebang binary with provided executable
-        flags += [ "build_scripts", "--executable", attributes[:python_scripts_executable] ]
-      end
-
-      if !attributes[:python_setup_py_arguments].nil? and !attributes[:python_setup_py_arguments].empty?
-        # Add optional setup.py arguments
-        attributes[:python_setup_py_arguments].each do |a|
-          flags += [ a ]
-        end
-      end
-
-      safesystem(attributes[:python_bin], "setup.py", "install", *flags)
-    end
+    safesystem(*attributes[:python_pip], "install", "--no-deps", *flags, path)
   end # def install_to_staging
 
   public(:input)

@@ -43,7 +43,7 @@ class FPM::Package::Dir < FPM::Package
     # This mapping should work the same way 'rsync -a' does
     #   Meaning 'rsync -a source dest'
     #   and 'source=dest' in fpm work the same as the above rsync
-    if path =~ /.=./ && !File.exists?(chdir == '.' ? path : File.join(chdir, path))
+    if path =~ /.=./ && !File.exist?(chdir == '.' ? path : File.join(chdir, path))
       origin, destination = path.split("=", 2)
 
       if File.directory?(origin) && origin[-1,1] == "/"
@@ -197,10 +197,6 @@ class FPM::Package::Dir < FPM::Package
     else
       # Otherwise try copying the file.
       begin
-        logger.debug("Linking", :source => source, :destination => destination)
-        File.link(source, destination)
-      rescue Errno::ENOENT, Errno::EXDEV, Errno::EPERM
-        # Hardlink attempt failed, copy it instead
         logger.debug("Copying", :source => source, :destination => destination)
         copy_entry(source, destination)
       rescue Errno::EEXIST

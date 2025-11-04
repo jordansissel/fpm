@@ -1,13 +1,39 @@
 require "fpm/namespace"
-require "ostruct"
 require "rake"
 require "rake/tasklib"
 
 class FPM::RakeTask < Rake::TaskLib
+  class Options
+    attr_accessor :args
+
+    def initialize(defaults=nil)
+      if defaults.nil?
+        @h = Hash.new
+      else
+        @h = defaults
+      end
+    end
+
+    def method_missing(m, *args)
+      if m.end_with?("=")
+        raise ArgumentError, "#{self.class.name}##{m} ... Expected 1 arg, got #{args.length}" if args.length != 1
+        @h[m[0...-1]] = args[0]
+      else
+        raise ArgumentError, "Expected 0 arg, got #{args.length}" if args.length != 0
+        return @h[m]
+      end
+    end
+
+    def to_h
+      return @h
+    end
+  end # Options
+
   attr_reader :options
 
   def initialize(package_name, opts = {}, &block)
-    @options = OpenStruct.new(:name => package_name.to_s)
+    #@options = OpenStruct.new(:name => package_name.to_s)
+    @options = Options.new(:name => package_name.to_s)
     @source, @target = opts.values_at(:source, :target).map(&:to_s)
     @directory = File.expand_path(opts[:directory].to_s)
 
@@ -18,8 +44,8 @@ class FPM::RakeTask < Rake::TaskLib
 
     task(options.name) do |_, task_args|
       block.call(*[options, task_args].first(block.arity)) if block_given?
-      abort("Must specify args") unless options.respond_to?(:args)
-      @args = options.delete_field(:args)
+      abort("Must specify args") if options.args.nil?
+      @args = options.args
       run_cli
     end
   end

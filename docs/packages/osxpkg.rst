@@ -10,6 +10,6 @@ output type (such as a `dir` or `rpm`). It also means you can create a ``.pkg``
 package file.
 
 osxpkg-specific command line flags
--------------------------------
+----------------------------------
 
 .. include:: cli/osxpkg.rst

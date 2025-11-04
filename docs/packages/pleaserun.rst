@@ -18,6 +18,6 @@ fpm supports using ``pleaserun`` only as an input type. This means you can conve
 ``pleaserun`` input packages to output packages like ``deb``, ``rpm``, and more.
 
 pleaserun-specific command line flags
--------------------------------
+-------------------------------------
 
 .. include:: cli/pleaserun.rst

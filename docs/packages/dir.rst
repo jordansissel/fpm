@@ -14,7 +14,7 @@ Any number of arguments are supported and behave as follows:
 1) A path to a local file or directory will be put into the output package as-is with the same path, contents, and metadata (file owner, modification date, etc)
 2) A syntax of "localpath=destinationpath" to copy local paths into the output package with the destination path.
 
-The local file paths are modified by the ``--chdir`` flag. The destination file paths are modified by the `--prefix`` flag.
+The local file paths are modified by the ``--chdir`` flag. The destination file paths are modified by the ``--prefix`` flag.
 
 Sample Usage
 ------------

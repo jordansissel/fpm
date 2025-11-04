@@ -53,7 +53,13 @@ describe FPM::Package::Deb do
 
     it "should default to native" do
       # Convert kernel name to debian name
-      expected = native == "x86_64" ? "amd64" : native
+      expected = if native == "x86_64"
+        "amd64"
+      elsif native == "aarch64"
+        "arm64"
+      else
+        native
+      end
       expect(subject.architecture).to(be == expected)
     end
   end
@@ -407,7 +413,7 @@ describe FPM::Package::Deb do
 
     context "when run against lintian" do
       before do
-        skip("Missing lintian program") unless have_lintian 
+        skip("Missing lintian program") unless have_lintian
       end
 
       lintian_errors_to_ignore = [
@@ -529,7 +535,8 @@ describe FPM::Package::Deb do
     {
       "bzip2" => "bz2",
       "xz" => "xz",
-      "gz" => "gz"
+      "gz" => "gz",
+      "zst" => "zst"
     }.each do |flag,suffix|
       context "when --deb-compression is #{flag}" do
         let(:target) { Stud::Temporary.pathname + ".deb" }

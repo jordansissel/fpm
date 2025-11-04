@@ -37,11 +37,15 @@ class FPM::Package::Pacman < FPM::Package
   def architecture
     case @architecture
       when nil
-        return %x{uname -m}.chomp   # default to current arch
-      when "amd64" # debian and pacman disagree on architecture names
-        return "x86_64"
+        return %x{uname -m}.chomp     # default to current arch
+      when "amd64"                    # Debian uses amd64
+        return "x86_64"               # Arch Linux uses x86_64
+      when "arm64"                    # Debian uses arm64
+        return "aarch64"              # Arch Linux ARM uses aarch64
+      when "armhf"                    # Debian uses armhf
+        return "arm7hf"               # Arch Linux ARM uses arm7hf
       when "native"
-        return %x{uname -m}.chomp   # 'native' is current arch
+        return %x{uname -m}.chomp     # 'native' is the current arch
       when "all", "any", "noarch"
         return "any"
       else

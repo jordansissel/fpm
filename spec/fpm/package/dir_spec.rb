@@ -2,6 +2,7 @@ require "spec_setup"
 require "fpm" # local
 require "fpm/package/dir" # local
 require "stud/temporary"
+require "insist/assert"
 
 if RUBY_VERSION =~ /^1\.8/
   # The following method copied from ruby 1.9.3
@@ -125,6 +126,49 @@ describe FPM::Package::Dir do
       subject.input(File.join("a", "a=b"))
       subject.output(output)
       insist { File }.exist?(File.join(output, "foo", "a", "a=b"))
+    end
+
+    it "should create two normal files when one normal file is copied to two different locations" do
+      # For issue #2102
+      # With the following: fpm -s dir ... pathA=/location1 pathA=location2
+      # The above command was copying pathA to both locations but hardlinking them instead of creating normal files.
+
+      foo = File.join(tmpdir, "foo")
+      File.write(foo, "hello world")
+
+      paths = [ "/opt/example/foo", "/usr/share/example/foo" ]
+      paths.each do |path|
+        subject.input("#{foo}=#{path}")
+      end
+
+      subject.output(output)
+
+      outfiles = paths.collect { |path| File.join(output, path) }
+
+      expect(outfiles).to all(satisfy("have link count == 1") { |path| File.lstat(path).nlink == 1 })
+    end
+
+  end
+
+  context "hardlinks" do
+    it "should create hardlinks when inputs are hardlinks (within the context of the target package)" do
+      # For issue #2102
+      # With the following: fpm -s dir ... pathA=/location1 pathA=location2
+      # The above command was copying pathA to both locations but hardlinking them instead of creating normal files.
+
+      foo = File.join(tmpdir, "foo")
+      bar = File.join(tmpdir, "bar")
+      File.write(foo, "hello world")
+      File.link(foo, bar)
+
+      subject.attributes[:chdir] = tmpdir
+      subject.input(".")
+
+      subject.output(output)
+
+      outfiles = ["foo", "bar"].collect { |path| File.join(output, path) }
+
+      expect(outfiles).to all(satisfy("have link count == 2") { |path| File.stat(path).nlink == 2 })
     end
   end
 

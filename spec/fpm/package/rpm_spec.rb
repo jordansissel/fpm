@@ -484,6 +484,45 @@ describe FPM::Package::RPM do
         File.unlink(@target)
       end
     end # dist
+
+    context "changelog" do
+      it "should generate a changelog in the release" do
+        subject.name = "example"
+        subject.attributes[:rpm_dist] = 'rhel'
+        subject.version = "1.2.3"
+        subject.maintainer = "Spec Test <spec.test@example.com>"
+        @target = Stud::Temporary.pathname
+
+        # Write RPM
+        subject.output(@target)
+
+        @rpm = ::RPM::File.new(@target)
+        insist { @rpm.tags[:changelogname] } == [ "Spec Test <spec.test@example.com> - 1.2.3-1.rhel" ]
+        insist { @rpm.tags[:changelogtext] } == [ "- Package created with FPM" ]
+
+        File.unlink(@target)
+      end
+
+      it "should have the changelog in the release" do
+        subject.name = "example"
+        subject.attributes[:rpm_changelog] = <<CHANGELOG
+* Tue May 31 2016  Example Maintainers <fpm@example.com> - 1.0-1
+- First example package
+CHANGELOG
+        subject.version = "1.0"
+        @target = Stud::Temporary.pathname
+
+        # Write RPM
+        subject.output(@target)
+
+        @rpm = ::RPM::File.new(@target)
+        insist { @rpm.tags[:changelogtime] } == [ 1464696000 ]
+        insist { @rpm.tags[:changelogname] } == [ "Example Maintainers <fpm@example.com> - 1.0-1" ]
+        insist { @rpm.tags[:changelogtext] } == [ "- First example package" ]
+
+        File.unlink(@target)
+      end
+    end # changelog
   end # #output
 
   describe "prefix attribute" do
@@ -528,6 +567,15 @@ describe FPM::Package::RPM do
 
       rpm = ::RPM::File.new(@target)
       insist { rpm.files } == [ "/example/%name%" ]
+    end
+
+    it "should escape '{' and '}' characters in filenames" do
+      Dir.mkdir(subject.staging_path("/example"))
+      File.write(subject.staging_path("/example/{{ test }}"), "Hello")
+      subject.output(@target)
+
+      rpm = ::RPM::File.new(@target)
+      insist { rpm.files } == [ "/example/{{ test }}" ]
     end
 
     it "should correctly include files with spaces and quotation marks" do

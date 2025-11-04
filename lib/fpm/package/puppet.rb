@@ -60,7 +60,7 @@ class FPM::Package::Puppet < FPM::Package
       end # case name
     end # self.scripts.each
 
-    if File.exists?(params[:output])
+    if File.exist?(params[:output])
       # TODO(sissel): Allow folks to choose output?
       logger.error("Puppet module directory '#{params[:output]}' already " \
                     "exists. Delete it or choose another output (-p flag)")
