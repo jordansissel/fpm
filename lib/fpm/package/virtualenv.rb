@@ -25,6 +25,12 @@ class FPM::Package::Virtualenv < FPM::Package
     File.expand_path(path)
   end
 
+  option "--bin", "VIRTUALENV_EXECUTABLE",
+  "The path to the virtualenv executable you wish to run.", :default => "virtualenv"
+  
+  option "--python", "VIRTUALENV_PYTHON",
+  "The path to the python binary to use with virtualenv", :default => "python"
+
   option "--fix-name", :flag, "Should the target package name be prefixed?",
   :default => true
   option "--other-files-dir", "DIRECTORY", "Optionally, the contents of the " \
@@ -54,6 +60,8 @@ class FPM::Package::Virtualenv < FPM::Package
   #
   #     `package` can look like `psutil==2.2.1` or `psutil`.
   def input(package)
+    virtualenv_bin = attributes[:virtualenv_bin]
+    virtualenv_python = attributes[:virtualenv_python]
     installdir = attributes[:virtualenv_install_location]
     m = /^([^=]+)==([^=]+)$/.match(package)
     package_version = nil
@@ -102,9 +110,9 @@ class FPM::Package::Virtualenv < FPM::Package
 
     if self.attributes[:virtualenv_system_site_packages?]
         logger.info("Creating virtualenv with --system-site-packages")
-        safesystem("virtualenv", "--system-site-packages", virtualenv_build_folder)
+        safesystem(virtualenv_bin, "--python", virtualenv_python, "--system-site-packages", virtualenv_build_folder)
     else
-        safesystem("virtualenv", virtualenv_build_folder)
+        safesystem(virtualenv_bin, "--python", virtualenv_python, virtualenv_build_folder)
     end
 
     pip_exe = File.join(virtualenv_build_folder, "bin", "pip")
