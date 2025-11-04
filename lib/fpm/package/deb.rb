@@ -542,6 +542,20 @@ class FPM::Package::Deb < FPM::Package
       raise FPM::InvalidPackageConfiguration, "#{name}: tar is insufficient to support source_date_epoch."
     end
 
+    systemd_file_extensions = [
+        ".service",
+        ".socket",
+        ".device",
+        ".mount",
+        ".automount",
+        ".swap",
+        ".target",
+        ".path",
+        ".timer",
+        ".slice",
+        ".scope",
+    ]
+
     attributes[:deb_systemd] = []
     attributes.fetch(:deb_systemd_list, []).each do |systemd|
       name = File.basename(systemd)
@@ -549,10 +563,16 @@ class FPM::Package::Deb < FPM::Package
 
       name_with_extension = if extname.empty?
                               "#{name}.service"
-                            elsif [".service", ".timer"].include?(extname)
+                            elsif systemd_file_extensions.include?(extname)
                               name
                             else
-                              raise FPM::InvalidPackageConfiguration, "Invalid systemd unit file extension: #{extname}. Expected .service or .timer, or no extension."
+                              # Mutating the array is fine as we raise directly after, and the array will be re-initialised next time
+                              # this method is called. If this branch is changed in the future so as not to diverge, care should be
+                              # taken to ensure that this mutated version of the array is only used for generating the error message.
+                              systemd_file_extensions[-1] = systemd_file_extensions[-1].prepend("or ")
+                              possible_extensions_str = systemd_file_extensions.join(", ")
+                              raise FPM::InvalidPackageConfiguration,
+                                "Invalid systemd unit file extension: #{extname}. Expected one of: #{possible_extensions_str}"
                             end
 
       dest_systemd = staging_path(File.join(attributes[:deb_systemd_path], "#{name_with_extension}"))
