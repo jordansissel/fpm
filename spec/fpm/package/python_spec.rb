@@ -38,6 +38,11 @@ describe FPM::Package::Python do
     #subject.attributes[:python_bin] = find_python
   end
 
+
+  let(:python_major) do 
+    `#{subject.attributes[:python_bin]} -c "import sys; print(sys.version_info[0])"`.chomp
+  end
+
   let (:example_dir) do
     File.expand_path("../../fixtures/python/", File.dirname(__FILE__))
   end
@@ -56,9 +61,11 @@ describe FPM::Package::Python do
       end
 
       context "and :python_package_name_prefix is nil/default" do
-        it "should prefix the package name based on detected python-bin name" do
+        it "should prefix the package name based on detected python-bin version" do
           subject.input(example_dir)
-          insist { subject.name } == "#{subject.attributes[:python_bin]}-Example"
+          reject { subject.attributes[:python_package_name_prefix_given?] }
+          insist { subject.attributes[:python_package_name_prefix] } == "python#{python_major}"
+          insist { subject.name } == "python#{python_major}-Example"
         end
       end
 
@@ -99,7 +106,7 @@ describe FPM::Package::Python do
         it "should prefix the package based on the version of python" do
           subject.input(example_dir)
           insist { subject.attributes[:python_package_name_prefix_given?] }.nil?
-          insist { subject.name } == "#{subject.attributes[:python_bin]}-example"
+          insist { subject.name } == "python#{python_major}-example"
         end
       end
 
