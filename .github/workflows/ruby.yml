@@ -20,7 +20,13 @@ jobs:
       with:
         ruby-version: ${{ matrix.ruby-version }}
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
-    - run: |
+    - name: Run test suite
+      run: |
+        # use venv to avoid pip conflicts with system packages, which was causing failures
+        python -m venv venv
+        . venv/bin/activate
+        pip install -r requirements.txt -r spec/requirements.txt
+
         if [ ! -z "$RUNNER_DEBUG" ] ; then
           DEBUG=1 bundle exec rspec -fd
         else
