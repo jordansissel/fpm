@@ -1,0 +1,3 @@
+# Listing of fpm's Python package dependencies
+packaging
+simplejson
