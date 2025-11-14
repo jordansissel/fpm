@@ -119,7 +119,7 @@ class FPM::Package::Python < FPM::Package
         headers[field] = []
       end
 
-      while !s.eos? and !s.scan("\n") do 
+      while !s.eos? and !s.scan(/\n/) do 
         # Field is non-space up, but excluding the colon
         field = s.scan(/[^\s:]+/)
 
@@ -148,11 +148,11 @@ class FPM::Package::Python < FPM::Package
           # Per Python core-metadata spec:
           # > Changed in version 2.1: This field may be specified in the message body instead.
           #return PythonMetadata.new(headers, s.string[s.pos ...])
-          return headers, s.string[s.pos ... ]
+          return headers, s.string[s.pos .. -1]
         elsif headers["Metadata-Version"].to_f >= 2.0
           # dnspython v1.15.0 has a description body and Metadata-Version 2.0 
           # this seems out of spec, but let's accept it anyway.
-          return headers, s.string[s.pos ... ]
+          return headers, s.string[s.pos .. -1]
         else
           raise "After reading METADATA headers, extra data is in the file but was not expected. This may be a bug in fpm."
         end
@@ -166,7 +166,7 @@ class FPM::Package::Python < FPM::Package
       puts "---"
       puts input
       puts "==="
-      puts input[s.pointer...]
+      puts input[s.pointer..-1]
       puts "---"
       raise e
     end # self.parse
@@ -453,7 +453,7 @@ class FPM::Package::Python < FPM::Package
 
       safesystem(*setup_cmd)
 
-      files = ::Dir.entries(target).filter { |entry| entry =~ /\.(whl|tgz|tar\.gz|zip)$/ }
+      files = ::Dir.entries(target).select { |entry| entry =~ /\.(whl|tgz|tar\.gz|zip)$/ }
       if files.length != 1
         raise "Unexpected directory layout after `pip download ...`. This might be an fpm bug? The directory contains these files: #{files.inspect}"
       end
