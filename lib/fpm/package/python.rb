@@ -148,11 +148,11 @@ class FPM::Package::Python < FPM::Package
           # Per Python core-metadata spec:
           # > Changed in version 2.1: This field may be specified in the message body instead.
           #return PythonMetadata.new(headers, s.string[s.pos ...])
-          return headers, s.string[s.pos ... ]
+          return headers, s.string[s.pos .. -1]
         elsif headers["Metadata-Version"].to_f >= 2.0
           # dnspython v1.15.0 has a description body and Metadata-Version 2.0 
           # this seems out of spec, but let's accept it anyway.
-          return headers, s.string[s.pos ... ]
+          return headers, s.string[s.pos .. -1]
         else
           raise "After reading METADATA headers, extra data is in the file but was not expected. This may be a bug in fpm."
         end
@@ -166,7 +166,7 @@ class FPM::Package::Python < FPM::Package
       puts "---"
       puts input
       puts "==="
-      puts input[s.pointer...]
+      puts input[s.pointer..-1]
       puts "---"
       raise e
     end # self.parse
