@@ -119,7 +119,7 @@ class FPM::Package::Python < FPM::Package
         headers[field] = []
       end
 
-      while !s.eos? and !s.scan("\n") do 
+      while !s.eos? and !s.scan(/\n/) do 
         # Field is non-space up, but excluding the colon
         field = s.scan(/[^\s:]+/)
 
