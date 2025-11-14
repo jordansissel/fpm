@@ -60,7 +60,7 @@ class FPM::Package::CPAN < FPM::Package
       moduledir = package
       result = {}
     else
-      result = search(package)
+      result = search_module(package, version)
       tarball = download(result, version)
       moduledir = unpack(tarball)
     end
@@ -98,20 +98,17 @@ class FPM::Package::CPAN < FPM::Package
       else; metadata["license"]
     end
 
-    unless metadata["distribution"].nil?
+    unless metadata["release"].nil?
+      dist_name, _, dist_version = metadata["release"].rpartition('-')
       logger.info("Setting package name from 'distribution'",
-                   :distribution => metadata["distribution"])
-      self.name = fix_name(metadata["distribution"])
+                  :distribution => dist_name)
+      self.name = fix_name(dist_name)
+      self.provides = search_provided_modules(dist_name, dist_version)
     else
       logger.info("Setting package name from 'name'",
                    :name => metadata["name"])
       self.name = fix_name(metadata["name"])
-    end
-
-    unless metadata["module"].nil?
-      metadata["module"].each do |m|
-        self.provides << cap_name(m["name"]) + " = #{self.version}"
-      end
+      self.provides << cap_name(metadata["name"]) + " = #{self.version}"
     end
 
     # author is not always set or it may be a string instead of an array
@@ -174,7 +171,6 @@ class FPM::Package::CPAN < FPM::Package
             self.dependencies << "#{dep_name} >= #{version}"
             next
           end
-          dep = search(dep_name)
 
           name = cap_name(dep_name)
 
@@ -371,25 +367,79 @@ class FPM::Package::CPAN < FPM::Package
     return build_path(tarball)
   end # def download
 
-  def search(package)
-    logger.info("Asking metacpan about a module", :module => package)
-    metacpan_url = "https://fastapi.metacpan.org/v1/module/" + package
+  def search_module(module_name, version=nil)
+    logger.info("Asking metacpan about a module", :module => module_name, :version => version)
+    metacpan_api_url = "https://fastapi.metacpan.org/v1/module/_search"
+    metacpan_api_query = <<-EOS
+{
+  "query": {
+    "bool": {
+      "must": [
+        { "term": { "module.name": "#{module_name}" } },
+        { "term": { "maturity": "released" } },
+        { "term": { #{version.nil? ? '"status": "latest"' : '"module.version": "' + version + '"'} } }
+      ]
+    }
+  },
+  "size": 1
+}
+EOS
     begin
-      response = httpfetch(metacpan_url)
+      response = httppost(metacpan_api_url, metacpan_api_query)
     rescue Net::HTTPServerException => e
       #logger.error("metacpan query failed.", :error => response.status_line,
                     #:module => package, :url => metacpan_url)
       logger.error("metacpan query failed.", :error => e.message,
-                    :module => package, :url => metacpan_url)
+                    :module => module_name, :version => version, :url => metacpan_api_url)
       raise FPM::InvalidPackageConfiguration, "metacpan query failed"
     end
 
     #data = ""
     #response.read_body { |c| p c; data << c }
     data = response.body
-    metadata = JSON.parse(data)
+    metadata = JSON.parse(data)['hits']['hits'][0]['_source']
     return metadata
   end # def search
+
+  def search_provided_modules(distribution, version)
+    logger.info("Asking metacpan about a releases provided modules",
+                :distribution => distribution,
+                :version => version)
+    metacpan_api_url = "https://fastapi.metacpan.org/v1/module/_search"
+    metacpan_api_query = <<-EOS
+{
+  "query": {
+    "bool": {
+      "filter": [
+        { "exists": { "field": "module" } },
+        { "term": { "release": "#{distribution}-#{version}" } }
+      ]
+    }
+  },
+  "fields": ["module.name", "module.version"],
+  "sort": [ { "module.name": { "order": "asc" } } ],
+  "size": 5000
+}
+EOS
+    begin
+      response = httppost(metacpan_api_url, metacpan_api_query)
+    rescue Net::HTTPServerException => e
+      logger.error("metacpan release query failed.", :error => e.message,
+                   :url => metacpan_api_url)
+      raise FPM::InvalidPackageConfiguration, "metacpan release query failed"
+    end
+    query_hits = JSON.parse(response.body)['hits']['hits']
+
+    provided_modules = []
+    query_hits.each do |m|
+      module_name = m["fields"]["module.name"]
+      module_version = m["fields"]["module.version"]
+      Array(module_name).zip(Array(module_version)).each do |name, version|
+        provided_modules << cap_name(name) + (version ? " = #{version}" : "")
+      end
+    end
+    return provided_modules
+  end # def search_provided_modules
 
   def cap_name(name)
     return "perl(" + name.gsub("-", "::") + ")"
