@@ -453,7 +453,7 @@ class FPM::Package::Python < FPM::Package
 
       safesystem(*setup_cmd)
 
-      files = ::Dir.entries(target).filter { |entry| entry =~ /\.(whl|tgz|tar\.gz|zip)$/ }
+      files = ::Dir.entries(target).select { |entry| entry =~ /\.(whl|tgz|tar\.gz|zip)$/ }
       if files.length != 1
         raise "Unexpected directory layout after `pip download ...`. This might be an fpm bug? The directory contains these files: #{files.inspect}"
       end
