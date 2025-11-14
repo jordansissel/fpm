@@ -43,15 +43,32 @@ describe FPM::Package::CPAN do
   end
 
   it "should return metadata hash" do
-    metadata = subject.instance_eval { search("File::Temp") }
+    metadata = subject.instance_eval { search_module("File::Temp") }
     insist { metadata.class } == Hash
     insist { metadata["name"] } == "Temp.pm"
     insist { metadata["distribution"] } == "File-Temp"
   end
 
   it "should download precise version" do
-    metadata = subject.instance_eval { search("Set::Tiny") }
+    metadata = subject.instance_eval { search_module("Set::Tiny") }
     insist { File.basename(subject.instance_eval { download(metadata, "0.01") }) } == "Set-Tiny-0.01.tar.gz"
+  end
+
+  it "should find distributions provided modules" do
+    provided_modules = subject.instance_eval { search_provided_modules("Test-DB", "0.10") }
+    insist { provided_modules } == ["perl(Test::DB) = 0.10", "perl(Test::DB::Mssql) = 0.10", "perl(Test::DB::Mysql) = 0.10", "perl(Test::DB::Postgres) = 0.10", "perl(Test::DB::Sqlite) = 0.10"]
+
+    # The Set-Tiny-0.01 release provides a single module, Set::Tiny version 0.01
+    provided_modules = subject.instance_eval { search_provided_modules("Set-Tiny", "0.01") }
+    insist { provided_modules } == ["perl(Set::Tiny) = 0.01"]
+
+    # Class::DI has packages with no version
+    provided_modules = subject.instance_eval { search_provided_modules("Class-DI", "0.03") }
+    insist { provided_modules } == ["perl(Class::DI) = 0.03", "perl(Class::DI::Definition)", "perl(Class::DI::Factory)", "perl(Class::DI::Resource)", "perl(Class::DI::Resource::YAML)"]
+
+    # File::Spec is a module provided by the PathTools distribution
+    provided_modules = subject.instance_eval { search_provided_modules("File-Spec", "3.75") }
+    insist { provided_modules } == []
   end
 
   it "should package Digest::MD5" do
@@ -71,6 +88,7 @@ describe FPM::Package::CPAN do
     insist { subject.description } == "Perl interface to the MD-5 algorithm"
     insist { subject.vendor } == "Gisle Aas <gisle@activestate.com>"
     insist { subject.dependencies.sort } == ["perl >= 5.006", "perl(Digest::base) >= 1.00", "perl(XSLoader)"]
+    insist { subject.provides } == ["perl(Digest::MD5) = 2.58"]
   end
 
   it "should unpack tarball containing ./ leading paths" do
