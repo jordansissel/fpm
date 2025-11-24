@@ -3,6 +3,7 @@ require 'fileutils'
 require "fpm" # local
 require "fpm/package/deb" # local
 require "fpm/package/dir" # local
+require "fpm/package/cpan" # local
 require "stud/temporary"
 require "English" # for $CHILD_STATUS
 
@@ -352,6 +353,37 @@ describe FPM::Package::Deb do
       insist { input.dependencies }.empty?
     end
   end # #output with no dependencies
+
+  describe "#output converted from CPAN" do
+    skip("Missing cpanm program") unless program_exists?("cpanm")
+
+    let(:input) { FPM::Package::CPAN.new }
+    let(:input_name) { "Digest::MD5" }
+
+    before :each do
+      input.instance_variable_set(:@version, "2.58");
+      input.attributes[:cpan_test?] = false
+      input.attributes[:rejects] = ['vars','warnings','strict','Config']
+    end
+
+    after :each do
+      input.cleanup
+    end
+
+    it "should ignore dependencies in attributes[:rejects]" do
+      input.attributes[:rejects] += ["Digest::base", "XSLoader"]
+      input.input(input_name)
+      package = input.convert(FPM::Package::Deb)
+      insist { package.dependencies.sort } == ["perl (>= 5.006)"]
+    end
+
+    it "should name package and deps according to Debians Perl packaging standard" do
+      input.input(input_name)
+      package = input.convert(FPM::Package::Deb)
+      insist { package.name } == "libdigest-md5-perl"
+      insist { package.dependencies.sort.first } == "libdigest-base-perl (>= 1.00)"
+    end
+  end # #output converted from CPAN
 
   describe "#tar_flags" do
     let(:package) { FPM::Package::Deb.new }
