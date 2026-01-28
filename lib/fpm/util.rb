@@ -38,7 +38,7 @@ module FPM::Util
     shell = ENV["SHELL"]
     return "/bin/sh" if shell.nil? || shell.empty?
     return shell
-  end
+  end # def default_shell
 
   ############################################################################
   # execmd([env,] cmd [,opts])
@@ -259,7 +259,7 @@ module FPM::Util
   def ar_cmd_deterministic?
     ar_cmd if not defined? @@ar_cmd_deterministic
     return @@ar_cmd_deterministic
-  end
+  end # def ar_cmd_deterministic?
 
   # Get the recommended 'tar' command for this platform.
   def tar_cmd
@@ -306,7 +306,7 @@ module FPM::Util
   def tar_cmd_supports_sort_names_and_set_mtime?
     tar_cmd if not defined? @@tar_cmd_deterministic
     return @@tar_cmd_deterministic
-  end
+  end # def tar_cmd_supports_sort_names_and_set_mtime?
 
   def copy_metadata(source, destination)
     source_stat = File::lstat(source)
@@ -452,7 +452,7 @@ module FPM::Util
       # Ruby 3.1.0 and newer
       return ERB.new(template_code, trim_mode: "-")
     end
-  end
+  end # def erbnew
 end # module FPM::Util
 
 require 'fpm/util/tar_writer'

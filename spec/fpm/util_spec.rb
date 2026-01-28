@@ -25,7 +25,7 @@ describe FPM::Util do
             ta = File.join(target, "a")
             tb = File.join(target, "b")
             subject.copy_entry(a, ta)
-            subject.copy_entry(b, tb, true, true)
+            subject.copy_entry(b, tb, false, true)
 
             # This seems to work to compare file stat calls.
             # target 'a' and 'b' should have the same stat result because

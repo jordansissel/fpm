@@ -23,7 +23,7 @@ jobs:
         printf "JSON\n" >> $GITHUB_OUTPUT
 
   test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: [ split ]
     strategy:
       fail-fast: false
@@ -39,8 +39,12 @@ jobs:
       with:
         ruby-version: ${{ matrix.ruby-version }}
         bundler-cache: true # runs 'bundle install' and caches installed gems automatically
-    - run: |
-        [ ! -z "$RUNNER_DEBUG" ] && export DEBUG=1
-        bundle exec rspec -fd -e "${{ matrix.rspec-group }}"
+    - name: Run test suite
+      run: |
+        if [ ! -z "$RUNNER_DEBUG" ] ; then
+          DEBUG=1 bundle exec rspec -fd
+        else
+          bundle exec rspec
+        fi
       env:
         SHELL: /usr/bin/bash

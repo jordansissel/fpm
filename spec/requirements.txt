@@ -1,0 +1,2 @@
+# Listing of fpm test-suite's Python package dependencies
+setuptools

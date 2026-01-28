@@ -137,7 +137,7 @@ function save_environment(){
 
     # just piping env to a file doesn't quote the variables. This does
     # filter out multiline junk, _, and functions. _ is a readonly variable.
-    env | grep -v "^_=" | grep -v "^[^=(]*()=" | egrep "^[^ ]+=" | while read ENVVAR ; do
+    env | grep -v "^_=" | grep -v "^[^=(]*()=" | grep -v "^BASH_FUNC_.*%%=" |egrep "^[^ ]+=" | while read ENVVAR ; do
         local NAME=${ENVVAR%%=*}
         # sed is to preserve variable values with dollars (for escaped variables or $() style command replacement),
         # and command replacement backticks

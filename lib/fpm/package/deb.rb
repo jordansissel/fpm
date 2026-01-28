@@ -542,6 +542,20 @@ class FPM::Package::Deb < FPM::Package
       raise FPM::InvalidPackageConfiguration, "#{name}: tar is insufficient to support source_date_epoch."
     end
 
+    systemd_file_extensions = [
+        ".service",
+        ".socket",
+        ".device",
+        ".mount",
+        ".automount",
+        ".swap",
+        ".target",
+        ".path",
+        ".timer",
+        ".slice",
+        ".scope",
+    ]
+
     attributes[:deb_systemd] = []
     attributes.fetch(:deb_systemd_list, []).each do |systemd|
       name = File.basename(systemd)
@@ -549,10 +563,16 @@ class FPM::Package::Deb < FPM::Package
 
       name_with_extension = if extname.empty?
                               "#{name}.service"
-                            elsif [".service", ".timer"].include?(extname)
+                            elsif systemd_file_extensions.include?(extname)
                               name
                             else
-                              raise FPM::InvalidPackageConfiguration, "Invalid systemd unit file extension: #{extname}. Expected .service or .timer, or no extension."
+                              # Mutating the array is fine as we raise directly after, and the array will be re-initialised next time
+                              # this method is called. If this branch is changed in the future so as not to diverge, care should be
+                              # taken to ensure that this mutated version of the array is only used for generating the error message.
+                              systemd_file_extensions[-1] = systemd_file_extensions[-1].prepend("or ")
+                              possible_extensions_str = systemd_file_extensions.join(", ")
+                              raise FPM::InvalidPackageConfiguration,
+                                "Invalid systemd unit file extension: #{extname}. Expected one of: #{possible_extensions_str}"
                             end
 
       dest_systemd = staging_path(File.join(attributes[:deb_systemd_path], "#{name_with_extension}"))
@@ -767,10 +787,19 @@ class FPM::Package::Deb < FPM::Package
     self.provides = self.provides.reject { |p| p.empty? }
 
     if origin == FPM::Package::CPAN
+
+      # By default, we'd prefer to name Debian-targeted Perl packages using the
+      # same naming scheme that Debian itself uses, which is usually something
+      # like "lib<module-name-hyphenated>-perl", such as libregexp-common-perl
+      #
+      logger.info("Changing package name to match Debian's typical libmodule-name-perl style")
+      self.name = "lib#{self.name.sub(/^perl-/, "")}-perl"
+
       # The fpm cpan code presents dependencies and provides fields as perl(ModuleName)
       # so we'll need to convert them to something debian supports.
 
-      # Replace perl(ModuleName) > 1.0 with Debian-style perl-ModuleName (> 1.0)
+      # Replace perl(Module::Name) > 1.0 with Debian-style libmodule-name-perl (> 1.0)
+      # per: https://www.debian.org/doc/packaging-manuals/perl-policy/ch-module_packages.html
       perldepfix = lambda do |dep|
         m = dep.match(/perl\((?<name>[A-Za-z0-9_:]+)\)\s*(?<op>.*$)/)
         if m.nil?
@@ -781,7 +810,7 @@ class FPM::Package::Deb < FPM::Package
           modulename = m["name"].gsub("::", "-")
 
           # Fix any upper-casing or other naming concerns Debian has about packages
-          name = "#{attributes[:cpan_package_name_prefix]}-#{modulename}"
+          name = "lib#{modulename}-perl"
 
           if m["op"].empty?
             name
@@ -792,7 +821,9 @@ class FPM::Package::Deb < FPM::Package
         end
       end
 
-      rejects = [ "perl(vars)", "perl(warnings)", "perl(strict)", "perl(Config)" ]
+      rejects = attributes[:rejects].map do |skip|
+        "perl(#{skip})"
+      end
       self.dependencies = self.dependencies.reject do |dep|
         # Reject non-module Perl dependencies like 'vars' and 'warnings'
         rejects.include?(dep)
@@ -1174,7 +1205,7 @@ class FPM::Package::Deb < FPM::Package
       end
       upstarts.each do |upstart|
         name = File.basename(upstart, ".upstart")
-        upstartscript = "etc/init/#{name}.conf"
+        upstartscript = "/etc/init/#{name}.conf"
         logger.debug("Add conf file declaration for upstart script", :script => upstartscript)
         allconfigs << upstartscript[1..-1]
       end
