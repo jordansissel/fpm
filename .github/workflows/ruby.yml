@@ -6,30 +6,11 @@ on:
     branches: [main]
 
 jobs:
-  split:
-    runs-on: ubuntu-24.04 
-    outputs:
-      rspec_groups: ${{ steps.groups.outputs.rspec_groups }}
-    steps:
-    - uses: actions/checkout@v3
-    - uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: '3.4'
-        bundler-cache: true
-    - id: groups
-      run: |
-        printf "rspec_groups<<JSON\n" >> $GITHUB_OUTPUT
-        bundle exec rspec -fd --dry-run | sed -ne '/^Finished in /q; /^\S/p' | jq -R | jq -s >> $GITHUB_OUTPUT
-        printf "JSON\n" >> $GITHUB_OUTPUT
-
   test:
     runs-on: ubuntu-24.04
-    needs: [ split ]
     strategy:
-      fail-fast: false
       matrix:
         ruby-version: ['2.7', '3.0', '3.1', '3.4']
-        rspec-group: ${{ fromJSON(needs.split.outputs.rspec_groups) }}
     steps:
     - run: |
         sudo apt-get update
