@@ -405,7 +405,7 @@ EOS
     logger.info("Asking metacpan about a releases provided modules",
                 :distribution => distribution,
                 :version => version)
-    metacpan_api_url = "https://fastapi.metacpan.org/v1/module/_search"
+    metacpan_api_url = "https://fastapi.metacpan.org/v1/module/_search?_source=module.name,module.version"
     metacpan_api_query = <<-EOS
 {
   "query": {
@@ -416,11 +416,11 @@ EOS
       ]
     }
   },
-  "fields": ["module.name", "module.version"],
   "sort": [ { "module.name": { "order": "asc" } } ],
   "size": 5000
 }
 EOS
+
     begin
       response = httppost(metacpan_api_url, metacpan_api_query)
     rescue Net::HTTPServerException => e
@@ -428,12 +428,12 @@ EOS
                    :url => metacpan_api_url)
       raise FPM::InvalidPackageConfiguration, "metacpan release query failed"
     end
-    query_hits = JSON.parse(response.body)['hits']['hits']
+    query_hits = JSON.parse(response.body)['hits']['hits'][0]["_source"]["module"]
 
     provided_modules = []
     query_hits.each do |m|
-      module_name = m["fields"]["module.name"]
-      module_version = m["fields"]["module.version"]
+      module_name = m["name"]
+      module_version = m["version"]
       Array(module_name).zip(Array(module_version)).each do |name, version|
         provided_modules << cap_name(name) + (version ? " = #{version}" : "")
       end
