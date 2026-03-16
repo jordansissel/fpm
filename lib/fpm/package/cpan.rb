@@ -428,14 +428,16 @@ EOS
                    :url => metacpan_api_url)
       raise FPM::InvalidPackageConfiguration, "metacpan release query failed"
     end
-    query_hits = JSON.parse(response.body)['hits']['hits'][0]["_source"]["module"]
+    query_hits = JSON.parse(response.body)['hits']['hits']
 
     provided_modules = []
-    query_hits.each do |m|
-      module_name = m["name"]
-      module_version = m["version"]
-      Array(module_name).zip(Array(module_version)).each do |name, version|
-        provided_modules << cap_name(name) + (version ? " = #{version}" : "")
+    query_hits.each do |h|
+      h["_source"]["module"].each do |m|
+        module_name = m["name"]
+        module_version = m["version"]
+        Array(module_name).zip(Array(module_version)).each do |name, version|
+          provided_modules << cap_name(name) + (version ? " = #{version}" : "")
+        end
       end
     end
     return provided_modules
