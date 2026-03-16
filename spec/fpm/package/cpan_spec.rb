@@ -73,6 +73,17 @@ describe FPM::Package::CPAN do
     insist { subject.dependencies.sort } == ["perl >= 5.006", "perl(Digest::base) >= 1.00", "perl(XSLoader)"]
   end
 
+  it "should package Regexp::Common" do
+    # Set the version explicitly because we default to installing the newest
+    # version, and a new version could be released that breaks the test.
+    subject.instance_variable_set(:@version, "2024080801");
+    subject.attributes[:cpan_test?] = false
+
+    subject.input("Regexp::Common")
+    insist { subject.name } == "perl-Regexp-Common"
+    insist { subject.dependencies.sort } == ["perl >= 5.010", "perl(Config)", "perl(strict)", "perl(vars)", "perl(warnings)"]
+  end
+
   it "should unpack tarball containing ./ leading paths" do
 
     Dir.mktmpdir do |tmpdir|

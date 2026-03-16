@@ -174,7 +174,6 @@ class FPM::Package::CPAN < FPM::Package
             self.dependencies << "#{dep_name} >= #{version}"
             next
           end
-          dep = search(dep_name)
 
           name = cap_name(dep_name)
 
