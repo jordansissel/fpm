@@ -36,8 +36,8 @@ describe FPM::Package::CPAN do
 
   it "should return successful HTTP resonse" do
     response = subject.instance_eval {httppost(
-      "https://fastapi.metacpan.org/v1/release/_search",
-      "{\"fields\":[\"download_url\"],\"filter\":{\"term\":{\"name\":\"File-Temp-0.2310\"}}}"
+      "https://fastapi.metacpan.org/v1/release/_search?_source=download_url",
+      "{\"query\":{\"term\":{\"name\":\"File-Temp-0.2310\"}}}"
     )}
     insist { response.class } == Net::HTTPOK
   end
@@ -71,6 +71,17 @@ describe FPM::Package::CPAN do
     insist { subject.description } == "Perl interface to the MD-5 algorithm"
     insist { subject.vendor } == "Gisle Aas <gisle@activestate.com>"
     insist { subject.dependencies.sort } == ["perl >= 5.006", "perl(Digest::base) >= 1.00", "perl(XSLoader)"]
+  end
+
+  it "should package Regexp::Common" do
+    # Set the version explicitly because we default to installing the newest
+    # version, and a new version could be released that breaks the test.
+    subject.instance_variable_set(:@version, "2024080801");
+    subject.attributes[:cpan_test?] = false
+
+    subject.input("Regexp::Common")
+    insist { subject.name } == "perl-Regexp-Common"
+    insist { subject.dependencies.sort } == ["perl >= 5.010", "perl(Config)", "perl(strict)", "perl(vars)", "perl(warnings)"]
   end
 
   it "should unpack tarball containing ./ leading paths" do
