@@ -826,6 +826,7 @@ class FPM::Package::Deb < FPM::Package
       end
       self.dependencies = self.dependencies.reject do |dep|
         # Reject non-module Perl dependencies like 'vars' and 'warnings'
+        dep, _ = dep.split(' ') # strip potential version component
         rejects.include?(dep)
       end.collect(&perldepfix).collect(&method(:fix_dependency))
 
