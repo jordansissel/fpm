@@ -36,8 +36,8 @@ describe FPM::Package::CPAN do
 
   it "should return successful HTTP resonse" do
     response = subject.instance_eval {httppost(
-      "https://fastapi.metacpan.org/v1/release/_search",
-      "{\"fields\":[\"download_url\"],\"filter\":{\"term\":{\"name\":\"File-Temp-0.2310\"}}}"
+      "https://fastapi.metacpan.org/v1/release/_search?_source=download_url",
+      "{\"query\":{\"term\":{\"name\":\"File-Temp-0.2310\"}}}"
     )}
     insist { response.class } == Net::HTTPOK
   end
