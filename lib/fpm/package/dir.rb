@@ -93,6 +93,7 @@ class FPM::Package::Dir < FPM::Package
   # Output this package to the given directory.
   def output(output_path)
     output_check(output_path)
+    run_pre_build_helpers
 
     output_path = File.expand_path(output_path)
     ::Dir.chdir(staging_path) do

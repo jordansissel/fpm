@@ -216,4 +216,48 @@ describe FPM::Package do
       expect(subject.staging_path("hello2")).to(include("staging"))
     end
   end
+  describe "#run_pre_build_helpers" do
+    it "does nothing when no helpers are set" do
+      expect { subject.send(:run_pre_build_helpers) }.not_to raise_error
+    end
+
+    it "does nothing when helpers list is empty" do
+      subject.attributes[:pre_build_helpers] = []
+      expect { subject.send(:run_pre_build_helpers) }.not_to raise_error
+    end
+
+    it "runs a helper and sets environment variables" do
+      helper_script = File.expand_path("../../test/pre-build-helper-print-env.sh", File.dirname(__FILE__))
+      output_file = Tempfile.new("helper-output")
+      subject.name = "testpkg"
+      subject.version = "1.2.3"
+      subject.attributes[:pre_build_helpers] = ["#{helper_script} > #{output_file.path}"]
+
+      subject.send(:run_pre_build_helpers)
+
+      output = File.read(output_file.path)
+      expect(output).to include("FPM_STAGING_PATH=#{subject.staging_path}")
+      expect(output).to include("FPM_BUILD_PATH=#{subject.build_path}")
+      expect(output).to include("FPM_PACKAGE_NAME=testpkg")
+      expect(output).to include("FPM_PACKAGE_VERSION=1.2.3")
+    end
+
+    it "raises ProcessFailed on non-zero exit" do
+      subject.attributes[:pre_build_helpers] = ["false"]
+      expect { subject.send(:run_pre_build_helpers) }.to raise_error(FPM::Util::ProcessFailed)
+    end
+
+    it "runs multiple helpers in order" do
+      output_file = Tempfile.new("helper-order")
+      subject.attributes[:pre_build_helpers] = [
+        "echo first >> #{output_file.path}",
+        "echo second >> #{output_file.path}",
+      ]
+
+      subject.send(:run_pre_build_helpers)
+
+      lines = File.read(output_file.path).lines.map(&:strip)
+      expect(lines).to eq(["first", "second"])
+    end
+  end
 end # describe FPM::Package

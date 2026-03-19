@@ -281,4 +281,16 @@ describe FPM::Package::Pacman do
   end
   # TODO: output sometimes make fu-:1.2.3.out.rpm or something. Make sure the
   # version isn't screwed up in transit.
+  describe "#output pre-build helpers" do
+    it "should run pre-build helpers after .PKGINFO is generated" do
+      skip(skip?) if skip?
+      subject.name = "test"
+      subject.version = "1.0"
+      subject.architecture = "all"
+      subject.attributes[:pre_build_helpers] = [
+        "test -f $FPM_BUILD_PATH/.PKGINFO"
+      ]
+      subject.output(target)
+    end
+  end
 end # describe FPM::Package::Pacman

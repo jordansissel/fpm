@@ -154,6 +154,7 @@ class FPM::Package::OSXpkg < FPM::Package
     end
 
     args << output_path
+    run_pre_build_helpers
 
     safesystem("pkgbuild", *args)
     FileUtils.remove_file(temp_info)

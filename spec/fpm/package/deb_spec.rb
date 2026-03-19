@@ -618,4 +618,15 @@ describe FPM::Package::Deb do
       end
     end
   end
+  describe "#output pre-build helpers" do
+    it "should run pre-build helpers after control tarball is generated" do
+      subject.name = "test"
+      subject.version = "1.0"
+      subject.architecture = "all"
+      subject.attributes[:pre_build_helpers] = [
+        "test -f $FPM_BUILD_PATH/control.tar.gz"
+      ]
+      subject.output(target)
+    end
+  end
 end # describe FPM::Package::Deb

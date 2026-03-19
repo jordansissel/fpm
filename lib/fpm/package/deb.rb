@@ -695,6 +695,7 @@ class FPM::Package::Deb < FPM::Package
     end
 
     write_control_tarball
+    run_pre_build_helpers
 
     # Tar up the staging_path into data.tar.{compression type}
     case self.attributes[:deb_compression]
