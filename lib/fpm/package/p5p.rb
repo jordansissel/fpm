@@ -94,6 +94,7 @@ class FPM::Package::P5P < FPM::Package
 
     # Final edit for lint check and packaging
     edit_file(manifest_fn) if attributes[:edit?]
+    run_pre_build_helpers
 
     # Add any facets or actuators that are needed.
     # TODO(jcraig): add manpage actuator to enable install wo/ man pages

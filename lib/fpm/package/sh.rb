@@ -17,6 +17,7 @@ class FPM::Package::Sh < FPM::Package
 
   def output(output_path)
     create_scripts
+    run_pre_build_helpers
 
     # Make one file. The installscript can unpack itself.
     `cat #{install_script} #{payload} > #{output_path}`

@@ -51,6 +51,7 @@ class FPM::Package::Tar < FPM::Package
 
     # Write the scripts, too.
     write_scripts
+    run_pre_build_helpers
 
     # Unpack the tarball to the staging path
     args = ["-cf", output_path, "-C", staging_path]

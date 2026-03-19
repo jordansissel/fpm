@@ -21,6 +21,7 @@ class FPM::Package::Pkgin < FPM::Package
     File.write(build_path("comment"),  self.description + "\n")
 
     File.write(build_path("description"), self.description + "\n")
+    run_pre_build_helpers
 
     args = [ "-B", build_path("build-info"), "-c", build_path("comment"), "-d", build_path("description"), "-f", build_path("packlist"), "-I", "/opt/local", "-p", staging_path,  "-U", "#{cwd}/#{name}-#{self.version}-#{iteration}.tgz" ]
     safesystem("pkg_create", *args)

@@ -34,4 +34,12 @@ describe FPM::Package::Tar do
       FileUtils.rm_rf(target)
     end
   end
+  it "should run pre-build helpers with staging path available" do
+    target = Stud::Temporary.pathname + ".tar"
+    subject.attributes[:pre_build_helpers] = [
+      "test -n \"$FPM_STAGING_PATH\""
+    ]
+    subject.output(target)
+    FileUtils.rm_rf(target)
+  end
 end # describe FPM::Package::Tar

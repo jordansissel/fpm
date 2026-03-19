@@ -45,6 +45,7 @@ class FPM::Package::Snap < FPM::Package
     output_check(output_snap)
 
     write_snap_yaml
+    run_pre_build_helpers
 
     # Create the snap from the staging path
     safesystem("mksquashfs", staging_path, output_snap, "-noappend", "-comp",

@@ -70,6 +70,7 @@ class FPM::Package::Solaris < FPM::Package
         prototype.puts([type, klass, path, mode, attributes[:solaris_user], attributes[:solaris_group]].join(" "))
       end # popen "pkgproto ..."
     end # File prototype
+    run_pre_build_helpers
 
     ::Dir.chdir staging_path do
       # Should create a package directory named by the package name.
