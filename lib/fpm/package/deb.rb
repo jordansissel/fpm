@@ -719,7 +719,7 @@ class FPM::Package::Deb < FPM::Package
         datatar = build_path("data.tar.zst")
         controltar = build_path("control.tar.zst")
         compression_flags = ["--use-compress-program", "zstd"]
-        compressor_options = {"ZSTD_CLEVEL" => "-#{self.attributes[:deb_compression_level] || 3}"}
+        compressor_options = {"ZSTD_CLEVEL" => "#{self.attributes[:deb_compression_level] || ENV['ZSTD_CLEVEL'] || 3}"}
       when "none"
         datatar = build_path("data.tar")
         controltar = build_path("control.tar")
