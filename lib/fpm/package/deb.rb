@@ -213,7 +213,9 @@ class FPM::Package::Deb < FPM::Package
     next File.expand_path(file)
   end
 
-  option "--upstart", "FILEPATH", "Add FILEPATH as an upstart script",
+  option "--upstart", "FILEPATH", "Add FILEPATH as an upstart script. It is " \
+    "expected to be named <service>.upstart and will placed in " \
+    "/etc/init/<service>.conf",
     :multivalued => true do |file|
     next File.expand_path(file)
   end
