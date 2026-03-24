@@ -84,7 +84,7 @@ describe FPM::Package::OSXpkg, :if => platform_is_darwin do
       pkg.name = "test"
       pkg.version = "1.0"
       pkg.attributes[:pre_build_helpers] = [
-        "test -n \"$FPM_STAGING_PATH\""
+        File.expand_path("../../../test/pre-build-helper-print-env.sh", File.dirname(__FILE__))
       ]
       pkg.output(target)
       pkg.cleanup

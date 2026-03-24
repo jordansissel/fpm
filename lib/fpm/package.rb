@@ -391,7 +391,7 @@ class FPM::Package
     }
     helpers.each do |helper|
       logger.info("Running pre-build helper", :helper => helper)
-      safesystem(env, default_shell, "-c", helper)
+      safesystem(env, helper)
     end
   end # def run_pre_build_helpers
 

@@ -82,7 +82,7 @@ describe FPM::Package::Sh do
       target = Tempfile.new("fpm-test-sh").path
       pkg = FPM::Package::Sh.new
       pkg.attributes[:pre_build_helpers] = [
-        "test -n \"$FPM_STAGING_PATH\""
+        File.expand_path("../../../test/pre-build-helper-print-env.sh", File.dirname(__FILE__))
       ]
       pkg.output(target)
       pkg.cleanup

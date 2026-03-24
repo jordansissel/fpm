@@ -226,7 +226,7 @@ describe FPM::Package::Dir do
   end
   it "should run pre-build helpers with staging path available" do
     subject.attributes[:pre_build_helpers] = [
-      "test -n \"$FPM_STAGING_PATH\""
+      File.expand_path("../../../test/pre-build-helper-print-env.sh", File.dirname(__FILE__))
     ]
     subject.output(output)
   end
