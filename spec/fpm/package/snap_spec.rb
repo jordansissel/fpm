@@ -197,4 +197,16 @@ describe FPM::Package::Snap do
       insist { input.attributes[:snap_grade] } == "test-grade"
     end
   end
+
+  describe "#output pre-build helpers" do
+    it "should run pre-build helpers after snap.yaml is generated" do
+      subject.name = "test"
+      subject.version = "1.0"
+      subject.architecture = "all"
+      subject.attributes[:pre_build_helpers] = [
+        "test -f $FPM_STAGING_PATH/meta/snap.yaml"
+      ]
+      subject.output(target)
+    end
+  end
 end

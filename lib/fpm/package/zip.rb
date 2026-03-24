@@ -39,6 +39,7 @@ class FPM::Package::Zip < FPM::Package
   # Output a zipfile.
   def output(output_path)
     output_check(output_path)
+    run_pre_build_helpers
     realpath = Pathname.new(output_path).realdirpath.to_s
     ::Dir.chdir(staging_path) do
       safesystem("zip", "-9r", realpath, ".")

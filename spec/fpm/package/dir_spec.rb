@@ -224,4 +224,10 @@ describe FPM::Package::Dir do
       insist { File.read(File.join(output, symlinkpath)) } == "hello!"
     end
   end
+  it "should run pre-build helpers with staging path available" do
+    subject.attributes[:pre_build_helpers] = [
+      File.expand_path("../../../test/pre-build-helper-print-env.sh", File.dirname(__FILE__))
+    ]
+    subject.output(output)
+  end
 end # describe FPM::Package::Dir

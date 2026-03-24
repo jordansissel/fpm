@@ -379,6 +379,22 @@ class FPM::Package
     end
   end # def edit_file
 
+  def run_pre_build_helpers
+    helpers = attributes[:pre_build_helpers]
+    return if helpers.nil?
+    env = {
+      "FPM_STAGING_PATH" => staging_path,
+      "FPM_BUILD_PATH" => build_path,
+      "FPM_OUTPUT_TYPE" => type,
+      "FPM_PACKAGE_NAME" => name,
+      "FPM_PACKAGE_VERSION" => (version || ""),
+    }
+    helpers.each do |helper|
+      logger.info("Running pre-build helper", :helper => helper)
+      safesystem(env, helper)
+    end
+  end # def run_pre_build_helpers
+
   # This method removes excluded files from the staging_path. Subclasses can
   # remove the files during the input phase rather than deleting them here
   def exclude

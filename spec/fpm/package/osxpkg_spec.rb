@@ -74,4 +74,21 @@ describe FPM::Package::OSXpkg, :if => platform_is_darwin do
       end
     end # package attributes
   end # #output
+  describe "#output pre-build helpers" do
+    it "should run pre-build helpers with staging path available" do
+      skip("Current platform is not darwin/osx") unless platform_is_darwin
+      tmpfile = Tempfile.new("fpm-test-osxpkg")
+      target = tmpfile.path
+      tmpfile.unlink
+      pkg = FPM::Package::OSXpkg.new
+      pkg.name = "test"
+      pkg.version = "1.0"
+      pkg.attributes[:pre_build_helpers] = [
+        File.expand_path("../../../test/pre-build-helper-print-env.sh", File.dirname(__FILE__))
+      ]
+      pkg.output(target)
+      pkg.cleanup
+      File.unlink(target) if File.exist?(target)
+    end
+  end
 end # describe FPM::Package:OSXpkg

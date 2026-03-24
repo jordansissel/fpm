@@ -59,4 +59,13 @@ describe FPM::Package::FreeBSD do
       end
     end
   end
+
+  it "should run pre-build helpers after +MANIFEST is generated" do
+    package = Stud::Temporary.pathname
+    subject.attributes[:pre_build_helpers] = [
+      "test -f $FPM_STAGING_PATH/+MANIFEST"
+    ]
+    subject.output(package)
+    File.unlink(package) if File.exist?(package)
+  end
 end
