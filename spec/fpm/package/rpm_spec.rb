@@ -138,6 +138,25 @@ describe FPM::Package::RPM do
         expect(subject.rpmspec).to include('%defattr(-,some_user,some_group,-')
       end
     end # context
+
+    context "build-id links disabled by default" do
+      before :each do
+        FileUtils.mkdir_p(subject.staging_path(File.dirname(__FILE__)))
+        FileUtils.cp(__FILE__, subject.staging_path(__FILE__))
+        def subject.files; [__FILE__]; end
+        def subject.rpmspec; @rpmspec; end
+        def subject.render_template; @rpmspec = template("rpm.erb").result(binding); end
+        subject.render_template
+      end
+
+      after :each do
+        subject.cleanup
+      end
+
+      it "should disable build-id link generation" do
+        expect(subject.rpmspec).to include('%define _build_id_links none')
+      end
+    end # context
   end
 
   describe "#output" do
