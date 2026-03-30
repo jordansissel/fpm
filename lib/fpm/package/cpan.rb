@@ -44,6 +44,10 @@ class FPM::Package::CPAN < FPM::Package
   option "--cpanm-force", :flag,
     "Pass the --force parameter to cpanm", :default => false
 
+  option "--metacpan-api-url", "URL",
+    "URL for the MetaCPAN api",
+    :default => "https://fastapi.metacpan.org"
+
   private
   def input(package)
     #if RUBY_VERSION =~ /^1\.8/
@@ -328,7 +332,7 @@ class FPM::Package::CPAN < FPM::Package
     end
 
     # Search metacpan to get download URL for this version of the module
-    metacpan_search_url = "https://fastapi.metacpan.org/v1/release/_search?_source=download_url"
+    metacpan_search_url = "#{attributes[:cpan_metacpan_api_url]}/v1/release/_search?_source=download_url"
     metacpan_search_query = {"query":{"term":{"name": "#{distribution}-#{self.version}" } } }.to_json
     begin
       search_response = httppost(metacpan_search_url,metacpan_search_query)
@@ -369,7 +373,7 @@ class FPM::Package::CPAN < FPM::Package
 
   def search_module(module_name, version=nil)
     logger.info("Asking metacpan about a module", :module => module_name, :version => version)
-    metacpan_api_url = "https://fastapi.metacpan.org/v1/module/_search"
+    metacpan_api_url = "#{attributes[:cpan_metacpan_api_url]}/v1/module/_search"
     metacpan_api_query = <<-EOS
 {
   "query": {
@@ -405,7 +409,7 @@ EOS
     logger.info("Asking metacpan about a releases provided modules",
                 :distribution => distribution,
                 :version => version)
-    metacpan_api_url = "https://fastapi.metacpan.org/v1/module/_search?_source=module.name,module.version"
+    metacpan_api_url = "#{attributes[:cpan_metacpan_api_url]}/v1/module/_search?_source=module.name,module.version"
     metacpan_api_query = <<-EOS
 {
   "query": {

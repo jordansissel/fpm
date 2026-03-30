@@ -146,4 +146,13 @@ describe FPM::Package::CPAN do
       subject.input("IPC::Session")
     end
   end
+
+  it "should default metacpan api url to https://fastapi.metacpan.org" do
+    insist { subject.attributes[:cpan_metacpan_api_url] } == "https://fastapi.metacpan.org"
+  end
+
+  it "should use custom metacpan api url" do
+    subject.attributes[:cpan_metacpan_api_url] = "https://localhost.invalid"
+    insist { subject.instance_eval { search_module("File::Temp") } }.raises Exception
+  end
 end # describe FPM::Package::CPAN
