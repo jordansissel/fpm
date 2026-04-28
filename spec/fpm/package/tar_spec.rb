@@ -34,10 +34,10 @@ describe FPM::Package::Tar do
       FileUtils.rm_rf(target)
     end
   end
-  it "should run pre-build helpers with staging path available" do
+  it "should run pre-build hooks with staging path available" do
     target = Stud::Temporary.pathname + ".tar"
-    subject.attributes[:pre_build_helpers] = [
-      File.expand_path("../../../test/pre-build-helper-print-env.sh", File.dirname(__FILE__))
+    subject.attributes[:pre_build_hooks] = [
+      File.expand_path("../../../test/pre-build-hook-print-env.sh", File.dirname(__FILE__))
     ]
     subject.output(target)
     FileUtils.rm_rf(target)

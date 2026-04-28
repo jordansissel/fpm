@@ -76,13 +76,13 @@ describe FPM::Package::Sh do
       end # package attributes
     end
   end # #output
-  describe "#output pre-build helpers" do
-    it "should run pre-build helpers after scripts are created" do
+  describe "#output pre-build hooks" do
+    it "should run pre-build hooks after scripts are created" do
       skip("Shell (SHELL env) is not bash") unless shell_is_bash
       target = Tempfile.new("fpm-test-sh").path
       pkg = FPM::Package::Sh.new
-      pkg.attributes[:pre_build_helpers] = [
-        File.expand_path("../../../test/pre-build-helper-print-env.sh", File.dirname(__FILE__))
+      pkg.attributes[:pre_build_hooks] = [
+        File.expand_path("../../../test/pre-build-hook-print-env.sh", File.dirname(__FILE__))
       ]
       pkg.output(target)
       pkg.cleanup

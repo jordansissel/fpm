@@ -198,12 +198,12 @@ describe FPM::Package::Snap do
     end
   end
 
-  describe "#output pre-build helpers" do
-    it "should run pre-build helpers after snap.yaml is generated" do
+  describe "#output pre-build hooks" do
+    it "should run pre-build hooks after snap.yaml is generated" do
       subject.name = "test"
       subject.version = "1.0"
       subject.architecture = "all"
-      subject.attributes[:pre_build_helpers] = [
+      subject.attributes[:pre_build_hooks] = [
         "test -f $FPM_STAGING_PATH/meta/snap.yaml"
       ]
       subject.output(target)

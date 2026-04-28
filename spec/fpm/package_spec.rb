@@ -216,24 +216,24 @@ describe FPM::Package do
       expect(subject.staging_path("hello2")).to(include("staging"))
     end
   end
-  describe "#run_pre_build_helpers" do
-    it "does nothing when no helpers are set" do
-      expect { subject.send(:run_pre_build_helpers) }.not_to raise_error
+  describe "#run_pre_build_hooks" do
+    it "does nothing when no hooks are set" do
+      expect { subject.send(:run_pre_build_hooks) }.not_to raise_error
     end
 
-    it "does nothing when helpers list is empty" do
-      subject.attributes[:pre_build_helpers] = []
-      expect { subject.send(:run_pre_build_helpers) }.not_to raise_error
+    it "does nothing when hooks list is empty" do
+      subject.attributes[:pre_build_hooks] = []
+      expect { subject.send(:run_pre_build_hooks) }.not_to raise_error
     end
 
-    it "runs a helper and sets environment variables" do
-      helper_script = File.expand_path("../../test/pre-build-helper-print-env.sh", File.dirname(__FILE__))
-      output_file = Tempfile.new("helper-output")
+    it "runs a hook and sets environment variables" do
+      hook_script = File.expand_path("../../test/pre-build-hook-print-env.sh", File.dirname(__FILE__))
+      output_file = Tempfile.new("hook-output")
       subject.name = "testpkg"
       subject.version = "1.2.3"
-      subject.attributes[:pre_build_helpers] = ["#{helper_script} > #{output_file.path}"]
+      subject.attributes[:pre_build_hooks] = ["#{hook_script} > #{output_file.path}"]
 
-      subject.send(:run_pre_build_helpers)
+      subject.send(:run_pre_build_hooks)
 
       output = File.read(output_file.path)
       expect(output).to include("FPM_STAGING_PATH=#{subject.staging_path}")
@@ -243,18 +243,18 @@ describe FPM::Package do
     end
 
     it "raises ProcessFailed on non-zero exit" do
-      subject.attributes[:pre_build_helpers] = ["false"]
-      expect { subject.send(:run_pre_build_helpers) }.to raise_error(FPM::Util::ProcessFailed)
+      subject.attributes[:pre_build_hooks] = ["false"]
+      expect { subject.send(:run_pre_build_hooks) }.to raise_error(FPM::Util::ProcessFailed)
     end
 
-    it "runs multiple helpers in order" do
-      output_file = Tempfile.new("helper-order")
-      subject.attributes[:pre_build_helpers] = [
+    it "runs multiple hooks in order" do
+      output_file = Tempfile.new("hook-order")
+      subject.attributes[:pre_build_hooks] = [
         "echo first >> #{output_file.path}",
         "echo second >> #{output_file.path}",
       ]
 
-      subject.send(:run_pre_build_helpers)
+      subject.send(:run_pre_build_hooks)
 
       lines = File.read(output_file.path).lines.map(&:strip)
       expect(lines).to eq(["first", "second"])

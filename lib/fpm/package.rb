@@ -379,9 +379,9 @@ class FPM::Package
     end
   end # def edit_file
 
-  def run_pre_build_helpers
-    helpers = attributes[:pre_build_helpers]
-    return if helpers.nil?
+  def run_pre_build_hooks
+    hooks = attributes[:pre_build_hooks]
+    return if hooks.nil?
     env = {
       "FPM_STAGING_PATH" => staging_path,
       "FPM_BUILD_PATH" => build_path,
@@ -389,11 +389,11 @@ class FPM::Package
       "FPM_PACKAGE_NAME" => name,
       "FPM_PACKAGE_VERSION" => (version || ""),
     }
-    helpers.each do |helper|
-      logger.info("Running pre-build helper", :helper => helper)
-      safesystem(env, helper)
+    hooks.each do |hook|
+      logger.info("Running pre-build hook", :hook => hook)
+      safesystem(env, hook)
     end
-  end # def run_pre_build_helpers
+  end # def run_pre_build_hooks
 
   # This method removes excluded files from the staging_path. Subclasses can
   # remove the files during the input phase rather than deleting them here

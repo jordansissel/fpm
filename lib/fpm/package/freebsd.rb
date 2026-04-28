@@ -85,7 +85,7 @@ class FPM::Package::FreeBSD < FPM::Package
       file_list.puts(i)
     end
     file_list.close
-    run_pre_build_helpers
+    run_pre_build_hooks
 
     # Create the .txz package archive from the files in staging_path.
     # We use --files-from here to keep the tar entries from having `./` as the prefix.

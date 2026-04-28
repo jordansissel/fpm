@@ -100,7 +100,7 @@ class FPM::Package::APK< FPM::Package
       FileUtils.rm_r(control_path)
     end
 
-    run_pre_build_helpers
+    run_pre_build_hooks
 
     # concatenate the two into a real apk.
     begin

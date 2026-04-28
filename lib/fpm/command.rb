@@ -136,12 +136,12 @@ class FPM::Command < Clamp::Command
   option ["-e", "--edit"], :flag,
     "Edit the package spec before building.", :default => false
 
-  option "--pre-build-helper", "EXECUTABLE",
+  option "--pre-build-hook", "EXECUTABLE",
          "An executable to run just before the package is built. " \
          "Environment variables FPM_STAGING_PATH, FPM_BUILD_PATH, " \
          "FPM_OUTPUT_TYPE, FPM_PACKAGE_NAME, and FPM_PACKAGE_VERSION " \
          "are set. This flag can be specified multiple times.",
-         :multivalued => true, :attribute_name => :pre_build_helpers
+         :multivalued => true, :attribute_name => :pre_build_hooks
 
   excludes = []
   option ["-x", "--exclude"], "EXCLUDE_PATTERN",
@@ -448,7 +448,7 @@ class FPM::Command < Clamp::Command
     input.replaces += replaces
     input.config_files += config_files
     input.directories += directories
-    input.attributes[:pre_build_helpers] = pre_build_helpers
+    input.attributes[:pre_build_hooks] = pre_build_hooks
 
     h = {}
     attrs.each do | e |

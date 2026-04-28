@@ -858,13 +858,13 @@ CHANGELOG
       end
     end # bzip2/sha1
   end # #output with digest/compression settings
-  describe "#output pre-build helpers", :if => program_exists?("rpmbuild") do
-    it "should run pre-build helpers after spec file is generated" do
+  describe "#output pre-build hooks", :if => program_exists?("rpmbuild") do
+    it "should run pre-build hooks after spec file is generated" do
       subject.name = "test"
       subject.version = "1.0"
       subject.architecture = "all"
       target = Stud::Temporary.pathname + ".rpm"
-      subject.attributes[:pre_build_helpers] = [
+      subject.attributes[:pre_build_hooks] = [
         "test -f $FPM_BUILD_PATH/SPECS/test.spec"
       ]
       subject.output(target)

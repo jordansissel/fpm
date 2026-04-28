@@ -602,7 +602,7 @@ class FPM::Package::RPM < FPM::Package
     File.write(specfile, rpmspec)
 
     edit_file(specfile) if attributes[:edit?]
-    run_pre_build_helpers
+    run_pre_build_hooks
 
     args << specfile
 
