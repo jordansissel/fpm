@@ -137,10 +137,14 @@ class FPM::Command < Clamp::Command
     "Edit the package spec before building.", :default => false
 
   option "--pre-build-hook", "EXECUTABLE",
-         "An executable to run just before the package is built. " \
+         "An executable file to run just before the package is built. " \
+         "This flag can be specified multiple times. This executable should " \
+         "not expect to be passed any arguments. " \
          "Environment variables FPM_STAGING_PATH, FPM_BUILD_PATH, " \
          "FPM_OUTPUT_TYPE, FPM_PACKAGE_NAME, and FPM_PACKAGE_VERSION " \
-         "are set. This flag can be specified multiple times.",
+         "are set. WARNING, pre-build hooks provide access to fpm internals " \
+         "in which there is no promise of stability or compatibility across fpm versions, " \
+         "particularly in regards to the build and staging paths!",
          :multivalued => true, :attribute_name => :pre_build_hooks
 
   excludes = []
