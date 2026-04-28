@@ -203,10 +203,13 @@ describe FPM::Package::Snap do
       subject.name = "test"
       subject.version = "1.0"
       subject.architecture = "all"
-      subject.attributes[:pre_build_hooks] = [
-        "test -f $FPM_STAGING_PATH/meta/snap.yaml"
-      ]
-      subject.output(target)
+      Tempfile.create(["pre-build-hook", ".sh"]) do |hook_script|
+        hook_script.write("#!/bin/sh\nset -e\ntest -f \"$FPM_STAGING_PATH/meta/snap.yaml\"\n")
+        hook_script.close
+        File.chmod(0755, hook_script.path)
+        subject.attributes[:pre_build_hooks] = [hook_script.path]
+        subject.output(target)
+      end
     end
   end
 end

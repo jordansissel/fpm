@@ -217,6 +217,15 @@ describe FPM::Package do
     end
   end
   describe "#run_pre_build_hooks" do
+    def with_hook_script(contents)
+      Tempfile.create(["pre-build-hook", ".sh"]) do |hook_script|
+        hook_script.write("#!/bin/sh\nset -e\n#{contents}\n")
+        hook_script.close
+        File.chmod(0755, hook_script.path)
+        yield hook_script.path
+      end
+    end
+
     it "does nothing when no hooks are set" do
       expect { subject.send(:run_pre_build_hooks) }.not_to raise_error
     end
@@ -227,32 +236,36 @@ describe FPM::Package do
     end
 
     it "runs a hook and sets environment variables" do
-      hook_script = File.expand_path("../../test/pre-build-hook-print-env.sh", File.dirname(__FILE__))
-      output_file = Tempfile.new("hook-output")
-      subject.name = "testpkg"
-      subject.version = "1.2.3"
-      subject.attributes[:pre_build_hooks] = ["#{hook_script} > #{output_file.path}"]
+      Tempfile.create("hook-output") do |output_file|
+        with_hook_script("env | grep '^FPM_' | sort > #{output_file.path.inspect}") do |hook_script|
+          subject.name = "testpkg"
+          subject.version = "1.2.3"
+          subject.attributes[:pre_build_hooks] = [hook_script]
 
-      subject.send(:run_pre_build_hooks)
+          subject.send(:run_pre_build_hooks)
 
-      output = File.read(output_file.path)
-      expect(output).to include("FPM_STAGING_PATH=#{subject.staging_path}")
-      expect(output).to include("FPM_BUILD_PATH=#{subject.build_path}")
-      expect(output).to include("FPM_PACKAGE_NAME=testpkg")
-      expect(output).to include("FPM_PACKAGE_VERSION=1.2.3")
+          output = File.read(output_file.path)
+          expect(output).to include("FPM_STAGING_PATH=#{subject.staging_path}")
+          expect(output).to include("FPM_BUILD_PATH=#{subject.build_path}")
+          expect(output).to include("FPM_PACKAGE_NAME=testpkg")
+          expect(output).to include("FPM_PACKAGE_VERSION=1.2.3")
+        end
+      end
     end
 
     it "stringifies the default version for hook environment variables" do
-      hook_script = File.expand_path("../../test/pre-build-hook-print-env.sh", File.dirname(__FILE__))
-      output_file = Tempfile.new("hook-output")
-      subject.attributes[:version] = 1.0
-      subject.attributes[:version_given?] = true
-      subject.attributes[:pre_build_hooks] = ["#{hook_script} > #{output_file.path}"]
+      Tempfile.create("hook-output") do |output_file|
+        with_hook_script("env | grep '^FPM_' | sort > #{output_file.path.inspect}") do |hook_script|
+          subject.attributes[:version] = 1.0
+          subject.attributes[:version_given?] = true
+          subject.attributes[:pre_build_hooks] = [hook_script]
 
-      subject.send(:run_pre_build_hooks)
+          subject.send(:run_pre_build_hooks)
 
-      output = File.read(output_file.path)
-      expect(output).to include("FPM_PACKAGE_VERSION=1.0")
+          output = File.read(output_file.path)
+          expect(output).to include("FPM_PACKAGE_VERSION=1.0")
+        end
+      end
     end
 
     it "raises ProcessFailed on non-zero exit" do
@@ -260,17 +273,53 @@ describe FPM::Package do
       expect { subject.send(:run_pre_build_hooks) }.to raise_error(FPM::Util::ProcessFailed)
     end
 
+    it "raises ProcessFailed with useful message when hook executable doesn't exist" do
+      cmd = "nonexistent_hook_command_xyz123"
+      subject.attributes[:pre_build_hooks] = [cmd]
+
+      expect { subject.send(:run_pre_build_hooks) }.to raise_error(
+        FPM::Util::ProcessFailed,
+        /A pre-build hook file does not exist or is not executable: #{Regexp.escape(cmd)}/
+      )
+    end
+
+    it "raises ProcessFailed when hook file is not executable" do
+      Tempfile.create("non-executable-hook") do |hook_script|
+        hook_script.write("#!/bin/sh\nexit 0\n")
+        hook_script.close
+        File.chmod(0644, hook_script.path)
+        subject.attributes[:pre_build_hooks] = [hook_script.path]
+
+        expect { subject.send(:run_pre_build_hooks) }.to raise_error(
+          FPM::Util::ProcessFailed,
+          /A pre-build hook file does not exist or is not executable: #{Regexp.escape(hook_script.path)}/
+        )
+      end
+    end
+
+    it "rejects shell command hook strings" do
+      cmd = "echo first >> /tmp/fpm-pre-build-hook-output"
+      subject.attributes[:pre_build_hooks] = [cmd]
+
+      expect { subject.send(:run_pre_build_hooks) }.to raise_error(
+        FPM::Util::ProcessFailed,
+        /A pre-build hook file does not exist or is not executable: #{Regexp.escape(cmd)}/
+      )
+    end
+
     it "runs multiple hooks in order" do
-      output_file = Tempfile.new("hook-order")
-      subject.attributes[:pre_build_hooks] = [
-        "echo first >> #{output_file.path}",
-        "echo second >> #{output_file.path}",
-      ]
+      Tempfile.create("hook-order") do |output_file|
+        with_hook_script("echo first >> #{output_file.path.inspect}") do |first_hook|
+          with_hook_script("echo second >> #{output_file.path.inspect}") do |second_hook|
+            subject.attributes[:pre_build_hooks] = [first_hook, second_hook]
 
-      subject.send(:run_pre_build_hooks)
+            subject.send(:run_pre_build_hooks)
 
-      lines = File.read(output_file.path).lines.map(&:strip)
-      expect(lines).to eq(["first", "second"])
+            lines = File.read(output_file.path).lines.map(&:strip)
+            expect(lines).to eq(["first", "second"])
+          end
+        end
+      end
     end
   end
 end # describe FPM::Package

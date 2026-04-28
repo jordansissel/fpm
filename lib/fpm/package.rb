@@ -391,7 +391,11 @@ class FPM::Package
     }
     hooks.each do |hook|
       logger.info("Running pre-build hook", :hook => hook)
-      safesystem(env, hook)
+      begin
+        safesystem(env, hook, hook) # pass hook twice to force a direct exec
+      rescue FPM::Util::ExecutableNotFound, Errno::ENOENT, Errno::EACCES
+        raise ProcessFailed.new("A pre-build hook file does not exist or is not executable: #{hook}")
+      end
     end
   end # def run_pre_build_hooks
 

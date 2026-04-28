@@ -287,10 +287,13 @@ describe FPM::Package::Pacman do
       subject.name = "test"
       subject.version = "1.0"
       subject.architecture = "all"
-      subject.attributes[:pre_build_hooks] = [
-        "test -f $FPM_BUILD_PATH/.PKGINFO"
-      ]
-      subject.output(target)
+      Tempfile.create(["pre-build-hook", ".sh"]) do |hook_script|
+        hook_script.write("#!/bin/sh\nset -e\ntest -f \"$FPM_BUILD_PATH/.PKGINFO\"\n")
+        hook_script.close
+        File.chmod(0755, hook_script.path)
+        subject.attributes[:pre_build_hooks] = [hook_script.path]
+        subject.output(target)
+      end
     end
   end
 end # describe FPM::Package::Pacman
