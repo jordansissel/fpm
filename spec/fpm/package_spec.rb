@@ -242,6 +242,19 @@ describe FPM::Package do
       expect(output).to include("FPM_PACKAGE_VERSION=1.2.3")
     end
 
+    it "stringifies the default version for hook environment variables" do
+      hook_script = File.expand_path("../../test/pre-build-hook-print-env.sh", File.dirname(__FILE__))
+      output_file = Tempfile.new("hook-output")
+      subject.attributes[:version] = 1.0
+      subject.attributes[:version_given?] = true
+      subject.attributes[:pre_build_hooks] = ["#{hook_script} > #{output_file.path}"]
+
+      subject.send(:run_pre_build_hooks)
+
+      output = File.read(output_file.path)
+      expect(output).to include("FPM_PACKAGE_VERSION=1.0")
+    end
+
     it "raises ProcessFailed on non-zero exit" do
       subject.attributes[:pre_build_hooks] = ["false"]
       expect { subject.send(:run_pre_build_hooks) }.to raise_error(FPM::Util::ProcessFailed)

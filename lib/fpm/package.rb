@@ -387,7 +387,7 @@ class FPM::Package
       "FPM_BUILD_PATH" => build_path,
       "FPM_OUTPUT_TYPE" => type,
       "FPM_PACKAGE_NAME" => name,
-      "FPM_PACKAGE_VERSION" => (version || ""),
+      "FPM_PACKAGE_VERSION" => version.to_s
     }
     hooks.each do |hook|
       logger.info("Running pre-build hook", :hook => hook)
