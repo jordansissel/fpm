@@ -1,5 +1,5 @@
 Format: 1.8
-Date: <%= (if attributes[:source_date_epoch].nil? then Time.now() else Time.at(attributes[:source_date_epoch].to_i) end).strftime("%a, %d %b %Y %T %z") %>
+Date: <%= (if source_date_epoch.nil? then Time.now() else Time.at(source_date_epoch.to_i).utc end).strftime("%a, %d %b %Y %T %z") %>
 Source: <%= name %>
 Binary: <%= name %>
 Architecture: <%= architecture %>

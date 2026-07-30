@@ -510,12 +510,15 @@ describe FPM::Package::Deb do
     end
   end
 
-  describe "#reproducible" do
+  # A date an input type discovered for itself and the --source-date-epoch-default fallback
+  # both have to reach every generated file, so exercise the two attributes separately.
+  [:source_date_epoch, :source_date_epoch_default].each do |epoch_attribute|
+  describe "#reproducible with #{epoch_attribute}" do
 
     let(:package) {
        # Turn on reproducible build behavior by setting SOURCE_DATE_EPOCH like user would
        val = FPM::Package::Deb.new
-       val.attributes[:source_date_epoch] = '1'  # one second into Jan 1 1970 UTC... '0' not supported by zlib binding :-(
+       val.attributes[epoch_attribute] = '1'  # one second into Jan 1 1970 UTC... '0' not supported by zlib binding :-(
        val
     }
 
@@ -562,6 +565,7 @@ describe FPM::Package::Deb do
       expect(FileUtils.compare_file(target, target + '.orig')).to be true
     end
   end # #reproducible
+  end
 
   describe "compression" do
     {

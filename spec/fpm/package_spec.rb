@@ -216,4 +216,21 @@ describe FPM::Package do
       expect(subject.staging_path("hello2")).to(include("staging"))
     end
   end
+
+  describe "#source_date_epoch (internal method)" do
+    it "should be nil when neither attribute is set" do
+      insist { subject.source_date_epoch }.nil?
+    end
+
+    it "should fall back to attributes[:source_date_epoch_default]" do
+      subject.attributes[:source_date_epoch_default] = "1700000000"
+      insist { subject.source_date_epoch } == "1700000000"
+    end
+
+    it "should prefer attributes[:source_date_epoch]" do
+      subject.attributes[:source_date_epoch] = "1699000000"
+      subject.attributes[:source_date_epoch_default] = "1700000000"
+      insist { subject.source_date_epoch } == "1699000000"
+    end
+  end
 end # describe FPM::Package
