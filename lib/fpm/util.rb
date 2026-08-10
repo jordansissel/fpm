@@ -250,7 +250,7 @@ module FPM::Util
       end
     end
     # If no combination of ar and options omits timestamps, fall back to default.
-    @@ar_cmd = ["ar", "-qc"]
+    @@ar_cmd = ["ar", "-qcS"]
     FileUtils.rm_f([testarchive, emptyfile])
     return @@ar_cmd
   end # def ar_cmd
