@@ -34,7 +34,7 @@ As a full example::
 Depending on your needs, you will have to adjust the volume mounts and
 relative paths to fit your particular situation.
 
-Running rpsec inside docker
+Running rspec inside docker
 ---------------------------
 
 The Makefile provides some targets for testing. They will build a
