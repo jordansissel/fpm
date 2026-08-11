@@ -1,6 +1,11 @@
 Release Notes and Change Log
 ============================
 
+Unreleased
+^^^^^^^^^^
+
+* rpm: Disable build-id links by default to prevent file conflicts when multiple packages include pre-built ELF binaries with the same build-ids, such as Electron apps. (`#2142`_; Matthew Rathbone)
+
 1.17.0 (October 2, 2025)
 ^^^^^^^^^^^^^^^^^^^^^^^^
 

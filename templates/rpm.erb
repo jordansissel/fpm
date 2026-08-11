@@ -20,6 +20,10 @@
 # Allow building noarch packages that contain binaries
 %define _binaries_in_noarch_packages_terminate_build 0
 
+# Disable build_id links to prevent file conflicts between packages
+# with pre-built ELF binaries sharing the same build-ids
+%define _build_id_links none
+
 # Use <%= attributes[:rpm_digest] %> file digest method. 
 # The first macro is the one used in RPM v4.9.1.1
 %define _binary_filedigest_algorithm <%= digest_algorithm %>
