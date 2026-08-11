@@ -85,39 +85,46 @@ class FPM::Package::APK< FPM::Package
     control_path = build_path("control")
     controltar_path = build_path("control.tar")
     datatar_path = build_path("data.tar")
+    datatargz_path = build_path("data.tar.gz")
+    controltargz_path = build_path("control.tar.gz")
 
     FileUtils.mkdir(control_path)
 
     # data tar.
     tar_path(staging_path(""), datatar_path)
 
+    begin
+      # calculate/rewrite sha1 hashes for data tar
+      hash_datatar_sha1(datatar_path)
+    end
+
+    # gzip the data tar. The .PKGINFO datahash is checked by apk against
+    # these compressed bytes, not the uncompressed tar, so it must be
+    # computed from this final data.tar.gz.
+    gzip_path(datatar_path, datatargz_path)
+
     # control tar.
     begin
-      write_pkginfo(control_path)
+      write_pkginfo(control_path, datatargz_path)
       write_control_scripts(control_path)
       tar_path(control_path, controltar_path)
     ensure
       FileUtils.rm_r(control_path)
     end
 
-    # concatenate the two into a real apk.
-    begin
+    # cut end-of-tar record from control tar
+    cut_tar_record(controltar_path)
 
-      # cut end-of-tar record from control tar
-      cut_tar_record(controltar_path)
+    gzip_path(controltar_path, controltargz_path)
 
-      # calculate/rewrite sha1 hashes for data tar
-      hash_datatar(datatar_path)
-
-      # concatenate the two into the final apk
-      concat_zip_tars(controltar_path, datatar_path, output_path)
-    end
+    # concatenate the two gzip streams into the final apk
+    concat_files(controltargz_path, datatargz_path, output_path)
 
     logger.warn("apk output does not currently sign packages.")
     logger.warn("It's recommended that your package be installed with '--allow-untrusted'")
   end
 
-  def write_pkginfo(base_path)
+  def write_pkginfo(base_path, datatargz_path)
 
     pkginfo = ""
 
@@ -133,6 +140,8 @@ class FPM::Package::APK< FPM::Package
     for dependency in dependencies()
       pkginfo << "depend = #{dependency}\n"
     end
+
+    pkginfo << "datahash = #{Digest::SHA256.file(datatargz_path).hexdigest.downcase}\n"
 
     File.write("#{base_path}/.PKGINFO", pkginfo)
   end
@@ -203,6 +212,10 @@ class FPM::Package::APK< FPM::Package
           record_length = ascii_length.to_i(8)
           record_length = determine_record_length(record_length)
 
+          # ownership headers were rewritten above; the checksum must be
+          # recalculated afterward or apk will reject the package as corrupt.
+          header = checksum_header(header)
+
           target_file.write(header)
           target_file.write(file.read(record_length))
         end
@@ -215,7 +228,7 @@ class FPM::Package::APK< FPM::Package
   # Rewrites the tar file located at the given [target_tar_path]
   # to have its record headers use a simple checksum,
   # and the apk sha1 hash extension.
-  def hash_datatar(target_path)
+  def hash_datatar_sha1(target_path)
 
     header = extension_header = ""
     data = extension_data = ""
@@ -232,20 +245,21 @@ class FPM::Package::APK< FPM::Package
 
         header = file.read(TAR_CHUNK_SIZE)
         typeflag = header[TAR_TYPEFLAG_OFFSET]
-        record_length = header[TAR_LENGTH_OFFSET_START..TAR_LENGTH_OFFSET_END].to_i(8)
+        content_length = header[TAR_LENGTH_OFFSET_START..TAR_LENGTH_OFFSET_END].to_i(8)
 
         data = ""
-        record_length = determine_record_length(record_length)
+        record_length = determine_record_length(content_length)
 
         until(data.length == record_length)
           data << file.read(TAR_CHUNK_SIZE)
         end
 
-        # Clear ownership fields
-        header = replace_ownership_headers(header, false)
-
         # If it's not a null record, do extension hash.
         if(typeflag != "\0")
+          # Clear ownership fields. Null (end-of-archive) records must be
+          # left untouched, since apk requires them to remain all zero bytes.
+          header = replace_ownership_headers(header, false)
+
           extension_header = header.dup()
 
           extension_header = replace_ownership_headers(extension_header, true)
@@ -264,7 +278,9 @@ class FPM::Package::APK< FPM::Package
               full_record_path = full_record_path.chop()
             end
           else
-            extension_data = hash_record(data)
+            # hash only the real file content, not the zero padding used to
+            # round the tar record up to a 512-byte boundary.
+            extension_data = hash_record_sha1(data[0, content_length])
           end
 
           full_record_path = pad_string_to(full_record_path, 100)
@@ -281,6 +297,12 @@ class FPM::Package::APK< FPM::Package
           empty_records += 1
         end
 
+        # ownership headers were rewritten above; the checksum must be
+        # recalculated afterward or apk will reject the package as corrupt.
+        if(typeflag != "\0")
+          header = checksum_header(header)
+        end
+
         # write header and data to target file.
         target_file.write(header)
         target_file.write(data)
@@ -292,37 +314,26 @@ class FPM::Package::APK< FPM::Package
     end
   end
 
+  # Gzips the contents of [source_path] into [target_path].
+  def gzip_path(source_path, target_path)
+    Zlib::GzipWriter.open(target_path) do |target_writer|
+      open(source_path, "rb") do |file|
+        until(file.eof?())
+          target_writer.write(file.read(4096))
+        end
+      end
+    end
+  end
+
   # Concatenates each of the given [apath] and [bpath] into the given [target_path]
-  def concat_zip_tars(apath, bpath, target_path)
-
-    temp_apath = apath + "~"
-    temp_bpath = bpath + "~"
-
-    # zip each path separately
-    Zlib::GzipWriter.open(temp_apath) do |target_writer|
+  def concat_files(apath, bpath, target_path)
+    File.open(target_path, "wb") do |target_writer|
       open(apath, "rb") do |file|
         until(file.eof?())
           target_writer.write(file.read(4096))
         end
       end
-    end
-
-    Zlib::GzipWriter.open(temp_bpath) do |target_writer|
       open(bpath, "rb") do |file|
-        until(file.eof?())
-          target_writer.write(file.read(4096))
-        end
-      end
-    end
-
-    # concat both into one.
-    File.open(target_path, "wb") do |target_writer|
-      open(temp_apath, "rb") do |file|
-        until(file.eof?())
-          target_writer.write(file.read(4096))
-        end
-      end
-      open(temp_bpath, "rb") do |file|
         until(file.eof?())
           target_writer.write(file.read(4096))
         end
@@ -365,7 +376,7 @@ class FPM::Package::APK< FPM::Package
 
   # SHA-1 hashes the given data, then places it in the APK hash string format
   # then returns.
-  def hash_record(data)
+  def hash_record_sha1(data)
 
     # %u %s=%s\n
     # len name=hash
