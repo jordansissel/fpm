@@ -91,9 +91,14 @@ class FPM::Package::APK< FPM::Package
     # data tar.
     tar_path(staging_path(""), datatar_path)
 
+    begin
+      # calculate/rewrite sha1 hashes for data tar
+      hash_datatar_sha1(datatar_path)
+    end
+
     # control tar.
     begin
-      write_pkginfo(control_path)
+      write_pkginfo(control_path, datatar_path)
       write_control_scripts(control_path)
       tar_path(control_path, controltar_path)
     ensure
@@ -106,9 +111,6 @@ class FPM::Package::APK< FPM::Package
       # cut end-of-tar record from control tar
       cut_tar_record(controltar_path)
 
-      # calculate/rewrite sha1 hashes for data tar
-      hash_datatar(datatar_path)
-
       # concatenate the two into the final apk
       concat_zip_tars(controltar_path, datatar_path, output_path)
     end
@@ -117,7 +119,7 @@ class FPM::Package::APK< FPM::Package
     logger.warn("It's recommended that your package be installed with '--allow-untrusted'")
   end
 
-  def write_pkginfo(base_path)
+  def write_pkginfo(base_path, datatar_path)
 
     pkginfo = ""
 
@@ -133,6 +135,8 @@ class FPM::Package::APK< FPM::Package
     for dependency in dependencies()
       pkginfo << "depend = #{dependency}\n"
     end
+
+    pkginfo << "datahash = #{Digest::SHA256.file(datatar_path).hexdigest.downcase}\n"
 
     File.write("#{base_path}/.PKGINFO", pkginfo)
   end
@@ -215,7 +219,7 @@ class FPM::Package::APK< FPM::Package
   # Rewrites the tar file located at the given [target_tar_path]
   # to have its record headers use a simple checksum,
   # and the apk sha1 hash extension.
-  def hash_datatar(target_path)
+  def hash_datatar_sha1(target_path)
 
     header = extension_header = ""
     data = extension_data = ""
@@ -264,7 +268,7 @@ class FPM::Package::APK< FPM::Package
               full_record_path = full_record_path.chop()
             end
           else
-            extension_data = hash_record(data)
+            extension_data = hash_record_sha1(data)
           end
 
           full_record_path = pad_string_to(full_record_path, 100)
@@ -365,7 +369,7 @@ class FPM::Package::APK< FPM::Package
 
   # SHA-1 hashes the given data, then places it in the APK hash string format
   # then returns.
-  def hash_record(data)
+  def hash_record_sha1(data)
 
     # %u %s=%s\n
     # len name=hash
