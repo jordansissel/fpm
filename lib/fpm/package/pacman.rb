@@ -162,7 +162,7 @@ class FPM::Package::Pacman < FPM::Package
     self.description = control["pkgdesc"][0]
 
     if control.include? "backup"
-      self.config_files = control["backup"].map{|file| "/" + file}
+      self.config_files = control["backup"].map{|file| file.sub(%r{^/}, "")}
     else
       self.config_files = []
     end
