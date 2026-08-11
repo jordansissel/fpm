@@ -322,6 +322,21 @@ class FPM::Package
       .collect { |path| path[staging_path.length + 1.. -1] }
   end # def files
 
+  # The timestamp to use in place of anything that would otherwise vary between builds,
+  # as a string holding seconds since the UNIX epoch, or nil if none is available.
+  #
+  # An input package type may set :source_date_epoch when it discovers a release date of
+  # its own; see FPM::Package::Gem. That takes precedence over the fallback given by
+  # --source-date-epoch-default, which defaults to the SOURCE_DATE_EPOCH environment
+  # variable.
+  #
+  # Package code should read this rather than attributes[:source_date_epoch].
+  #
+  # See https://reproducible-builds.org/specs/source-date-epoch
+  def source_date_epoch
+    attributes[:source_date_epoch] || attributes[:source_date_epoch_default]
+  end # def source_date_epoch
+
   def template_dir
     File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "templates"))
   end # def template_dir
@@ -555,5 +570,5 @@ class FPM::Package
 
   # Package internal public api
   public(:cleanup_staging, :cleanup_build, :staging_path, :converted_from,
-         :edit_file, :build_path)
+         :edit_file, :build_path, :source_date_epoch)
 end # class FPM::Package

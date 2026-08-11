@@ -526,18 +526,15 @@ class FPM::Package::Deb < FPM::Package
       end
     end
 
-    if attributes[:source_date_epoch].nil? and not attributes[:source_date_epoch_default].nil?
-      attributes[:source_date_epoch] = attributes[:source_date_epoch_default]
-    end
-    if attributes[:source_date_epoch] == "0"
+    if source_date_epoch == "0"
       logger.error("Alas, ruby's Zlib::GzipWriter does not support setting an mtime of zero.  Aborting.")
       raise FPM::InvalidPackageConfiguration, "#{name}: source_date_epoch of 0 not supported."
     end
-    if not attributes[:source_date_epoch].nil? and not ar_cmd_deterministic?
+    if not source_date_epoch.nil? and not ar_cmd_deterministic?
       logger.error("Alas, could not find an ar that can handle -D option. Try installing recent gnu binutils. Aborting.")
       raise FPM::InvalidPackageConfiguration, "#{name}: ar is insufficient to support source_date_epoch."
     end
-    if not attributes[:source_date_epoch].nil? and not tar_cmd_supports_sort_names_and_set_mtime?
+    if not source_date_epoch.nil? and not tar_cmd_supports_sort_names_and_set_mtime?
       logger.error("Alas, could not find a tar that can set mtime and sort.  Try installing recent gnu tar. Aborting.")
       raise FPM::InvalidPackageConfiguration, "#{name}: tar is insufficient to support source_date_epoch."
     end
@@ -612,8 +609,8 @@ class FPM::Package::Deb < FPM::Package
     mkdir_p(File.dirname(dest_changelog))
     File.new(dest_changelog, "wb", 0644).tap do |changelog|
       Zlib::GzipWriter.new(changelog, Zlib::BEST_COMPRESSION).tap do |changelog_gz|
-        if not attributes[:source_date_epoch].nil?
-          changelog_gz.mtime = attributes[:source_date_epoch].to_i
+        if not source_date_epoch.nil?
+          changelog_gz.mtime = source_date_epoch.to_i
         end
         if attributes[:deb_changelog]
           logger.info("Writing user-specified changelog", :source => attributes[:deb_changelog])
@@ -634,8 +631,8 @@ class FPM::Package::Deb < FPM::Package
     if attributes[:deb_upstream_changelog]
       File.new(dest_upstream_changelog, "wb", 0644).tap do |changelog|
         Zlib::GzipWriter.new(changelog, Zlib::BEST_COMPRESSION).tap do |changelog_gz|
-            if not attributes[:source_date_epoch].nil?
-              changelog_gz.mtime = attributes[:source_date_epoch].to_i
+            if not source_date_epoch.nil?
+              changelog_gz.mtime = source_date_epoch.to_i
             end
             logger.info("Writing user-specified upstream changelog", :source => attributes[:deb_upstream_changelog])
             File.new(attributes[:deb_upstream_changelog]).tap do |fd|
@@ -704,7 +701,7 @@ class FPM::Package::Deb < FPM::Package
         compression_flags = ["-z"]
       # gnu tar obeys GZIP environment variable with options for gzip; -n = forget original filename and date
         compressor_options = {"GZIP" => "-#{self.attributes[:deb_compression_level] || 9}" +
-            "#{'n' if tar_cmd_supports_sort_names_and_set_mtime? and not attributes[:source_date_epoch].nil?}"}
+            "#{'n' if tar_cmd_supports_sort_names_and_set_mtime? and not source_date_epoch.nil?}"}
       when "bzip2"
         datatar = build_path("data.tar.bz2")
         controltar = build_path("control.tar.gz")
@@ -730,9 +727,9 @@ class FPM::Package::Deb < FPM::Package
           "Unknown compression type '#{self.attributes[:deb_compression]}'"
     end
     args = [ tar_cmd, "-C", staging_path ] + compression_flags + data_tar_flags + [ "-cf", datatar, "." ]
-    if tar_cmd_supports_sort_names_and_set_mtime? and not attributes[:source_date_epoch].nil?
+    if tar_cmd_supports_sort_names_and_set_mtime? and not source_date_epoch.nil?
       # Use gnu tar options to force deterministic file order and timestamp
-      args += ["--sort=name", ("--mtime=@%s" % attributes[:source_date_epoch])]
+      args += ["--sort=name", ("--mtime=@%s" % source_date_epoch)]
     end
     args.unshift(compressor_options)
     safesystem(*args)
@@ -1043,7 +1040,7 @@ class FPM::Package::Deb < FPM::Package
         compression_flags = ["-z"]
         # gnu tar obeys GZIP environment variable with options for gzip; -n = forget original filename and date
         compressor_options = {"GZIP" => "-#{self.attributes[:deb_compression_level] || 9}" +
-            "#{'n' if tar_cmd_supports_sort_names_and_set_mtime? and not attributes[:source_date_epoch].nil?}"}
+            "#{'n' if tar_cmd_supports_sort_names_and_set_mtime? and not source_date_epoch.nil?}"}
       when "xz"
         controltar = "control.tar.xz"
         compression_flags = ["-J"]
@@ -1067,9 +1064,9 @@ class FPM::Package::Deb < FPM::Package
 
       args = [ tar_cmd, "-C", control_path ] + compression_flags + [ "-cf", controltar,
         "--owner=0", "--group=0", "--numeric-owner", "." ]
-      if tar_cmd_supports_sort_names_and_set_mtime? and not attributes[:source_date_epoch].nil?
+      if tar_cmd_supports_sort_names_and_set_mtime? and not source_date_epoch.nil?
         # Force deterministic file order and timestamp
-        args += ["--sort=name", ("--mtime=@%s" % attributes[:source_date_epoch])]
+        args += ["--sort=name", ("--mtime=@%s" % source_date_epoch)]
       end
       args.unshift(compressor_options)
       safesystem(*args)

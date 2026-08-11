@@ -522,6 +522,49 @@ CHANGELOG
 
         File.unlink(@target)
       end
+
+      # In these two, 1700000000 is 2023-11-14 22:13:20 UTC. rpm stores the date of a
+      # changelog entry as noon UTC on the day it names, so a correctly dated entry gives
+      # 1699963200.
+      it "should date the generated changelog from source_date_epoch, in UTC" do
+        subject.name = "example"
+        subject.version = "1.0"
+        subject.attributes[:source_date_epoch] = "1700000000"
+        @target = Stud::Temporary.pathname
+
+        # The epoch above is late enough in the day that formatting it in a time zone east
+        # of UTC names the next day instead, which would give 1700049600. Spelled as a
+        # POSIX TZ string rather than a zoneinfo name, so this does not quietly fall back
+        # to UTC on a host without a time zone database installed.
+        saved_tz = ENV["TZ"]
+        begin
+          ENV["TZ"] = "JST-9"
+          # Write RPM
+          subject.output(@target)
+        ensure
+          ENV["TZ"] = saved_tz
+        end
+
+        @rpm = ::RPM::File.new(@target)
+        insist { @rpm.tags[:changelogtime] } == [ 1699963200 ]
+
+        File.unlink(@target)
+      end
+
+      it "should date the generated changelog from source_date_epoch_default" do
+        subject.name = "example"
+        subject.version = "1.0"
+        subject.attributes[:source_date_epoch_default] = "1700000000"
+        @target = Stud::Temporary.pathname
+
+        # Write RPM
+        subject.output(@target)
+
+        @rpm = ::RPM::File.new(@target)
+        insist { @rpm.tags[:changelogtime] } == [ 1699963200 ]
+
+        File.unlink(@target)
+      end
     end # changelog
   end # #output
 
