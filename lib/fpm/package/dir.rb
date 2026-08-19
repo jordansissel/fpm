@@ -194,6 +194,12 @@ class FPM::Package::Dir < FPM::Package
                       :destination => destination)
         FileUtils.copy_entry(source, destination)
       end
+    elsif File.symlink?(source)
+      # Linking symlinks seems to turn them into hard links in the package when
+      # building on a Mac (but not Linux...), so copy it instead
+      logger.debug("Copying symlinked file", :source => source,
+                    :destination => destination)
+      FileUtils.copy_entry(source, destination)
     else
       # Otherwise try copying the file.
       begin
