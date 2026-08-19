@@ -476,8 +476,11 @@ describe FPM::Package::Deb do
       original.cleanup
     end # after
 
+    # Note: underscores and upper case letters are not valid Debian package
+    # names, but they are fixed via "fix_provides".
     invalid = [
       "this is not valid",
+      ".invalid",
       "hello = world",
       "hello ()",
       "hello (>)",
@@ -486,6 +489,8 @@ describe FPM::Package::Deb do
     ]
 
     valid = [
+      "c++-compiler",
+      "go1.17",
       "libc",
       "libc (= 6)",
       "bar (= 1:1.0)",
