@@ -1,0 +1,15 @@
+Format: 1.8
+Source: <%= name %>
+Version: <%= "#{epoch}:" if epoch %><%= version %><%= "-" + iteration.to_s if iteration %>
+Architecture: <%= architecture %>
+Maintainer: <%= maintainer %>
+Standards-Version: 4.6.2.0
+<% if url -%>
+Homepage: <%= url %>
+<% end -%>
+Checksums-Sha1:
+<%= dsc_files("sha1").map { |f| " #{f}" }.join("\n") %>
+Checksums-Sha256:
+<%= dsc_files("sha256").map { |f| " #{f}" }.join("\n") %>
+Files:
+<%= dsc_files("md5").map { |f| " #{f}" }.join("\n") %>
