@@ -1,6 +1,17 @@
 Release Notes and Change Log
 ============================
 
+1.??.? (unreleased)
+^^^^^^^^^^^^^^^^^^^
+
+* https://github.com/jordansissel/fpm/pull/2149 (`#2149`_; Dan Pashin)
+* https://github.com/jordansissel/fpm/pull/2123 (`#2123`_; Jordan Sissel)
+* https://github.com/jordansissel/fpm/pull/2146 (`#2146`_; Nicholas B. Hubbard)
+* https://github.com/jordansissel/fpm/pull/2128 (`#2128`_; Nicholas B. Hubbard)
+* https://github.com/jordansissel/fpm/pull/2125 (`#2125`_; Nicholas B. Hubbard)
+* https://github.com/jordansissel/fpm/pull/2144 (`#2144`_; Jordan Sissel)
+* https://github.com/jordansissel/fpm/pull/2122 (`#2122`_; Nicholas B. Hubbard)
+
 1.17.0 (October 2, 2025)
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
