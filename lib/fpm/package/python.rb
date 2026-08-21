@@ -375,11 +375,15 @@ class FPM::Package::Python < FPM::Package
 
       logger.info("Setting default python executable", :name => default_python)
       attributes[:python_bin] = default_python
+    end
 
-      if !attributes[:python_package_name_prefix_given?]
-        attributes[:python_package_name_prefix] = default_python
-        logger.info("Setting package name prefix", :name => default_python)
+    if !attributes[:python_package_name_prefix_given?]
+      major = nil
+      execmd([attributes[:python_bin], "-c", "import sys; print(sys.version_info[0])"], :stdin => false, :stderr => false) do |stdout|
+        major = stdout.readline.chomp
       end
+      attributes[:python_package_name_prefix] = "python#{major}"
+      logger.info("Setting package name prefix based on python major version #{major}", :name => attributes[:python_package_name_prefix])
     end
 
     if attributes[:python_internal_pip?]
