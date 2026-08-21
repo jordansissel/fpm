@@ -197,4 +197,19 @@ describe FPM::Package::Snap do
       insist { input.attributes[:snap_grade] } == "test-grade"
     end
   end
+
+  describe "#output pre-build hooks" do
+    it "should run pre-build hooks after snap.yaml is generated" do
+      subject.name = "test"
+      subject.version = "1.0"
+      subject.architecture = "all"
+      Tempfile.create(["pre-build-hook", ".sh"]) do |hook_script|
+        hook_script.write("#!/bin/sh\nset -e\ntest -f \"$FPM_STAGING_PATH/meta/snap.yaml\"\n")
+        hook_script.close
+        File.chmod(0755, hook_script.path)
+        subject.attributes[:pre_build_hooks] = [hook_script.path]
+        subject.output(target)
+      end
+    end
+  end
 end

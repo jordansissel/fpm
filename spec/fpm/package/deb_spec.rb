@@ -618,4 +618,18 @@ describe FPM::Package::Deb do
       end
     end
   end
+  describe "#output pre-build hooks" do
+    it "should run pre-build hooks after control tarball is generated" do
+      subject.name = "test"
+      subject.version = "1.0"
+      subject.architecture = "all"
+      Tempfile.create(["pre-build-hook", ".sh"]) do |hook_script|
+        hook_script.write("#!/bin/sh\nset -e\ntest -f \"$FPM_BUILD_PATH/control.tar.gz\"\n")
+        hook_script.close
+        File.chmod(0755, hook_script.path)
+        subject.attributes[:pre_build_hooks] = [hook_script.path]
+        subject.output(target)
+      end
+    end
+  end
 end # describe FPM::Package::Deb

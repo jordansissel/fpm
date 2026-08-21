@@ -59,4 +59,16 @@ describe FPM::Package::FreeBSD do
       end
     end
   end
+
+  it "should run pre-build hooks after +MANIFEST is generated" do
+    package = Stud::Temporary.pathname
+    Tempfile.create(["pre-build-hook", ".sh"]) do |hook_script|
+      hook_script.write("#!/bin/sh\nset -e\ntest -f \"$FPM_STAGING_PATH/+MANIFEST\"\n")
+      hook_script.close
+      File.chmod(0755, hook_script.path)
+      subject.attributes[:pre_build_hooks] = [hook_script.path]
+      subject.output(package)
+    end
+    File.unlink(package) if File.exist?(package)
+  end
 end

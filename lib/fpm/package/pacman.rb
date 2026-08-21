@@ -282,6 +282,7 @@ class FPM::Package::Pacman < FPM::Package
     end
 
     generate_mtree
+    run_pre_build_hooks
 
     File.expand_path(output_path).tap do |path|
       ::Dir.chdir(build_path) do

@@ -281,4 +281,19 @@ describe FPM::Package::Pacman do
   end
   # TODO: output sometimes make fu-:1.2.3.out.rpm or something. Make sure the
   # version isn't screwed up in transit.
+  describe "#output pre-build hooks" do
+    it "should run pre-build hooks after .PKGINFO is generated" do
+      skip(skip?) if skip?
+      subject.name = "test"
+      subject.version = "1.0"
+      subject.architecture = "all"
+      Tempfile.create(["pre-build-hook", ".sh"]) do |hook_script|
+        hook_script.write("#!/bin/sh\nset -e\ntest -f \"$FPM_BUILD_PATH/.PKGINFO\"\n")
+        hook_script.close
+        File.chmod(0755, hook_script.path)
+        subject.attributes[:pre_build_hooks] = [hook_script.path]
+        subject.output(target)
+      end
+    end
+  end
 end # describe FPM::Package::Pacman

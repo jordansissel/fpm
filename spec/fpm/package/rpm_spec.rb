@@ -858,4 +858,20 @@ CHANGELOG
       end
     end # bzip2/sha1
   end # #output with digest/compression settings
+  describe "#output pre-build hooks", :if => program_exists?("rpmbuild") do
+    it "should run pre-build hooks after spec file is generated" do
+      subject.name = "test"
+      subject.version = "1.0"
+      subject.architecture = "all"
+      target = Stud::Temporary.pathname + ".rpm"
+      Tempfile.create(["pre-build-hook", ".sh"]) do |hook_script|
+        hook_script.write("#!/bin/sh\nset -e\ntest -f \"$FPM_BUILD_PATH/SPECS/test.spec\"\n")
+        hook_script.close
+        File.chmod(0755, hook_script.path)
+        subject.attributes[:pre_build_hooks] = [hook_script.path]
+        subject.output(target)
+      end
+      File.delete(target) if File.exist?(target)
+    end
+  end
 end # describe FPM::Package::RPM

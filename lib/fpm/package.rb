@@ -379,6 +379,26 @@ class FPM::Package
     end
   end # def edit_file
 
+  def run_pre_build_hooks
+    hooks = attributes[:pre_build_hooks]
+    return if hooks.nil?
+    env = {
+      "FPM_STAGING_PATH" => staging_path,
+      "FPM_BUILD_PATH" => build_path,
+      "FPM_OUTPUT_TYPE" => type,
+      "FPM_PACKAGE_NAME" => name,
+      "FPM_PACKAGE_VERSION" => version.to_s
+    }
+    hooks.each do |hook|
+      logger.info("Running pre-build hook", :hook => hook)
+      begin
+        safesystem(env, hook, hook) # pass hook twice to force a direct exec
+      rescue FPM::Util::ExecutableNotFound, Errno::ENOENT, Errno::EACCES
+        raise ProcessFailed.new("A pre-build hook file does not exist or is not executable: #{hook}")
+      end
+    end
+  end # def run_pre_build_hooks
+
   # This method removes excluded files from the staging_path. Subclasses can
   # remove the files during the input phase rather than deleting them here
   def exclude
