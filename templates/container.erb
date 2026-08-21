@@ -1,0 +1,7 @@
+FROM <%= attributes[:container_image] %>
+
+<% attributes.fetch(:container_setup_list, []).each do |step| %>
+RUN <%= step %>
+<% end %>
+
+RUN <%= entry %>

@@ -281,6 +281,37 @@ class FPM::Package
   def cleanup_staging
     if File.directory?(staging_path)
       logger.debug("Cleaning up staging path", :path => staging_path)
+
+      # Recursively check directories to make sure 'write' and 'execute'
+      # permission is set. This works around an issue where 'rm_r' fails
+      # because a a directory may have no write permission.
+      #
+      # You might wonder if `rm_rf` is an option for this because "force"
+      # sounds like an option that would effectively ignore permissions.
+      # It does not. In Ruby, the "force" option just silences any exceptions.
+      # The GNU coreutils version of `rm` also has this problem.
+
+      # I found FileUtils::Entry_#preorder_traverse gives me a recursive
+      # listing of all entries. Parent directories are listed first, which is
+      # good, because we need to make sure they're writable before we try to
+      # delete..
+      # It's worth noting that this class (FileUtils::Entry_) is an
+      # undocumented class within FileUtils. This likely means the api should
+      # be assumed to be unstable and not guaranteed. If it doesn't work across
+      # all versions of ruby, then we'll need to find another way. The code for
+      # FileUtils::Entry_ was found inside the Ruby 2.4 documentation and was 
+      # tested for this code, here, under Ruby 2.7.6.
+      FileUtils::Entry_.new(staging_path).preorder_traverse do |entry|
+        if entry.directory?
+          # Directory must be writable in order to remove files.
+          # Directories need to be executable if we're going to remove files in the directory.
+          if !entry.lstat.writable? || !entry.lstat.executable?
+            entry.chmod(entry.lstat.mode | (0100 | 0200))
+          end
+        end
+      end
+
+      # Now delete the staging path.
       FileUtils.rm_r(staging_path)
     end
   end # def cleanup_staging
