@@ -1,16 +1,16 @@
 Release Notes and Change Log
 ============================
 
-1.??.? (unreleased)
-^^^^^^^^^^^^^^^^^^^
+1.18.0 (August 26, 2026)
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-* https://github.com/jordansissel/fpm/pull/2149 (`#2149`_; Dan Pashin)
-* https://github.com/jordansissel/fpm/pull/2123 (`#2123`_; Jordan Sissel)
-* https://github.com/jordansissel/fpm/pull/2146 (`#2146`_; Nicholas B. Hubbard)
-* https://github.com/jordansissel/fpm/pull/2128 (`#2128`_; Nicholas B. Hubbard)
-* https://github.com/jordansissel/fpm/pull/2125 (`#2125`_; Nicholas B. Hubbard)
-* https://github.com/jordansissel/fpm/pull/2144 (`#2144`_; Jordan Sissel)
-* https://github.com/jordansissel/fpm/pull/2122 (`#2122`_; Nicholas B. Hubbard)
+* deb/macOS: Fix a bug on macOS caused by a behavior change to the ``ar`` utility provided by Xcode (`#2149`_, `#2148`_; Dan Pashin)
+* Ruby 2.x support: Restored compatibility with older versions of Ruby such as Ruby 2.5.0. (`#2123`_; Jordan Sissel)
+* cpan: Add flag --cpan-metacpan-api-url for custom MetaCPAN urls (`#2146`_; Nicholas B. Hubbard)
+* cpan: Add flag ``--cpan-disable-dependency <name>`` to remove a dependency from the package (`#2128`_, `#2125`_; Nicholas B. Hubbard)
+* cpan: MetaCPAN upgraded their Elasticsearch version which means fpm also needs to use the newer query syntax. (`#2144`_, `#2143`_; Jordan Sissel)
+* cpan: Improvements to cpan search to better support cpan distributions (`#2125`_; Nicholas B. Hubbard)
+* tests: Fixed a bunch of tests that were failing under Github Actions (`#2122`_; Nicholas B. Hubbard)
 
 1.17.0 (October 2, 2025)
 ^^^^^^^^^^^^^^^^^^^^^^^^
