@@ -288,10 +288,13 @@ class FPM::Package::RPM < FPM::Package
       return attributes[:rpm_changelog]
     end
 
-    reldate = if attributes[:source_date_epoch].nil?
+    # rpm stores this date in the CHANGELOGTIME header, so it has to be fixed for the
+    # output to be reproducible. Format it in UTC, the time zone SOURCE_DATE_EPOCH is
+    # defined in, so that the time zone of the build machine cannot shift the date.
+    reldate = if source_date_epoch.nil?
                 Time.now()
               else
-                Time.at(attributes[:source_date_epoch].to_i)
+                Time.at(source_date_epoch.to_i).utc
               end
     changed = reldate.strftime("%a %b %_e %Y")
     changev = "#{version}-#{iteration}"
