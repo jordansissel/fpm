@@ -280,12 +280,7 @@ class FPM::Command < Clamp::Command
 
   # Execute this command. See Clamp::Command#execute and Clamp's documentation
   def execute
-    logger.level = :warn
-    logger.level = :info if verbose? # --verbose
-    logger.level = :debug if debug? # --debug
-    if log_level
-      logger.level = log_level.to_sym
-    end
+    configure_logger
 
     if (stray_flags = args.grep(/^-/); stray_flags.any?)
       logger.warn("All flags should be before the first argument " \
@@ -517,7 +512,12 @@ class FPM::Command < Clamp::Command
       return 1
     end
 
-    logger.log("Created package", :path => package_file)
+    # Keep the default success message, but respect an explicit log level.
+    if log_level
+      logger.info("Created package", :path => package_file)
+    else
+      logger.log("Created package", :path => package_file)
+    end
     return 0
   rescue FPM::Util::ExecutableNotFound => e
     logger.error("Need executable '#{e}' to convert #{input_type} to #{output_type}")
@@ -562,15 +562,16 @@ class FPM::Command < Clamp::Command
     rc_files << File.join(ENV["HOME"], ".fpm") if ENV["HOME"]
 
     rc_args = []
+    rc_messages = []
 
     if ENV["FPMOPTS"]
-      logger.warn("Loading flags from FPMOPTS environment variable")
+      rc_messages << "Loading flags from FPMOPTS environment variable"
       rc_args.push(*Shellwords.shellsplit(ENV["FPMOPTS"]))
     end
 
     rc_files.each do |rc_file|
       if File.readable? rc_file
-        logger.warn("Loading flags from rc file #{rc_file}")
+        rc_messages << "Loading flags from rc file #{rc_file}"
         rc_args.push(*Shellwords.shellsplit(File.read(rc_file)))
       end
     end
@@ -590,17 +591,26 @@ class FPM::Command < Clamp::Command
       end
     end
 
+    parse(flags + run_args + args)
+    configure_logger
+
+    rc_messages.each { |message| logger.warn(message) }
     logger.warn("Additional options: #{flags.join " "}") if flags.size > 0
     logger.warn("Additional arguments: #{args.join " "}") if args.size > 0
 
-    ARGV.unshift(*flags)
-    ARGV.push(*args)
-
-    super(run_args)
+    execute
   rescue FPM::Package::InvalidArgument => e
     logger.error("Invalid package argument: #{e}")
     return 1
   end # def run
+
+  def configure_logger
+    logger.level = :warn
+    logger.level = :info if verbose? # --verbose
+    logger.level = :debug if debug? # --debug
+    logger.level = log_level.to_sym if log_level
+  end # def configure_logger
+  private :configure_logger
 
   def load_options(path)
     @loaded_files ||= []

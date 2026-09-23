@@ -4,6 +4,7 @@ require "fpm" # local
 require "fpm/command" # local
 require "fixtures/mockpackage"
 require "shellwords"
+require "stringio"
 
 describe FPM::Command do
   describe "--prefix"
@@ -131,6 +132,26 @@ describe FPM::Command do
         subject.parse(args + ["--log", "warn"])
         subject.parse(args + ["--log", "info"])
         subject.parse(args + ["--log", "debug"])
+      end
+
+      it "should respect a log level from an rc file" do
+        Stud::Temporary.directory do |path|
+          File.write(File.join(path, ".fpm"), "--log=error -s empty -t mock -n example")
+
+          output = StringIO.new
+          logger = Cabin::Channel.new
+          logger.subscribe(output)
+          allow(logger).to receive(:subscribe).with(STDOUT)
+          allow(subject).to receive(:logger).and_return(logger)
+
+          allow(ENV).to receive(:[]).and_call_original
+          allow(ENV).to receive(:[]).with("HOME").and_return(File.join(path, "home"))
+
+          Dir.chdir(path) do
+            insist { subject.run([]) } == 0
+          end
+          insist { output.string } == ""
+        end
       end
     end
     context "when given an invalid log level" do
