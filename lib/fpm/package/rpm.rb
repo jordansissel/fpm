@@ -30,7 +30,8 @@ class FPM::Package::RPM < FPM::Package
     "xz" => ".xzdio",
     "xzmt" => "T.xzdio",
     "gzip" => ".gzdio",
-    "bzip2" => ".bzdio"
+    "bzip2" => ".bzdio",
+    "zst" => ".zstdio"
   } unless defined?(COMPRESSION_MAP)
 
   option "--use-file-permissions", :flag,

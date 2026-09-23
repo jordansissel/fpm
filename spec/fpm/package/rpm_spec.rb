@@ -858,4 +858,36 @@ CHANGELOG
       end
     end # bzip2/sha1
   end # #output with digest/compression settings
+
+  describe "zstd compression end-to-end" do
+    before do
+      skip("Missing rpmbuild program") unless program_exists?("rpmbuild")
+    end
+
+    it "produces rpm with payloadcompressor tag set to 'zstd'" do
+      target = Stud::Temporary.pathname
+      begin
+        subject.name = "name"
+        subject.version = "123"
+        subject.architecture = "all"
+        subject.iteration = "100"
+        subject.attributes[:rpm_compression] = "zst"
+        subject.output(target)
+        rpm = ::RPM::File.new(target)
+        rpmtags = {}
+        rpm.header.tags.each { |tag| rpmtags[tag.tag] = tag.value }
+        expect(rpmtags[:payloadcompressor]).to eq("zstd")
+      ensure
+        File.delete(target) rescue nil
+      end
+    end
+  end
+
+  describe "zstd compression mapping" do
+    it "maps 'zst' to zstdio with level" do
+      subject.attributes[:rpm_compression] = "zst"
+      subject.attributes[:rpm_compression_level] = 7
+      expect(subject.send(:payload_compression)).to eq("w7.zstdio")
+    end
+  end
 end # describe FPM::Package::RPM

@@ -12,7 +12,7 @@
     - Enable RPM's AutoReqProv option
 * ``--rpm-changelog FILEPATH``
     - Add changelog from FILEPATH contents
-* ``--rpm-compression none|xz|xzmt|gzip|bzip2``
+* ``--rpm-compression none|xz|xzmt|zst|gzip|bzip2``
     - Select a compression method. gzip works on the most platforms.
 * ``--rpm-compression-level [0-9]``
     - Select a compression level. 0 is store-only. 9 is max compression.
